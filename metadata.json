@@ -1,0 +1,6 @@
+{
+  "name": "Zacatecas Deslumbrante Prototype",
+  "description": "Official AI conversational assistant and spatial guide for the State of Zacatecas, providing verified cultural heritage, UNESCO historic centre insights, Pueblos Mágicos guides, and interactive itineraries.",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

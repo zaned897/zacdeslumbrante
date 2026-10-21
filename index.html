@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Zacatecas Deslumbrante Prototype</title>
+    <meta name="description" content="Official AI conversational assistant and spatial guide for the State of Zacatecas, providing verified cultural heritage, UNESCO historic centre insights, Pueblos Mágicos guides, and interactive itineraries." />
+    <meta property="og:title" content="Zacatecas Deslumbrante Prototype" />
+    <meta property="og:description" content="Official AI conversational assistant and spatial guide for the State of Zacatecas, providing verified cultural heritage, UNESCO historic centre insights, Pueblos Mágicos guides, and interactive itineraries." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <script>
+      // Runtime constraint: HMR is disabled in AI Studio iFrame. Ignore WebSocket transport errors.
+      window.addEventListener('error', function(e) {
+        if (e.message && (e.message.includes('WebSocket') || e.message.includes('transport') || (e.filename && e.filename.includes('@vite/client')))) {
+          e.stopImmediatePropagation();
+          e.preventDefault();
+        }
+      });
+      window.addEventListener('unhandledrejection', function(e) {
+        var str = String(e.reason && (e.reason.message || e.reason.stack || e.reason));
+        if (str.includes('WebSocket') || str.includes('transport') || str.includes('@vite/client')) {
+          e.stopImmediatePropagation();
+          e.preventDefault();
+        }
+      });
+    </script>
+  </head>
+  <body class="bg-[#FBF9F5] text-stone-900 antialiased selection:bg-[#9A3412]/20 selection:text-[#9A3412]">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+
