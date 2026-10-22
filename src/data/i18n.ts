@@ -132,6 +132,14 @@ export const TRANSLATIONS = {
     view3dAvatar_minero: 'Minero',
     view3dAvatar_danzante: 'Danzante',
     view3dAvatar_visitante: 'Visitante',
+    view3dTourPick: 'Elegir recorrido',
+    view3dLayers: 'Capas',
+    view3dPhotoPrev: 'Foto anterior',
+    view3dPhotoNext: 'Foto siguiente',
+    view3dPhotoBy: 'Foto: {author} · {license}',
+    view3dKeyRejected: 'Google rechazó la llave en este dominio (revisa que tenga Maps JavaScript API y Map Tiles API, y que el dominio esté autorizado). Mientras, ciudad estilizada.',
+    view3dCrashTitle: 'La vista 3D falló',
+    view3dCrashRetry: 'Reintentar en modo estilizado',
   },
   en: {
     // App & Header
@@ -266,5 +274,13 @@ export const TRANSLATIONS = {
     view3dAvatar_minero: 'Miner',
     view3dAvatar_danzante: 'Dancer',
     view3dAvatar_visitante: 'Visitor',
+    view3dTourPick: 'Choose a tour',
+    view3dLayers: 'Layers',
+    view3dPhotoPrev: 'Previous photo',
+    view3dPhotoNext: 'Next photo',
+    view3dPhotoBy: 'Photo: {author} · {license}',
+    view3dKeyRejected: 'Google rejected the key on this domain (check it has Maps JavaScript API and Map Tiles API, and that the domain is allowed). Showing the stylized city meanwhile.',
+    view3dCrashTitle: 'The 3D view failed',
+    view3dCrashRetry: 'Retry in stylized mode',
   },
 };
