@@ -60,6 +60,27 @@ Los 3 lugares no visitados más cercanos (haversine), compatibles con `ScenePoi`
       "isMock": true,
       "reason": { "es": "A 90 m de ti", "en": "90 m from you" },
       "distanceMeters": 90
+### GET /api/py/tours · GET /api/py/tours/{id}  · mock · dueño: Claude Code (#27)
+Recorridos 3D con el formato de `Tour` (`src/types/scene3d.ts`). Fixture en `services/api/app/fixtures/tours.json`; `/tours/{id}` responde 404 si no existe.
+```json
+[
+  {
+    "id": "centro-historico-express",
+    "title": { "es": "Centro histórico en 2 minutos", "en": "Historic center in 2 minutes" },
+    "_mock": true,
+    "stops": [
+      {
+        "placeId": "cerro-de-la-bufa",
+        "camera": { "lat": 22.7738, "lng": -102.5649, "altitude": 2610, "range": 900, "tilt": 65, "heading": 250 },
+        "holdMillis": 2500,
+        "caption": { "es": "…", "en": "…" }
+      }
+    ]
+  }
+]
+```
+`Map3DView` los pide con `loadTours()` (`src/data/tours3d.ts`) y, si Python no responde, usa `TOURS_3D`.
+
 ### GET /api/py/street-life?category=  · mock · dueño: Claude Code (#40)
 Vida de calle para la ciudad 3D: puestos, artesanos y músicos **genéricos** (tipos de comercio típicos, no negocios reales), compatibles con `ScenePoi`. `category` opcional: `food | sweets | crafts | music | art`. Datos en `services/api/app/fixtures/street_life.json`.
 ```json
