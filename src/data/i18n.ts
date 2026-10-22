@@ -47,6 +47,12 @@ export const TRANSLATIONS = {
     chatQuickPlans: 'Itinerarios',
     chatPlaceholderShort: 'Pregunta sobre Zacatecas…',
     chatFootnote: 'Respuestas con fuentes oficiales citadas. Verifica horarios antes de ir.',
+    mapAssistantAbout: 'Preguntando sobre {name}',
+    mapAssistantPlaceholder: 'Pregunta sobre {name}…',
+    mapAssistantSuggest1: '¿Qué debo ver adentro?',
+    mapAssistantSuggest2: '¿Horario y costo?',
+    mapAssistantSuggest3: '¿Alguna leyenda?',
+    mapAssistantError: 'No pude conectar con el asistente. Intenta de nuevo.',
     
     // Sidebar
     knowledgeBaseTitle: 'Base de Conocimiento RAG',
@@ -214,6 +220,12 @@ export const TRANSLATIONS = {
     chatQuickPlans: 'Itineraries',
     chatPlaceholderShort: 'Ask about Zacatecas…',
     chatFootnote: 'Answers cite official sources. Check opening hours before you go.',
+    mapAssistantAbout: 'Asking about {name}',
+    mapAssistantPlaceholder: 'Ask about {name}…',
+    mapAssistantSuggest1: 'What should I see inside?',
+    mapAssistantSuggest2: 'Hours and price?',
+    mapAssistantSuggest3: 'Any legends?',
+    mapAssistantError: 'Could not reach the assistant. Please try again.',
     
     // Sidebar
     knowledgeBaseTitle: 'RAG Knowledge Base',
