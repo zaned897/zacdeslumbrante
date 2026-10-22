@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { MessageCircle, Box, Trophy, CalendarDays } from 'lucide-react';
+import { MessageCircle, Box, PawPrint, Trophy, CalendarDays } from 'lucide-react';
 import { Language } from '../../types';
 import { TRANSLATIONS } from '../../data/i18n';
 import { AppTab } from './tabs';
@@ -16,6 +16,7 @@ export const BottomTabBar: React.FC<BottomTabBarProps> = ({ language, active, on
   const tabs: { id: AppTab; label: string; icon: React.ReactNode }[] = [
     { id: 'chat', label: t.tabChat, icon: <MessageCircle className="w-5 h-5" /> },
     { id: '3d', label: t.tab3d, icon: <Box className="w-5 h-5" /> },
+    { id: 'pet', label: t.tabPet, icon: <PawPrint className="w-5 h-5" /> },
     { id: 'badges', label: t.tabBadges, icon: <Trophy className="w-5 h-5" /> },
     { id: 'plans', label: t.tabPlans, icon: <CalendarDays className="w-5 h-5" /> },
   ];
@@ -39,7 +40,7 @@ export const BottomTabBar: React.FC<BottomTabBarProps> = ({ language, active, on
                   on ? 'text-carbon' : 'text-tenue hover:text-carbon'
                 }`}
               >
-                <span className="relative grid place-items-center w-14 h-8 rounded-full group-focus-visible:ring-2 group-focus-visible:ring-cantera">
+                <span className="relative grid place-items-center w-12 h-8 rounded-full group-focus-visible:ring-2 group-focus-visible:ring-cantera">
                   {on && (
                     <motion.span
                       layoutId="tab-pill"
