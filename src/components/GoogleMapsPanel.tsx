@@ -59,11 +59,12 @@ export const GoogleMapsPanel: React.FC<GoogleMapsPanelProps> = ({
       localStorage.getItem('zacatecas_maps_api_key') ||
       import.meta.env.VITE_MAPS_API_KEY ||
       import.meta.env.VITE_GOOGLE_MAPS_API_KEY ||
-      'AIzaSyCxLbKAfK48tIY_id-WkfZOsTXHTNhx4go'
+      ''
     );
   });
 
-  const [showKeyModal, setShowKeyModal] = useState(false);
+  // Sin llave: se muestra la cartografía de respaldo y se pide una llave.
+  const [showKeyModal, setShowKeyModal] = useState(() => !currentApiKey);
   const [customKeyInput, setCustomKeyInput] = useState('');
 
   // Capital coordinates
@@ -73,6 +74,12 @@ export const GoogleMapsPanel: React.FC<GoogleMapsPanelProps> = ({
   // Initialize Google Maps
   useEffect(() => {
     if (!isOpen || !mapContainerRef.current) return;
+
+    if (!currentApiKey) {
+      setMapError('Interactive Spatial Canvas Active');
+      setMapLoaded(true);
+      return;
+    }
 
     let isMounted = true;
 
@@ -286,7 +293,13 @@ export const GoogleMapsPanel: React.FC<GoogleMapsPanelProps> = ({
             title="Google Maps API Key activa. Clic para cambiar"
           >
             <Key className="w-3 h-3 text-emerald-600" />
-            <span>Key: {currentApiKey.slice(0, 6)}...{currentApiKey.slice(-4)}</span>
+            <span>
+              {currentApiKey
+                ? `Key: ${currentApiKey.slice(0, 6)}...${currentApiKey.slice(-4)}`
+                : language === 'es'
+                  ? 'Sin llave'
+                  : 'No key'}
+            </span>
           </button>
           <button
             onClick={handleCenterCapital}

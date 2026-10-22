@@ -20,17 +20,29 @@ import { TRANSLATIONS } from '../data/i18n';
 import { TOURS_3D, ZACATECAS_3D_HOME, loadTours } from '../data/tours3d';
 import { ZACATECAS_PLACES } from '../data/places';
 import { SCENE_LAYERS } from '../scene3d/layers';
-import { GoogleMaps3dEngine } from '../scene3d/googleMaps3dEngine';
+import { createEngine, selectedEngineId } from '../scene3d/createEngine';
+import { SceneStats, isStatsEnabled } from '../scene3d/SceneStats';
 import { distanceMeters } from '../scene3d/geo';
 import { usePlayerPosition, type FallbackReason } from '../scene3d/usePlayerPosition';
 import { useCollection } from '../scene3d/useCollection';
 import { useAvatarControls, type AvatarAction } from '../scene3d/useAvatarControls';
 
-type Status = 'loading' | 'ready' | 'nokey' | 'error';
+type Status = 'loading' | 'ready' | 'error';
 
 const FLIGHT_MILLIS = 4500;
 const DISCOVER_RADIUS_M = 40;
-const AVATAR_SRC = '/models/avatars/minero.glb';
+const AVATARS = ['minero', 'danzante', 'visitante'] as const;
+type AvatarId = (typeof AVATARS)[number];
+const AVATAR_STORAGE_KEY = 'zacatecas_avatar';
+
+function readAvatar(): AvatarId {
+  try {
+    const stored = localStorage.getItem(AVATAR_STORAGE_KEY);
+    return AVATARS.find((a) => a === stored) ?? 'minero';
+  } catch {
+    return 'minero';
+  }
+}
 const UNDISCOVERED_COLOR = '#A8A29E';
 // PROTO: altitud fija del centro para la cámara que sigue al jugador; el terreno varía ±100 m.
 const FOLLOW_ALTITUDE = 2450;
@@ -60,7 +72,15 @@ export const Map3DView: React.FC = () => {
   const [isTouring, setIsTouring] = useState(false);
   const [tours, setTours] = useState<Tour[]>(TOURS_3D);
   const [isExploring, setIsExploring] = useState(false);
+  const [avatar, setAvatar] = useState<AvatarId>(readAvatar);
   const [toast, setToast] = useState<string | null>(null);
+  const [timings, setTimings] = useState<{ mountMs: number | null; readyMs: number | null }>({
+    mountMs: null,
+    readyMs: null,
+  });
+  const apiKey = useMemo(resolveApiKey, []);
+  const engineId = useMemo(() => selectedEngineId(Boolean(apiKey)), [apiKey]);
+  const showStats = useMemo(isStatsEnabled, []);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const engineRef = useRef<SceneEngine | null>(null);
@@ -93,24 +113,23 @@ export const Map3DView: React.FC = () => {
 
   // Montar el motor una sola vez.
   useEffect(() => {
-    const apiKey = resolveApiKey();
-    if (!apiKey) {
-      setStatus('nokey');
-      return;
-    }
     const container = containerRef.current;
     if (!container) return;
 
-    const engine = new GoogleMaps3dEngine(apiKey);
+    const engine = createEngine(engineId, apiKey);
     engineRef.current = engine;
     let cancelled = false;
+    const startedAt = performance.now();
 
     engine
       .mount(container, ZACATECAS_3D_HOME)
       .then(async () => {
         if (cancelled) return;
+        setTimings((prev) => ({ ...prev, mountMs: performance.now() - startedAt }));
+        void engine.ready().then(() => {
+          if (!cancelled) setTimings((prev) => ({ ...prev, readyMs: performance.now() - startedAt }));
+        });
         engine.onPoiClick(setSelected);
-        engine.setAvatar(AVATAR_SRC);
         engine.onGroundClick((at) => teleportRef.current?.(at));
         const loaded = await Promise.all(
           SCENE_LAYERS.filter((l) => l.enabledByDefault).map((l) => l.load()),
@@ -131,7 +150,17 @@ export const Map3DView: React.FC = () => {
       engine.destroy();
       engineRef.current = null;
     };
-  }, []);
+  }, [engineId, apiKey]);
+
+  useEffect(() => {
+    if (status !== 'ready') return;
+    engineRef.current?.setAvatar(`/models/avatars/${avatar}.glb`);
+    try {
+      localStorage.setItem(AVATAR_STORAGE_KEY, avatar);
+    } catch {
+      // Sin almacenamiento: el avatar vale solo en esta visita.
+    }
+  }, [avatar, status]);
 
   // Repintar marcadores al cambiar puntos, idioma o colección (en exploración, lo no descubierto va en gris).
   useEffect(() => {
@@ -271,12 +300,6 @@ export const Map3DView: React.FC = () => {
         <div className="absolute inset-0 z-0 flex items-center justify-center p-6">
           <div className="max-w-sm text-center bg-[#FBF9F5] rounded-xl p-6 shadow-lg">
             {status === 'loading' && <p className="text-sm text-stone-600">{t.view3dLoading}</p>}
-            {status === 'nokey' && (
-              <>
-                <h2 className="font-serif font-bold text-lg mb-2">{t.view3dNoKeyTitle}</h2>
-                <p className="text-sm text-stone-600">{t.view3dNoKeyBody}</p>
-              </>
-            )}
             {status === 'error' && (
               <>
                 <h2 className="font-serif font-bold text-lg mb-2">{t.view3dErrorTitle}</h2>
@@ -286,6 +309,14 @@ export const Map3DView: React.FC = () => {
           </div>
         </div>
       )}
+
+      {engineId === 'three' && status === 'ready' && !isExploring && (
+        <div className="absolute top-16 inset-x-3 md:inset-x-auto md:left-4 md:max-w-xs z-10 text-[11px] text-stone-700 bg-[#FBF9F5]/90 border border-stone-200 rounded-lg px-3 py-2">
+          {apiKey ? t.view3dStylized : t.view3dNoKeyBody}
+        </div>
+      )}
+
+      {showStats && <SceneStats engine={engineId} mountMs={timings.mountMs} readyMs={timings.readyMs} />}
 
       {/* HUD de exploración */}
       {isExploring && (
@@ -314,6 +345,24 @@ export const Map3DView: React.FC = () => {
             {sourceText && <span className="font-semibold text-stone-800">{sourceText}. </span>}
             {fallbackReason && !isManual && fallbackText[fallbackReason]} {t.view3dTapToMove}
           </p>
+          <div className="mt-2 flex items-center gap-1.5" role="radiogroup" aria-label={t.view3dAvatar}>
+            <span className="text-stone-500">{t.view3dAvatar}:</span>
+            {AVATARS.map((id) => (
+              <button
+                key={id}
+                role="radio"
+                aria-checked={avatar === id}
+                onClick={() => setAvatar(id)}
+                className={`px-2 py-0.5 rounded-full border cursor-pointer ${
+                  avatar === id
+                    ? 'bg-[#9A3412] border-[#9A3412] text-white'
+                    : 'bg-white border-stone-300 text-stone-700 hover:border-stone-400'
+                }`}
+              >
+                {t[`view3dAvatar_${id}`]}
+              </button>
+            ))}
+          </div>
           {isManual && (
             <button
               onClick={resume}
@@ -391,7 +440,7 @@ export const Map3DView: React.FC = () => {
           {isTouring ? (
             <button
               onClick={stopTour}
-              className="flex items-center gap-2 px-4 py-3 text-sm font-semibold text-white bg-stone-800 rounded-full shadow-lg hover:bg-stone-700 cursor-pointer"
+              className="flex items-center gap-2 px-3.5 py-3 text-sm font-semibold whitespace-nowrap text-white bg-stone-800 rounded-full shadow-lg hover:bg-stone-700 cursor-pointer"
             >
               <Square className="w-4 h-4" />
               {t.view3dStop}
@@ -400,7 +449,7 @@ export const Map3DView: React.FC = () => {
             tour && (
               <button
                 onClick={() => void playTour(tour)}
-                className="flex items-center gap-2 px-4 py-3 text-sm font-semibold text-white bg-[#9A3412] rounded-full shadow-lg hover:bg-[#78350F] cursor-pointer"
+                className="flex items-center gap-2 px-3.5 py-3 text-sm font-semibold whitespace-nowrap text-white bg-[#9A3412] rounded-full shadow-lg hover:bg-[#78350F] cursor-pointer"
               >
                 <Play className="w-4 h-4" />
                 {t.view3dTour}
@@ -410,7 +459,7 @@ export const Map3DView: React.FC = () => {
           {!isTouring && (
             <button
               onClick={toggleExplore}
-              className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold rounded-full shadow-lg cursor-pointer ${
+              className={`flex items-center gap-2 px-3.5 py-3 text-sm font-semibold whitespace-nowrap rounded-full shadow-lg cursor-pointer ${
                 isExploring
                   ? 'text-white bg-stone-800 hover:bg-stone-700'
                   : 'text-white bg-[#2563EB] hover:bg-[#1D4ED8]'
@@ -422,7 +471,7 @@ export const Map3DView: React.FC = () => {
           )}
           <button
             onClick={goHome}
-            className="flex items-center gap-2 px-4 py-3 text-sm font-semibold text-stone-800 bg-[#FBF9F5] border border-stone-200 rounded-full shadow-lg hover:bg-white cursor-pointer"
+            className="flex items-center gap-2 px-3.5 py-3 text-sm font-semibold whitespace-nowrap text-stone-800 bg-[#FBF9F5] border border-stone-200 rounded-full shadow-lg hover:bg-white cursor-pointer"
             aria-label={t.view3dHome}
           >
             <Home className="w-4 h-4 text-[#9A3412]" />

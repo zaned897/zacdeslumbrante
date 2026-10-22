@@ -1,0 +1,40 @@
+# Blueprint de Render (#38): web (Express + Vite) y API Python, plan gratis.
+# Las llaves se capturan en el panel de Render (sync: false); nunca van en este archivo.
+# PROTO: plan free; cada servicio se duerme tras 15 min sin tráfico (~1 min en despertar).
+services:
+  - type: web
+    name: zacdes-web
+    runtime: node
+    plan: free
+    region: oregon
+    buildCommand: command -v bun >/dev/null || npm install -g bun; bun install --frozen-lockfile && bun run build
+    startCommand: node_modules/.bin/tsx server.ts
+    healthCheckPath: /api/health
+    previews:
+      generation: manual # un PR con "[render preview]" en el título obtiene su URL
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: "22"
+      # Si Render asigna otra URL a zacdes-api, corrige este valor en el panel.
+      - key: PY_API_URL
+        value: https://zacdes-api.onrender.com
+      - key: GEMINI_API_KEY
+        sync: false
+      # Se incrusta en el JS en el build: restríngela por referente a *.onrender.com.
+      - key: VITE_MAPS_API_KEY
+        sync: false
+
+  - type: web
+    name: zacdes-api
+    runtime: python
+    plan: free
+    region: oregon
+    rootDir: services/api
+    buildCommand: pip install uv && uv sync --frozen --no-dev
+    startCommand: .venv/bin/uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.8"

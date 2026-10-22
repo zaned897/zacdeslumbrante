@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Ciudad 3D — maqueta de estilo (#13)</title>
+<style>
+  :root {
+    --cantera: #C98B78; --terracota: #9A3412; --terracota-osc: #78350F;
+    --caliza: #FBF9F5; --caliza-2: #E7DCC9; --carbon: #1C1917; --piedra: #78716C;
+    --ambar: #D97706; --gris: #A8A29E; --azul: #2563EB; --verde: #15803D;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 24px; background: #EDE6DB; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; color: var(--carbon); }
+  h1 { font-family: 'Playfair Display', Georgia, serif; margin: 0 0 4px; font-size: 22px; }
+  .sub { color: var(--piedra); font-size: 12px; margin-bottom: 20px; }
+  .row { display: flex; gap: 24px; align-items: flex-start; }
+  .phone { width: 300px; height: 620px; border-radius: 28px; background: #D9CBB8; border: 8px solid var(--carbon); position: relative; overflow: hidden; }
+  .phone::before { content: ''; position: absolute; inset: 0; background:
+      linear-gradient(115deg, transparent 0 30%, rgba(201,139,120,.55) 30% 34%, transparent 34% 52%, rgba(201,139,120,.5) 52% 57%, transparent 57%),
+      repeating-linear-gradient(25deg, rgba(154,52,18,.18) 0 18px, transparent 18px 40px); }
+  .label { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--piedra); margin: 0 0 8px; }
+  .col { display: flex; flex-direction: column; }
+  .bar { position: absolute; top: 10px; left: 10px; right: 10px; display: flex; justify-content: space-between; }
+  .chip { background: rgba(251,249,245,.95); border: 1px solid var(--caliza-2); border-radius: 10px; padding: 6px 9px; font-size: 11px; font-weight: 600; display: flex; gap: 6px; align-items: center; }
+  .badge { background: var(--ambar); color: #fff; font-size: 9px; font-weight: 800; padding: 2px 5px; border-radius: 4px; }
+  .hud { position: absolute; top: 52px; left: 10px; right: 10px; background: rgba(251,249,245,.95); border: 1px solid var(--caliza-2); border-radius: 14px; padding: 10px; font-size: 11px; }
+  .prog { height: 6px; background: var(--caliza-2); border-radius: 99px; margin: 6px 0; overflow: hidden; }
+  .prog > div { height: 100%; width: 36%; background: var(--terracota); }
+  .pills { display: flex; gap: 4px; margin-top: 6px; }
+  .pill { border: 1px solid #D6D3D1; border-radius: 99px; padding: 2px 8px; background: #fff; }
+  .pill.on { background: var(--terracota); color: #fff; border-color: var(--terracota); }
+  .compass { position: absolute; top: 140px; right: 14px; width: 40px; height: 40px; border-radius: 50%; background: rgba(251,249,245,.95); border: 1px solid var(--caliza-2); display: grid; place-items: center; font-weight: 800; font-size: 12px; color: var(--terracota); }
+  .pad { position: absolute; right: 10px; bottom: 74px; display: grid; grid-template-columns: repeat(3, 38px); gap: 5px; }
+  .pad div { width: 38px; height: 38px; border-radius: 10px; background: rgba(251,249,245,.95); border: 1px solid var(--caliza-2); display: grid; place-items: center; font-size: 14px; }
+  .btns { position: absolute; bottom: 14px; left: 0; right: 0; display: flex; justify-content: center; gap: 8px; }
+  .btn { border-radius: 99px; padding: 10px 14px; font-size: 12px; font-weight: 700; color: #fff; background: var(--terracota); box-shadow: 0 4px 10px rgba(0,0,0,.2); }
+  .btn.dark { background: var(--carbon); } .btn.light { background: var(--caliza); color: var(--carbon); }
+  .toast { position: absolute; top: 46%; left: 20px; right: 20px; text-align: center; background: var(--terracota); color: #fff; font-weight: 800; font-size: 13px; border-radius: 99px; padding: 10px; box-shadow: 0 6px 16px rgba(154,52,18,.4); }
+  .avatar { position: absolute; left: 130px; top: 330px; width: 22px; height: 54px; }
+  .avatar i { position: absolute; display: block; }
+  /* Marcadores */
+  .markers { display: grid; grid-template-columns: repeat(2, 140px); gap: 18px 10px; padding: 14px; background: var(--caliza); border-radius: 18px; border: 1px solid var(--caliza-2); width: 300px; }
+  .mk { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 11px; text-align: center; }
+  .pin { width: 36px; height: 36px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); display: grid; place-items: center; border: 3px solid #fff; box-shadow: 0 3px 8px rgba(0,0,0,.25); }
+  .pin span { transform: rotate(45deg); color: #fff; font-weight: 800; font-size: 14px; }
+  .stem { width: 2px; height: 14px; margin-top: -4px; }
+  .mk b { display: block; }
+  .card { position: absolute; left: 10px; right: 10px; bottom: 70px; background: var(--caliza); border-radius: 16px; border: 1px solid var(--caliza-2); box-shadow: 0 8px 20px rgba(0,0,0,.2); overflow: hidden; font-size: 11px; }
+  .photo { height: 120px; background: linear-gradient(160deg, #B9775F, #7C3A22); position: relative; }
+  .photo small { position: absolute; left: 8px; bottom: 6px; color: #fff; font-size: 9px; opacity: .9; }
+  .dots { position: absolute; right: 8px; bottom: 8px; display: flex; gap: 3px; } .dots i { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,.6); } .dots i:first-child { background: #fff; }
+  .card .body { padding: 10px 12px; }
+  .card h3 { font-family: 'Playfair Display', Georgia, serif; color: var(--terracota); margin: 0 0 4px; font-size: 15px; }
+  .tag { display: inline-block; font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 4px; margin-right: 4px; }
+  .actions { display: flex; gap: 6px; margin-top: 8px; } .actions div { flex: 1; text-align: center; border-radius: 10px; padding: 7px; font-weight: 700; }
+  .notes { width: 280px; font-size: 12px; line-height: 1.5; }
+  .notes h2 { font-family: 'Playfair Display', Georgia, serif; font-size: 15px; margin: 0 0 6px; }
+  .sw { display: flex; gap: 6px; align-items: center; margin: 3px 0; } .sw i { width: 18px; height: 18px; border-radius: 5px; border: 1px solid rgba(0,0,0,.1); }
+</style>
+</head>
+<body>
+<h1>Ciudad 3D — estilo "juego"</h1>
+<div class="sub">Maqueta de baja fidelidad para #13 · tokens del proyecto: cantera rosa, piedra caliza, carbón colonial, terracota · 390 px de ancho real (aquí a escala)</div>
+<div class="row">
+
+  <div class="col">
+    <p class="label">1 · Marcadores</p>
+    <div class="markers">
+      <div class="mk"><div class="pin" style="background:var(--gris)"><span>?</span></div><div class="stem" style="background:var(--gris)"></div><b>Por descubrir</b>Gris, signo ?, sin nombre hasta acercarse</div>
+      <div class="mk"><div class="pin" style="background:var(--terracota)"><span>★</span></div><div class="stem" style="background:var(--terracota)"></div><b>Descubierto</b>Color de la categoría, estrella y nombre</div>
+      <div class="mk"><div class="pin" style="background:var(--ambar)"><span>♥</span></div><div class="stem" style="background:var(--ambar)"></div><b>Recomendado</b>Ámbar, corazón, badge "Demo" si es mock</div>
+      <div class="mk"><div class="pin" style="background:var(--verde)"><span>⚑</span></div><div class="stem" style="background:var(--verde)"></div><b>Reto activo</b>Verde, bandera; pulsa suave</div>
+      <div class="mk"><div class="pin" style="background:var(--azul);border-radius:50%"><span>●</span></div><div class="stem" style="background:var(--azul)"></div><b>Jugador</b>Azul (o avatar .glb)</div>
+      <div class="mk"><div class="pin" style="background:#7C3AED"><span>◉</span></div><div class="stem" style="background:#7C3AED"></div><b>Foto</b>Violeta, cámara: hay galería</div>
+    </div>
+  </div>
+
+  <div class="col">
+    <p class="label">2 · HUD móvil en Explorar</p>
+    <div class="phone">
+      <div class="bar"><div class="chip">←</div><div class="chip">Ciudad 3D <span class="badge">DEMO</span></div><div class="chip">ES</div></div>
+      <div class="hud">
+        <b>🏆 Colección 4/11</b> <span style="float:right;color:var(--piedra)">↺</span>
+        <div class="prog"><div></div></div>
+        <span style="color:var(--piedra)"><b style="color:var(--carbon)">GPS.</b> Toca el mapa para moverte.</span>
+        <div class="pills"><span class="pill on">Minero</span><span class="pill">Danzante</span><span class="pill">Visitante</span></div>
+      </div>
+      <div class="compass">N</div>
+      <div class="avatar">
+        <i style="left:6px;top:0;width:10px;height:10px;background:#EAB308"></i>
+        <i style="left:5px;top:10px;width:12px;height:10px;background:#C68F66"></i>
+        <i style="left:2px;top:20px;width:18px;height:16px;background:var(--terracota)"></i>
+        <i style="left:4px;top:36px;width:6px;height:18px;background:#2B2826"></i>
+        <i style="left:12px;top:36px;width:6px;height:18px;background:#2B2826"></i>
+      </div>
+      <div class="toast">¡Descubriste la Catedral! ★</div>
+      <div class="pad"><div style="grid-column:2">↑</div><div style="grid-row:2">↺</div><div style="grid-row:2">↓</div><div style="grid-row:2">↻</div></div>
+      <div class="btns"><div class="btn dark">Salir</div><div class="btn light">⌂</div></div>
+    </div>
+  </div>
+
+  <div class="col">
+    <p class="label">3 · Tarjeta de lugar</p>
+    <div class="phone">
+      <div class="bar"><div class="chip">←</div><div class="chip">Ciudad 3D <span class="badge">DEMO</span></div><div class="chip">ES</div></div>
+      <div class="card">
+        <div class="photo"><small>Foto: Autor · CC BY-SA 4.0 · Wikimedia Commons</small><div class="dots"><i></i><i></i><i></i></div></div>
+        <div class="body">
+          <span class="tag" style="background:#FDE7DD;color:var(--terracota)">Monumento barroco</span><span class="tag" style="background:#DCFCE7;color:var(--verde)">★ Descubierto</span>
+          <h3>Catedral Basílica de Zacatecas</h3>
+          Fachada barroca labrada en cantera rosa entre 1730 y 1760.
+          <div style="color:var(--piedra);margin-top:4px">Horario · desde src/data/places.ts</div>
+          <div class="actions"><div style="background:var(--terracota);color:#fff">Preguntar al asistente</div><div style="background:var(--caliza-2)">Cómo llegar</div></div>
+        </div>
+      </div>
+      <div class="btns"><div class="btn">▶ Recorrido</div><div class="btn" style="background:var(--azul)">Explorar</div><div class="btn light">⌂</div></div>
+    </div>
+  </div>
+
+  <div class="notes">
+    <h2>Paleta</h2>
+    <div class="sw"><i style="background:#9A3412"></i>Terracota #9A3412: acción principal, descubierto</div>
+    <div class="sw"><i style="background:#C98B78"></i>Cantera rosa #C98B78: edificios (modo sin llave)</div>
+    <div class="sw"><i style="background:#FBF9F5"></i>Piedra caliza #FBF9F5: paneles y tarjetas</div>
+    <div class="sw"><i style="background:#1C1917"></i>Carbón colonial #1C1917: texto, botón secundario</div>
+    <div class="sw"><i style="background:#D97706"></i>Ámbar #D97706: Demo, recomendaciones, logros</div>
+    <div class="sw"><i style="background:#A8A29E"></i>Gris piedra #A8A29E: por descubrir</div>
+    <div class="sw"><i style="background:#2563EB"></i>Azul #2563EB: jugador y Explorar</div>
+    <h2 style="margin-top:12px">Reglas</h2>
+    • Paneles translúcidos (95 %) para no tapar la ciudad.<br>
+    • Controles abajo, al alcance del pulgar; HUD arriba.<br>
+    • Botones de 44 px mínimo; texto ≥ 11 px.<br>
+    • Badge "Demo" siempre visible en la barra superior.<br>
+    • Fotos siempre con autor y licencia en la propia imagen.<br>
+    • Iconos: <b>lucide</b> (ISC), ya incluido en el proyecto: Trophy, Footprints, Star, Heart, Flag, Camera, Compass.
+  </div>
+</div>
+</body>
+</html>
