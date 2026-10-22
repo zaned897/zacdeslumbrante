@@ -77,7 +77,7 @@ Se definen en `.env` (copia de `.env.example`). **`.env` nunca se sube al repo**
 - La URL de la web abre en el celular. Los servicios gratis se duermen tras 15 min sin visitas y tardan ~1 min en despertar.
 - Si Render asigna a la API otra URL que `https://zacdes-api.onrender.com`, actualiza `PY_API_URL` en el panel de `zacdes-web`.
 - Preview de un PR: agrega `[render preview]` a su título.
-- El corpus de `services/kb` no está en el repo, así que el chat en línea responde sin citar fragmentos.
+- El build (`scripts/render-build.sh`) baja el corpus de `services/kb` en cada deploy para que el chat cite fuentes; si la ingesta falla, el chat responde sin citas.
 
 ## Estructura
 
