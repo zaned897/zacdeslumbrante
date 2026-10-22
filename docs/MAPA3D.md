@@ -2,7 +2,7 @@
 
 Objetivo: un recorrido 3D animado sobre la arquitectura real de Zacatecas, con mecánicas tipo Pokémon Go (avatar, descubrir lugares, colección), donde sea fácil enchufar recomendaciones, fotos, avatares y animaciones. Web app primero (navegador móvil); app nativa después, si el demo lo justifica.
 
-Ábrelo en `http://localhost:3000/#3d` (o con el botón **Ciudad 3D** del encabezado). Requiere `VITE_MAPS_API_KEY` en `.env` con Maps JavaScript API habilitada.
+Ábrelo en `http://localhost:3000/#3d` (o con el botón **Ciudad 3D** del encabezado). Con `VITE_MAPS_API_KEY` (Maps JavaScript API) se ve fotorrealista; sin llave, estilizada.
 
 ## Capas
 
@@ -26,8 +26,8 @@ Objetivo: un recorrido 3D animado sobre la arquitectura real de Zacatecas, con m
 **Google Maps 3D** (`Map3DElement` de Maps JavaScript API, librería `maps3d`): muestra los Photorealistic 3D Tiles de la ciudad real, usa la misma llave que el mapa 2D y ya trae marcadores 3D, polilíneas, vuelos de cámara y modelos `.glb` (`Model3DElement`).
 
 Límites conocidos, que abren issues:
-- `Model3DElement` no reproduce animaciones glTF: un avatar que camina con animación necesita CesiumJS (mismos 3D Tiles de Google vía Map Tiles API) o una capa Three.js. Ver la PoC de comparación de motores.
-- Cuesta por carga de mapa y necesita red; el modo sin llave usa un motor de respaldo.
+- `Model3DElement` no reproduce animaciones glTF. Para el avatar que camina está **CesiumJS** (`src/scene3d/cesiumEngine.ts`, mismos 3D Tiles vía Map Tiles API): `?engine=cesium#3d`. Comparativa en `docs/poc/motor-3d.md`; `?stats=1` muestra tiempos y fps.
+- Cuesta por carga de mapa y necesita red. **Sin llave** (o con `?engine=three`) entra `src/scene3d/threeOsmEngine.ts`: ciudad estilizada con three.js y 6,861 huellas reales de edificios (`public/data/centro-edificios.json`, Overture Maps 2026-10-21: OpenStreetMap + Microsoft + Google Open Buildings, ODbL). Terreno plano y alturas por defecto de 6–10 m.
 - Licencia: los 3D Tiles de Google no se pueden cachear ni extraer; se muestran en vivo con atribución.
 
 ## Cómo agregar algo nuevo
