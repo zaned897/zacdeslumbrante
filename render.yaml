@@ -7,7 +7,7 @@ services:
     runtime: node
     plan: free
     region: oregon
-    buildCommand: command -v bun >/dev/null || npm install -g bun; bun install --frozen-lockfile && bun run build
+    buildCommand: ./scripts/render-build.sh
     startCommand: node_modules/.bin/tsx server.ts
     healthCheckPath: /api/health
     previews:
