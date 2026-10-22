@@ -13,6 +13,7 @@ import { Onboarding, shouldShowOnboarding } from './components/app/Onboarding';
 import { Language, ChatMessage, Place, KnowledgeBaseURL } from './types';
 import { getStoredKnowledgeBase, saveStoredKnowledgeBase, resetKnowledgeBase } from './data/knowledgeBase';
 import { ZACATECAS_PLACES } from './data/places';
+import { activeSeason } from './data/seasons';
 
 // El motor 3D (three.js / Cesium) pesa: solo se descarga al abrir la pestaña.
 const Map3DView = lazy(() => import('./components/Map3DView').then((m) => ({ default: m.Map3DView })));
@@ -70,6 +71,19 @@ export default function App() {
 
   const [isStreaming, setIsStreaming] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
+
+  // Temporada activa (#75): tiñe chat y hojas con su acento vía CSS
+  const season = activeSeason(new Date());
+  useEffect(() => {
+    const root = document.documentElement;
+    if (season) {
+      root.dataset.temporada = season.id;
+      root.style.setProperty('--temporada', season.accent);
+    } else {
+      delete root.dataset.temporada;
+      root.style.removeProperty('--temporada');
+    }
+  }, [season?.id, season?.accent]);
 
   // Sync language with localStorage and html lang attribute
   useEffect(() => {
@@ -363,6 +377,7 @@ export default function App() {
             <>
               <AppHeader
                 language={language}
+                season={season ? { name: season.name[language], accent: season.accent } : undefined}
                 onToggleLanguage={toggleLanguage}
                 isMapOpen={isMapOpen}
                 onToggleMap={() => setIsMapOpen((prev) => !prev)}
