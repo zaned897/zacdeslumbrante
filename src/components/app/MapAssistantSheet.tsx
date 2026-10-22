@@ -71,7 +71,21 @@ export const MapAssistantSheet: React.FC<MapAssistantSheetProps> = ({ language, 
       update({ isStreaming: false });
     } catch (err: unknown) {
       if ((err as Error)?.name !== 'AbortError') {
-        update({ content: `⚠️ ${t.mapAssistantError}`, isStreaming: false, isError: true });
+        // Si el flujo se cortó a medias, se conserva lo recibido y se marca el error debajo.
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === aId
+              ? {
+                  ...m,
+                  content: m.content ? `${m.content}
+
+⚠️ ${t.mapAssistantError}` : `⚠️ ${t.mapAssistantError}`,
+                  isStreaming: false,
+                  isError: true,
+                }
+              : m,
+          ),
+        );
       } else {
         update({ isStreaming: false });
       }
