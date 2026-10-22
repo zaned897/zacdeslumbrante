@@ -8,7 +8,7 @@ import type { Localized } from '../types/scene3d';
  * `provisional: true` hasta confirmarlas cada año con el calendario oficial
  * (Secretaría de Turismo de Zacatecas, Ayuntamiento, programa de cada fiesta).
  */
-export type SeasonId = 'primavera' | 'lluvias' | 'morismas' | 'feria' | 'muertos' | 'navidad';
+export type SeasonId = 'panamericana' | 'primavera' | 'lluvias' | 'morismas' | 'feria' | 'muertos' | 'navidad';
 
 /** Mes (1–12) y día. */
 type MonthDay = [number, number];
@@ -18,6 +18,8 @@ export interface Season {
   name: Localized;
   /** Cómo se muestra la fecha en el chip, p. ej. "1 y 2 de nov". */
   dateLabel: Localized;
+  /** Solo ese año (eventos únicos, p. ej. la meta de una carrera); sin año = cada año. */
+  year?: number;
   /** Inclusivo. Si `endsOn` es anterior a `startsOn`, el rango cruza el año. */
   startsOn: MonthDay;
   endsOn: MonthDay;
@@ -31,18 +33,43 @@ export interface Season {
   fireworks: boolean;
   /** Papel picado arriba de la vista. */
   papelPicado: boolean;
+  /** Banderas a cuadros, ruta del desfile y autos clásicos (Carrera Panamericana, #87). */
+  race?: boolean;
   /** Color del chip y de los fondos de temporada (lo puede usar el rediseño, #43). */
   accent: string;
-  provisional: true;
+  /** true hasta confirmar la fecha con la fuente oficial; la UI muestra "fechas por confirmar". */
+  provisional: boolean;
   _mock: true;
   /** Fuente con la que se confirma la fecha cada año. */
   sourceNote: string;
+  sourceUrl?: string;
 }
 
 const OFFICIAL = 'Por confirmar con el calendario oficial de la Secretaría de Turismo de Zacatecas';
 
 // Las fiestas van antes que las temporadas base: gana la primera que coincide.
 export const SEASONS: Season[] = [
+  {
+    // Fecha confirmada: Gobierno de Zacatecas, 21 de oct de 2026 (src/data/panamericana.ts).
+    id: 'panamericana',
+    name: { es: 'Carrera Panamericana', en: 'Carrera Panamericana' },
+    dateLabel: { es: 'meta hoy, 22 de oct', en: 'finish today, Oct 22' },
+    year: 2026,
+    startsOn: [10, 22],
+    endsOn: [10, 22],
+    legendaryDrops: true,
+    night: false,
+    petals: false,
+    fireworks: false,
+    papelPicado: false,
+    race: true,
+    accent: '#DC2626',
+    provisional: false,
+    _mock: true,
+    sourceNote: 'Gobierno de Zacatecas, 21 de octubre de 2026',
+    sourceUrl:
+      'https://www.zacatecas.gob.mx/zacatecas-alista-operativo-interinstitucional-para-recibir-la-carrera-panamericana-2026/',
+  },
   {
     id: 'muertos',
     name: { es: 'Día de Muertos', en: 'Day of the Dead' },
@@ -145,6 +172,7 @@ export const SEASONS: Season[] = [
 const key = ([m, d]: MonthDay) => m * 100 + d;
 
 function inRange(date: Date, season: Season): boolean {
+  if (season.year !== undefined && date.getFullYear() !== season.year) return false;
   const today = key([date.getMonth() + 1, date.getDate()]);
   const start = key(season.startsOn);
   const end = key(season.endsOn);
