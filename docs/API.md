@@ -45,5 +45,26 @@ Retos e insignias para el modo juego. Datos en `services/api/app/fixtures/challe
 - `placeIds`: ids de `src/data/places.ts` (el test lo valida).
 - `badge.icon`: nombre de ícono de lucide (`landmark`, `mountain`, `pickaxe`…).
 
+### GET /api/py/tours · GET /api/py/tours/{id}  · mock · dueño: Claude Code (#27)
+Recorridos 3D con el formato de `Tour` (`src/types/scene3d.ts`). Fixture en `services/api/app/fixtures/tours.json`; `/tours/{id}` responde 404 si no existe.
+```json
+[
+  {
+    "id": "centro-historico-express",
+    "title": { "es": "Centro histórico en 2 minutos", "en": "Historic center in 2 minutes" },
+    "_mock": true,
+    "stops": [
+      {
+        "placeId": "cerro-de-la-bufa",
+        "camera": { "lat": 22.7738, "lng": -102.5649, "altitude": 2610, "range": 900, "tilt": 65, "heading": 250 },
+        "holdMillis": 2500,
+        "caption": { "es": "…", "en": "…" }
+      }
+    ]
+  }
+]
+```
+`Map3DView` los pide con `loadTours()` (`src/data/tours3d.ts`) y, si Python no responde, usa `TOURS_3D`.
+
 ## Propuestas pendientes
 (Agrega aquí endpoints nuevos antes de implementarlos: método, ruta, body, respuesta, dueño.)

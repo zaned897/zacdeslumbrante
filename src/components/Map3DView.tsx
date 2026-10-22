@@ -17,7 +17,7 @@ import {
 import { Language } from '../types';
 import type { SceneEngine, ScenePoi, Tour } from '../types/scene3d';
 import { TRANSLATIONS } from '../data/i18n';
-import { TOURS_3D, ZACATECAS_3D_HOME } from '../data/tours3d';
+import { TOURS_3D, ZACATECAS_3D_HOME, loadTours } from '../data/tours3d';
 import { ZACATECAS_PLACES } from '../data/places';
 import { SCENE_LAYERS } from '../scene3d/layers';
 import { GoogleMaps3dEngine } from '../scene3d/googleMaps3dEngine';
@@ -58,6 +58,7 @@ export const Map3DView: React.FC = () => {
   const [selected, setSelected] = useState<ScenePoi | null>(null);
   const [caption, setCaption] = useState<string | null>(null);
   const [isTouring, setIsTouring] = useState(false);
+  const [tours, setTours] = useState<Tour[]>(TOURS_3D);
   const [isExploring, setIsExploring] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
 
@@ -84,6 +85,11 @@ export const Map3DView: React.FC = () => {
     localStorage.setItem('zacatecas_lang', language);
     document.documentElement.lang = language;
   }, [language]);
+
+  // Recorridos desde la API Python; si no responde, se quedan los de src/data/tours3d.ts.
+  useEffect(() => {
+    void loadTours().then(setTours);
+  }, []);
 
   // Montar el motor una sola vez.
   useEffect(() => {
@@ -229,7 +235,7 @@ export const Map3DView: React.FC = () => {
   const selectedPlace = selected?.placeId
     ? ZACATECAS_PLACES.find((p) => p.id === selected.placeId)
     : undefined;
-  const tour = TOURS_3D[0];
+  const tour = tours[0];
 
   return (
     <div className="relative h-dvh w-full overflow-hidden bg-stone-900 text-stone-900">

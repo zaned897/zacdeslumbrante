@@ -65,3 +65,18 @@ export const TOURS_3D: Tour[] = [
     ],
   },
 ];
+
+/**
+ * Recorridos desde la API Python (`GET /api/py/tours`, #27).
+ * Si Python no está corriendo o responde algo inválido, usa TOURS_3D.
+ */
+export async function loadTours(): Promise<Tour[]> {
+  try {
+    const res = await fetch('/api/py/tours', { signal: AbortSignal.timeout(3000) });
+    if (!res.ok) return TOURS_3D;
+    const data: unknown = await res.json();
+    return Array.isArray(data) && data.length > 0 ? (data as Tour[]) : TOURS_3D;
+  } catch {
+    return TOURS_3D;
+  }
+}
