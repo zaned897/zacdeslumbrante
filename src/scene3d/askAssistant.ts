@@ -73,5 +73,8 @@ export async function streamChat(
       if (event.type === 'done') return;
     }
   }
-  onEvent({ type: 'done' });
+  const last = parseSseEvent(buffer);
+  if (last?.type === 'done') return onEvent(last);
+  // Sin [DONE] el flujo se cortó: la respuesta parcial no debe mostrarse como completa.
+  throw new Error('chat stream ended before [DONE]');
 }
