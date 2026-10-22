@@ -4,6 +4,7 @@ import {
   ArrowLeft,
   ArrowUp,
   Footprints,
+  MessageCircle,
   Globe,
   Home,
   LocateFixed,
@@ -17,6 +18,7 @@ import {
 import { Language } from '../types';
 import type { SceneEngine, ScenePoi, Tour } from '../types/scene3d';
 import { TRANSLATIONS } from '../data/i18n';
+import { PlaceAskPanel } from './PlaceAskPanel';
 import { TOURS_3D, ZACATECAS_3D_HOME, loadTours } from '../data/tours3d';
 import { ZACATECAS_PLACES } from '../data/places';
 import { SCENE_LAYERS } from '../scene3d/layers';
@@ -70,6 +72,7 @@ export const Map3DView: React.FC = () => {
   const [selected, setSelected] = useState<ScenePoi | null>(null);
   const [caption, setCaption] = useState<string | null>(null);
   const [isTouring, setIsTouring] = useState(false);
+  const [isAsking, setIsAsking] = useState(false);
   const [tours, setTours] = useState<Tour[]>(TOURS_3D);
   const [isExploring, setIsExploring] = useState(false);
   const [avatar, setAvatar] = useState<AvatarId>(readAvatar);
@@ -261,6 +264,8 @@ export const Map3DView: React.FC = () => {
     void engineRef.current?.flyTo(ZACATECAS_3D_HOME, 2500);
   };
 
+  useEffect(() => setIsAsking(false), [selected]);
+
   const selectedPlace = selected?.placeId
     ? ZACATECAS_PLACES.find((p) => p.id === selected.placeId)
     : undefined;
@@ -393,7 +398,7 @@ export const Map3DView: React.FC = () => {
       )}
 
       {/* Tarjeta del lugar */}
-      {selected && !isTouring && (
+      {selected && !isTouring && !isAsking && (
         <div className={`absolute inset-x-3 ${isExploring ? 'bottom-56 md:bottom-24 md:right-48' : 'bottom-24 md:right-4'} md:inset-x-auto md:w-80 z-10 bg-[#FBF9F5] rounded-xl shadow-lg border border-stone-200 p-4`}>
           <div className="flex items-start justify-between gap-2">
             <h3 className="font-serif font-bold text-base text-[#9A3412]">{selected.title[language]}</h3>
@@ -413,7 +418,21 @@ export const Map3DView: React.FC = () => {
               <span className="font-semibold">{t.scheduleLabel}</span> {selectedPlace.schedule}
             </p>
           )}
+          {selectedPlace && (
+            <button
+              onClick={() => setIsAsking(true)}
+              className="mt-3 w-full flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold text-white bg-[#9A3412] rounded-lg hover:bg-[#7C2D12] cursor-pointer"
+            >
+              <MessageCircle className="w-3.5 h-3.5" />
+              {t.view3dAsk}
+            </button>
+          )}
         </div>
+      )}
+
+      {/* Chat sobre el lugar (#25) */}
+      {isAsking && selectedPlace && (
+        <PlaceAskPanel place={selectedPlace} language={language} onClose={() => setIsAsking(false)} />
       )}
 
       {/* Pad táctil del avatar (también WASD / flechas) */}
