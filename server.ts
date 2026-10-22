@@ -185,14 +185,16 @@ ${language === 'en' ? '"Suggested Itinerary (Open Decision)"' : '"Itinerario Sug
       ]);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
-      if (msg.includes('503') || msg.includes('UNAVAILABLE') || msg.includes('high demand') || msg.includes('timed out')) {
-        console.warn('Gemini upstream high demand/timeout: streaming verified contextual grounding response...');
+      const isBusy = msg.includes('503') || msg.includes('UNAVAILABLE') || msg.includes('high demand') || msg.includes('timed out');
+      // Con fragmentos reales, cualquier fallo de Gemini (p. ej. llave inválida) cae al respaldo.
+      if (isBusy || hits.length > 0) {
+        console.warn(`Gemini no disponible (${msg.slice(0, 120)}): respondiendo con el respaldo...`);
         // Con fragmentos reales, el respaldo los muestra tal cual en vez del texto escrito a mano.
         const synthesizedText = hits.length > 0
           ? [
               language === 'en'
-                ? 'The AI model is busy right now. These are the most relevant excerpts from the official sources:'
-                : 'El modelo de IA está saturado en este momento. Estos son los fragmentos más relevantes de las fuentes oficiales:',
+                ? 'The AI model is not available right now. These are the most relevant excerpts from the official sources:'
+                : 'El modelo de IA no está disponible en este momento. Estos son los fragmentos más relevantes de las fuentes oficiales:',
               ...hits.map((h, i) => `[${i + 1}] ${h.chunk.text}\n[Fuente: ${citation(h.chunk)}]`),
             ].join('\n\n')
           : synthesizeKnowledgeResponse({

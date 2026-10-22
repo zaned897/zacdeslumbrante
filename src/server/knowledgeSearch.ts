@@ -24,6 +24,9 @@ export interface KnowledgeHit {
 
 const CORPUS_PATH = process.env.KB_CORPUS_PATH || path.resolve('services/kb/data/corpus.jsonl');
 
+// La URL curada de cada fuente pesa más que las páginas halladas al rastrear (menú, avisos, etc.).
+const ROOT_BOOST = 1.5;
+
 const STOP = new Set(
   `a al algo como con cual cuales cuando de del desde donde el ella en entre es esta este esto
   fue ha hay la las le lo los mas me mi muy no o para pero por que quien se ser si sin sobre su
@@ -76,7 +79,9 @@ class Index {
         const norm = 1 - this.b + (this.b * this.lens[i]) / (this.avg || 1);
         s += ((this.idf.get(t) ?? 0) * tf * (this.k1 + 1)) / (tf + this.k1 * norm);
       }
-      if (s > 0) scored.push({ score: s, chunk: this.chunks[i] });
+      const c = this.chunks[i];
+      if (c.sourceUrl && c.url.replace(/\/$/, '') === c.sourceUrl.replace(/\/$/, '')) s *= ROOT_BOOST;
+      if (s > 0) scored.push({ score: s, chunk: c });
     });
     scored.sort((a, b) => b.score - a.score);
     const out: KnowledgeHit[] = [];

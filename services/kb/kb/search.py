@@ -14,6 +14,9 @@ from pathlib import Path
 
 CORPUS = Path(__file__).resolve().parents[1] / "data" / "corpus.jsonl"
 
+# La URL curada de cada fuente pesa más que las páginas halladas al rastrear (menú, avisos, etc.).
+ROOT_BOOST = 1.5
+
 _STOP = set(
     """
     a al algo como con cual cuales cuando de del desde donde el ella en entre es esta este esto
@@ -84,6 +87,9 @@ class Index:
                     tf = d[t]
                     norm = 1 - self.b + self.b * self.lens[i] / (self.avg or 1)
                     s += self.idf[t] * tf * (self.k1 + 1) / (tf + self.k1 * norm)
+            c = self.chunks[i]
+            if c.get("sourceUrl") and c["url"].rstrip("/") == c["sourceUrl"].rstrip("/"):
+                s *= ROOT_BOOST
             if s > 0:
                 scored.append(Hit(s, self.chunks[i]))
         scored.sort(key=lambda h: h.score, reverse=True)

@@ -190,3 +190,13 @@ def test_ingest_follows_internal_links_up_to_max_pages() -> None:
         "https://www.inah.gob.mx/a",
         "https://www.inah.gob.mx/b",
     }
+
+
+def test_curated_root_page_outranks_crawled_page() -> None:
+    root = _chunk("unesco-faq-126", "Criterios UNESCO del centro histórico de Zacatecas.")
+    crawled = {
+        **_chunk("inah-portal-nacional", "Criterios UNESCO del centro histórico de Zacatecas.")
+    }
+    crawled["url"] = "https://example.org/inah-portal-nacional/otra"
+    hits = Index([crawled, root]).search("criterios unesco", k=2)
+    assert [h.chunk["sourceId"] for h in hits] == ["unesco-faq-126", "inah-portal-nacional"]
