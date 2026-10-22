@@ -79,6 +79,13 @@ def _allowed(client: httpx.Client, url: str) -> bool:
     return _robots[root].can_fetch(USER_AGENT, url)
 
 
+def url_key(url: str) -> str:
+    """Misma página aunque cambie www, mayúsculas del host o la diagonal final."""
+    p = urlparse(url)
+    host = p.netloc.lower().removeprefix("www.")
+    return f"{host}{p.path.rstrip('/')}?{p.query}"
+
+
 def internal_links(base: str, hrefs: list[str], limit: int) -> list[str]:
     """Enlaces del mismo sitio, sin anclas ni archivos; primero los que cuelgan de la ruta base."""
     b = urlparse(base)
@@ -145,15 +152,17 @@ def ingest_source(
         status = first.split()[0] if first.startswith("http-error") else first
         return [], Report(src.id, src.url, status, int(code) if code.isdigit() else None)
     pages = [first]
-    seen.add(first.url)
+    seen.add(url_key(first.url))
     # PROTO: profundidad 1 y tope de páginas por fuente; suficiente para medir cuánto mejora.
     # Una página ya tomada por otra fuente (p. ej. boletines del INAH) no se repite.
-    candidates = [u for u in internal_links(first.url, first.links, 3 * max_pages) if u not in seen]
+    candidates = [
+        u for u in internal_links(first.url, first.links, 3 * max_pages) if url_key(u) not in seen
+    ]
     for url in candidates[: max_pages - 1]:
         time.sleep(PAUSE)
         page = fetch_page(client, url, src.title)
-        if isinstance(page, Page) and page.text and page.url not in seen:
-            seen.add(page.url)
+        if isinstance(page, Page) and page.text and url_key(page.url) not in seen:
+            seen.add(url_key(page.url))
             pages.append(page)
     drop_boilerplate(pages)
     now = datetime.now(UTC).isoformat(timespec="seconds")

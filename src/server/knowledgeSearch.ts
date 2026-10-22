@@ -47,6 +47,15 @@ export function tokenize(text: string): string[] {
   return out;
 }
 
+function isRoot(c: KnowledgeChunk): boolean {
+  return Boolean(c.sourceUrl) && c.url.replace(/\/$/, '') === c.sourceUrl.replace(/\/$/, '');
+}
+
+// Las páginas halladas al rastrear llevan su propio título, no el de la fuente semilla.
+export function displayTitle(c: KnowledgeChunk): string {
+  return isRoot(c) || !c.pageTitle ? c.sourceTitle : c.pageTitle;
+}
+
 class Index {
   private docs: Map<string, number>[];
   private lens: number[];
@@ -80,16 +89,19 @@ class Index {
         s += ((this.idf.get(t) ?? 0) * tf * (this.k1 + 1)) / (tf + this.k1 * norm);
       }
       const c = this.chunks[i];
-      if (c.sourceUrl && c.url.replace(/\/$/, '') === c.sourceUrl.replace(/\/$/, '')) s *= ROOT_BOOST;
+      if (isRoot(c)) s *= ROOT_BOOST;
       if (s > 0) scored.push({ score: s, chunk: c });
     });
     scored.sort((a, b) => b.score - a.score);
     const out: KnowledgeHit[] = [];
     const seen = new Map<string, number>();
     const texts = new Set<string>();
+    const urls = new Set<string>();
+    // diversidad: máximo `perSource` fragmentos por fuente y uno por página, sin repetidos
     for (const h of scored) {
-      if (texts.has(h.chunk.text)) continue;
+      if (texts.has(h.chunk.text) || urls.has(h.chunk.url)) continue;
       texts.add(h.chunk.text);
+      urls.add(h.chunk.url);
       const n = seen.get(h.chunk.sourceId) ?? 0;
       if (n < perSource) {
         out.push(h);
@@ -129,7 +141,7 @@ export function searchKnowledge(query: string, k = 4, activeUrls: string[] = [])
 }
 
 export function citation(c: KnowledgeChunk): string {
-  return `${c.sourceTitle} · ${c.url} · consultado ${c.fetchedAt.slice(0, 10)}`;
+  return `${displayTitle(c)} · ${c.url} · consultado ${c.fetchedAt.slice(0, 10)}`;
 }
 
 export function promptContext(hits: KnowledgeHit[]): string {

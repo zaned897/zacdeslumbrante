@@ -6,7 +6,7 @@ import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import { ZACATECAS_PLACES } from './src/data/places.ts';
 import { synthesizeKnowledgeResponse } from './src/server/groundingSynthesizer.ts';
-import { citation, promptContext, searchKnowledge } from './src/server/knowledgeSearch.ts';
+import { citation, displayTitle, promptContext, searchKnowledge } from './src/server/knowledgeSearch.ts';
 
 dotenv.config();
 
@@ -88,7 +88,7 @@ app.post('/api/chat/stream', async (req, res) => {
       sendEvent({
         sources: hits.map((h, i) => ({
           n: i + 1,
-          title: h.chunk.sourceTitle,
+          title: displayTitle(h.chunk),
           url: h.chunk.url,
           fetchedAt: h.chunk.fetchedAt.slice(0, 10),
         })),

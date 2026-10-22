@@ -8,8 +8,15 @@ from kb import ingest
 from kb.chunk import chunk_text
 from kb.evaluate import evaluate
 from kb.extract import csv_to_text, html_to_text
-from kb.ingest import USER_AGENT, Page, drop_boilerplate, ingest_source, internal_links
-from kb.search import Index, prompt_context, tokenize
+from kb.ingest import (
+    USER_AGENT,
+    Page,
+    drop_boilerplate,
+    ingest_source,
+    internal_links,
+    url_key,
+)
+from kb.search import Hit, Index, prompt_context, tokenize
 from kb.sources import load_sources
 
 
@@ -232,8 +239,26 @@ def test_ingest_skips_pages_taken_by_another_source() -> None:
         )
         return httpx.Response(200, text=body, headers={"content-type": "text/html"})
 
-    seen = {"https://www.inah.gob.mx/boletines"}
+    seen = {url_key("https://inah.gob.mx/boletines/")}
     with httpx.Client(transport=httpx.MockTransport(handler)) as client:
         chunks, _ = ingest_source(client, src, max_pages=3, seen=seen)
     assert "https://www.inah.gob.mx/boletines" not in {c.url for c in chunks}
     assert "https://www.inah.gob.mx/propia" in {c.url for c in chunks}
+
+
+def test_url_key_ignores_www_and_trailing_slash() -> None:
+    assert url_key("https://www.ZacatecasTravel.com/museos/") == url_key(
+        "https://zacatecastravel.com/museos"
+    )
+
+
+def test_search_takes_one_chunk_per_page_and_titles_crawled_pages() -> None:
+    a = {
+        **_chunk("zac-museos-travel", "La Quemada y su salón de columnas."),
+        "url": "https://x.org/arq",
+    }
+    b = {**a, "chunkId": "zac-museos-travel#1", "text": "Salón de columnas, horario y acceso."}
+    a["pageTitle"] = b["pageTitle"] = "Zonas arqueológicas"
+    hits = Index([a, b]).search("salón columnas", k=3)
+    assert len(hits) == 1
+    assert Hit(1.0, a).citation.startswith("Zonas arqueológicas · https://x.org/arq")

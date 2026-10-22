@@ -44,6 +44,15 @@ def tokenize(text: str) -> list[str]:
     return out
 
 
+def is_root(c: dict) -> bool:
+    return bool(c.get("sourceUrl")) and c["url"].rstrip("/") == c["sourceUrl"].rstrip("/")
+
+
+def display_title(c: dict) -> str:
+    """Las páginas halladas al rastrear llevan su propio título, no el de la fuente semilla."""
+    return c["sourceTitle"] if is_root(c) or not c.get("pageTitle") else c["pageTitle"]
+
+
 @dataclass
 class Hit:
     score: float
@@ -52,7 +61,7 @@ class Hit:
     @property
     def citation(self) -> str:
         c = self.chunk
-        return f"{c['sourceTitle']} · {c['url']} · consultado {c['fetchedAt'][:10]}"
+        return f"{display_title(c)} · {c['url']} · consultado {c['fetchedAt'][:10]}"
 
 
 class Index:
@@ -88,7 +97,7 @@ class Index:
                     norm = 1 - self.b + self.b * self.lens[i] / (self.avg or 1)
                     s += self.idf[t] * tf * (self.k1 + 1) / (tf + self.k1 * norm)
             c = self.chunks[i]
-            if c.get("sourceUrl") and c["url"].rstrip("/") == c["sourceUrl"].rstrip("/"):
+            if is_root(c):
                 s *= ROOT_BOOST
             if s > 0:
                 scored.append(Hit(s, self.chunks[i]))
@@ -96,10 +105,13 @@ class Index:
         out: list[Hit] = []
         seen: Counter[str] = Counter()
         texts: set[str] = set()
-        for h in scored:  # diversidad: máximo `per_source` fragmentos por fuente, sin repetidos
-            if h.chunk["text"] in texts:
+        urls: set[str] = set()
+        # diversidad: máximo `per_source` fragmentos por fuente y uno por página, sin repetidos
+        for h in scored:
+            if h.chunk["text"] in texts or h.chunk["url"] in urls:
                 continue
             texts.add(h.chunk["text"])
+            urls.add(h.chunk["url"])
             if seen[h.chunk["sourceId"]] < per_source:
                 out.append(h)
                 seen[h.chunk["sourceId"]] += 1
