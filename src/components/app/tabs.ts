@@ -1,9 +1,10 @@
 // PROTO: enrutado por hash para no meter un router todavía. /#3d sigue abriendo la ciudad 3D.
-export type AppTab = 'chat' | '3d' | 'badges' | 'plans';
+export type AppTab = 'chat' | '3d' | 'pet' | 'badges' | 'plans';
 
 const HASH_BY_TAB: Record<AppTab, string> = {
   chat: '',
   '3d': '#3d',
+  pet: '#mascota',
   badges: '#insignias',
   plans: '#planes',
 };
