@@ -42,6 +42,11 @@ export const TRANSLATIONS = {
     plansSourcesBody: '{count} fuentes oficiales activas',
     plansConversation: 'Conversación',
     plansOpen: 'Ver itinerario',
+    chatSee3d: 'Verlo en 3D',
+    chatQuick3d: 'Ciudad 3D',
+    chatQuickPlans: 'Itinerarios',
+    chatPlaceholderShort: 'Pregunta sobre Zacatecas…',
+    chatFootnote: 'Respuestas con fuentes oficiales citadas. Verifica horarios antes de ir.',
     
     // Sidebar
     knowledgeBaseTitle: 'Base de Conocimiento RAG',
@@ -204,6 +209,11 @@ export const TRANSLATIONS = {
     plansSourcesBody: '{count} official sources active',
     plansConversation: 'Conversation',
     plansOpen: 'View itinerary',
+    chatSee3d: 'See it in 3D',
+    chatQuick3d: '3D City',
+    chatQuickPlans: 'Itineraries',
+    chatPlaceholderShort: 'Ask about Zacatecas…',
+    chatFootnote: 'Answers cite official sources. Check opening hours before you go.',
     
     // Sidebar
     knowledgeBaseTitle: 'RAG Knowledge Base',

@@ -1,16 +1,6 @@
 import React, { useState } from 'react';
-import {
-  BookOpen,
-  Sparkles,
-  Compass,
-  MapPin,
-  ExternalLink,
-  Copy,
-  Check,
-  AlertTriangle,
-  Clock,
-} from 'lucide-react';
-import { ChatMessage, Language, Place } from '../types';
+import { BookOpen, Sparkles, Compass, MapPin, Copy, Check, AlertTriangle, Box } from 'lucide-react';
+import { ChatMessage, KnowledgeBaseURL, Language, Place, SourceCitation } from '../types';
 import { TRANSLATIONS } from '../data/i18n';
 import { ZACATECAS_PLACES } from '../data/places';
 
@@ -18,12 +8,98 @@ interface ChatMessageItemProps {
   message: ChatMessage;
   language: Language;
   onPlaceClick: (place: Place) => void;
+  onOpen3d?: () => void;
+  knowledgeBase?: KnowledgeBaseURL[];
+}
+
+const URL_RE = /https?:\/\/[^\s)\],·]+/g;
+
+/** Chip de cita numerada, como en el adelanto: [1] [2]… */
+const Cite: React.FC<{ n: number; url?: string }> = ({ n, url }) => {
+  const cls =
+    'inline-grid place-items-center min-w-[1.15rem] h-[1.15rem] px-1 mx-0.5 rounded bg-[#FDEBD8] text-cantera font-mono text-[10px] font-semibold align-[1px] no-underline';
+  return url ? (
+    <a href={url} target="_blank" rel="noopener noreferrer" className={cls} title={url}>
+      {n}
+    </a>
+  ) : (
+    <span className={cls}>{n}</span>
+  );
+};
+
+/** Resuelve las fuentes de una respuesta: las que mandó el servidor o, si no, las URL del texto. */
+function resolveSources(message: ChatMessage, text: string, kb: KnowledgeBaseURL[]): SourceCitation[] {
+  if (message.citations && message.citations.length > 0) return message.citations;
+  const urls = Array.from(new Set(text.match(URL_RE) ?? []));
+  return urls.map((url) => {
+    const host = url.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '');
+    const known = kb.find((k) => k.url.replace(/\/$/, '') === url.replace(/\/$/, ''));
+    return { title: known?.title ?? host, url, verificationDate: '' };
+  });
+}
+
+/** Texto en línea: **negritas**, [n] y URL sueltas se vuelven chips de cita. */
+function renderInline(text: string, sources: SourceCitation[], keyPrefix: string): React.ReactNode[] {
+  const out: React.ReactNode[] = [];
+  const re = /\*\*([^*]+)\*\*|\[(\d{1,2})\]|(https?:\/\/[^\s)\],·]+)/g;
+  let last = 0;
+  let m: RegExpExecArray | null;
+  let i = 0;
+  while ((m = re.exec(text))) {
+    if (m.index > last) out.push(text.slice(last, m.index));
+    const key = `${keyPrefix}-${i++}`;
+    if (m[1]) {
+      out.push(<strong key={key} className="font-semibold text-carbon">{m[1]}</strong>);
+    } else if (m[2]) {
+      const n = Number(m[2]);
+      out.push(<Cite key={key} n={n} url={sources[n - 1]?.url} />);
+    } else if (m[3]) {
+      // La puntuación final no es parte de la URL
+      const url = m[3].replace(/[.;:!?]+$/, '');
+      const idx = sources.findIndex((s) => s.url === url);
+      out.push(
+        idx >= 0 ? (
+          <Cite key={key} n={idx + 1} url={url} />
+        ) : (
+          <a key={key} href={url} target="_blank" rel="noopener noreferrer" className="text-cantera underline break-all">
+            {url.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')}
+          </a>
+        ),
+      );
+      re.lastIndex = m.index + url.length;
+    }
+    last = re.lastIndex;
+  }
+  if (last < text.length) out.push(text.slice(last));
+  return out;
+}
+
+const SECTION_STYLES = {
+  history: { icon: BookOpen, cls: 'text-amber-800 bg-amber-50 border-amber-200' },
+  legend: { icon: Sparkles, cls: 'text-purple-800 bg-purple-50 border-purple-200' },
+  recommendation: { icon: Compass, cls: 'text-emerald-800 bg-emerald-50 border-emerald-200' },
+} as const;
+
+type SectionKind = keyof typeof SECTION_STYLES;
+
+function sectionOf(paragraph: string): { kind: SectionKind; rest: string } | null {
+  const tests: [SectionKind, RegExp][] = [
+    ['history', /^(?:\[HISTORIA(?: DOCUMENTADA)?\]|#{2,3} .*Historia[^\n]*)\s*/i],
+    ['legend', /^(?:\[LEYENDA(?: CULTURAL)?\]|#{2,3} .*Leyenda[^\n]*)\s*/i],
+    ['recommendation', /^(?:\[RECOMENDACI[ÓO]N(?: PR[ÁA]CTICA)?\]|#{2,3} .*Recomendaci[^\n]*)\s*/i],
+  ];
+  for (const [kind, re] of tests) {
+    if (re.test(paragraph)) return { kind, rest: paragraph.replace(re, '') };
+  }
+  return null;
 }
 
 export const ChatMessageItem: React.FC<ChatMessageItemProps> = ({
   message,
   language,
   onPlaceClick,
+  onOpen3d,
+  knowledgeBase = [],
 }) => {
   const [copied, setCopied] = useState(false);
   const t = TRANSLATIONS[language];
@@ -36,232 +112,165 @@ export const ChatMessageItem: React.FC<ChatMessageItemProps> = ({
 
   if (message.role === 'user') {
     return (
-      <div className="flex justify-end mb-4 animate-in fade-in duration-150">
-        <div className="max-w-[85%] sm:max-w-[75%] px-4 py-3 bg-[#9A3412] text-white rounded-2xl rounded-tr-xs shadow-xs">
-          <p className="text-sm font-sans leading-relaxed whitespace-pre-wrap">
-            {message.content}
-          </p>
-          <span className="block text-[10px] text-stone-300 font-mono mt-1 text-right">
-            {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-          </span>
+      <div className="flex justify-end mb-3">
+        <div className="max-w-[82%] px-3.5 py-2.5 bg-cantera text-white rounded-[18px] rounded-br-[5px] text-sm leading-relaxed whitespace-pre-wrap">
+          {message.content}
         </div>
       </div>
     );
   }
 
-  // Assistant Message Processing
   const rawText = message.content;
 
-  // Extract explicit spatial tags: [LUGARES: place1, place2]
+  // Lugares: etiqueta explícita [LUGARES: …] o, si no hay, nombres conocidos en el texto
   const placesMatch = rawText.match(/\[LUGARES(?:_MENCIONADOS)?:\s*([^\]]+)\]/i);
-  let placeIds: string[] = [];
-  if (placesMatch && placesMatch[1]) {
-    placeIds = placesMatch[1]
-      .split(',')
-      .map((p) => p.trim())
-      .filter(Boolean);
-  }
-
-  // Also check if any known place name is present in the text if no explicit tag
+  let placeIds = placesMatch?.[1]
+    ? placesMatch[1].split(',').map((p) => p.trim()).filter(Boolean)
+    : [];
   if (placeIds.length === 0) {
+    const lower = rawText.toLowerCase();
     placeIds = ZACATECAS_PLACES.filter(
       (p) =>
-        rawText.toLowerCase().includes(p.nameEs.toLowerCase()) ||
-        rawText.toLowerCase().includes(p.name.toLowerCase()) ||
-        (p.puebloMagico && rawText.toLowerCase().includes(p.puebloMagico.toLowerCase()))
+        lower.includes(p.nameEs.toLowerCase()) ||
+        lower.includes(p.name.toLowerCase()) ||
+        (p.puebloMagico && lower.includes(p.puebloMagico.toLowerCase())),
     ).map((p) => p.id);
   }
-
-  // Distinct unique places
   const matchedPlaces = ZACATECAS_PLACES.filter((p) => placeIds.includes(p.id));
 
-  // Check for data gap declaration
-  const gapMatch = rawText.match(/\[GAP_DECLARADO:\s*([^\]]+)\]/i);
-  const hasDataGap = Boolean(gapMatch || rawText.includes('Dato no disponible en los registros oficiales'));
+  const hasDataGap = /\[GAP_DECLARADO:[^\]]+\]|Dato no disponible en los registros oficiales/i.test(rawText);
 
-  // Clean raw text by removing raw bracket metadata tags from main view
-  const cleanedContent = rawText
+  const sources = resolveSources(message, rawText, knowledgeBase);
+
+  // Quita metadatos y líneas de fuente (se muestran abajo como lista numerada)
+  const cleaned = rawText
     .replace(/\[LUGARES(?:_MENCIONADOS)?:[^\]]+\]/gi, '')
     .replace(/\[GAP_DECLARADO:[^\]]+\]/gi, '')
+    .replace(/\[FUENTES?:[^\]]*\]/gi, '')
+    // "[1] (https://…)": la URL ya está en la lista de fuentes
+    .replace(/(\[\d{1,2}\])\s*\((https?:\/\/[^\s)]+)\)/g, '$1')
+    .replace(/\((https?:\/\/[^\s)]+)\)/g, '$1')
     .trim();
 
-  // Detect distinction sections if present in text
-  const hasHistory = /\[HISTORIA(?: DOCUMENTADA)?\]|Historia Documentada/i.test(cleanedContent);
-  const hasLegend = /\[LEYENDA(?: CULTURAL)?\]|Leyenda Cultural/i.test(cleanedContent);
-  const hasRecommendation = /\[RECOMENDACI[ÓO]N(?: PR[ÁA]CTICA)?\]|Recomendaci[oó]n Pr[aá]ctica/i.test(cleanedContent);
+  const paragraphs = cleaned.split(/\n{2,}/).filter((p) => p.trim());
 
-  // Extract URLs from text or citations
-  const urlRegex = /(https?:\/\/[^\s\)\],]+)/g;
-  const urlsInText = Array.from(new Set(cleanedContent.match(urlRegex) || []));
+  const renderParagraph = (p: string, idx: number) => {
+    const lines = p.split('\n');
+    const isList = lines.every((l) => /^\s*(?:[-•*]|\d+\.)\s+/.test(l));
+    if (isList) {
+      return (
+        <ul key={idx} className="space-y-1 pl-1">
+          {lines.map((l, j) => (
+            <li key={j} className="flex gap-2">
+              <span className="text-cantera shrink-0">•</span>
+              <span>{renderInline(l.replace(/^\s*(?:[-•*]|\d+\.)\s+/, ''), sources, `${idx}-${j}`)}</span>
+            </li>
+          ))}
+        </ul>
+      );
+    }
+    return (
+      <p key={idx} className="whitespace-pre-wrap">
+        {renderInline(p.replace(/^#{1,4}\s+/, ''), sources, String(idx))}
+      </p>
+    );
+  };
 
   return (
-    <div className="flex flex-col mb-6 animate-in fade-in duration-200">
-      <div className="flex items-start gap-3">
-        {/* Assistant Avatar */}
-        <div className="w-8 h-8 rounded-lg bg-stone-900 flex items-center justify-center text-white shrink-0 shadow-xs mt-1">
-          <span className="font-serif font-bold text-xs tracking-tight text-amber-300">ZD</span>
-        </div>
-
-        {/* Message Container */}
-        <div className="flex-1 max-w-[95%] sm:max-w-[88%] space-y-3">
-          {/* Main Bubble */}
-          <div className="p-4 sm:p-5 bg-white border border-stone-200/90 rounded-2xl rounded-tl-xs shadow-2xs text-stone-900 space-y-3">
-            {/* Distinction Pills Header if detected */}
-            {(hasHistory || hasLegend || hasRecommendation) && (
-              <div className="flex items-center gap-2 pb-2.5 border-b border-stone-100 flex-wrap">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-stone-400">
-                  {language === 'es' ? 'Distinción de Contenido:' : 'Content Delineation:'}
-                </span>
-                {hasHistory && (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-900 border border-amber-200">
-                    <BookOpen className="w-3 h-3 text-amber-700" />
-                    <span>{t.tagHistory}</span>
-                  </span>
-                )}
-                {hasLegend && (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-purple-50 text-purple-900 border border-purple-200">
-                    <Sparkles className="w-3 h-3 text-purple-700" />
-                    <span>{t.tagLegend}</span>
-                  </span>
-                )}
-                {hasRecommendation && (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-900 border border-emerald-200">
-                    <Compass className="w-3 h-3 text-emerald-700" />
-                    <span>{t.tagRecommendation}</span>
-                  </span>
-                )}
-              </div>
-            )}
-
-            {/* Markdown Text Body */}
-            <div className="text-sm font-sans leading-relaxed text-stone-800 space-y-3 prose prose-stone max-w-none">
-              {cleanedContent.split('\n\n').map((paragraph, idx) => {
-                // Check if paragraph is a distinction header
-                if (/^\[HISTORIA(?: DOCUMENTADA)?\]|^###? .*Historia/i.test(paragraph)) {
-                  return (
-                    <div key={idx} className="pt-2">
-                      <div className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-amber-100/70 border border-amber-300 rounded text-xs font-bold text-amber-950 mb-1.5">
-                        <BookOpen className="w-3.5 h-3.5 text-amber-800" />
-                        <span>{t.tagHistory}</span>
-                      </div>
-                      <p className="whitespace-pre-wrap text-stone-800">
-                        {paragraph.replace(/^\[HISTORIA(?: DOCUMENTADA)?\]/i, '').trim()}
-                      </p>
+    <div className="flex flex-col items-start mb-4 gap-2">
+      <div className="max-w-[94%] sm:max-w-[85%] px-3.5 py-3 bg-white border border-linea rounded-[18px] rounded-bl-[5px] text-sm leading-relaxed text-stone-800 space-y-2.5 break-words">
+        {paragraphs.map((p, idx) => {
+          const section = sectionOf(p);
+          if (!section) return renderParagraph(p, idx);
+          const { icon: Icon, cls } = SECTION_STYLES[section.kind];
+          const label =
+            section.kind === 'history' ? t.tagHistory : section.kind === 'legend' ? t.tagLegend : t.tagRecommendation;
+          return (
+            <div key={idx} className="space-y-1">
+              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[10px] font-bold uppercase tracking-wide ${cls}`}>
+                <Icon className="w-3 h-3" />
+                {label}
+              </span>
+              {section.rest.trim() &&
+                section.rest
+                  .split(/\n{2,}/)
+                  .map((sub, j) => (
+                    <div key={j} className={section.kind === 'legend' ? 'italic' : undefined}>
+                      {renderParagraph(sub, idx * 100 + j)}
                     </div>
-                  );
-                }
-                if (/^\[LEYENDA(?: CULTURAL)?\]|^###? .*Leyenda/i.test(paragraph)) {
-                  return (
-                    <div key={idx} className="pt-2">
-                      <div className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-purple-100/70 border border-purple-300 rounded text-xs font-bold text-purple-950 mb-1.5">
-                        <Sparkles className="w-3.5 h-3.5 text-purple-800" />
-                        <span>{t.tagLegend}</span>
-                      </div>
-                      <p className="whitespace-pre-wrap text-stone-800 italic">
-                        {paragraph.replace(/^\[LEYENDA(?: CULTURAL)?\]/i, '').trim()}
-                      </p>
-                    </div>
-                  );
-                }
-                if (/^\[RECOMENDACI[ÓO]N(?: PR[ÁA]CTICA)?\]|^###? .*Recomendaci/i.test(paragraph)) {
-                  return (
-                    <div key={idx} className="pt-2">
-                      <div className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-emerald-100/70 border border-emerald-300 rounded text-xs font-bold text-emerald-950 mb-1.5">
-                        <Compass className="w-3.5 h-3.5 text-emerald-800" />
-                        <span>{t.tagRecommendation}</span>
-                      </div>
-                      <p className="whitespace-pre-wrap text-stone-800">
-                        {paragraph.replace(/^\[RECOMENDACI[ÓO]N(?: PR[ÁA]CTICA)?\]/i, '').trim()}
-                      </p>
-                    </div>
-                  );
-                }
-
-                return (
-                  <p key={idx} className="whitespace-pre-wrap text-stone-800">
-                    {paragraph}
-                  </p>
-                );
-              })}
+                  ))}
             </div>
+          );
+        })}
 
-            {/* Missing Data Protocol Alert if triggered */}
-            {hasDataGap && (
-              <div className="p-3 bg-amber-50/80 border border-amber-300 rounded-xl flex items-start gap-2.5 text-xs text-amber-950">
-                <AlertTriangle className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
-                <div className="space-y-0.5">
-                  <p className="font-bold">{t.dataGapTitle}</p>
-                  <p className="text-amber-900 text-[11px] leading-relaxed">
-                    {t.dataGapNotice}
-                  </p>
-                </div>
-              </div>
-            )}
+        {message.isStreaming && !rawText && (
+          <span className="inline-flex gap-1 py-1" aria-label="…">
+            {[0, 1, 2].map((i) => (
+              <span key={i} className="w-1.5 h-1.5 rounded-full bg-stone-300 animate-bounce" style={{ animationDelay: `${i * 120}ms` }} />
+            ))}
+          </span>
+        )}
 
-            {/* Mentioned Places Spatial Badges (Click to View on Google Maps) */}
-            {matchedPlaces.length > 0 && (
-              <div className="pt-3 border-t border-stone-100 space-y-1.5">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-stone-500">
-                  {language === 'es' ? 'Ubicaciones en el Mapa:' : 'Discussed on Map:'}
-                </span>
-                <div className="flex flex-wrap gap-1.5">
-                  {matchedPlaces.map((place) => (
-                    <button
-                      key={place.id}
-                      onClick={() => onPlaceClick(place)}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold bg-stone-100 hover:bg-[#9A3412] hover:text-white text-stone-800 border border-stone-300 rounded-lg transition-colors cursor-pointer group"
-                    >
-                      <MapPin className="w-3 h-3 text-[#9A3412] group-hover:text-white transition-colors" />
-                      <span>{language === 'es' ? place.nameEs : place.name}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Inline Citations & Verification Timestamps */}
-            {urlsInText.length > 0 && (
-              <div className="pt-2.5 border-t border-stone-100 space-y-1.5 text-xs">
-                <div className="flex items-center justify-between text-[11px] text-stone-500 font-medium">
-                  <span>{t.sourceVerification}</span>
-                  <div className="flex items-center gap-1 text-stone-500 font-mono">
-                    <Clock className="w-3 h-3 text-stone-400" />
-                    <span>{t.lastChecked} Octubre 2026</span>
-                  </div>
-                </div>
-                <div className="flex flex-wrap gap-1.5">
-                  {urlsInText.slice(0, 4).map((url, i) => (
-                    <a
-                      key={i}
-                      href={url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-mono text-[#9A3412] bg-[#9A3412]/5 hover:bg-[#9A3412]/10 border border-[#9A3412]/20 rounded transition-colors"
-                    >
-                      <span className="truncate max-w-[200px]">{url.replace(/^https?:\/\/(www\.)?/, '')}</span>
-                      <ExternalLink className="w-3 h-3 shrink-0" />
-                    </a>
-                  ))}
-                </div>
-              </div>
-            )}
+        {hasDataGap && (
+          <div className="p-2.5 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-2 text-xs text-amber-950">
+            <AlertTriangle className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-bold">{t.dataGapTitle}</p>
+              <p className="text-[11px]">{t.dataGapNotice}</p>
+            </div>
           </div>
+        )}
 
-          {/* Action Row */}
-          <div className="flex items-center justify-between px-2 text-xs text-stone-400">
-            <span className="font-mono text-[11px]">
-              {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-            </span>
-            <button
-              onClick={handleCopy}
-              className="flex items-center gap-1 hover:text-stone-700 transition-colors cursor-pointer"
-            >
-              {copied ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
-              <span>{copied ? t.copiedText : t.copyText}</span>
-            </button>
-          </div>
-        </div>
+        {sources.length > 0 && !message.isStreaming && (
+          <ol className="pt-2 border-t border-dashed border-[#E7DCCB] space-y-1">
+            {sources.slice(0, 6).map((s, i) => (
+              <li key={s.url + i} className="flex items-start gap-1.5 text-[11px] text-stone-600">
+                <Cite n={i + 1} />
+                <a href={s.url} target="_blank" rel="noopener noreferrer" className="hover:text-cantera hover:underline min-w-0">
+                  <span className="block line-clamp-1">{s.title}</span>
+                  {s.verificationDate && (
+                    <span className="block font-mono text-[10px] text-stone-400">{s.verificationDate}</span>
+                  )}
+                </a>
+              </li>
+            ))}
+          </ol>
+        )}
       </div>
+
+      {!message.isStreaming && (
+        <div className="flex flex-wrap items-center gap-1.5 pl-1">
+          {matchedPlaces.slice(0, 4).map((place) => (
+            <button
+              key={place.id}
+              type="button"
+              onClick={() => onPlaceClick(place)}
+              className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-semibold text-cantera bg-white border border-[#E7DCCB] rounded-full hover:bg-caliza cursor-pointer"
+            >
+              <MapPin className="w-3 h-3" />
+              {language === 'es' ? place.nameEs : place.name}
+            </button>
+          ))}
+          {matchedPlaces.length > 0 && onOpen3d && (
+            <button
+              type="button"
+              onClick={onOpen3d}
+              className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-semibold text-white bg-cantera border border-cantera rounded-full hover:bg-[#7C2D12] cursor-pointer"
+            >
+              <Box className="w-3 h-3" />
+              {t.chatSee3d}
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={handleCopy}
+            className="flex items-center gap-1 px-2 py-1.5 text-[11px] text-stone-400 hover:text-stone-700 cursor-pointer"
+          >
+            {copied ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+            {copied ? t.copiedText : t.copyText}
+          </button>
+        </div>
+      )}
     </div>
   );
 };

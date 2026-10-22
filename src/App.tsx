@@ -185,7 +185,15 @@ export default function App() {
 
             try {
               const parsed = JSON.parse(dataStr);
-              if (parsed.chunk) {
+              if (Array.isArray(parsed.sources)) {
+                // Fragmentos recuperados de la base de conocimientos: numerados igual que las citas [n] del texto
+                const citations = (parsed.sources as { n: number; title: string; url: string; fetchedAt: string }[])
+                  .sort((a, b) => a.n - b.n)
+                  .map((s) => ({ title: s.title, url: s.url, verificationDate: s.fetchedAt }));
+                setMessages((prev) =>
+                  prev.map((m) => (m.id === assistantMsgId ? { ...m, citations } : m))
+                );
+              } else if (parsed.chunk) {
                 accumulatedContent += parsed.chunk;
                 setMessages((prev) =>
                   prev.map((m) =>
@@ -363,6 +371,8 @@ export default function App() {
                   onPlaceClick={handlePlaceClick}
                   onSelectPrompt={(prompt) => handleSendMessage(prompt)}
                   knowledgeBase={knowledgeBase}
+                  onOpen3d={() => goToTab('3d')}
+                  onOpenPlans={() => goToTab('plans')}
                 />
                 <GoogleMapsPanel
                   isOpen={isMapOpen}
