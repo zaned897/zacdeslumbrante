@@ -641,9 +641,13 @@ const Map3DScene: React.FC = () => {
         <div className="absolute top-16 inset-x-3 md:inset-x-auto md:left-4 md:max-w-xs z-10 text-[11px] text-stone-700 bg-[#FBF9F5]/90 border border-stone-200 rounded-lg px-3 py-2">
           {engineFallback ? (
             <>
-              {engineFailure ? t.view3dEngineFailed : t.view3dKeyRejected}
-              {(engineFailure ?? keyErrorCode) && (
-                <span className="block mt-1 font-mono text-stone-500 break-words">{engineFailure ?? keyErrorCode}</span>
+              {/* Si Google avisó un error de la llave o del proyecto, esa es la causa: después de ese aviso
+                  la librería ya no crea marcadores y setPois falla con "reading 'keys'" (probado con 3.66). */}
+              {keyErrorCode || !engineFailure ? t.view3dKeyRejected : t.view3dEngineFailed}
+              {(keyErrorCode || engineFailure) && (
+                <span className="block mt-1 font-mono text-stone-500 break-words">
+                  {[keyErrorCode, engineFailure].filter(Boolean).join(' · ')}
+                </span>
               )}
             </>
           ) : apiKey ? (
