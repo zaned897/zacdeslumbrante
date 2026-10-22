@@ -1,5 +1,7 @@
 """HTML → texto legible, sin dependencias: descarta scripts, estilos y navegación."""
 
+import csv
+import io
 import re
 from html.parser import HTMLParser
 
@@ -45,3 +47,10 @@ def html_to_text(html: str) -> tuple[str, str]:
     lines = (re.sub(r"\s+", " ", ln).strip() for ln in "".join(p.parts).split("\n"))
     text = "\n".join(ln for ln in lines if len(ln.split()) >= 4)
     return re.sub(r"\s+", " ", p.title).strip(), text
+
+
+def csv_to_text(raw: str) -> str:
+    """Cada fila como línea "columna: valor; …" para que la búsqueda vea los nombres de campo."""
+    rows = csv.DictReader(io.StringIO(raw))
+    lines = ("; ".join(f"{k}: {v}" for k, v in row.items() if k and v) for row in rows)
+    return "\n".join(ln for ln in lines if ln)

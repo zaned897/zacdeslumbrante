@@ -5,7 +5,7 @@ import httpx
 
 from kb.chunk import chunk_text
 from kb.evaluate import evaluate
-from kb.extract import html_to_text
+from kb.extract import csv_to_text, html_to_text
 from kb.ingest import USER_AGENT, ingest_source
 from kb.search import Index, prompt_context, tokenize
 from kb.sources import load_sources
@@ -117,3 +117,24 @@ def test_eval_questions_reference_known_sources() -> None:
     ids = {s.id for s in load_sources()}
     qs = json.loads((Path(__file__).parents[1] / "eval" / "questions.json").read_text("utf-8"))
     assert all(set(q["expect"]) <= ids for q in qs["questions"])
+
+
+def test_csv_to_text_keeps_field_names() -> None:
+    raw = "nombre,municipio\nMuseo Pedro Coronel,Zacatecas\nMuseo de Guadalupe,Guadalupe\n"
+    assert csv_to_text(raw).splitlines() == [
+        "nombre: Museo Pedro Coronel; municipio: Zacatecas",
+        "nombre: Museo de Guadalupe; municipio: Guadalupe",
+    ]
+
+
+def test_ingest_reports_unsupported_content_type() -> None:
+    src = next(s for s in load_sources() if s.id == "inah-la-quemada")
+
+    def handler(req: httpx.Request) -> httpx.Response:
+        if req.url.path == "/robots.txt":
+            return httpx.Response(404)
+        return httpx.Response(200, content=b"%PDF", headers={"content-type": "application/pdf"})
+
+    with httpx.Client(transport=httpx.MockTransport(handler)) as client:
+        chunks, report = ingest_source(client, src)
+    assert chunks == [] and report.status == "unsupported: application/pdf"

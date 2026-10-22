@@ -15,7 +15,7 @@ from urllib.robotparser import RobotFileParser
 import httpx
 
 from kb.chunk import chunk_text
-from kb.extract import html_to_text
+from kb.extract import csv_to_text, html_to_text
 from kb.sources import Source, load_sources
 
 DATA_DIR = Path(__file__).resolve().parents[1] / "data"
@@ -63,9 +63,15 @@ def ingest_source(client: httpx.Client, src: Source) -> tuple[list[Chunk], Repor
         r = client.get(src.url)
     except httpx.HTTPError as e:
         return [], Report(src.id, src.url, f"error: {type(e).__name__}")
-    if r.status_code != 200 or "html" not in r.headers.get("content-type", ""):
+    if r.status_code != 200:
         return [], Report(src.id, src.url, "http-error", r.status_code)
-    page_title, text = html_to_text(r.text)
+    ctype = r.headers.get("content-type", "")
+    if "html" in ctype:
+        page_title, text = html_to_text(r.text)
+    elif "csv" in ctype or src.url.endswith(".csv"):
+        page_title, text = src.title, csv_to_text(r.text)
+    else:
+        return [], Report(src.id, src.url, f"unsupported: {ctype or '?'}", r.status_code)
     now = datetime.now(UTC).isoformat(timespec="seconds")
     chunks = [
         Chunk(f"{src.id}#{i}", src.id, src.title, str(r.url), page_title, src.category, now, t)
