@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./node_modules/**)",
+      "Read(./dist/**)"
+    ],
+    "allow": [
+      "Bash(./scripts/check.sh:*)",
+      "Bash(git status)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)"
+    ]
+  },
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/toolbox/hooks/scout-hint.mjs\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

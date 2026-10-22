@@ -1,0 +1,32 @@
+name: Bug
+description: Algo que debería funcionar en una demo y no funciona
+title: "[bug] "
+labels: ["type:bug", "status:triage"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: Qué pasa
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Pasos para reproducir
+      placeholder: |
+        1. ./scripts/dev.sh
+        2. Abrir http://localhost:3000
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Qué esperabas
+    validations:
+      required: true
+  - type: textarea
+    id: env
+    attributes:
+      label: Entorno
+      placeholder: SO, navegador, versiones de runtime, commit
