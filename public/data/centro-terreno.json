@@ -1,0 +1,18 @@
+{
+  "_mock": false,
+  "source": "AWS Terrain Tiles (Terrarium, zoom 15): SRTM, NED y otros modelos públicos de Mapzen/Tilezen",
+  "license": "Datos públicos; atribución: Mapzen / Tilezen joerd (SRTM, NASA)",
+  "bbox": [
+    -102.596,
+    22.756,
+    -102.548,
+    22.794
+  ],
+  "cols": 494,
+  "rows": 424,
+  "cellMeters": 10,
+  "encoding": "uint16 LE, fila norte→sur, valor = (altura_m - 2000) * 10",
+  "baseMeters": 2000,
+  "minMeters": 2335.0,
+  "maxMeters": 2684.6
+}
