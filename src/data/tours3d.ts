@@ -1,4 +1,4 @@
-import type { SceneCamera, Tour } from '../types/scene3d';
+import type { SceneCamera, Tour, TourStop } from '../types/scene3d';
 
 // Vista inicial: el centro histórico desde el suroeste, con la Bufa al fondo.
 export const ZACATECAS_3D_HOME: SceneCamera = {
@@ -66,6 +66,30 @@ export const TOURS_3D: Tour[] = [
   },
 ];
 
+const isNum = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
+const isLocalized = (v: unknown): boolean =>
+  typeof v === 'object' && v !== null && typeof (v as Tour['title']).es === 'string' && typeof (v as Tour['title']).en === 'string';
+
+function isTourStop(v: unknown): v is TourStop {
+  if (typeof v !== 'object' || v === null) return false;
+  const s = v as TourStop;
+  const c = s.camera as SceneCamera | undefined;
+  return (
+    typeof s.placeId === 'string' &&
+    isNum(s.holdMillis) &&
+    isLocalized(s.caption) &&
+    typeof c === 'object' && c !== null &&
+    [c.lat, c.lng, c.altitude, c.range, c.tilt, c.heading].every(isNum)
+  );
+}
+
+/** Valida la respuesta de la API antes de reemplazar los recorridos locales. */
+function isTour(v: unknown): v is Tour {
+  if (typeof v !== 'object' || v === null) return false;
+  const t = v as Tour;
+  return typeof t.id === 'string' && isLocalized(t.title) && Array.isArray(t.stops) && t.stops.length > 0 && t.stops.every(isTourStop);
+}
+
 /**
  * Recorridos desde la API Python (`GET /api/py/tours`, #27).
  * Si Python no está corriendo o responde algo inválido, usa TOURS_3D.
@@ -75,7 +99,7 @@ export async function loadTours(): Promise<Tour[]> {
     const res = await fetch('/api/py/tours', { signal: AbortSignal.timeout(3000) });
     if (!res.ok) return TOURS_3D;
     const data: unknown = await res.json();
-    return Array.isArray(data) && data.length > 0 ? (data as Tour[]) : TOURS_3D;
+    return Array.isArray(data) && data.length > 0 && data.every(isTour) ? data : TOURS_3D;
   } catch {
     return TOURS_3D;
   }
