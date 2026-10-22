@@ -1,0 +1,149 @@
+{
+  "_source": "src/data/places.ts (generado)",
+  "places": [
+    {
+      "id": "catedral-zacatecas",
+      "name": {
+        "es": "Catedral Basílica de Zacatecas",
+        "en": "Cathedral Basilica of Zacatecas"
+      },
+      "lat": 22.77543,
+      "lng": -102.57242
+    },
+    {
+      "id": "cerro-de-la-bufa",
+      "name": {
+        "es": "Cerro de la Bufa y Santuario del Patrocinio",
+        "en": "Cerro de la Bufa & Sanctuary of Patrocinio"
+      },
+      "lat": 22.7738,
+      "lng": -102.5649
+    },
+    {
+      "id": "mina-el-eden",
+      "name": {
+        "es": "Mina El Edén",
+        "en": "El Edén Silver Mine"
+      },
+      "lat": 22.7778,
+      "lng": -102.5794
+    },
+    {
+      "id": "teleferico-zacatecas",
+      "name": {
+        "es": "Teleférico de Zacatecas",
+        "en": "Zacatecas Cable Car"
+      },
+      "lat": 22.7782,
+      "lng": -102.5775
+    },
+    {
+      "id": "museo-rafael-coronel",
+      "name": {
+        "es": "Museo Rafael Coronel (Ex-Convento de San Francisco)",
+        "en": "Rafael Coronel Museum (Ex-Convent of San Francisco)"
+      },
+      "lat": 22.7801,
+      "lng": -102.5714
+    },
+    {
+      "id": "museo-pedro-coronel",
+      "name": {
+        "es": "Museo Pedro Coronel",
+        "en": "Pedro Coronel Museum"
+      },
+      "lat": 22.7765,
+      "lng": -102.5731
+    },
+    {
+      "id": "museo-felguerez",
+      "name": {
+        "es": "Museo de Arte Abstracto Manuel Felguérez",
+        "en": "Manuel Felguérez Museum of Abstract Art"
+      },
+      "lat": 22.7788,
+      "lng": -102.5737
+    },
+    {
+      "id": "museo-francisco-goitia",
+      "name": {
+        "es": "Museo Francisco Goitia",
+        "en": "Francisco Goitia Museum"
+      },
+      "lat": 22.7669,
+      "lng": -102.5711
+    },
+    {
+      "id": "plaza-armas",
+      "name": {
+        "es": "Plaza de Armas y Palacio de Gobierno",
+        "en": "Plaza de Armas & Government Palace"
+      },
+      "lat": 22.7756,
+      "lng": -102.5723
+    },
+    {
+      "id": "teatro-calderon",
+      "name": {
+        "es": "Teatro Fernando Calderón",
+        "en": "Fernando Calderón Theater"
+      },
+      "lat": 22.7748,
+      "lng": -102.5729
+    },
+    {
+      "id": "acueducto-el-cubo",
+      "name": {
+        "es": "Acueducto El Cubo y Parque Sierra de Álica",
+        "en": "El Cubo Aqueduct & Sierra de Álica Park"
+      },
+      "lat": 22.7686,
+      "lng": -102.5694
+    },
+    {
+      "id": "la-quemada",
+      "name": {
+        "es": "Zona Arqueológica La Quemada",
+        "en": "La Quemada Archaeological Zone"
+      },
+      "lat": 22.5278,
+      "lng": -102.8222
+    },
+    {
+      "id": "jerez-pueblo-magico",
+      "name": {
+        "es": "Jerez de García Salinas (Pueblo Mágico)",
+        "en": "Jerez de García Salinas (Pueblo Mágico)"
+      },
+      "lat": 22.6486,
+      "lng": -102.9908
+    },
+    {
+      "id": "sombrerete-pueblo-magico",
+      "name": {
+        "es": "Sombrerete y Sierra de Órganos (Pueblo Mágico)",
+        "en": "Sombrerete & Sierra de Órganos (Pueblo Mágico)"
+      },
+      "lat": 23.6339,
+      "lng": -103.6425
+    },
+    {
+      "id": "guadalupe-pueblo-magico",
+      "name": {
+        "es": "Guadalupe y Museo de Guadalupe (Pueblo Mágico)",
+        "en": "Guadalupe & Convent Museum (Pueblo Mágico)"
+      },
+      "lat": 22.7508,
+      "lng": -102.5186
+    },
+    {
+      "id": "pinos-pueblo-magico",
+      "name": {
+        "es": "Pinos (Pueblo Mágico)",
+        "en": "Pinos (Pueblo Mágico)"
+      },
+      "lat": 22.2961,
+      "lng": -101.5744
+    }
+  ]
+}

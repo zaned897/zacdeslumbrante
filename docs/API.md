@@ -91,5 +91,38 @@ Vida de calle para la ciudad 3D: puestos, artesanos y músicos **genéricos** (t
 - `nearPlaceId`: id de `src/data/places.ts`; el test valida que exista y que el puesto quede a menos de ~150 m.
 - Sin precios, nombres de comerciantes, contactos ni reseñas.
 
+### GET /api/py/places/{placeId}/photos  · mock · dueño: Claude Code (#23)
+Fotos curadas de Wikimedia Commons (`services/api/app/fixtures/photos.json`, #22). Lugar sin fotos → `photos: []`.
+```json
+{
+  "placeId": "catedral-zacatecas",
+  "source": "Wikimedia Commons",
+  "_mock": true,
+  "photos": [
+    {
+      "id": "catedral-zacatecas-1",
+      "placeId": "catedral-zacatecas",
+      "url": "https://upload.wikimedia.org/...",
+      "author": "…",
+      "license": "CC BY-SA 3.0",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:…",
+      "caption": { "es": "Fachada principal de la Catedral", "en": "Main façade of the Cathedral" }
+
+### GET /api/py/recommendations?lat=&lng=&visited=  · mock · dueño: Claude Code (#24)
+Los 3 lugares no visitados más cercanos (haversine), compatibles con `ScenePoi`. `lat` y `lng` obligatorios; `visited` son ids separados por coma. Lugares en `services/api/app/fixtures/places.json` (generado desde `src/data/places.ts`).
+```json
+{
+  "_mock": true,
+  "recommendations": [
+    {
+      "id": "recommendation:teatro-calderon",
+      "kind": "recommendation",
+      "title": { "es": "Teatro Fernando Calderón", "en": "Fernando Calderón Theater" },
+      "lat": 22.7748, "lng": -102.5729,
+      "placeId": "teatro-calderon",
+      "isMock": true,
+      "reason": { "es": "A 90 m de ti", "en": "90 m from you" },
+      "distanceMeters": 90
+
 ## Propuestas pendientes
 (Agrega aquí endpoints nuevos antes de implementarlos: método, ruta, body, respuesta, dueño.)
