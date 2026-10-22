@@ -69,7 +69,7 @@ export const AccountSheet: React.FC<AccountSheetProps> = ({ open, onClose, langu
 
   const user = account.user;
   const field =
-    'w-full px-4 py-2.5 text-sm bg-white border border-[#E7DCCB] rounded-xl focus:outline-none focus:border-cantera placeholder:text-stone-400';
+    'w-full px-4 py-2.5 text-sm bg-superficie text-carbon border border-linea rounded-xl focus:outline-none focus:border-cantera placeholder:text-tenue';
 
   return (
     <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-carbon/40" onClick={onClose}>
@@ -117,7 +117,7 @@ export const AccountSheet: React.FC<AccountSheetProps> = ({ open, onClose, langu
             <button
               type="button"
               onClick={() => void account.signOut()}
-              className="mt-1 px-4 py-2 text-sm font-semibold text-cantera border border-[#E7DCCB] rounded-full hover:bg-caliza cursor-pointer"
+              className="mt-1 px-4 py-2 text-sm font-semibold text-cantera border border-linea rounded-full hover:bg-caliza cursor-pointer"
             >
               {t.accountSignOut}
             </button>
@@ -133,7 +133,7 @@ export const AccountSheet: React.FC<AccountSheetProps> = ({ open, onClose, langu
                   type="button"
                   disabled={busy}
                   onClick={() => void run(account.signInWithGoogle)}
-                  className="flex items-center justify-center gap-2 w-full py-2.5 text-sm font-semibold text-carbon bg-white border border-[#E7DCCB] rounded-full hover:bg-caliza disabled:opacity-50 cursor-pointer"
+                  className="flex items-center justify-center gap-2 w-full py-2.5 text-sm font-semibold text-carbon bg-superficie text-carbon border border-linea rounded-full hover:bg-caliza disabled:opacity-50 cursor-pointer"
                 >
                   <svg viewBox="0 0 48 48" className="w-4 h-4" aria-hidden="true">
                     <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.6 5.4 2.7 13.3l7.9 6.1C12.5 13.6 17.8 9.5 24 9.5z" />
@@ -176,7 +176,7 @@ export const AccountSheet: React.FC<AccountSheetProps> = ({ open, onClose, langu
                 <button
                   type="submit"
                   disabled={busy || account.offline}
-                  className="flex items-center justify-center gap-2 w-full py-2.5 text-sm font-semibold text-white bg-cantera rounded-full disabled:opacity-50 cursor-pointer"
+                  className="flex items-center justify-center gap-2 w-full py-2.5 text-sm font-semibold text-sobre-cantera bg-cantera rounded-full disabled:opacity-50 cursor-pointer"
                 >
                   {busy && <Loader2 className="w-4 h-4 animate-spin" />}
                   {mode === 'signIn' ? t.accountSignIn : t.accountSignUp}

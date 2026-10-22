@@ -14,6 +14,8 @@ import { Language, ChatMessage, Place, KnowledgeBaseURL } from './types';
 import { getStoredKnowledgeBase, saveStoredKnowledgeBase, resetKnowledgeBase } from './data/knowledgeBase';
 import { ZACATECAS_PLACES } from './data/places';
 import { activeSeason } from './data/seasons';
+import { AccountAvatarButton } from './components/account/AccountAvatarButton';
+import { AccountSheet } from './components/account/AccountSheet';
 
 // El motor 3D (three.js / Cesium) pesa: solo se descarga al abrir la pestaña.
 const Map3DView = lazy(() => import('./components/Map3DView').then((m) => ({ default: m.Map3DView })));
@@ -48,6 +50,8 @@ export default function App() {
   // Modals state
   const [isKnowledgeModalOpen, setIsKnowledgeModalOpen] = useState(false);
   const [isItineraryModalOpen, setIsItineraryModalOpen] = useState(false);
+  const [isAccountOpen, setIsAccountOpen] = useState(false);
+  const closeAccount = useCallback(() => setIsAccountOpen(false), []);
   const [initialItineraryId, setInitialItineraryId] = useState<string | undefined>(undefined);
 
   // Knowledge base state (26 official URLs)
@@ -381,6 +385,7 @@ export default function App() {
                 onToggleLanguage={toggleLanguage}
                 isMapOpen={isMapOpen}
                 onToggleMap={() => setIsMapOpen((prev) => !prev)}
+                trailing={<AccountAvatarButton language={language} onClick={() => setIsAccountOpen(true)} />}
               />
               <div className="flex-1 min-h-0 flex overflow-hidden relative">
                 <ChatContainer
@@ -451,6 +456,7 @@ export default function App() {
       )}
 
       {/* Modals */}
+      <AccountSheet open={isAccountOpen} onClose={closeAccount} language={language} />
       <KnowledgeBaseModal
         isOpen={isKnowledgeModalOpen}
         onClose={() => setIsKnowledgeModalOpen(false)}

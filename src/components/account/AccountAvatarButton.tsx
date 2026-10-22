@@ -20,7 +20,7 @@ export const AccountAvatarButton: React.FC<AccountAvatarButtonProps> = ({ langua
       onClick={onClick}
       aria-label={t.accountOpen}
       title={user?.email ?? t.accountOpen}
-      className="w-8 h-8 grid place-items-center rounded-full overflow-hidden border border-linea bg-white text-cantera text-sm font-semibold hover:bg-caliza cursor-pointer shrink-0"
+      className="w-9 h-9 grid place-items-center rounded-full overflow-hidden border border-linea bg-superficie text-cantera text-sm font-semibold hover:bg-caliza cursor-pointer shrink-0"
     >
       {user?.avatarUrl ? (
         <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
