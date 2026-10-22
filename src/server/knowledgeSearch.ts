@@ -86,7 +86,10 @@ class Index {
     scored.sort((a, b) => b.score - a.score);
     const out: KnowledgeHit[] = [];
     const seen = new Map<string, number>();
+    const texts = new Set<string>();
     for (const h of scored) {
+      if (texts.has(h.chunk.text)) continue;
+      texts.add(h.chunk.text);
       const n = seen.get(h.chunk.sourceId) ?? 0;
       if (n < perSource) {
         out.push(h);

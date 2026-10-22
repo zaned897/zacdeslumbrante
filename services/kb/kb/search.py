@@ -95,7 +95,11 @@ class Index:
         scored.sort(key=lambda h: h.score, reverse=True)
         out: list[Hit] = []
         seen: Counter[str] = Counter()
-        for h in scored:  # diversidad: máximo `per_source` fragmentos por fuente
+        texts: set[str] = set()
+        for h in scored:  # diversidad: máximo `per_source` fragmentos por fuente, sin repetidos
+            if h.chunk["text"] in texts:
+                continue
+            texts.add(h.chunk["text"])
             if seen[h.chunk["sourceId"]] < per_source:
                 out.append(h)
                 seen[h.chunk["sourceId"]] += 1

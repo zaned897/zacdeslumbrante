@@ -8,7 +8,7 @@ from kb import ingest
 from kb.chunk import chunk_text
 from kb.evaluate import evaluate
 from kb.extract import csv_to_text, html_to_text
-from kb.ingest import USER_AGENT, ingest_source, internal_links
+from kb.ingest import USER_AGENT, Page, drop_boilerplate, ingest_source, internal_links
 from kb.search import Index, prompt_context, tokenize
 from kb.sources import load_sources
 
@@ -200,3 +200,40 @@ def test_curated_root_page_outranks_crawled_page() -> None:
     crawled["url"] = "https://example.org/inah-portal-nacional/otra"
     hits = Index([crawled, root]).search("criterios unesco", k=2)
     assert [h.chunk["sourceId"] for h in hits] == ["unesco-faq-126", "inah-portal-nacional"]
+
+
+def test_drop_boilerplate_removes_lines_shared_by_pages() -> None:
+    aviso = "Esta dirección de correo electrónico está protegida contra spambots."
+    pages = [
+        Page(f"u{i}", "", f"Contenido propio de la página {i} aquí.\n{aviso}", []) for i in range(4)
+    ]
+    drop_boilerplate(pages)
+    assert all(aviso not in p.text and "Contenido propio" in p.text for p in pages)
+
+
+def test_search_skips_duplicate_text() -> None:
+    a = _chunk("inah-la-quemada", "Boletín sobre museos del INAH.")
+    b = _chunk("inah-red-museos-zac", "Boletín sobre museos del INAH.")
+    assert len(Index([a, b]).search("boletín museos", k=3)) == 1
+
+
+def test_ingest_skips_pages_taken_by_another_source() -> None:
+    src = next(s for s in load_sources() if s.id == "inah-la-quemada")
+    links = '<a href="/boletines">b</a><a href="/propia">p</a>'
+    root = links + "<p>Inicio del sitio con texto suficiente.</p>"
+
+    def handler(req: httpx.Request) -> httpx.Response:
+        if req.url.path == "/robots.txt":
+            return httpx.Response(404)
+        body = (
+            root
+            if "zonas" in req.url.path
+            else f"<p>Página {req.url.path} con texto suficiente.</p>"
+        )
+        return httpx.Response(200, text=body, headers={"content-type": "text/html"})
+
+    seen = {"https://www.inah.gob.mx/boletines"}
+    with httpx.Client(transport=httpx.MockTransport(handler)) as client:
+        chunks, _ = ingest_source(client, src, max_pages=3, seen=seen)
+    assert "https://www.inah.gob.mx/boletines" not in {c.url for c in chunks}
+    assert "https://www.inah.gob.mx/propia" in {c.url for c in chunks}

@@ -7,6 +7,7 @@ import argparse
 import json
 import sys
 import time
+from collections import Counter
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -124,21 +125,37 @@ def fetch_page(client: httpx.Client, url: str, fallback_title: str) -> Page | st
     return f"unsupported: {ctype or '?'}"
 
 
+def drop_boilerplate(pages: list[Page]) -> None:
+    """Quita líneas repetidas en varias páginas del sitio (menús, pies, avisos de correo)."""
+    if len(pages) < 3:
+        return
+    counts = Counter(ln for p in pages for ln in set(p.text.split("\n")))
+    common = {ln for ln, n in counts.items() if n >= max(3, len(pages) // 2)}
+    for p in pages:
+        p.text = "\n".join(ln for ln in p.text.split("\n") if ln not in common)
+
+
 def ingest_source(
-    client: httpx.Client, src: Source, max_pages: int = 1
+    client: httpx.Client, src: Source, max_pages: int = 1, seen: set[str] | None = None
 ) -> tuple[list[Chunk], Report]:
+    seen = set() if seen is None else seen
     first = fetch_page(client, src.url, src.title)
     if isinstance(first, str):
         code = first.split()[-1]
         status = first.split()[0] if first.startswith("http-error") else first
         return [], Report(src.id, src.url, status, int(code) if code.isdigit() else None)
     pages = [first]
+    seen.add(first.url)
     # PROTO: profundidad 1 y tope de páginas por fuente; suficiente para medir cuánto mejora.
-    for url in internal_links(first.url, first.links, max_pages - 1):
+    # Una página ya tomada por otra fuente (p. ej. boletines del INAH) no se repite.
+    candidates = [u for u in internal_links(first.url, first.links, 3 * max_pages) if u not in seen]
+    for url in candidates[: max_pages - 1]:
         time.sleep(PAUSE)
         page = fetch_page(client, url, src.title)
-        if isinstance(page, Page) and page.text:
+        if isinstance(page, Page) and page.text and page.url not in seen:
+            seen.add(page.url)
             pages.append(page)
+    drop_boilerplate(pages)
     now = datetime.now(UTC).isoformat(timespec="seconds")
     chunks: list[Chunk] = []
     for page in pages:
@@ -172,9 +189,10 @@ def main(argv: list[str] | None = None) -> int:
     all_chunks: list[Chunk] = []
     reports: list[Report] = []
     headers = {"User-Agent": USER_AGENT, "Accept-Language": "es-MX,es;q=0.9,en;q=0.5"}
+    seen: set[str] = set()
     with httpx.Client(headers=headers, timeout=TIMEOUT, follow_redirects=True) as client:
         for src in sources:
-            chunks, rep = ingest_source(client, src, args.max_pages)
+            chunks, rep = ingest_source(client, src, args.max_pages, seen)
             all_chunks += chunks
             reports.append(rep)
             print(
