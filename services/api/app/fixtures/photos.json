@@ -1,0 +1,258 @@
+{
+  "_mock": true,
+  "source": "Wikimedia Commons",
+  "photos": [
+    {
+      "id": "catedral-zacatecas-1",
+      "placeId": "catedral-zacatecas",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dc/Fachada_Frontal_de_la_Catedral_de_Zacatecas%2C_Zac.jpg/960px-Fachada_Frontal_de_la_Catedral_de_Zacatecas%2C_Zac.jpg",
+      "author": "Martín Daniel Cordero Amézquita",
+      "license": "CC BY-SA 3.0",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Fachada_Frontal_de_la_Catedral_de_Zacatecas,_Zac.jpg",
+      "caption": {
+        "es": "Fachada principal de la Catedral",
+        "en": "Main façade of the Cathedral"
+      }
+    },
+    {
+      "id": "catedral-zacatecas-2",
+      "placeId": "catedral-zacatecas",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/55/Fachada_Catedral_de_Zacatecas.jpg/960px-Fachada_Catedral_de_Zacatecas.jpg",
+      "author": "Lunita28mx",
+      "license": "CC BY 4.0",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Fachada_Catedral_de_Zacatecas.jpg",
+      "caption": {
+        "es": "Fachada de la Catedral de Zacatecas",
+        "en": "Façade of Zacatecas Cathedral"
+      }
+    },
+    {
+      "id": "cerro-de-la-bufa-1",
+      "placeId": "cerro-de-la-bufa",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b2/La_bufa_de_Zacatecas_de_noche.JPG/960px-La_bufa_de_Zacatecas_de_noche.JPG",
+      "author": "Sanchezmarco141",
+      "license": "CC BY-SA 4.0",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:La_bufa_de_Zacatecas_de_noche.JPG",
+      "caption": {
+        "es": "El Cerro de la Bufa de noche",
+        "en": "Cerro de la Bufa at night"
+      }
+    },
+    {
+      "id": "cerro-de-la-bufa-2",
+      "placeId": "cerro-de-la-bufa",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Cerro_de_la_Bufa_de_lejos.jpg/960px-Cerro_de_la_Bufa_de_lejos.jpg",
+      "author": "Lunita28mx",
+      "license": "CC BY 4.0",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Cerro_de_la_Bufa_de_lejos.jpg",
+      "caption": {
+        "es": "El Cerro de la Bufa visto de lejos",
+        "en": "Cerro de la Bufa seen from afar"
+      }
+    },
+    {
+      "id": "mina-el-eden-1",
+      "placeId": "mina-el-eden",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/d/d6/Mina_El_Ed%C3%A9n_Zacatecas_M%C3%A9xico.jpg",
+      "author": "Isacdaavid",
+      "license": "CC BY-SA 4.0",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Mina_El_Ed%C3%A9n_Zacatecas_M%C3%A9xico.jpg",
+      "caption": {
+        "es": "Mina El Edén",
+        "en": "El Edén Mine"
+      }
+    },
+    {
+      "id": "mina-el-eden-2",
+      "placeId": "mina-el-eden",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/Interior_Mina_El_Ed%C3%A9n_-_panoramio.jpg/960px-Interior_Mina_El_Ed%C3%A9n_-_panoramio.jpg",
+      "author": "JavierDo",
+      "license": "CC BY-SA 3.0",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Interior_Mina_El_Ed%C3%A9n_-_panoramio.jpg",
+      "caption": {
+        "es": "Interior de la Mina El Edén",
+        "en": "Inside El Edén Mine"
+      }
+    },
+    {
+      "id": "teleferico-zacatecas-1",
+      "placeId": "teleferico-zacatecas",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5d/Telef%C3%A9rico_de_Zacatecas.jpg/960px-Telef%C3%A9rico_de_Zacatecas.jpg",
+      "author": "Eneas De Troya from Mexico City, México",
+      "license": "CC BY 2.0",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Telef%C3%A9rico_de_Zacatecas.jpg",
+      "caption": {
+        "es": "Teleférico de Zacatecas",
+        "en": "Zacatecas Cable Car"
+      }
+    },
+    {
+      "id": "teleferico-zacatecas-2",
+      "placeId": "teleferico-zacatecas",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/28/Vista_del_telef%C3%A9rico_de_Zacatecas_1.JPG/960px-Vista_del_telef%C3%A9rico_de_Zacatecas_1.JPG",
+      "author": "Luisalvaz",
+      "license": "CC BY-SA 4.0",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Vista_del_telef%C3%A9rico_de_Zacatecas_1.JPG",
+      "caption": {
+        "es": "Vista del teleférico sobre la ciudad",
+        "en": "View of the cable car over the city"
+      }
+    },
+    {
+      "id": "museo-rafael-coronel-1",
+      "placeId": "museo-rafael-coronel",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/df/Patio_interior_del_Museo_Rafael_Coronel%2C_Zacatecas%2C_Zac._M%C3%A9xico.jpg/960px-Patio_interior_del_Museo_Rafael_Coronel%2C_Zacatecas%2C_Zac._M%C3%A9xico.jpg",
+      "author": "Arturo Martínez González 2",
+      "license": "CC BY-SA 4.0",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Patio_interior_del_Museo_Rafael_Coronel,_Zacatecas,_Zac._M%C3%A9xico.jpg",
+      "caption": {
+        "es": "Patio interior del Museo Rafael Coronel",
+        "en": "Inner courtyard of the Rafael Coronel Museum"
+      }
+    },
+    {
+      "id": "museo-rafael-coronel-2",
+      "placeId": "museo-rafael-coronel",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c6/Puerta%2C_Museo_Rafael_Coronel_-_panoramio.jpg/960px-Puerta%2C_Museo_Rafael_Coronel_-_panoramio.jpg",
+      "author": "JavierDo",
+      "license": "CC BY-SA 3.0",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Puerta,_Museo_Rafael_Coronel_-_panoramio.jpg",
+      "caption": {
+        "es": "Puerta del Museo Rafael Coronel",
+        "en": "Door of the Rafael Coronel Museum"
+      }
+    },
+    {
+      "id": "museo-pedro-coronel-1",
+      "placeId": "museo-pedro-coronel",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/61/Museo_Pedro_Coronel_-_Fachada.JPG/960px-Museo_Pedro_Coronel_-_Fachada.JPG",
+      "author": "ProtoplasmaKid",
+      "license": "CC BY-SA 4.0",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Museo_Pedro_Coronel_-_Fachada.JPG",
+      "caption": {
+        "es": "Fachada del Museo Pedro Coronel",
+        "en": "Façade of the Pedro Coronel Museum"
+      }
+    },
+    {
+      "id": "museo-pedro-coronel-2",
+      "placeId": "museo-pedro-coronel",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b9/MuseoPedroCoronel.JPG/960px-MuseoPedroCoronel.JPG",
+      "author": "Thelmadatter",
+      "license": "CC BY-SA 3.0",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:MuseoPedroCoronel.JPG",
+      "caption": {
+        "es": "Museo Pedro Coronel",
+        "en": "Pedro Coronel Museum"
+      }
+    },
+    {
+      "id": "museo-felguerez-1",
+      "placeId": "museo-felguerez",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/1/1e/Museo_de_arte_abstracto_Manuel_Felgu%C3%A9rez_-_panoramio.jpg",
+      "author": "Alejandro Vega Rdz.",
+      "license": "CC BY-SA 3.0",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Museo_de_arte_abstracto_Manuel_Felgu%C3%A9rez_-_panoramio.jpg",
+      "caption": {
+        "es": "Museo de Arte Abstracto Manuel Felguérez",
+        "en": "Manuel Felguérez Museum of Abstract Art"
+      }
+    },
+    {
+      "id": "museo-francisco-goitia-1",
+      "placeId": "museo-francisco-goitia",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9b/Museo_%22Francisco_Goitia%22.jpg/960px-Museo_%22Francisco_Goitia%22.jpg",
+      "author": "Ivonne Leticia Contreras Rodríguez",
+      "license": "CC BY-SA 4.0",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Museo_%22Francisco_Goitia%22.jpg",
+      "caption": {
+        "es": "Museo Francisco Goitia",
+        "en": "Francisco Goitia Museum"
+      }
+    },
+    {
+      "id": "museo-francisco-goitia-2",
+      "placeId": "museo-francisco-goitia",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Museo_Francisco_Goitia.JPG/960px-Museo_Francisco_Goitia.JPG",
+      "author": "Noé González-Gallegos",
+      "license": "CC BY-SA 3.0",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Museo_Francisco_Goitia.JPG",
+      "caption": {
+        "es": "Edificio del Museo Francisco Goitia",
+        "en": "Francisco Goitia Museum building"
+      }
+    },
+    {
+      "id": "plaza-armas-1",
+      "placeId": "plaza-armas",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f9/Centro_Zacatecas_Palacio_Gobierno_Plaza_de_Armas_M%C3%A9xico.jpg/960px-Centro_Zacatecas_Palacio_Gobierno_Plaza_de_Armas_M%C3%A9xico.jpg",
+      "author": "Isacdaavid",
+      "license": "CC BY-SA 4.0",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Centro_Zacatecas_Palacio_Gobierno_Plaza_de_Armas_M%C3%A9xico.jpg",
+      "caption": {
+        "es": "Palacio de Gobierno en la Plaza de Armas",
+        "en": "Government Palace on Plaza de Armas"
+      }
+    },
+    {
+      "id": "plaza-armas-2",
+      "placeId": "plaza-armas",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/3/31/Palacio_de_gobierno_de_Zacatecas.jpg",
+      "author": "AlamDeAvila",
+      "license": "CC BY-SA 4.0",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Palacio_de_gobierno_de_Zacatecas.jpg",
+      "caption": {
+        "es": "Palacio de Gobierno de Zacatecas",
+        "en": "Zacatecas Government Palace"
+      }
+    },
+    {
+      "id": "teatro-calderon-1",
+      "placeId": "teatro-calderon",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/1/17/Fachada_Principal_del_Teatro_Fern%C3%A1ndo_Calder%C3%B3n.jpg",
+      "author": "Juan Ma Lugo",
+      "license": "CC BY-SA 3.0",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Fachada_Principal_del_Teatro_Fern%C3%A1ndo_Calder%C3%B3n.jpg",
+      "caption": {
+        "es": "Fachada principal del Teatro Fernando Calderón",
+        "en": "Main façade of the Fernando Calderón Theater"
+      }
+    },
+    {
+      "id": "teatro-calderon-2",
+      "placeId": "teatro-calderon",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/d/dd/Interior_de_la_Sala_principal_del_Teatro_Fern%C3%A1ndo_Calder%C3%B3n.jpg",
+      "author": "Juan Ma Lugo",
+      "license": "CC BY-SA 3.0",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Interior_de_la_Sala_principal_del_Teatro_Fern%C3%A1ndo_Calder%C3%B3n.jpg",
+      "caption": {
+        "es": "Sala principal del Teatro Fernando Calderón",
+        "en": "Main hall of the Fernando Calderón Theater"
+      }
+    },
+    {
+      "id": "acueducto-el-cubo-1",
+      "placeId": "acueducto-el-cubo",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/0/0a/Acueducto_Zacatecas_2.JPG",
+      "author": "Ramiparr",
+      "license": "CC BY-SA 3.0",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Acueducto_Zacatecas_2.JPG",
+      "caption": {
+        "es": "Acueducto de Zacatecas",
+        "en": "Zacatecas Aqueduct"
+      }
+    },
+    {
+      "id": "acueducto-el-cubo-2",
+      "placeId": "acueducto-el-cubo",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/29/Vista_del_Acueducto_de_Zacatecas_08.jpg/960px-Vista_del_Acueducto_de_Zacatecas_08.jpg",
+      "author": "Luisalvaz",
+      "license": "CC BY-SA 4.0",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Vista_del_Acueducto_de_Zacatecas_08.jpg",
+      "caption": {
+        "es": "Vista del Acueducto de Zacatecas",
+        "en": "View of the Zacatecas Aqueduct"
+      }
+    }
+  ]
+}
