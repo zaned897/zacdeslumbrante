@@ -69,7 +69,17 @@ export interface SceneLayer {
   label: Localized;
   /** Encendida al abrir la vista. */
   enabledByDefault: boolean;
-  load(): Promise<ScenePoi[]>;
+  /** Se ofrece como interruptor en el HUD de exploración. */
+  toggleable?: boolean;
+  /** Volver a cargar cuando el jugador descubre un lugar (p. ej. recomendaciones). */
+  reloadOnDiscover?: boolean;
+  load(context?: SceneLayerContext): Promise<ScenePoi[]>;
+}
+
+/** Lo que sabe la vista al pedir los puntos de una capa. */
+export interface SceneLayerContext {
+  player?: { lat: number; lng: number };
+  visitedPlaceIds?: string[];
 }
 
 /**

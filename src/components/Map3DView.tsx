@@ -3,9 +3,12 @@ import {
   ArrowDown,
   ArrowLeft,
   ArrowUp,
+  ChevronLeft,
+  ChevronRight,
   Footprints,
   Globe,
   Home,
+  Layers,
   LocateFixed,
   Play,
   RotateCcw,
@@ -15,17 +18,18 @@ import {
   X,
 } from 'lucide-react';
 import { Language } from '../types';
-import type { SceneEngine, ScenePoi, Tour } from '../types/scene3d';
+import type { SceneEngine, SceneLayerContext, ScenePoi, Tour } from '../types/scene3d';
 import { TRANSLATIONS } from '../data/i18n';
 import { TOURS_3D, ZACATECAS_3D_HOME, loadTours } from '../data/tours3d';
 import { ZACATECAS_PLACES } from '../data/places';
 import { SCENE_LAYERS } from '../scene3d/layers';
-import { createEngine, selectedEngineId } from '../scene3d/createEngine';
+import { createEngine, selectedEngineId, type EngineId } from '../scene3d/createEngine';
 import { SceneStats, isStatsEnabled } from '../scene3d/SceneStats';
 import { distanceMeters } from '../scene3d/geo';
 import { usePlayerPosition, type FallbackReason } from '../scene3d/usePlayerPosition';
 import { useCollection } from '../scene3d/useCollection';
 import { useAvatarControls, type AvatarAction } from '../scene3d/useAvatarControls';
+import { loadPlacePhotos, type PlacePhoto } from '../scene3d/placePhotos';
 
 type Status = 'loading' | 'ready' | 'error';
 
@@ -44,6 +48,8 @@ function readAvatar(): AvatarId {
   }
 }
 const UNDISCOVERED_COLOR = '#A8A29E';
+const DEFAULT_LAYERS = new Set(SCENE_LAYERS.filter((l) => l.enabledByDefault).map((l) => l.id));
+const TOGGLEABLE_LAYERS = SCENE_LAYERS.filter((l) => l.toggleable);
 // PROTO: altitud fija del centro para la cámara que sigue al jugador; el terreno varía ±100 m.
 const FOLLOW_ALTITUDE = 2450;
 const SIMULATED_PATH = (TOURS_3D[0]?.stops ?? []).map((s) => ({ lat: s.camera.lat, lng: s.camera.lng }));
@@ -59,18 +65,30 @@ function resolveApiKey(): string {
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+type GoogleAuthWindow = Window & { gm_authFailure?: () => void };
+
 /** Vista 3D de la ciudad (nivel mock). Se abre en /#3d. */
-export const Map3DView: React.FC = () => {
+export const Map3DView: React.FC = () => (
+  <Map3DErrorBoundary>
+    <Map3DScene />
+  </Map3DErrorBoundary>
+);
+
+const Map3DScene: React.FC = () => {
   const [language, setLanguage] = useState<Language>(
     () => (localStorage.getItem('zacatecas_lang') as Language) || 'es',
   );
   const [status, setStatus] = useState<Status>('loading');
   const [errorDetail, setErrorDetail] = useState('');
-  const [pois, setPois] = useState<ScenePoi[]>([]);
+  const [enabledLayers, setEnabledLayers] = useState<Set<string>>(DEFAULT_LAYERS);
+  const [layerPois, setLayerPois] = useState<Record<string, ScenePoi[]>>({});
   const [selected, setSelected] = useState<ScenePoi | null>(null);
   const [caption, setCaption] = useState<string | null>(null);
   const [isTouring, setIsTouring] = useState(false);
   const [tours, setTours] = useState<Tour[]>(TOURS_3D);
+  const [tourId, setTourId] = useState<string | null>(null);
+  const [photos, setPhotos] = useState<PlacePhoto[]>([]);
+  const [photoIndex, setPhotoIndex] = useState(0);
   const [isExploring, setIsExploring] = useState(false);
   const [avatar, setAvatar] = useState<AvatarId>(readAvatar);
   const [toast, setToast] = useState<string | null>(null);
@@ -79,7 +97,13 @@ export const Map3DView: React.FC = () => {
     readyMs: null,
   });
   const apiKey = useMemo(resolveApiKey, []);
-  const engineId = useMemo(() => selectedEngineId(Boolean(apiKey)), [apiKey]);
+  // Si Google rechaza la llave o no hay 3D Tiles, se cae a la ciudad estilizada en vez de quedar en error.
+  const [engineFallback, setEngineFallback] = useState<EngineId | null>(null);
+  const [keyErrorCode, setKeyErrorCode] = useState<string | null>(null);
+  const engineId = useMemo(
+    () => engineFallback ?? selectedEngineId(Boolean(apiKey)),
+    [apiKey, engineFallback],
+  );
   const showStats = useMemo(isStatsEnabled, []);
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -98,8 +122,22 @@ export const Map3DView: React.FC = () => {
   const teleportRef = useRef<typeof teleport | null>(null);
   teleportRef.current = isExploring ? teleport : null;
 
+  const pois = useMemo(
+    () => SCENE_LAYERS.filter((l) => enabledLayers.has(l.id)).flatMap((l) => layerPois[l.id] ?? []),
+    [enabledLayers, layerPois],
+  );
   const placePois = useMemo(() => pois.filter((p) => p.kind === 'place' && p.placeId), [pois]);
   const discoveredCount = placePois.filter((p) => p.placeId && collection[p.placeId]).length;
+  const collectedCount = Object.keys(collection).length;
+  const hasPlayer = isExploring && position !== null;
+
+  // Lo que reciben las capas al cargar; en refs para no recargar en cada paso del jugador.
+  const layerContextRef = useRef<SceneLayerContext>({});
+  layerContextRef.current = {
+    player: hasPlayer && position ? { lat: position.lat, lng: position.lng } : undefined,
+    visitedPlaceIds: Object.keys(collection),
+  };
+  const loadedLayersRef = useRef(new Map<string, string>());
 
   useEffect(() => {
     localStorage.setItem('zacatecas_lang', language);
@@ -119,11 +157,31 @@ export const Map3DView: React.FC = () => {
     const engine = createEngine(engineId, apiKey);
     engineRef.current = engine;
     let cancelled = false;
+    setStatus('loading');
+    // Google avisa así de una llave inválida o de un dominio no autorizado (pinta "Oops! Something went wrong").
+    const authWindow = window as GoogleAuthWindow;
+    const previousAuthFailure = authWindow.gm_authFailure;
+    // PROTO: Map3DElement no llama gm_authFailure ni emite evento; el único aviso es el console.error de Google.
+    const originalConsoleError = console.error;
+    if (engineId !== 'three') {
+      authWindow.gm_authFailure = () => {
+        previousAuthFailure?.();
+        if (!cancelled) setEngineFallback('three');
+      };
+      console.error = (...args: unknown[]) => {
+        originalConsoleError(...args);
+        const code = /Google Maps JavaScript API error: (\w+)/.exec(String(args[0]))?.[1];
+        if (code && !cancelled) {
+          setKeyErrorCode(code);
+          setEngineFallback('three');
+        }
+      };
+    }
     const startedAt = performance.now();
 
     engine
       .mount(container, ZACATECAS_3D_HOME)
-      .then(async () => {
+      .then(() => {
         if (cancelled) return;
         setTimings((prev) => ({ ...prev, mountMs: performance.now() - startedAt }));
         void engine.ready().then(() => {
@@ -131,21 +189,25 @@ export const Map3DView: React.FC = () => {
         });
         engine.onPoiClick(setSelected);
         engine.onGroundClick((at) => teleportRef.current?.(at));
-        const loaded = await Promise.all(
-          SCENE_LAYERS.filter((l) => l.enabledByDefault).map((l) => l.load()),
-        );
-        if (cancelled) return;
-        setPois(loaded.flat());
         setStatus('ready');
       })
       .catch((err: unknown) => {
         if (cancelled) return;
+        console.error('[Map3DView] el motor no cargó', engineId, err);
+        if (engineId !== 'three') {
+          setEngineFallback('three');
+          return;
+        }
         setErrorDetail(err instanceof Error ? err.message : String(err));
         setStatus('error');
       });
 
     return () => {
       cancelled = true;
+      if (engineId !== 'three') {
+        authWindow.gm_authFailure = previousAuthFailure;
+        console.error = originalConsoleError;
+      }
       tourRunRef.current++;
       engine.destroy();
       engineRef.current = null;
@@ -162,12 +224,53 @@ export const Map3DView: React.FC = () => {
     }
   }, [avatar, status]);
 
+  // Cargar las capas encendidas; las de recomendaciones se recargan al descubrir un lugar.
+  useEffect(() => {
+    if (status !== 'ready') return;
+    const loaded = loadedLayersRef.current;
+    for (const id of loaded.keys()) if (!enabledLayers.has(id)) loaded.delete(id);
+    for (const layer of SCENE_LAYERS) {
+      if (!enabledLayers.has(layer.id)) continue;
+      // Con jugador en escena cambia el origen de las recomendaciones.
+      const key = layer.reloadOnDiscover ? `${hasPlayer}:${collectedCount}` : '';
+      if (loaded.get(layer.id) === key) continue;
+      loaded.set(layer.id, key);
+      void layer.load(layerContextRef.current).then((points) => {
+        // Descarta respuestas viejas (capa apagada o recargada mientras tanto).
+        if (loadedLayersRef.current.get(layer.id) !== key) return;
+        setLayerPois((prev) => ({ ...prev, [layer.id]: points }));
+      });
+    }
+  }, [status, enabledLayers, collectedCount, hasPlayer]);
+
+  const toggleLayer = (id: string) =>
+    setEnabledLayers((prev) => {
+      const next = new Set(prev);
+      if (!next.delete(id)) next.add(id);
+      return next;
+    });
+
+  // Fotos del lugar seleccionado (#23).
+  const selectedPlaceId = selected?.placeId;
+  useEffect(() => {
+    setPhotos([]);
+    setPhotoIndex(0);
+    if (!selectedPlaceId) return;
+    let cancelled = false;
+    void loadPlacePhotos(selectedPlaceId).then((list) => {
+      if (!cancelled) setPhotos(list);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedPlaceId]);
+
   // Repintar marcadores al cambiar puntos, idioma o colección (en exploración, lo no descubierto va en gris).
   useEffect(() => {
     if (status !== 'ready') return;
     const shown = isExploring
       ? pois.map((p) =>
-          p.placeId && !collection[p.placeId] ? { ...p, color: UNDISCOVERED_COLOR } : p,
+          p.kind === 'place' && p.placeId && !collection[p.placeId] ? { ...p, color: UNDISCOVERED_COLOR } : p,
         )
       : pois;
     engineRef.current?.setPois(shown, language);
@@ -264,11 +367,15 @@ export const Map3DView: React.FC = () => {
   const selectedPlace = selected?.placeId
     ? ZACATECAS_PLACES.find((p) => p.id === selected.placeId)
     : undefined;
-  const tour = tours[0];
+  const tour = tours.find((x) => x.id === tourId) ?? tours[0];
+  const photo = photos[photoIndex];
+  const stepPhoto = (delta: number) =>
+    setPhotoIndex((i) => (i + delta + photos.length) % photos.length);
 
   return (
     <div className="relative h-dvh w-full overflow-hidden bg-stone-900 text-stone-900">
-      <div ref={containerRef} className="absolute inset-0" />
+      {/* isolate: las etiquetas CSS2D de three.js traen z-index propio y no deben tapar la UI. */}
+      <div ref={containerRef} className="absolute inset-0 isolate" />
 
       {/* Barra superior */}
       <div className="absolute top-0 inset-x-0 z-10 flex items-center justify-between gap-2 p-3 md:p-4 pointer-events-none">
@@ -312,7 +419,16 @@ export const Map3DView: React.FC = () => {
 
       {engineId === 'three' && status === 'ready' && !isExploring && (
         <div className="absolute top-16 inset-x-3 md:inset-x-auto md:left-4 md:max-w-xs z-10 text-[11px] text-stone-700 bg-[#FBF9F5]/90 border border-stone-200 rounded-lg px-3 py-2">
-          {apiKey ? t.view3dStylized : t.view3dNoKeyBody}
+          {engineFallback ? (
+            <>
+              {t.view3dKeyRejected}
+              {keyErrorCode && <span className="block mt-1 font-mono text-stone-500">{keyErrorCode}</span>}
+            </>
+          ) : apiKey ? (
+            t.view3dStylized
+          ) : (
+            t.view3dNoKeyBody
+          )}
         </div>
       )}
 
@@ -363,6 +479,29 @@ export const Map3DView: React.FC = () => {
               </button>
             ))}
           </div>
+          {TOGGLEABLE_LAYERS.length > 0 && (
+            <div className="mt-2 flex flex-wrap items-center gap-1.5">
+              <span className="flex items-center gap-1 text-stone-500">
+                <Layers className="w-3.5 h-3.5" />
+                {t.view3dLayers}:
+              </span>
+              {TOGGLEABLE_LAYERS.map((layer) => (
+                <button
+                  key={layer.id}
+                  role="switch"
+                  aria-checked={enabledLayers.has(layer.id)}
+                  onClick={() => toggleLayer(layer.id)}
+                  className={`px-2 py-0.5 rounded-full border cursor-pointer ${
+                    enabledLayers.has(layer.id)
+                      ? 'bg-[#7C3AED] border-[#7C3AED] text-white'
+                      : 'bg-white border-stone-300 text-stone-700 hover:border-stone-400'
+                  }`}
+                >
+                  {layer.label[language]}
+                </button>
+              ))}
+            </div>
+          )}
           {isManual && (
             <button
               onClick={resume}
@@ -394,7 +533,52 @@ export const Map3DView: React.FC = () => {
 
       {/* Tarjeta del lugar */}
       {selected && !isTouring && (
-        <div className={`absolute inset-x-3 ${isExploring ? 'bottom-56 md:bottom-24 md:right-48' : 'bottom-24 md:right-4'} md:inset-x-auto md:w-80 z-10 bg-[#FBF9F5] rounded-xl shadow-lg border border-stone-200 p-4`}>
+        <div className={`absolute inset-x-3 ${isExploring ? 'bottom-56 md:bottom-24 md:right-48' : 'bottom-32 md:right-4'} md:inset-x-auto md:w-80 z-10 max-h-[60dvh] overflow-y-auto bg-[#FBF9F5] rounded-xl shadow-lg border border-stone-200 p-4`}>
+          {photo && (
+            <figure className="-mx-4 -mt-4 mb-3">
+              <div className="relative aspect-video overflow-hidden rounded-t-xl bg-stone-200">
+                <img
+                  key={photo.id}
+                  src={photo.url}
+                  alt={photo.caption[language]}
+                  loading="lazy"
+                  referrerPolicy="no-referrer"
+                  onError={(e) => {
+                    e.currentTarget.style.visibility = 'hidden';
+                  }}
+                  className="h-full w-full object-cover"
+                />
+                {photos.length > 1 && (
+                  <>
+                    <button
+                      onClick={() => stepPhoto(-1)}
+                      className="absolute left-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-stone-900/60 text-white hover:bg-stone-900/80 cursor-pointer"
+                      aria-label={t.view3dPhotoPrev}
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => stepPhoto(1)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-stone-900/60 text-white hover:bg-stone-900/80 cursor-pointer"
+                      aria-label={t.view3dPhotoNext}
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                    <span className="absolute bottom-2 right-2 px-1.5 py-0.5 text-[10px] font-semibold text-white bg-stone-900/60 rounded">
+                      {photoIndex + 1}/{photos.length}
+                    </span>
+                  </>
+                )}
+              </div>
+              <figcaption className="px-4 pt-1.5 text-[10px] leading-snug text-stone-500">
+                {photo.caption[language]} ·{' '}
+                <a href={photo.sourceUrl} target="_blank" rel="noreferrer" className="underline hover:text-stone-800">
+                  {t.view3dPhotoBy.replace('{author}', photo.author).replace('{license}', photo.license)}
+                </a>
+                , Wikimedia Commons
+              </figcaption>
+            </figure>
+          )}
           <div className="flex items-start justify-between gap-2">
             <h3 className="font-serif font-bold text-base text-[#9A3412]">{selected.title[language]}</h3>
             <button
@@ -431,6 +615,26 @@ export const Map3DView: React.FC = () => {
               <Icon className="w-5 h-5" />
             </PadButton>
           ))}
+        </div>
+      )}
+
+      {/* Selector de recorrido (#34) */}
+      {status === 'ready' && !isTouring && !isExploring && tours.length > 1 && (
+        <div className="absolute inset-x-0 bottom-[4.5rem] z-10 flex justify-center px-4">
+          <label className="flex items-center gap-2 px-3 py-1.5 text-xs bg-[#FBF9F5]/95 border border-stone-200 rounded-full shadow-sm">
+            <span className="text-stone-500">{t.view3dTourPick}</span>
+            <select
+              value={tour?.id}
+              onChange={(e) => setTourId(e.target.value)}
+              className="max-w-[12rem] bg-transparent font-semibold text-stone-800 cursor-pointer focus:outline-none"
+            >
+              {tours.map((x) => (
+                <option key={x.id} value={x.id}>
+                  {x.title[language]}
+                </option>
+              ))}
+            </select>
+          </label>
         </div>
       )}
 
@@ -513,3 +717,47 @@ const PadButton: React.FC<{
     </button>
   );
 };
+
+/** Si algo revienta dentro de la vista 3D, muestra un aviso con salida en vez de una pantalla en blanco. */
+class Map3DErrorBoundary extends React.Component<{ children: React.ReactNode }, { error: Error | null }> {
+  state: { error: Error | null } = { error: null };
+
+  static getDerivedStateFromError(error: Error) {
+    return { error };
+  }
+
+  componentDidCatch(error: Error, info: React.ErrorInfo) {
+    console.error('[Map3DView] error de render', error, info.componentStack);
+  }
+
+  render() {
+    const { error } = this.state;
+    if (!error) return this.props.children;
+    const language = (localStorage.getItem('zacatecas_lang') as Language) || 'es';
+    const t = TRANSLATIONS[language];
+    const retryStylized = () => {
+      const url = new URL(window.location.href);
+      url.searchParams.set('engine', 'three');
+      window.location.href = url.toString();
+    };
+    return (
+      <div className="flex h-dvh w-full items-center justify-center bg-stone-900 p-6">
+        <div className="max-w-sm text-center bg-[#FBF9F5] rounded-xl p-6 shadow-lg">
+          <h2 className="font-serif font-bold text-lg mb-2">{t.view3dCrashTitle}</h2>
+          <p className="text-xs text-stone-500 font-mono break-words">{error.message}</p>
+          <div className="mt-4 flex flex-col gap-2">
+            <button
+              onClick={retryStylized}
+              className="px-4 py-2 text-sm font-semibold text-white bg-[#9A3412] rounded-full cursor-pointer hover:bg-[#78350F]"
+            >
+              {t.view3dCrashRetry}
+            </button>
+            <a href="#" className="text-sm text-stone-600 underline">
+              {t.view3dBack}
+            </a>
+          </div>
+        </div>
+      </div>
+    );
+  }
+}
