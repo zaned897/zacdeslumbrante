@@ -47,7 +47,7 @@ Límites conocidos, que abren issues:
 ## Mecánicas de juego (plan)
 
 1. Recorrido animado de cámara (hecho en el mock).
-2. Avatar en la escena, movido con teclado o joystick táctil.
+2. Avatar en la escena, movido con teclado o pad táctil (hecho: `minero.glb` generado por `scripts/gen-avatar-glb.mjs`, `useAvatarControls`; sin animación de caminar hasta decidir motor).
 3. Posición por GPS, con modo simulado para probar desde casa (hecho: `usePlayerPosition`, `?sim=1#3d` lo fuerza; tocar el mapa mueve al jugador a mano).
 4. Descubrir lugares al entrar en un radio de 40 m y guardarlos en una colección local (hecho: `useCollection`, `localStorage` `zacatecas_collection_v1`).
 5. Retos e insignias servidos desde FastAPI.

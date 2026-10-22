@@ -90,6 +90,8 @@ export interface SceneEngine {
   onGroundClick(handler: (at: { lat: number; lng: number }) => void): void;
   /** Muestra, mueve u oculta (null) al jugador. */
   setPlayer(player: ScenePlayer | null): void;
+  /** Modelo .glb del jugador; null = marcador simple. */
+  setAvatar(src: string | null): void;
   /** Dibuja una línea sobre el terreno (p. ej. la ruta de un recorrido). */
   setRoute(points: Array<{ lat: number; lng: number }> | null): void;
   destroy(): void;

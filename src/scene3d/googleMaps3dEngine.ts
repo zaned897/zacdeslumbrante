@@ -25,6 +25,12 @@ function loadLibraries(apiKey: string): Promise<[Maps3dLibrary, MarkerLibrary]> 
   return librariesPromise;
 }
 
+// PROTO: orientación y escala del avatar a ojo; los .glb vienen en Y arriba y miran a +Z.
+// Escala exagerada a propósito (estilo juego): a 260 m de cámara, 1.7 m no se ve.
+const AVATAR_TILT = 270;
+const AVATAR_HEADING_OFFSET = 0;
+const AVATAR_SCALE = 12;
+
 function toCameraOptions(c: SceneCamera): google.maps.maps3d.CameraOptions {
   return {
     center: { lat: c.lat, lng: c.lng, altitude: c.altitude },
@@ -41,7 +47,8 @@ export class GoogleMaps3dEngine implements SceneEngine {
   private map: google.maps.maps3d.Map3DElement | null = null;
   private markers: HTMLElement[] = [];
   private route: google.maps.maps3d.Polyline3DElement | null = null;
-  private player: google.maps.maps3d.Marker3DElement | null = null;
+  private player: google.maps.maps3d.Marker3DElement | google.maps.maps3d.Model3DElement | null = null;
+  private avatarSrc: string | null = null;
   private clickHandler: ((poi: ScenePoi) => void) | null = null;
   private groundClickHandler: ((at: { lat: number; lng: number }) => void) | null = null;
   private pendingAnimation: (() => void) | null = null;
@@ -133,7 +140,14 @@ export class GoogleMaps3dEngine implements SceneEngine {
       this.player = null;
       return;
     }
-    if (!this.player) {
+    if (!this.player && this.avatarSrc) {
+      this.player = new lib.Model3DElement({
+        src: this.avatarSrc,
+        altitudeMode: lib.AltitudeMode.CLAMP_TO_GROUND,
+        scale: AVATAR_SCALE,
+      });
+      map.append(this.player);
+    } else if (!this.player) {
       this.player = new lib.Marker3DElement({
         altitudeMode: lib.AltitudeMode.RELATIVE_TO_GROUND,
         extruded: true,
@@ -145,7 +159,24 @@ export class GoogleMaps3dEngine implements SceneEngine {
       );
       map.append(this.player);
     }
-    this.player.position = { lat: player.lat, lng: player.lng, altitude: 6 };
+    if (this.player instanceof lib.Model3DElement) {
+      this.player.position = { lat: player.lat, lng: player.lng, altitude: 0 };
+      this.player.orientation = {
+        heading: (player.heading + AVATAR_HEADING_OFFSET) % 360,
+        tilt: AVATAR_TILT,
+        roll: 0,
+      };
+    } else {
+      this.player.position = { lat: player.lat, lng: player.lng, altitude: 6 };
+    }
+  }
+
+  setAvatar(src: string | null): void {
+    if (src === this.avatarSrc) return;
+    this.avatarSrc = src;
+    // Se vuelve a crear en el siguiente setPlayer con el tipo correcto.
+    this.player?.remove();
+    this.player = null;
   }
 
   stop(): void {

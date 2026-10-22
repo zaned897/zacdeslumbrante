@@ -1,5 +1,19 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowLeft, Footprints, Globe, Home, LocateFixed, Play, RotateCcw, Square, Trophy, X } from 'lucide-react';
+import {
+  ArrowDown,
+  ArrowLeft,
+  ArrowUp,
+  Footprints,
+  Globe,
+  Home,
+  LocateFixed,
+  Play,
+  RotateCcw,
+  RotateCw,
+  Square,
+  Trophy,
+  X,
+} from 'lucide-react';
 import { Language } from '../types';
 import type { SceneEngine, ScenePoi, Tour } from '../types/scene3d';
 import { TRANSLATIONS } from '../data/i18n';
@@ -10,11 +24,13 @@ import { GoogleMaps3dEngine } from '../scene3d/googleMaps3dEngine';
 import { distanceMeters } from '../scene3d/geo';
 import { usePlayerPosition, type FallbackReason } from '../scene3d/usePlayerPosition';
 import { useCollection } from '../scene3d/useCollection';
+import { useAvatarControls, type AvatarAction } from '../scene3d/useAvatarControls';
 
 type Status = 'loading' | 'ready' | 'nokey' | 'error';
 
 const FLIGHT_MILLIS = 4500;
 const DISCOVER_RADIUS_M = 40;
+const AVATAR_SRC = '/models/avatars/minero.glb';
 const UNDISCOVERED_COLOR = '#A8A29E';
 // PROTO: altitud fija del centro para la cámara que sigue al jugador; el terreno varía ±100 m.
 const FOLLOW_ALTITUDE = 2450;
@@ -57,6 +73,7 @@ export const Map3DView: React.FC = () => {
     playArea: ZACATECAS_3D_HOME,
   });
   const { collection, discover, reset } = useCollection();
+  const act = useAvatarControls(isExploring, position, teleport);
   const teleportRef = useRef<typeof teleport | null>(null);
   teleportRef.current = isExploring ? teleport : null;
 
@@ -87,6 +104,7 @@ export const Map3DView: React.FC = () => {
       .then(async () => {
         if (cancelled) return;
         engine.onPoiClick(setSelected);
+        engine.setAvatar(AVATAR_SRC);
         engine.onGroundClick((at) => teleportRef.current?.(at));
         const loaded = await Promise.all(
           SCENE_LAYERS.filter((l) => l.enabledByDefault).map((l) => l.load()),
@@ -321,7 +339,7 @@ export const Map3DView: React.FC = () => {
 
       {/* Tarjeta del lugar */}
       {selected && !isTouring && (
-        <div className="absolute inset-x-3 bottom-24 md:inset-x-auto md:right-4 md:w-80 z-10 bg-[#FBF9F5] rounded-xl shadow-lg border border-stone-200 p-4">
+        <div className={`absolute inset-x-3 ${isExploring ? 'bottom-56 md:bottom-24 md:right-48' : 'bottom-24 md:right-4'} md:inset-x-auto md:w-80 z-10 bg-[#FBF9F5] rounded-xl shadow-lg border border-stone-200 p-4`}>
           <div className="flex items-start justify-between gap-2">
             <h3 className="font-serif font-bold text-base text-[#9A3412]">{selected.title[language]}</h3>
             <button
@@ -340,6 +358,24 @@ export const Map3DView: React.FC = () => {
               <span className="font-semibold">{t.scheduleLabel}</span> {selectedPlace.schedule}
             </p>
           )}
+        </div>
+      )}
+
+      {/* Pad táctil del avatar (también WASD / flechas) */}
+      {isExploring && status === 'ready' && (
+        <div className="absolute right-3 bottom-24 z-10 grid grid-cols-3 gap-1.5 select-none">
+          {(
+            [
+              ['forward', ArrowUp, 'col-start-2'],
+              ['left', RotateCcw, 'col-start-1 row-start-2'],
+              ['back', ArrowDown, 'col-start-2 row-start-2'],
+              ['right', RotateCw, 'col-start-3 row-start-2'],
+            ] as Array<[AvatarAction, typeof ArrowUp, string]>
+          ).map(([action, Icon, place]) => (
+            <PadButton key={action} className={place} onAct={() => act(action)} label={action}>
+              <Icon className="w-5 h-5" />
+            </PadButton>
+          ))}
         </div>
       )}
 
@@ -389,5 +425,36 @@ export const Map3DView: React.FC = () => {
         </div>
       )}
     </div>
+  );
+};
+
+/** Botón del pad: repite mientras se mantiene presionado. */
+const PadButton: React.FC<{
+  onAct: () => void;
+  label: string;
+  className: string;
+  children: React.ReactNode;
+}> = ({ onAct, label, className, children }) => {
+  const timer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const stop = () => {
+    if (timer.current) clearInterval(timer.current);
+    timer.current = null;
+  };
+  useEffect(() => stop, []);
+  return (
+    <button
+      aria-label={label}
+      className={`${className} w-12 h-12 flex items-center justify-center rounded-xl bg-[#FBF9F5]/95 border border-stone-200 shadow-md text-stone-800 active:bg-stone-200 touch-none cursor-pointer`}
+      onPointerDown={() => {
+        onAct();
+        stop();
+        timer.current = setInterval(onAct, 150);
+      }}
+      onPointerUp={stop}
+      onPointerLeave={stop}
+      onPointerCancel={stop}
+    >
+      {children}
+    </button>
   );
 };

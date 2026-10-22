@@ -47,13 +47,13 @@ export function usePlayerPosition({
   const isManualRef = useRef(false);
   const lastHeading = useRef(0);
 
-  /** Mover al jugador a mano (clic en el mapa); pausa GPS y simulación hasta `resume()`. */
-  const teleport = useCallback((to: LatLng) => {
+  /** Mover al jugador a mano (clic, teclado o pad); pausa GPS y simulación hasta `resume()`. */
+  const teleport = useCallback((to: LatLng, heading?: number) => {
     isManualRef.current = true;
     setIsManual(true);
     setPosition((prev) => ({
       ...to,
-      heading: prev ? bearingDegrees(prev, to) : 0,
+      heading: heading ?? (prev ? bearingDegrees(prev, to) : 0),
       accuracy: null,
       source: 'manual',
     }));
