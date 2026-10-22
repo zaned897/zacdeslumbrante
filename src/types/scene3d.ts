@@ -33,6 +33,10 @@ export interface ScenePoi {
   /** Id en src/data/places.ts, si el punto es (o pertenece a) un lugar conocido. */
   placeId?: string;
   color?: string;
+  /** Glifo corto (emoji) que el motor pone en el marcador, p. ej. la categoría de un puesto. */
+  icon?: string;
+  /** Si existe, Explorar lo muestra como aviso cuando el jugador se acerca (sin coleccionarlo). */
+  nearbyNotice?: Localized;
   /** true si el dato es de ejemplo; la UI muestra el badge "Demo". */
   isMock?: boolean;
 }

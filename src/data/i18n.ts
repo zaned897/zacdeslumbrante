@@ -180,6 +180,8 @@ export const TRANSLATIONS = {
     view3dCrashTitle: 'La vista 3D falló',
     view3dCrashRetry: 'Reintentar en modo estilizado',
     view3dAsk: 'Preguntar al asistente',
+    view3dNearby: 'Cerca de ti: {name}',
+    view3dNearbyOpen: 'Ver',
   },
   en: {
     // App & Header
@@ -362,5 +364,7 @@ export const TRANSLATIONS = {
     view3dCrashTitle: 'The 3D view failed',
     view3dCrashRetry: 'Retry in stylized mode',
     view3dAsk: 'Ask the assistant',
+    view3dNearby: 'Near you: {name}',
+    view3dNearbyOpen: 'View',
   },
 };

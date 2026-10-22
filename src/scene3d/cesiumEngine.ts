@@ -121,7 +121,7 @@ export class CesiumEngine implements SceneEngine {
           disableDepthTestDistance: Number.POSITIVE_INFINITY,
         },
         label: {
-          text: poi.title[language],
+          text: poi.icon ? `${poi.icon} ${poi.title[language]}` : poi.title[language],
           font: '600 13px "Plus Jakarta Sans", sans-serif',
           fillColor: C.Color.WHITE,
           outlineColor: C.Color.fromCssColorString('#1C1917'),

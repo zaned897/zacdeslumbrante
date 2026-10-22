@@ -409,7 +409,7 @@ export class ThreeOsmEngine implements SceneEngine {
       pin.add(stem, head);
 
       const el = document.createElement('button');
-      el.textContent = poi.title[language];
+      el.textContent = poi.icon ? `${poi.icon} ${poi.title[language]}` : poi.title[language];
       Object.assign(el.style, {
         pointerEvents: 'auto',
         font: '600 12px "Plus Jakarta Sans", sans-serif',

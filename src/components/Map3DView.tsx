@@ -92,6 +92,9 @@ const Map3DScene: React.FC = () => {
   const [photos, setPhotos] = useState<PlacePhoto[]>([]);
   const [photoIndex, setPhotoIndex] = useState(0);
   const [askPlace, setAskPlace] = useState<Place | null>(null);
+  const [nearby, setNearby] = useState<ScenePoi | null>(null);
+  // Puestos ya anunciados en esta visita: el aviso sale una sola vez por puesto.
+  const announcedRef = useRef(new Set<string>());
   const [isExploring, setIsExploring] = useState(false);
   const [avatar, setAvatar] = useState<AvatarId>(readAvatar);
   const [toast, setToast] = useState<string | null>(null);
@@ -300,7 +303,24 @@ const Map3DScene: React.FC = () => {
       discover(found.placeId);
       setToast(t.view3dDiscovered.replace('{name}', found.title[language]));
     }
-  }, [position, status, placePois, collection, discover, t, language]);
+    const heard = pois.find(
+      (p) => p.nearbyNotice && !announcedRef.current.has(p.id) && distanceMeters(position, p) <= DISCOVER_RADIUS_M,
+    );
+    if (heard) {
+      announcedRef.current.add(heard.id);
+      setNearby(heard);
+    }
+  }, [position, status, placePois, pois, collection, discover, t, language]);
+
+  useEffect(() => {
+    if (!nearby) return;
+    const id = setTimeout(() => setNearby(null), 8000);
+    return () => clearTimeout(id);
+  }, [nearby]);
+
+  useEffect(() => {
+    if (!isExploring) setNearby(null);
+  }, [isExploring]);
 
   useEffect(() => {
     if (!toast) return;
@@ -519,6 +539,37 @@ const Map3DScene: React.FC = () => {
         </div>
       )}
 
+      {/* Aviso al acercarse a un puesto de la vida de calle (#51) */}
+      {nearby?.nearbyNotice && isExploring && !selected && (
+        <div className="absolute inset-x-3 bottom-52 md:inset-x-auto md:left-4 md:bottom-24 md:w-80 z-10 flex items-center gap-3 bg-[#FBF9F5] border-2 border-[#E4007C] rounded-xl shadow-lg p-3">
+          <span className="grid place-items-center w-10 h-10 shrink-0 rounded-full bg-[#FCE7F3] text-xl motion-safe:animate-pulse">
+            {nearby.icon ?? '📍'}
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-bold text-stone-900">
+              {t.view3dNearby.replace('{name}', nearby.title[language])}
+              {nearby.isMock && (
+                <span className="ml-1.5 align-middle px-1 py-px text-[9px] font-bold uppercase text-white bg-[#D97706] rounded">
+                  {t.view3dDemoBadge}
+                </span>
+              )}
+            </p>
+            <p className="mt-0.5 text-[11px] italic leading-snug text-stone-600 line-clamp-2">
+              «{nearby.nearbyNotice[language]}»
+            </p>
+          </div>
+          <button
+            onClick={() => {
+              setSelected(nearby);
+              setNearby(null);
+            }}
+            className="shrink-0 px-2.5 py-1.5 text-xs font-bold text-white bg-[#E4007C] rounded-lg cursor-pointer hover:bg-[#BE0068]"
+          >
+            {t.view3dNearbyOpen}
+          </button>
+        </div>
+      )}
+
       {toast && (
         <div className="absolute inset-x-0 top-1/3 z-20 flex justify-center px-4 pointer-events-none">
           <p className="animate-bounce text-center text-sm md:text-base font-bold text-white bg-[#9A3412] rounded-full shadow-lg px-5 py-3">
@@ -585,7 +636,15 @@ const Map3DScene: React.FC = () => {
             </figure>
           )}
           <div className="flex items-start justify-between gap-2">
-            <h3 className="font-serif font-bold text-base text-[#9A3412]">{selected.title[language]}</h3>
+            <h3 className="font-serif font-bold text-base text-[#9A3412]">
+              {selected.icon && <span className="mr-1">{selected.icon}</span>}
+              {selected.title[language]}
+              {selected.isMock && (
+                <span className="ml-2 align-middle px-1.5 py-0.5 text-[10px] font-sans font-bold uppercase tracking-wider text-white bg-[#D97706] rounded">
+                  {t.view3dDemoBadge}
+                </span>
+              )}
+            </h3>
             <button
               onClick={() => setSelected(null)}
               className="p-1 text-stone-500 hover:text-stone-900 cursor-pointer"

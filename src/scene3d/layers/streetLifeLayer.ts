@@ -3,8 +3,25 @@ import type { Localized, SceneLayer } from '../../types/scene3d';
 // Rosa mexicano: distinto de los colores de lugares y del gris de "no descubierto".
 const STREET_COLOR = '#E4007C';
 
+// Ícono de cada puesto (campo `icon` del fixture, nombres de lucide) como glifo para los tres motores.
+const ICON_GLYPHS: Record<string, string> = {
+  flame: '🔥',
+  wheat: '🌽',
+  candy: '🍬',
+  gem: '💍',
+  drum: '🥁',
+  guitar: '🎸',
+  palette: '🎨',
+  cherry: '🍹',
+  shirt: '🧣',
+  coffee: '☕',
+};
+const CATEGORY_GLYPHS: Record<string, string> = { food: '🌮', sweets: '🍬', crafts: '🧺', music: '🎵', art: '🎨' };
+
 interface StreetSpotDto {
   id: string;
+  category: string;
+  icon: string;
   title: Localized;
   cry: Localized;
   when: Localized;
@@ -27,11 +44,13 @@ export const streetLifeLayer: SceneLayer = {
         kind: 'vendor' as const,
         // Sin placeId: el modo Explorar no los pinta de gris ni cuentan para la colección.
         title: s.title,
-        // PROTO: "(Demo)" en el texto mientras la tarjeta 3D no muestra el badge con isMock.
+        icon: ICON_GLYPHS[s.icon] ?? CATEGORY_GLYPHS[s.category] ?? '📍',
         summary: {
-          es: `«${s.cry.es}» ${s.when.es}. (Demo)`,
-          en: `“${s.cry.en}” ${s.when.en}. (Demo)`,
+          es: `«${s.cry.es}» ${s.when.es}.`,
+          en: `“${s.cry.en}” ${s.when.en}.`,
         },
+        // En Explorar, al acercarse, se "oye" el pregón.
+        nearbyNotice: s.cry,
         lat: s.lat,
         lng: s.lng,
         color: STREET_COLOR,
