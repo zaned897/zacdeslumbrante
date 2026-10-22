@@ -18,14 +18,22 @@ jobs:
 
   python:
     runs-on: ubuntu-latest
-    if: hashFiles('services/api/pyproject.toml') != ''
     defaults:
       run:
         working-directory: services/api
     steps:
       - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v6
-      - run: uv sync --frozen
-      - run: uv run ruff check .
-      - run: uv run ruff format --check .
-      - run: uv run pytest || test $? -eq 5   # 5 = sin tests (válido en sketch/mock)
+      # hashFiles no está disponible en el if de un job: se decide en un paso
+      - id: has-api
+        working-directory: .
+        run: test -f services/api/pyproject.toml && echo "present=true" >> "$GITHUB_OUTPUT" || echo "services/api aún no existe"
+      - if: steps.has-api.outputs.present == 'true'
+        uses: astral-sh/setup-uv@v6
+      - if: steps.has-api.outputs.present == 'true'
+        run: uv sync --frozen
+      - if: steps.has-api.outputs.present == 'true'
+        run: uv run ruff check .
+      - if: steps.has-api.outputs.present == 'true'
+        run: uv run ruff format --check .
+      - if: steps.has-api.outputs.present == 'true'
+        run: uv run pytest || test $? -eq 5   # 5 = sin tests (válido en sketch/mock)
