@@ -38,3 +38,8 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: "3.12.8"
+      # Cuentas (#53, docs/CUENTAS.md). Sin estas dos, la API corre en modo demo (en memoria).
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false

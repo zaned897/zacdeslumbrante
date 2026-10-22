@@ -11,3 +11,4 @@ Formato: `fecha · necesidad · elegido / descartado · motivo`
 - 2026-10-21 · backend de features nuevas · Python + FastAPI + uv detrás de Express (/api/py) · sin reescribir lo existente; Pydantic espeja los tipos TS
 - 2026-10-21 · alcance · solo bocetos, mocks, demos y PoCs · repo abierto a forks e issues
 - 2026-10-22 · motores 3D · CesiumJS 1.146 + three.js 0.186 junto a Google Maps 3D · decisión del usuario ("una mezcla"): Google por defecto, Cesium para avatar animado (#11), three.js para modo sin llave (#14)
+- 2026-10-22 · cuentas y progreso de usuarios (#53) · Supabase Auth + Postgres (plan gratis) vía httpx desde FastAPI / descartados Firebase Auth (otra base aparte y verificar JWT con firebase-admin) y auth propia (guardar contraseñas, sin base persistente en Render free) · Google y correo en un solo servicio gratis, RLS por usuario, cero dependencias nuevas

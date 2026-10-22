@@ -125,5 +125,30 @@ Los 3 lugares no visitados más cercanos (haversine), compatibles con `ScenePoi`
       "reason": { "es": "A 90 m de ti", "en": "90 m from you" },
       "distanceMeters": 90
 
+### Cuentas y progreso · PoC · dueño: Claude Code (#53)
+Supabase Auth (Google y correo/contraseña) y una tabla `user_progress` con RLS. Si faltan `SUPABASE_URL` y `SUPABASE_ANON_KEY` en `zacdes-api`, corre en **modo demo**: cuentas y progreso en memoria (se borran al reiniciar), sin Google, respuestas con `"_mock": true`. Configuración: `docs/CUENTAS.md`. Cliente en `src/components/account/`.
+
+Errores: `{ "detail": "mensaje en español" }` con `400` (datos), `401` (sin sesión o credenciales malas), `413` (valor > 64 KB), `429` (demasiados intentos), `501` (Google sin configurar), `503` (Supabase no respondió).
+
+| Método y ruta | Body | Respuesta |
+|---|---|---|
+| `GET /api/py/auth/config` | | `{ "mode": "supabase" \| "demo", "providers": ["google", "password"], "_mock": bool }` |
+| `POST /api/py/auth/signup` | `{ email, password }` (8–72) | `{ "session": Session \| null, "needsConfirmation": bool }` |
+| `POST /api/py/auth/login` | `{ email, password }` | `Session` |
+| `POST /api/py/auth/refresh` | `{ refreshToken }` | `Session` (el refresh token anterior deja de servir) |
+| `POST /api/py/auth/logout` | Bearer | `204` |
+| `GET /api/py/auth/google?redirectTo=<url>` | | `{ "url": "https://<proyecto>.supabase.co/auth/v1/authorize?..." }`; al volver, los tokens llegan en el hash (`#access_token=…&refresh_token=…&expires_at=…`) |
+| `GET /api/py/me` | Bearer | `AccountUser` |
+| `GET /api/py/me/progress` | Bearer | `{ "pet", "visits", "collection", "updatedAt", "_mock" }` (claves sin guardar en `null`) |
+| `PUT /api/py/me/progress/{pet\|visits\|collection}` | Bearer; el valor (objeto JSON) | el valor guardado |
+
+```json
+// Session
+{ "accessToken": "…", "refreshToken": "…", "expiresAt": 1792656000, "_mock": false,
+  "user": { "id": "uuid", "email": "ana@example.com", "name": "Ana", "avatarUrl": "https://…" } }
+```
+- Bearer = header `Authorization: Bearer <accessToken>`; Express lo reenvía tal cual.
+- Los valores de progreso son opacos para el backend (los define `ProgressStore` del frontend). Si el valor guardado y el que llega traen `updatedAt` (ISO con zona) y el que llega es más viejo, se conserva el guardado y es el que se responde: gana el más reciente.
+
 ## Propuestas pendientes
 (Agrega aquí endpoints nuevos antes de implementarlos: método, ruta, body, respuesta, dueño.)
