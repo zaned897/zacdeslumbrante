@@ -1,14 +1,22 @@
 import type { SceneEngine } from '../types/scene3d';
 import { GoogleMaps3dEngine } from './googleMaps3dEngine';
 import { CesiumEngine } from './cesiumEngine';
+import { ThreeOsmEngine } from './threeOsmEngine';
 
-export type EngineId = 'google' | 'cesium';
+export type EngineId = 'google' | 'cesium' | 'three';
 
-/** `?engine=cesium` elige CesiumJS; por defecto, Google Maps 3D. */
-export function selectedEngineId(): EngineId {
-  return new URLSearchParams(window.location.search).get('engine') === 'cesium' ? 'cesium' : 'google';
+/**
+ * `?engine=cesium` o `?engine=three` eligen motor; por defecto Google Maps 3D.
+ * Sin llave de Google siempre se usa three.js (ciudad estilizada).
+ */
+export function selectedEngineId(hasApiKey: boolean): EngineId {
+  const requested = new URLSearchParams(window.location.search).get('engine');
+  if (!hasApiKey || requested === 'three') return 'three';
+  return requested === 'cesium' ? 'cesium' : 'google';
 }
 
 export function createEngine(id: EngineId, apiKey: string): SceneEngine {
-  return id === 'cesium' ? new CesiumEngine(apiKey) : new GoogleMaps3dEngine(apiKey);
+  if (id === 'cesium') return new CesiumEngine(apiKey);
+  if (id === 'three') return new ThreeOsmEngine();
+  return new GoogleMaps3dEngine(apiKey);
 }

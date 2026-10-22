@@ -31,7 +31,7 @@ export const SceneStats: React.FC<{ engine: string; mountMs: number | null; read
 
   const fmt = (ms: number | null) => (ms === null ? '…' : `${(ms / 1000).toFixed(1)} s`);
   return (
-    <div className="absolute left-3 bottom-24 z-20 font-mono text-[11px] leading-tight text-white bg-stone-900/80 rounded-md px-2 py-1.5 pointer-events-none">
+    <div className="absolute right-3 top-16 z-20 font-mono text-[11px] leading-tight text-white bg-stone-900/80 rounded-md px-2 py-1.5 pointer-events-none">
       <div>motor: {engine}</div>
       <div>montaje: {fmt(mountMs)}</div>
       <div>primera vista: {fmt(readyMs)}</div>

@@ -27,7 +27,7 @@ import { usePlayerPosition, type FallbackReason } from '../scene3d/usePlayerPosi
 import { useCollection } from '../scene3d/useCollection';
 import { useAvatarControls, type AvatarAction } from '../scene3d/useAvatarControls';
 
-type Status = 'loading' | 'ready' | 'nokey' | 'error';
+type Status = 'loading' | 'ready' | 'error';
 
 const FLIGHT_MILLIS = 4500;
 const DISCOVER_RADIUS_M = 40;
@@ -65,7 +65,8 @@ export const Map3DView: React.FC = () => {
     mountMs: null,
     readyMs: null,
   });
-  const engineId = useMemo(selectedEngineId, []);
+  const apiKey = useMemo(resolveApiKey, []);
+  const engineId = useMemo(() => selectedEngineId(Boolean(apiKey)), [apiKey]);
   const showStats = useMemo(isStatsEnabled, []);
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -94,11 +95,6 @@ export const Map3DView: React.FC = () => {
 
   // Montar el motor una sola vez.
   useEffect(() => {
-    const apiKey = resolveApiKey();
-    if (!apiKey) {
-      setStatus('nokey');
-      return;
-    }
     const container = containerRef.current;
     if (!container) return;
 
@@ -137,7 +133,7 @@ export const Map3DView: React.FC = () => {
       engine.destroy();
       engineRef.current = null;
     };
-  }, [engineId]);
+  }, [engineId, apiKey]);
 
   // Repintar marcadores al cambiar puntos, idioma o colección (en exploración, lo no descubierto va en gris).
   useEffect(() => {
@@ -277,12 +273,6 @@ export const Map3DView: React.FC = () => {
         <div className="absolute inset-0 z-0 flex items-center justify-center p-6">
           <div className="max-w-sm text-center bg-[#FBF9F5] rounded-xl p-6 shadow-lg">
             {status === 'loading' && <p className="text-sm text-stone-600">{t.view3dLoading}</p>}
-            {status === 'nokey' && (
-              <>
-                <h2 className="font-serif font-bold text-lg mb-2">{t.view3dNoKeyTitle}</h2>
-                <p className="text-sm text-stone-600">{t.view3dNoKeyBody}</p>
-              </>
-            )}
             {status === 'error' && (
               <>
                 <h2 className="font-serif font-bold text-lg mb-2">{t.view3dErrorTitle}</h2>
@@ -290,6 +280,12 @@ export const Map3DView: React.FC = () => {
               </>
             )}
           </div>
+        </div>
+      )}
+
+      {engineId === 'three' && status === 'ready' && !isExploring && (
+        <div className="absolute top-16 inset-x-3 md:inset-x-auto md:left-4 md:max-w-xs z-10 text-[11px] text-stone-700 bg-[#FBF9F5]/90 border border-stone-200 rounded-lg px-3 py-2">
+          {apiKey ? t.view3dStylized : t.view3dNoKeyBody}
         </div>
       )}
 
@@ -399,7 +395,7 @@ export const Map3DView: React.FC = () => {
           {isTouring ? (
             <button
               onClick={stopTour}
-              className="flex items-center gap-2 px-4 py-3 text-sm font-semibold text-white bg-stone-800 rounded-full shadow-lg hover:bg-stone-700 cursor-pointer"
+              className="flex items-center gap-2 px-3.5 py-3 text-sm font-semibold whitespace-nowrap text-white bg-stone-800 rounded-full shadow-lg hover:bg-stone-700 cursor-pointer"
             >
               <Square className="w-4 h-4" />
               {t.view3dStop}
@@ -408,7 +404,7 @@ export const Map3DView: React.FC = () => {
             tour && (
               <button
                 onClick={() => void playTour(tour)}
-                className="flex items-center gap-2 px-4 py-3 text-sm font-semibold text-white bg-[#9A3412] rounded-full shadow-lg hover:bg-[#78350F] cursor-pointer"
+                className="flex items-center gap-2 px-3.5 py-3 text-sm font-semibold whitespace-nowrap text-white bg-[#9A3412] rounded-full shadow-lg hover:bg-[#78350F] cursor-pointer"
               >
                 <Play className="w-4 h-4" />
                 {t.view3dTour}
@@ -418,7 +414,7 @@ export const Map3DView: React.FC = () => {
           {!isTouring && (
             <button
               onClick={toggleExplore}
-              className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold rounded-full shadow-lg cursor-pointer ${
+              className={`flex items-center gap-2 px-3.5 py-3 text-sm font-semibold whitespace-nowrap rounded-full shadow-lg cursor-pointer ${
                 isExploring
                   ? 'text-white bg-stone-800 hover:bg-stone-700'
                   : 'text-white bg-[#2563EB] hover:bg-[#1D4ED8]'
@@ -430,7 +426,7 @@ export const Map3DView: React.FC = () => {
           )}
           <button
             onClick={goHome}
-            className="flex items-center gap-2 px-4 py-3 text-sm font-semibold text-stone-800 bg-[#FBF9F5] border border-stone-200 rounded-full shadow-lg hover:bg-white cursor-pointer"
+            className="flex items-center gap-2 px-3.5 py-3 text-sm font-semibold whitespace-nowrap text-stone-800 bg-[#FBF9F5] border border-stone-200 rounded-full shadow-lg hover:bg-white cursor-pointer"
             aria-label={t.view3dHome}
           >
             <Home className="w-4 h-4 text-[#9A3412]" />
