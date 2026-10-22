@@ -1,5 +1,26 @@
 @import "tailwindcss";
 
+/* Tokens del adelanto visual (#43): cantera rosa, piedra caliza, carbón colonial, terracota. */
+@theme {
+  --color-cantera: #9A3412;
+  --color-cantera-2: #C2410C;
+  --color-caliza: #F5EFE6;
+  --color-papel: #FBF9F5;
+  --color-linea: #EDE5D8;
+  --color-carbon: #1C1917;
+  --color-terracota: #D97706;
+  --color-rosa: #E4007C;
+  --color-rec: #7C3AED;
+}
+
+/* Alto de la barra inferior; 0 donde no hay barra. */
+:root {
+  --tabbar-h: 0px;
+}
+:root:has(.app-tabbar) {
+  --tabbar-h: calc(4rem + env(safe-area-inset-bottom, 0px));
+}
+
 @layer base {
   body {
     font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;

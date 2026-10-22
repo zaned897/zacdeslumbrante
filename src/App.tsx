@@ -1,14 +1,19 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Header } from './components/Header';
-import { Sidebar } from './components/Sidebar';
+import React, { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react';
 import { ChatContainer } from './components/ChatContainer';
 import { GoogleMapsPanel } from './components/GoogleMapsPanel';
 import { KnowledgeBaseModal } from './components/KnowledgeBaseModal';
 import { ItineraryModal } from './components/ItineraryModal';
+import { AppHeader } from './components/app/AppHeader';
+import { BottomTabBar } from './components/app/BottomTabBar';
+import { BadgesScreen } from './components/app/BadgesScreen';
+import { PlansScreen } from './components/app/PlansScreen';
+import { AppTab, goToTab, tabFromHash } from './components/app/tabs';
 import { Language, ChatMessage, Place, KnowledgeBaseURL } from './types';
 import { getStoredKnowledgeBase, saveStoredKnowledgeBase, resetKnowledgeBase } from './data/knowledgeBase';
 import { ZACATECAS_PLACES } from './data/places';
-import { TRANSLATIONS } from './data/i18n';
+
+// El motor 3D (three.js / Cesium) pesa: solo se descarga al abrir la pestaña.
+const Map3DView = lazy(() => import('./components/Map3DView').then((m) => ({ default: m.Map3DView })));
 
 export default function App() {
   // Localization: default es (es-MX)
@@ -16,10 +21,20 @@ export default function App() {
     return (localStorage.getItem('zacatecas_lang') as Language) || 'es';
   });
 
+  // Pestaña activa (barra inferior), sincronizada con el hash de la URL
+  const [tab, setTab] = useState<AppTab>(() => tabFromHash(window.location.hash));
+  useEffect(() => {
+    const onChange = () => {
+      setTab(tabFromHash(window.location.hash));
+      // Map3DView guarda su propio idioma; al volver, adopta el último elegido.
+      const stored = localStorage.getItem('zacatecas_lang') as Language | null;
+      if (stored) setLanguage(stored);
+    };
+    window.addEventListener('hashchange', onChange);
+    return () => window.removeEventListener('hashchange', onChange);
+  }, []);
+
   // UI Panels state
-  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(() => {
-    return window.innerWidth >= 1024;
-  });
   const [isMapOpen, setIsMapOpen] = useState<boolean>(() => {
     return window.innerWidth >= 1280;
   });
@@ -28,6 +43,7 @@ export default function App() {
   // Modals state
   const [isKnowledgeModalOpen, setIsKnowledgeModalOpen] = useState(false);
   const [isItineraryModalOpen, setIsItineraryModalOpen] = useState(false);
+  const [initialItineraryId, setInitialItineraryId] = useState<string | undefined>(undefined);
 
   // Knowledge base state (26 official URLs)
   const [knowledgeBase, setKnowledgeBase] = useState<KnowledgeBaseURL[]>(() => {
@@ -169,7 +185,15 @@ export default function App() {
 
             try {
               const parsed = JSON.parse(dataStr);
-              if (parsed.chunk) {
+              if (Array.isArray(parsed.sources)) {
+                // Fragmentos recuperados de la base de conocimientos: numerados igual que las citas [n] del texto
+                const citations = (parsed.sources as { n: number; title: string; url: string; fetchedAt: string }[])
+                  .sort((a, b) => a.n - b.n)
+                  .map((s) => ({ title: s.title, url: s.url, verificationDate: s.fetchedAt }));
+                setMessages((prev) =>
+                  prev.map((m) => (m.id === assistantMsgId ? { ...m, citations } : m))
+                );
+              } else if (parsed.chunk) {
                 accumulatedContent += parsed.chunk;
                 setMessages((prev) =>
                   prev.map((m) =>
@@ -245,6 +269,12 @@ export default function App() {
     [isStreaming, knowledgeBase, language, messages]
   );
 
+  // Desde Planes o Insignias: manda la pregunta y vuelve al chat para ver la respuesta.
+  const handleAskFromElsewhere = (prompt: string) => {
+    goToTab('chat');
+    handleSendMessage(prompt);
+  };
+
   const handleStopStreaming = () => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
@@ -310,62 +340,84 @@ export default function App() {
     URL.revokeObjectURL(url);
   };
 
+  const toggleLanguage = () => setLanguage((prev) => (prev === 'es' ? 'en' : 'es'));
+
   return (
-    <div className="flex flex-col h-screen w-screen overflow-hidden bg-[#FBF9F5] text-stone-900 font-sans">
-      {/* 3-Zone Top Navigation Bar */}
-      <Header
-        language={language}
-        onToggleLanguage={() => setLanguage((prev) => (prev === 'es' ? 'en' : 'es'))}
-        isSidebarOpen={isSidebarOpen}
-        onToggleSidebar={() => setIsSidebarOpen((prev) => !prev)}
-        isMapOpen={isMapOpen}
-        onToggleMap={() => setIsMapOpen((prev) => !prev)}
-        onOpenItineraryModal={() => setIsItineraryModalOpen(true)}
-        onOpenKnowledgeModal={() => setIsKnowledgeModalOpen(true)}
-      />
+    <div className="h-dvh w-full overflow-hidden bg-papel text-carbon font-sans">
+      {tab === '3d' ? (
+        // La vista 3D se encaja arriba de la barra inferior: su raíz mide h-dvh y aquí se ajusta al hueco.
+        <div className="relative w-full overflow-hidden h-[calc(100dvh-var(--tabbar-h))] [&>div]:!h-full">
+          <Suspense fallback={<div className="h-full w-full bg-stone-900" aria-busy="true" />}>
+            <Map3DView />
+          </Suspense>
+        </div>
+      ) : (
+        <div className="h-full flex flex-col" style={{ paddingBottom: 'var(--tabbar-h)' }}>
+          {tab === 'chat' && (
+            <>
+              <AppHeader
+                language={language}
+                onToggleLanguage={toggleLanguage}
+                isMapOpen={isMapOpen}
+                onToggleMap={() => setIsMapOpen((prev) => !prev)}
+              />
+              <div className="flex-1 min-h-0 flex overflow-hidden relative">
+                <ChatContainer
+                  language={language}
+                  messages={messages}
+                  onSendMessage={handleSendMessage}
+                  onStopStreaming={handleStopStreaming}
+                  isStreaming={isStreaming}
+                  onPlaceClick={handlePlaceClick}
+                  onSelectPrompt={(prompt) => handleSendMessage(prompt)}
+                  knowledgeBase={knowledgeBase}
+                  onOpen3d={() => goToTab('3d')}
+                  onOpenPlans={() => goToTab('plans')}
+                />
+                <GoogleMapsPanel
+                  isOpen={isMapOpen}
+                  onClose={() => setIsMapOpen(false)}
+                  language={language}
+                  selectedPlace={selectedPlace}
+                  highlightedPlaceIds={highlightedPlaceIds}
+                  onPlaceSelect={setSelectedPlace}
+                  onAskAboutPlace={handleAskAboutPlace}
+                  splitRatio={mapSplitRatio}
+                  onToggleSplitRatio={() =>
+                    setMapSplitRatio((prev) => (prev === '50-50' ? 'full' : '50-50'))
+                  }
+                />
+              </div>
+            </>
+          )}
 
-      {/* Main Workspace Flow: Collapsible Sidebar + Chat Canvas + Collapsible Map */}
-      <div className="flex-1 flex overflow-hidden relative">
-        {/* Collapsible Left Panel */}
-        <Sidebar
-          isOpen={isSidebarOpen}
-          onClose={() => setIsSidebarOpen(false)}
-          language={language}
-          knowledgeBase={knowledgeBase}
-          onOpenKnowledgeModal={() => setIsKnowledgeModalOpen(true)}
-          onOpenItineraryModal={() => setIsItineraryModalOpen(true)}
-          onSelectPrompt={(prompt) => handleSendMessage(prompt)}
-          onClearChat={handleClearChat}
-          onExportChat={handleExportChat}
-        />
+          {tab === 'badges' && (
+            <div className="flex-1 min-h-0">
+              <BadgesScreen language={language} onGoExplore={() => goToTab('3d')} />
+            </div>
+          )}
 
-        {/* Central Chat Streaming Container */}
-        <ChatContainer
-          language={language}
-          messages={messages}
-          onSendMessage={handleSendMessage}
-          onStopStreaming={handleStopStreaming}
-          isStreaming={isStreaming}
-          onPlaceClick={handlePlaceClick}
-          onSelectPrompt={(prompt) => handleSendMessage(prompt)}
-          knowledgeBase={knowledgeBase}
-        />
+          {tab === 'plans' && (
+            <div className="flex-1 min-h-0">
+              <PlansScreen
+                language={language}
+                knowledgeBase={knowledgeBase}
+                onOpenItinerary={(id) => {
+                  setInitialItineraryId(id);
+                  setIsItineraryModalOpen(true);
+                }}
+                onAskTheme={handleAskFromElsewhere}
+                onOpenKnowledgeModal={() => setIsKnowledgeModalOpen(true)}
+                onClearChat={handleClearChat}
+                onExportChat={handleExportChat}
+                hasMessages={messages.length > 0}
+              />
+            </div>
+          )}
+        </div>
+      )}
 
-        {/* Collapsible Non-Overlapping Google Maps Panel (50/50 Split or Full) */}
-        <GoogleMapsPanel
-          isOpen={isMapOpen}
-          onClose={() => setIsMapOpen(false)}
-          language={language}
-          selectedPlace={selectedPlace}
-          highlightedPlaceIds={highlightedPlaceIds}
-          onPlaceSelect={setSelectedPlace}
-          onAskAboutPlace={handleAskAboutPlace}
-          splitRatio={mapSplitRatio}
-          onToggleSplitRatio={() =>
-            setMapSplitRatio((prev) => (prev === '50-50' ? 'full' : '50-50'))
-          }
-        />
-      </div>
+      <BottomTabBar language={language} active={tab} onSelect={goToTab} />
 
       {/* Modals */}
       <KnowledgeBaseModal
@@ -382,7 +434,8 @@ export default function App() {
         isOpen={isItineraryModalOpen}
         onClose={() => setIsItineraryModalOpen(false)}
         language={language}
-        onSelectItineraryPrompt={(prompt) => handleSendMessage(prompt)}
+        initialItineraryId={initialItineraryId}
+        onSelectItineraryPrompt={handleAskFromElsewhere}
         onHighlightPlacesOnMap={handleHighlightPlacesOnMap}
       />
     </div>
