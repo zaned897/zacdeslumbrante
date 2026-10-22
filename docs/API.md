@@ -14,6 +14,7 @@ Body:
 { "message": "string (requerido)", "history": [], "language": "es | en", "activeKnowledgeUrls": [] }
 ```
 Respuestas: `400` si falta `message`. Si no, flujo SSE de líneas `data: ...`:
+- `{ "sources": [{ "n": 1, "title": "string", "url": "string", "fetchedAt": "YYYY-MM-DD" }] }` — opcional, llega antes del primer `chunk`. Son los fragmentos de la base de conocimientos (`services/kb`) que se usaron; la respuesta los cita como `[n]`. Solo llega si existe `services/kb/data/corpus.jsonl` (o `KB_CORPUS_PATH`) y hubo coincidencias entre las fuentes activas.
 - `{ "chunk": "texto" }` — fragmentos de la respuesta, en orden
 - `{ "error": "mensaje" }` — error durante la generación
 - `[DONE]` — fin del flujo

@@ -14,10 +14,15 @@ class _TextParser(HTMLParser):
         super().__init__(convert_charrefs=True)
         self.parts: list[str] = []
         self.title = ""
+        self.links: list[str] = []
         self._skip = 0
         self._in_title = False
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        if tag == "a":  # también en <nav>: el menú es la mejor pista de páginas internas
+            href = dict(attrs).get("href")
+            if href:
+                self.links.append(href)
         if tag in _SKIP:
             self._skip += 1
         elif tag == "title":
@@ -40,13 +45,18 @@ class _TextParser(HTMLParser):
             self.parts.append(data)
 
 
-def html_to_text(html: str) -> tuple[str, str]:
-    """Devuelve (título, texto). Las líneas muy cortas (menús sueltos) se descartan."""
+def parse_html(html: str) -> tuple[str, str, list[str]]:
+    """Devuelve (título, texto, hrefs). Las líneas muy cortas (menús sueltos) se descartan."""
     p = _TextParser()
     p.feed(html)
     lines = (re.sub(r"\s+", " ", ln).strip() for ln in "".join(p.parts).split("\n"))
     text = "\n".join(ln for ln in lines if len(ln.split()) >= 4)
-    return re.sub(r"\s+", " ", p.title).strip(), text
+    return re.sub(r"\s+", " ", p.title).strip(), text, p.links
+
+
+def html_to_text(html: str) -> tuple[str, str]:
+    title, text, _ = parse_html(html)
+    return title, text
 
 
 def csv_to_text(raw: str) -> str:

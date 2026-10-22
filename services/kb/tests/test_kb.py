@@ -2,13 +2,22 @@ import json
 from pathlib import Path
 
 import httpx
+import pytest
 
+from kb import ingest
 from kb.chunk import chunk_text
 from kb.evaluate import evaluate
 from kb.extract import csv_to_text, html_to_text
-from kb.ingest import USER_AGENT, ingest_source
+from kb.ingest import USER_AGENT, ingest_source, internal_links
 from kb.search import Index, prompt_context, tokenize
 from kb.sources import load_sources
+
+
+@pytest.fixture(autouse=True)
+def _fresh_robots(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(ingest, "_robots", {})
+    monkeypatch.setattr(ingest, "PAUSE", 0)
+
 
 FIXTURES = Path(__file__).parent / "fixtures"
 HTML = (FIXTURES / "la_quemada.html").read_text(encoding="utf-8")
@@ -19,6 +28,7 @@ def _chunk(source_id: str, text: str) -> dict:
         "chunkId": f"{source_id}#0",
         "sourceId": source_id,
         "sourceTitle": source_id,
+        "sourceUrl": f"https://example.org/{source_id}",
         "url": f"https://example.org/{source_id}",
         "pageTitle": "",
         "category": "tourism",
@@ -138,3 +148,45 @@ def test_ingest_reports_unsupported_content_type() -> None:
     with httpx.Client(transport=httpx.MockTransport(handler)) as client:
         chunks, report = ingest_source(client, src)
     assert chunks == [] and report.status == "unsupported: application/pdf"
+
+
+def test_internal_links_same_site_prefers_base_path() -> None:
+    hrefs = [
+        "/otra",
+        "/zonas/112/salon",
+        "https://fuera.org/x",
+        "#top",
+        "/zonas/112/plano.pdf",
+        "/otra",
+    ]
+    assert internal_links("https://inah.gob.mx/zonas/112", hrefs, 5) == [
+        "https://inah.gob.mx/zonas/112/salon",
+        "https://inah.gob.mx/otra",
+    ]
+
+
+def test_ingest_follows_internal_links_up_to_max_pages() -> None:
+    src = next(s for s in load_sources() if s.id == "inah-la-quemada")
+    links = '<a href="/a">a</a><a href="/b">b</a><a href="/c">c</a>'
+    root = links + "<p>Inicio del sitio con texto suficiente aquí.</p>"
+    fetched: list[str] = []
+
+    def handler(req: httpx.Request) -> httpx.Response:
+        if req.url.path == "/robots.txt":
+            return httpx.Response(404)
+        fetched.append(req.url.path)
+        body = (
+            root
+            if len(fetched) == 1
+            else f"<p>Página {req.url.path} con texto suficiente aquí.</p>"
+        )
+        return httpx.Response(200, text=body, headers={"content-type": "text/html"})
+
+    with httpx.Client(transport=httpx.MockTransport(handler)) as client:
+        chunks, report = ingest_source(client, src, max_pages=3)
+    assert report.pages == 3 and len(fetched) == 3
+    assert {c.url for c in chunks} == {
+        str(src.url),
+        "https://www.inah.gob.mx/a",
+        "https://www.inah.gob.mx/b",
+    }
