@@ -195,7 +195,7 @@ def test_ingest_follows_internal_links_up_to_max_pages() -> None:
 def test_curated_root_page_outranks_crawled_page() -> None:
     root = _chunk("unesco-faq-126", "Criterios UNESCO del centro histórico de Zacatecas.")
     crawled = {
-        **_chunk("inah-portal-nacional", "Criterios UNESCO del centro histórico de Zacatecas.")
+        **_chunk("inah-portal-nacional", "Criterios UNESCO del centro histórico, Zacatecas.")
     }
     crawled["url"] = "https://example.org/inah-portal-nacional/otra"
     hits = Index([crawled, root]).search("criterios unesco", k=2)
