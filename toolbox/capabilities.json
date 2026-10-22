@@ -324,6 +324,7 @@
       "id": "persistencia",
       "idea": "Base de datos para eventos, comercios y usuarios (hoy todo es estático en src/data)",
       "status": "pendiente",
+      "note": "#53 usa Supabase (Auth + tabla user_progress) vía HTTP desde FastAPI, sin MCP ni SDK. Eventos y comercios siguen en archivos.",
       "triggers": [
         "base de datos",
         "database",

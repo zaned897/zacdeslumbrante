@@ -92,7 +92,8 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
 
   return (
     <div className="flex-1 min-w-0 flex flex-col h-full bg-papel overflow-hidden relative">
-      <div className="flex-1 overflow-y-auto px-3 sm:px-6 py-4">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-64 tinte-temporada" aria-hidden="true" />
+      <div className="relative flex-1 overflow-y-auto px-3 sm:px-6 py-4">
         {messages.length === 0 ? (
           <div className="max-w-lg mx-auto pt-6 pb-4 space-y-5">
             <div className="space-y-2">

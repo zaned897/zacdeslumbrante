@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import challenges, photos, recommendations, street_life, tours
+from app.routers import account, challenges, photos, recommendations, street_life, tours
 
 app = FastAPI(title="Zacatecas Deslumbrante API", version="0.1.0")
 
@@ -9,10 +9,11 @@ app = FastAPI(title="Zacatecas Deslumbrante API", version="0.1.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000"],
-    allow_methods=["GET", "POST"],
-    allow_headers=["content-type"],
+    allow_methods=["GET", "POST", "PUT"],
+    allow_headers=["content-type", "authorization"],
 )
 
+app.include_router(account.router)
 app.include_router(challenges.router)
 app.include_router(photos.router)
 app.include_router(recommendations.router)
