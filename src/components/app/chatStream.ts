@@ -64,5 +64,7 @@ export async function streamChat(opts: StreamChatOptions): Promise<string> {
       }
     }
   }
-  return text;
+  if (buffer.trim() === 'data: [DONE]') return text;
+  // Sin [DONE] el flujo se cortó: no mostrar la respuesta parcial como completa.
+  throw new Error('chat stream ended before [DONE]');
 }
