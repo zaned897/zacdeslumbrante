@@ -1,5 +1,5 @@
 import React from 'react';
-import { PanelLeftClose, PanelLeft, MapPin, Globe, Compass } from 'lucide-react';
+import { PanelLeftClose, PanelLeft, MapPin, Globe, Compass, Box } from 'lucide-react';
 import { Language } from '../types';
 import { TRANSLATIONS } from '../data/i18n';
 
@@ -73,6 +73,16 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* Zone 3: Actions (Language Selector & Map Toggle) */}
       <div className="flex items-center gap-2 md:gap-3 shrink-0">
+        {/* 3D City (mock) */}
+        <a
+          href="#3d"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-stone-800 bg-white border border-stone-300 hover:bg-stone-50 hover:border-stone-400 rounded-lg transition-colors"
+          title={t.view3d}
+        >
+          <Box className="w-3.5 h-3.5 text-[#9A3412]" />
+          <span className="hidden sm:inline whitespace-nowrap">{t.view3d}</span>
+        </a>
+
         {/* Language Selector Toggle */}
         <button
           onClick={onToggleLanguage}

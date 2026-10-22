@@ -1,0 +1,460 @@
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  ArrowDown,
+  ArrowLeft,
+  ArrowUp,
+  Footprints,
+  Globe,
+  Home,
+  LocateFixed,
+  Play,
+  RotateCcw,
+  RotateCw,
+  Square,
+  Trophy,
+  X,
+} from 'lucide-react';
+import { Language } from '../types';
+import type { SceneEngine, ScenePoi, Tour } from '../types/scene3d';
+import { TRANSLATIONS } from '../data/i18n';
+import { TOURS_3D, ZACATECAS_3D_HOME } from '../data/tours3d';
+import { ZACATECAS_PLACES } from '../data/places';
+import { SCENE_LAYERS } from '../scene3d/layers';
+import { GoogleMaps3dEngine } from '../scene3d/googleMaps3dEngine';
+import { distanceMeters } from '../scene3d/geo';
+import { usePlayerPosition, type FallbackReason } from '../scene3d/usePlayerPosition';
+import { useCollection } from '../scene3d/useCollection';
+import { useAvatarControls, type AvatarAction } from '../scene3d/useAvatarControls';
+
+type Status = 'loading' | 'ready' | 'nokey' | 'error';
+
+const FLIGHT_MILLIS = 4500;
+const DISCOVER_RADIUS_M = 40;
+const AVATAR_SRC = '/models/avatars/minero.glb';
+const UNDISCOVERED_COLOR = '#A8A29E';
+// PROTO: altitud fija del centro para la cámara que sigue al jugador; el terreno varía ±100 m.
+const FOLLOW_ALTITUDE = 2450;
+const SIMULATED_PATH = (TOURS_3D[0]?.stops ?? []).map((s) => ({ lat: s.camera.lat, lng: s.camera.lng }));
+
+function resolveApiKey(): string {
+  return (
+    localStorage.getItem('zacatecas_maps_api_key') ||
+    import.meta.env.VITE_MAPS_API_KEY ||
+    import.meta.env.VITE_GOOGLE_MAPS_API_KEY ||
+    ''
+  );
+}
+
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/** Vista 3D de la ciudad (nivel mock). Se abre en /#3d. */
+export const Map3DView: React.FC = () => {
+  const [language, setLanguage] = useState<Language>(
+    () => (localStorage.getItem('zacatecas_lang') as Language) || 'es',
+  );
+  const [status, setStatus] = useState<Status>('loading');
+  const [errorDetail, setErrorDetail] = useState('');
+  const [pois, setPois] = useState<ScenePoi[]>([]);
+  const [selected, setSelected] = useState<ScenePoi | null>(null);
+  const [caption, setCaption] = useState<string | null>(null);
+  const [isTouring, setIsTouring] = useState(false);
+  const [isExploring, setIsExploring] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
+
+  const containerRef = useRef<HTMLDivElement>(null);
+  const engineRef = useRef<SceneEngine | null>(null);
+  const tourRunRef = useRef(0);
+
+  const t = TRANSLATIONS[language];
+
+  const { position, fallbackReason, isManual, teleport, resume } = usePlayerPosition({
+    enabled: isExploring,
+    simulatedPath: SIMULATED_PATH,
+    playArea: ZACATECAS_3D_HOME,
+  });
+  const { collection, discover, reset } = useCollection();
+  const act = useAvatarControls(isExploring, position, teleport);
+  const teleportRef = useRef<typeof teleport | null>(null);
+  teleportRef.current = isExploring ? teleport : null;
+
+  const placePois = useMemo(() => pois.filter((p) => p.kind === 'place' && p.placeId), [pois]);
+  const discoveredCount = placePois.filter((p) => p.placeId && collection[p.placeId]).length;
+
+  useEffect(() => {
+    localStorage.setItem('zacatecas_lang', language);
+    document.documentElement.lang = language;
+  }, [language]);
+
+  // Montar el motor una sola vez.
+  useEffect(() => {
+    const apiKey = resolveApiKey();
+    if (!apiKey) {
+      setStatus('nokey');
+      return;
+    }
+    const container = containerRef.current;
+    if (!container) return;
+
+    const engine = new GoogleMaps3dEngine(apiKey);
+    engineRef.current = engine;
+    let cancelled = false;
+
+    engine
+      .mount(container, ZACATECAS_3D_HOME)
+      .then(async () => {
+        if (cancelled) return;
+        engine.onPoiClick(setSelected);
+        engine.setAvatar(AVATAR_SRC);
+        engine.onGroundClick((at) => teleportRef.current?.(at));
+        const loaded = await Promise.all(
+          SCENE_LAYERS.filter((l) => l.enabledByDefault).map((l) => l.load()),
+        );
+        if (cancelled) return;
+        setPois(loaded.flat());
+        setStatus('ready');
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return;
+        setErrorDetail(err instanceof Error ? err.message : String(err));
+        setStatus('error');
+      });
+
+    return () => {
+      cancelled = true;
+      tourRunRef.current++;
+      engine.destroy();
+      engineRef.current = null;
+    };
+  }, []);
+
+  // Repintar marcadores al cambiar puntos, idioma o colección (en exploración, lo no descubierto va en gris).
+  useEffect(() => {
+    if (status !== 'ready') return;
+    const shown = isExploring
+      ? pois.map((p) =>
+          p.placeId && !collection[p.placeId] ? { ...p, color: UNDISCOVERED_COLOR } : p,
+        )
+      : pois;
+    engineRef.current?.setPois(shown, language);
+  }, [pois, language, status, isExploring, collection]);
+
+  // Jugador: moverlo, seguirlo con la cámara y descubrir lugares cercanos.
+  useEffect(() => {
+    const engine = engineRef.current;
+    if (!engine || status !== 'ready') return;
+    engine.setPlayer(position);
+    if (!position) return;
+    engine.jumpTo({
+      lat: position.lat,
+      lng: position.lng,
+      altitude: FOLLOW_ALTITUDE,
+      range: 260,
+      tilt: 62,
+      heading: position.heading,
+    });
+    const found = placePois.find(
+      (p) => p.placeId && !collection[p.placeId] && distanceMeters(position, p) <= DISCOVER_RADIUS_M,
+    );
+    if (found?.placeId) {
+      discover(found.placeId);
+      setToast(t.view3dDiscovered.replace('{name}', found.title[language]));
+    }
+  }, [position, status, placePois, collection, discover, t, language]);
+
+  useEffect(() => {
+    if (!toast) return;
+    const id = setTimeout(() => setToast(null), 3500);
+    return () => clearTimeout(id);
+  }, [toast]);
+
+  const stopTour = useCallback(() => {
+    tourRunRef.current++;
+    engineRef.current?.stop();
+    engineRef.current?.setRoute(null);
+    setIsTouring(false);
+    setCaption(null);
+  }, []);
+
+  const playTour = useCallback(
+    async (tour: Tour) => {
+      const engine = engineRef.current;
+      if (!engine) return;
+      const run = ++tourRunRef.current;
+      const isCurrent = () => tourRunRef.current === run;
+      setSelected(null);
+      setIsTouring(true);
+      engine.setRoute(tour.stops.map((s) => ({ lat: s.camera.lat, lng: s.camera.lng })));
+
+      for (const stop of tour.stops) {
+        setCaption(stop.caption[language]);
+        await engine.flyTo(stop.camera, FLIGHT_MILLIS);
+        if (!isCurrent()) return;
+        await wait(stop.holdMillis);
+        if (!isCurrent()) return;
+      }
+      const last = tour.stops[tour.stops.length - 1];
+      if (last) await engine.orbit(last.camera, 8000);
+      if (!isCurrent()) return;
+      await engine.flyTo(ZACATECAS_3D_HOME, FLIGHT_MILLIS);
+      if (!isCurrent()) return;
+      engine.setRoute(null);
+      setCaption(null);
+      setIsTouring(false);
+    },
+    [language],
+  );
+
+  const toggleExplore = () => {
+    stopTour();
+    setSelected(null);
+    setIsExploring((v) => !v);
+  };
+
+  const fallbackText: Record<FallbackReason, string> = {
+    denied: t.view3dFallbackDenied,
+    far: t.view3dFallbackFar,
+    unavailable: t.view3dFallbackUnavailable,
+    forced: t.view3dFallbackForced,
+  };
+  const sourceText = position
+    ? { gps: t.view3dSourceGps, simulated: t.view3dSourceSimulated, manual: t.view3dSourceManual }[position.source]
+    : null;
+
+  const goHome = () => {
+    setIsExploring(false);
+    stopTour();
+    void engineRef.current?.flyTo(ZACATECAS_3D_HOME, 2500);
+  };
+
+  const selectedPlace = selected?.placeId
+    ? ZACATECAS_PLACES.find((p) => p.id === selected.placeId)
+    : undefined;
+  const tour = TOURS_3D[0];
+
+  return (
+    <div className="relative h-dvh w-full overflow-hidden bg-stone-900 text-stone-900">
+      <div ref={containerRef} className="absolute inset-0" />
+
+      {/* Barra superior */}
+      <div className="absolute top-0 inset-x-0 z-10 flex items-center justify-between gap-2 p-3 md:p-4 pointer-events-none">
+        <a
+          href="#"
+          className="pointer-events-auto flex items-center gap-2 px-3 py-2 text-xs font-semibold bg-[#FBF9F5]/95 border border-stone-200 rounded-lg shadow-sm hover:bg-white"
+        >
+          <ArrowLeft className="w-4 h-4 text-[#9A3412]" />
+          <span className="hidden sm:inline">{t.view3dBack}</span>
+        </a>
+        <div className="pointer-events-auto flex items-center gap-2 px-3 py-2 bg-[#FBF9F5]/95 border border-stone-200 rounded-lg shadow-sm">
+          <span className="font-serif font-bold text-sm md:text-base">{t.view3d}</span>
+          <span className="px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white bg-[#D97706] rounded">
+            {t.view3dDemoBadge}
+          </span>
+        </div>
+        <button
+          onClick={() => setLanguage((l) => (l === 'es' ? 'en' : 'es'))}
+          className="pointer-events-auto flex items-center gap-1.5 px-3 py-2 text-xs font-semibold bg-[#FBF9F5]/95 border border-stone-200 rounded-lg shadow-sm hover:bg-white cursor-pointer"
+          aria-label={t.toggleLanguage}
+        >
+          <Globe className="w-3.5 h-3.5 text-stone-500" />
+          <span className="uppercase">{language}</span>
+        </button>
+      </div>
+
+      {/* Estados sin mapa */}
+      {status !== 'ready' && (
+        <div className="absolute inset-0 z-0 flex items-center justify-center p-6">
+          <div className="max-w-sm text-center bg-[#FBF9F5] rounded-xl p-6 shadow-lg">
+            {status === 'loading' && <p className="text-sm text-stone-600">{t.view3dLoading}</p>}
+            {status === 'nokey' && (
+              <>
+                <h2 className="font-serif font-bold text-lg mb-2">{t.view3dNoKeyTitle}</h2>
+                <p className="text-sm text-stone-600">{t.view3dNoKeyBody}</p>
+              </>
+            )}
+            {status === 'error' && (
+              <>
+                <h2 className="font-serif font-bold text-lg mb-2">{t.view3dErrorTitle}</h2>
+                <p className="text-xs text-stone-500 font-mono break-words">{errorDetail}</p>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* HUD de exploración */}
+      {isExploring && (
+        <div className="absolute top-16 inset-x-3 md:inset-x-auto md:left-4 md:w-72 z-10 bg-[#FBF9F5]/95 border border-stone-200 rounded-xl shadow-sm p-3 text-xs">
+          <div className="flex items-center justify-between gap-2">
+            <span className="flex items-center gap-1.5 font-semibold text-stone-800">
+              <Trophy className="w-4 h-4 text-[#D97706]" />
+              {t.view3dCollection}: {discoveredCount}/{placePois.length}
+            </span>
+            <button
+              onClick={reset}
+              className="p-1 text-stone-500 hover:text-stone-900 cursor-pointer"
+              title={t.view3dResetCollection}
+              aria-label={t.view3dResetCollection}
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+            </button>
+          </div>
+          <div className="mt-2 h-1.5 rounded-full bg-stone-200 overflow-hidden">
+            <div
+              className="h-full bg-[#9A3412] transition-all"
+              style={{ width: `${placePois.length ? (discoveredCount / placePois.length) * 100 : 0}%` }}
+            />
+          </div>
+          <p className="mt-2 text-stone-600">
+            {sourceText && <span className="font-semibold text-stone-800">{sourceText}. </span>}
+            {fallbackReason && !isManual && fallbackText[fallbackReason]} {t.view3dTapToMove}
+          </p>
+          {isManual && (
+            <button
+              onClick={resume}
+              className="mt-2 flex items-center gap-1.5 font-semibold text-[#9A3412] hover:underline cursor-pointer"
+            >
+              <LocateFixed className="w-3.5 h-3.5" />
+              {t.view3dResume}
+            </button>
+          )}
+        </div>
+      )}
+
+      {toast && (
+        <div className="absolute inset-x-0 top-1/3 z-20 flex justify-center px-4 pointer-events-none">
+          <p className="animate-bounce text-center text-sm md:text-base font-bold text-white bg-[#9A3412] rounded-full shadow-lg px-5 py-3">
+            {toast}
+          </p>
+        </div>
+      )}
+
+      {/* Subtítulo del recorrido */}
+      {caption && (
+        <div className="absolute inset-x-0 bottom-24 z-10 flex justify-center px-4 pointer-events-none">
+          <p className="max-w-xl text-center text-sm md:text-base font-medium text-white bg-stone-900/75 rounded-lg px-4 py-3">
+            {caption}
+          </p>
+        </div>
+      )}
+
+      {/* Tarjeta del lugar */}
+      {selected && !isTouring && (
+        <div className={`absolute inset-x-3 ${isExploring ? 'bottom-56 md:bottom-24 md:right-48' : 'bottom-24 md:right-4'} md:inset-x-auto md:w-80 z-10 bg-[#FBF9F5] rounded-xl shadow-lg border border-stone-200 p-4`}>
+          <div className="flex items-start justify-between gap-2">
+            <h3 className="font-serif font-bold text-base text-[#9A3412]">{selected.title[language]}</h3>
+            <button
+              onClick={() => setSelected(null)}
+              className="p-1 text-stone-500 hover:text-stone-900 cursor-pointer"
+              aria-label={t.view3dClose}
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          {selected.summary && (
+            <p className="mt-2 text-xs leading-relaxed text-stone-700">{selected.summary[language]}</p>
+          )}
+          {selectedPlace && (
+            <p className="mt-2 text-[11px] text-stone-500">
+              <span className="font-semibold">{t.scheduleLabel}</span> {selectedPlace.schedule}
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Pad táctil del avatar (también WASD / flechas) */}
+      {isExploring && status === 'ready' && (
+        <div className="absolute right-3 bottom-24 z-10 grid grid-cols-3 gap-1.5 select-none">
+          {(
+            [
+              ['forward', ArrowUp, 'col-start-2'],
+              ['left', RotateCcw, 'col-start-1 row-start-2'],
+              ['back', ArrowDown, 'col-start-2 row-start-2'],
+              ['right', RotateCw, 'col-start-3 row-start-2'],
+            ] as Array<[AvatarAction, typeof ArrowUp, string]>
+          ).map(([action, Icon, place]) => (
+            <PadButton key={action} className={place} onAct={() => act(action)} label={action}>
+              <Icon className="w-5 h-5" />
+            </PadButton>
+          ))}
+        </div>
+      )}
+
+      {/* Controles */}
+      {status === 'ready' && (
+        <div className="absolute inset-x-0 bottom-0 z-10 flex justify-center gap-2 p-4">
+          {isTouring ? (
+            <button
+              onClick={stopTour}
+              className="flex items-center gap-2 px-4 py-3 text-sm font-semibold text-white bg-stone-800 rounded-full shadow-lg hover:bg-stone-700 cursor-pointer"
+            >
+              <Square className="w-4 h-4" />
+              {t.view3dStop}
+            </button>
+          ) : isExploring ? null : (
+            tour && (
+              <button
+                onClick={() => void playTour(tour)}
+                className="flex items-center gap-2 px-4 py-3 text-sm font-semibold text-white bg-[#9A3412] rounded-full shadow-lg hover:bg-[#78350F] cursor-pointer"
+              >
+                <Play className="w-4 h-4" />
+                {t.view3dTour}
+              </button>
+            )
+          )}
+          {!isTouring && (
+            <button
+              onClick={toggleExplore}
+              className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold rounded-full shadow-lg cursor-pointer ${
+                isExploring
+                  ? 'text-white bg-stone-800 hover:bg-stone-700'
+                  : 'text-white bg-[#2563EB] hover:bg-[#1D4ED8]'
+              }`}
+            >
+              <Footprints className="w-4 h-4" />
+              {isExploring ? t.view3dExploreStop : t.view3dExplore}
+            </button>
+          )}
+          <button
+            onClick={goHome}
+            className="flex items-center gap-2 px-4 py-3 text-sm font-semibold text-stone-800 bg-[#FBF9F5] border border-stone-200 rounded-full shadow-lg hover:bg-white cursor-pointer"
+            aria-label={t.view3dHome}
+          >
+            <Home className="w-4 h-4 text-[#9A3412]" />
+            <span className="hidden sm:inline">{t.view3dHome}</span>
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+/** Botón del pad: repite mientras se mantiene presionado. */
+const PadButton: React.FC<{
+  onAct: () => void;
+  label: string;
+  className: string;
+  children: React.ReactNode;
+}> = ({ onAct, label, className, children }) => {
+  const timer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const stop = () => {
+    if (timer.current) clearInterval(timer.current);
+    timer.current = null;
+  };
+  useEffect(() => stop, []);
+  return (
+    <button
+      aria-label={label}
+      className={`${className} w-12 h-12 flex items-center justify-center rounded-xl bg-[#FBF9F5]/95 border border-stone-200 shadow-md text-stone-800 active:bg-stone-200 touch-none cursor-pointer`}
+      onPointerDown={() => {
+        onAct();
+        stop();
+        timer.current = setInterval(onAct, 150);
+      }}
+      onPointerUp={stop}
+      onPointerLeave={stop}
+      onPointerCancel={stop}
+    >
+      {children}
+    </button>
+  );
+};
