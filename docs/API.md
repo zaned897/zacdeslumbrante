@@ -60,11 +60,31 @@ Los 3 lugares no visitados más cercanos (haversine), compatibles con `ScenePoi`
       "isMock": true,
       "reason": { "es": "A 90 m de ti", "en": "90 m from you" },
       "distanceMeters": 90
+### GET /api/py/street-life?category=  · mock · dueño: Claude Code (#40)
+Vida de calle para la ciudad 3D: puestos, artesanos y músicos **genéricos** (tipos de comercio típicos, no negocios reales), compatibles con `ScenePoi`. `category` opcional: `food | sweets | crafts | music | art`. Datos en `services/api/app/fixtures/street_life.json`.
+```json
+{
+  "_mock": true,
+  "spots": [
+    {
+      "id": "callejoneada-tamborazo",
+      "kind": "vendor",
+      "category": "music",
+      "icon": "drum",
+      "title": { "es": "Callejoneada con tamborazo", "en": "Callejoneada with tamborazo" },
+      "cry": { "es": "Tambora, trompeta y jarrito de mezcal…", "en": "Drum, trumpet and a clay cup of mezcal…" },
+      "when": { "es": "Suele salir de noche, más en fines de semana", "en": "Usually at night, mostly on weekends" },
+      "nearPlaceId": "plaza-armas",
+      "lat": 22.77605, "lng": -102.57265,
+      "isMock": true
     }
   ]
 }
 ```
 Sin precios ni reseñas: la razón es solo la distancia.
+- `cry`: el pregón del puesto; `when`: cuándo suele verse, nunca un horario exacto.
+- `nearPlaceId`: id de `src/data/places.ts`; el test valida que exista y que el puesto quede a menos de ~150 m.
+- Sin precios, nombres de comerciantes, contactos ni reseñas.
 
 ## Propuestas pendientes
 (Agrega aquí endpoints nuevos antes de implementarlos: método, ruta, body, respuesta, dueño.)

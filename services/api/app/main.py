@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import challenges, recommendations
+from app.routers import challenges, recommendations, street_life
 
 app = FastAPI(title="Zacatecas Deslumbrante API", version="0.1.0")
 
@@ -15,6 +15,7 @@ app.add_middleware(
 
 app.include_router(challenges.router)
 app.include_router(recommendations.router)
+app.include_router(street_life.router)
 
 
 @app.get("/health")
