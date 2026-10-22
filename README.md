@@ -70,6 +70,15 @@ Se definen en `.env` (copia de `.env.example`). **`.env` nunca se sube al repo**
 | `APP_URL` | No | URL pública cuando se aloja en AI Studio / Cloud Run; en local no hace falta. |
 | `PORT` | No | Puerto de Express (por defecto 3000). |
 
+### Desplegar en línea (Render)
+
+`render.yaml` define dos servicios gratis: `zacdes-web` (Express + Vite) y `zacdes-api` (FastAPI). Para crearlos: en Render, *New → Blueprint*, elige este repo y captura `GEMINI_API_KEY` (y `VITE_MAPS_API_KEY` si quieres el mapa de Google) cuando lo pida. Cada push a `main` vuelve a desplegar.
+
+- La URL de la web abre en el celular. Los servicios gratis se duermen tras 15 min sin visitas y tardan ~1 min en despertar.
+- Si Render asigna a la API otra URL que `https://zacdes-api.onrender.com`, actualiza `PY_API_URL` en el panel de `zacdes-web`.
+- Preview de un PR: agrega `[render preview]` a su título.
+- El corpus de `services/kb` no está en el repo, así que el chat en línea responde sin citar fragmentos.
+
 ## Estructura
 
 ```
