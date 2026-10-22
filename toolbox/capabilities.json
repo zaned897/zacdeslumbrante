@@ -1,0 +1,362 @@
+{
+  "_doc": "Fuente única de verdad de la suite. 'installed' = lo que existe; 'parked' = ideas a futuro con disparadores. Lo mantiene la skill scout. No instales nada que no pase por aquí.",
+  "updated": "2026-10-21",
+  "installed": [
+    {
+      "id": "context7",
+      "type": "mcp",
+      "agents": [
+        "claude",
+        "codex",
+        "antigravity"
+      ],
+      "covers": [
+        "docs actualizadas de librerías",
+        "express",
+        "vite",
+        "react",
+        "genai sdk"
+      ],
+      "cost": "bajo: solo trae docs al pedirlas"
+    },
+    {
+      "id": "playwright",
+      "type": "mcp",
+      "agents": [
+        "claude"
+      ],
+      "covers": [
+        "navegador",
+        "e2e",
+        "capturas",
+        "verificación visual"
+      ],
+      "cost": "medio: snapshots de página en contexto"
+    },
+    {
+      "id": "codebase-memory",
+      "type": "mcp",
+      "agents": [
+        "claude",
+        "codex"
+      ],
+      "covers": [
+        "mapa del código",
+        "buscar símbolos",
+        "dependencias entre archivos"
+      ],
+      "cost": "ahorra tokens: evita leer archivos completos"
+    },
+    {
+      "id": "codex-plugin-cc",
+      "type": "plugin",
+      "agents": [
+        "claude"
+      ],
+      "covers": [
+        "code review",
+        "review adversarial",
+        "delegar a codex"
+      ],
+      "cost": "usa cuota de ChatGPT, no de Claude"
+    },
+    {
+      "id": "scout",
+      "type": "skill",
+      "agents": [
+        "claude",
+        "codex",
+        "antigravity"
+      ],
+      "covers": [
+        "elegir e instalar herramientas",
+        "evitar duplicados"
+      ],
+      "cost": "solo se carga al invocarla"
+    },
+    {
+      "id": "radar",
+      "type": "skill",
+      "agents": [
+        "claude",
+        "codex",
+        "antigravity"
+      ],
+      "covers": [
+        "modelos nuevos",
+        "features nuevas de agentes",
+        "deprecaciones"
+      ],
+      "cost": "solo se carga al invocarla"
+    },
+    {
+      "id": "orchestrate",
+      "type": "skill",
+      "agents": [
+        "claude",
+        "codex",
+        "antigravity"
+      ],
+      "covers": [
+        "metodología multiagente",
+        "spec",
+        "plan",
+        "paralelo",
+        "review"
+      ],
+      "cost": "solo se carga al invocarla"
+    },
+    {
+      "id": "python-toolchain",
+      "type": "runtime",
+      "agents": [
+        "claude",
+        "codex",
+        "antigravity"
+      ],
+      "covers": [
+        "backend python",
+        "fastapi",
+        "uv",
+        "ruff",
+        "pytest"
+      ],
+      "cost": "nulo en tokens; se instala con uv por proyecto"
+    },
+    {
+      "id": "gh-cli",
+      "type": "cli",
+      "agents": [
+        "claude",
+        "codex"
+      ],
+      "covers": [
+        "issues",
+        "pull requests",
+        "labels",
+        "reviews",
+        "forks"
+      ],
+      "cost": "nulo en tokens"
+    },
+    {
+      "id": "prototype-scope",
+      "type": "skill",
+      "agents": [
+        "claude",
+        "codex",
+        "antigravity"
+      ],
+      "covers": [
+        "niveles",
+        "boceto",
+        "mock",
+        "demo",
+        "poc",
+        "alcance"
+      ],
+      "cost": "solo se carga al invocarla"
+    },
+    {
+      "id": "python-backend",
+      "type": "skill",
+      "agents": [
+        "claude",
+        "codex",
+        "antigravity"
+      ],
+      "covers": [
+        "fastapi",
+        "endpoints python",
+        "mocks python"
+      ],
+      "cost": "solo se carga al invocarla"
+    },
+    {
+      "id": "gh-issues",
+      "type": "skill",
+      "agents": [
+        "claude",
+        "codex",
+        "antigravity"
+      ],
+      "covers": [
+        "crear issues",
+        "good first issue",
+        "etiquetas"
+      ],
+      "cost": "solo se carga al invocarla"
+    },
+    {
+      "id": "pr-intake",
+      "type": "skill",
+      "agents": [
+        "claude",
+        "codex",
+        "antigravity"
+      ],
+      "covers": [
+        "revisar pr",
+        "forks",
+        "contribuciones externas"
+      ],
+      "cost": "solo se carga al invocarla"
+    },
+    {
+      "id": "relay",
+      "type": "skill",
+      "agents": [
+        "claude",
+        "codex",
+        "antigravity"
+      ],
+      "covers": [
+        "relevo entre agentes",
+        "sin cuota",
+        "handoff"
+      ],
+      "cost": "solo se carga al invocarla"
+    },
+    {
+      "id": "git-hooks",
+      "type": "git",
+      "agents": [
+        "claude",
+        "codex",
+        "antigravity"
+      ],
+      "covers": [
+        "secretos",
+        "tsc",
+        "ruff",
+        "commits convencionales"
+      ],
+      "cost": "nulo en tokens"
+    },
+    {
+      "id": "warp-windows",
+      "type": "terminal",
+      "agents": [
+        "claude",
+        "codex",
+        "antigravity"
+      ],
+      "covers": [
+        "pestañas por agente",
+        "notificaciones"
+      ],
+      "cost": "gratis"
+    }
+  ],
+  "parked": [
+    {
+      "id": "assets-3d-isometricos",
+      "idea": "Visualización isométrica/3D de edificios emblemáticos, iconos y avatares estilo juego de ubicación (tipo Pokémon GO)",
+      "status": "sin decidir",
+      "triggers": [
+        "3d",
+        "isometr",
+        "avatar",
+        "icono",
+        "iconos",
+        "sprite",
+        "pokemon",
+        "personaje",
+        "modelo 3d",
+        "three.js",
+        "threejs",
+        "gamific",
+        "coleccionable",
+        "low poly",
+        "edificio emblem"
+      ],
+      "when": "Al empezar cualquier tarea de UI de mapa avanzada, gamificación o assets visuales",
+      "scout_query": "skill o MCP para generar assets isométricos/3D y avatares consistentes (three.js, glTF, generación de imágenes con estilo fijo)"
+    },
+    {
+      "id": "geo-ar",
+      "idea": "Geolocalización en tiempo real, cercanía a puntos de interés, posible AR",
+      "status": "sin decidir",
+      "triggers": [
+        "geoloc",
+        "gps",
+        "cerca de mí",
+        "cercania",
+        "realidad aumentada",
+        " ar ",
+        "geofenc",
+        "check-in"
+      ],
+      "when": "Cuando se planee la experiencia móvil o retos por ubicación",
+      "scout_query": "librerías/MCP de geolocalización web, geofencing y WebXR para PWA"
+    },
+    {
+      "id": "persistencia",
+      "idea": "Base de datos para eventos, comercios y usuarios (hoy todo es estático en src/data)",
+      "status": "pendiente",
+      "triggers": [
+        "base de datos",
+        "database",
+        "postgres",
+        "sqlite",
+        "supabase",
+        "usuarios",
+        "login",
+        "registrar comercio",
+        "persist"
+      ],
+      "when": "Cuando los datos dejen de caber en archivos o haya usuarios",
+      "scout_query": "base de datos ligera para PoC en Python (SQLite/SQLModel o Supabase) y su MCP"
+    },
+    {
+      "id": "deploy",
+      "idea": "Despliegue y entornos (hoy viene de AI Studio / Cloud Run)",
+      "status": "pendiente",
+      "triggers": [
+        "deploy",
+        "desplegar",
+        "producción",
+        "produccion",
+        "hosting",
+        "dominio",
+        "cloud run",
+        "vercel",
+        "ci/cd",
+        "github actions"
+      ],
+      "when": "Antes de la primera demo pública",
+      "scout_query": "MCP o skill de despliegue para Express + Vite y CI con review de codex en PRs"
+    },
+    {
+      "id": "tests",
+      "idea": "Tests del lado TypeScript (Python ya trae pytest)",
+      "status": "parcial: pytest en Python; falta vitest para TS",
+      "triggers": [
+        "test",
+        "pruebas",
+        "vitest",
+        "jest",
+        "regresión",
+        "regresion",
+        "cobertura"
+      ],
+      "when": "Antes de que dos agentes trabajen en paralelo de forma sostenida",
+      "scout_query": "configuración mínima de vitest para React/Express con TypeScript"
+    },
+    {
+      "id": "usage-monitor",
+      "idea": "Ver consumo de cuota de Claude/Codex/Antigravity en vivo",
+      "status": "sin decidir",
+      "triggers": [
+        "cuota",
+        "limite de uso",
+        "límite de uso",
+        "rate limit",
+        "me quede sin",
+        "usage"
+      ],
+      "when": "Si los límites del plan empiezan a frenar el trabajo seguido",
+      "scout_query": "herramienta para monitorear uso y reinicio de cuota de Claude Code y Codex (statusline o CLI)"
+    }
+  ]
+}

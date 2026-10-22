@@ -1,0 +1,1350 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Atlas Zacdeslumbrante</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: índice lateral fijo + columna de lectura; diagramas a todo el ancho de la columna con scroll propio en móvil.
+   Paleta: tokens del propio proyecto (piedra caliza, carbón colonial, cantera rosa) + un color fijo por agente. */
+:root{
+  --paper:#F6F2ED; --card:#FFFDFA; --sunk:#EDE6DE; --rule:#D6C9BE; --ink:#211B18; --muted:#6A5D55;
+  --cantera:#B86F60;
+  --claude:#A8481F; --claude-soft:#F6E3D9;
+  --codex:#2C6283;  --codex-soft:#DDEAF2;
+  --anti:#8A6A12;   --anti-soft:#F3EBCF;
+  --gh:#6A4C93;     --gh-soft:#EAE2F4;
+  --you:#211B18;    --you-soft:#E7E1DB;
+  --ok:#2E7D4F; --bad:#B42318; --warn:#A86B0C;
+  --term-bg:#1F1A17; --term-fg:#EDE5DD; --term-dim:#A39388;
+  --display:"Alegreya", Georgia, "Times New Roman", serif;
+  --sans:"IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, "Cascadia Code", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#171311; --card:#201A17; --sunk:#2A2320; --rule:#3E3430; --ink:#EFE7E0; --muted:#A99A90;
+  --cantera:#D89A8B;
+  --claude:#E8805A; --claude-soft:#3A2219;
+  --codex:#78B2D8;  --codex-soft:#192B37;
+  --anti:#D9B24E;   --anti-soft:#33290F;
+  --gh:#B497E0;     --gh-soft:#2A2238;
+  --you:#EFE7E0;    --you-soft:#2E2724;
+  --ok:#6CC28F; --bad:#F07C6C; --warn:#E3AE52;
+  --term-bg:#0F0C0B; --term-fg:#EDE5DD; --term-dim:#9C8E85;
+  color-scheme:dark }}
+:root[data-theme="dark"]{
+  --paper:#171311; --card:#201A17; --sunk:#2A2320; --rule:#3E3430; --ink:#EFE7E0; --muted:#A99A90;
+  --cantera:#D89A8B;
+  --claude:#E8805A; --claude-soft:#3A2219;
+  --codex:#78B2D8;  --codex-soft:#192B37;
+  --anti:#D9B24E;   --anti-soft:#33290F;
+  --gh:#B497E0;     --gh-soft:#2A2238;
+  --you:#EFE7E0;    --you-soft:#2E2724;
+  --ok:#6CC28F; --bad:#F07C6C; --warn:#E3AE52;
+  --term-bg:#0F0C0B; --term-fg:#EDE5DD; --term-dim:#9C8E85;
+  color-scheme:dark }
+
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:15.5px;line-height:1.6;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+a{color:var(--codex)}
+code,kbd,pre{font-family:var(--mono)}
+:not(pre)>code{font-size:.88em;background:var(--sunk);padding:.08em .35em;border-radius:4px;white-space:nowrap}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;line-height:1.15;margin:0}
+h1{font-size:clamp(2.2rem,5vw,3.4rem);font-weight:700}
+h2{font-size:clamp(1.6rem,3.2vw,2.1rem);font-weight:700}
+h3{font-size:1.25rem;font-weight:700}
+p{margin:0}
+.eyebrow{font:600 .72rem/1 var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--cantera)}
+.muted{color:var(--muted)}
+
+.shell{max-width:1240px;margin:0 auto;display:grid;grid-template-columns:1fr;gap:40px;padding-block:32px 80px}
+@media(min-width:1100px){.shell{grid-template-columns:220px minmax(0,1fr)}}
+nav.toc{display:none}
+@media(min-width:1100px){nav.toc{display:block;position:sticky;top:calc(env(safe-area-inset-top,0px) + 24px);align-self:start;max-height:calc(100vh - 48px);overflow:auto;font-size:.86rem}}
+nav.toc ol{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+nav.toc a{display:block;padding:4px 10px;border-radius:6px;color:var(--muted);text-decoration:none}
+nav.toc a:hover,nav.toc a:focus-visible{background:var(--sunk);color:var(--ink)}
+nav.toc .part{margin:18px 0 6px 10px}
+.chipnav{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px}
+@media(min-width:1100px){.chipnav{display:none}}
+.chipnav a{flex:none;font-size:.82rem;padding:5px 12px;border:1px solid var(--rule);border-radius:99px;text-decoration:none;color:var(--ink);background:var(--card)}
+
+main{min-width:0;display:grid;gap:72px}
+header.hero{display:grid;gap:18px;padding-bottom:8px;border-bottom:1px solid var(--rule)}
+header.hero p.lede{max-width:68ch;font-size:1.08rem;color:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:10px 18px;font-size:.85rem;padding:12px 0 18px}
+.legend span{display:inline-flex;align-items:center;gap:8px}
+.sw{width:14px;height:14px;border-radius:4px;border:2px solid;display:inline-block}
+.sw.claude{border-color:var(--claude);background:var(--claude-soft)}
+.sw.codex{border-color:var(--codex);background:var(--codex-soft)}
+.sw.anti{border-color:var(--anti);background:var(--anti-soft)}
+.sw.gh{border-color:var(--gh);background:var(--gh-soft)}
+.sw.you{border-color:var(--you);background:var(--you-soft)}
+
+section{display:grid;gap:20px;scroll-margin-top:24px}
+section > header{display:grid;gap:8px}
+section > header p{max-width:70ch;color:var(--muted)}
+.partmark{display:grid;gap:10px;padding:28px 0 4px;border-top:3px solid var(--ink)}
+.partmark p{max-width:70ch;color:var(--muted)}
+
+figure{margin:0;background:var(--card);border:1px solid var(--rule);border-radius:14px;overflow:hidden}
+figure .scroll{overflow-x:auto;padding:18px}
+figure .scroll svg{min-width:820px}
+figcaption{padding:12px 18px 16px;border-top:1px solid var(--rule);font-size:.9rem;color:var(--muted);max-width:none}
+figcaption strong{color:var(--ink)}
+
+/* --- SVG --- */
+.dg{width:100%;height:auto;display:block;color:var(--ink);font-family:var(--sans)}
+.dg text{fill:var(--ink);font-size:13px}
+.dg .h{font-weight:600}
+.dg .s{font-size:11px;fill:var(--muted)}
+.dg .m{font-family:var(--mono);font-size:12px}
+.dg .gt{font-size:10.5px;letter-spacing:.1em;fill:var(--muted);font-weight:600}
+.dg .lbl{font-size:11px;fill:var(--muted);paint-order:stroke;stroke:var(--card);stroke-width:5px;stroke-linejoin:round}
+.dg .lbl.on-paper{stroke:var(--paper)}
+.dg .box{fill:var(--card);stroke:var(--rule);stroke-width:1.2}
+.dg .sunk{fill:var(--sunk);stroke:none}
+.dg .grp{fill:none;stroke:var(--rule);stroke-width:1.2;stroke-dasharray:4 4}
+.dg .claude{stroke:var(--claude);stroke-width:2}
+.dg .codex{stroke:var(--codex);stroke-width:2}
+.dg .anti{stroke:var(--anti);stroke-width:2}
+.dg .gh{stroke:var(--gh);stroke-width:2}
+.dg .you{stroke:var(--you);stroke-width:2}
+.dg .f-claude{fill:var(--claude-soft)} .dg .f-codex{fill:var(--codex-soft)} .dg .f-anti{fill:var(--anti-soft)} .dg .f-gh{fill:var(--gh-soft)} .dg .f-you{fill:var(--you-soft)}
+.dg .e{fill:none;stroke:var(--ink);stroke-width:1.4}
+.dg .e.claude,.dg .e.codex,.dg .e.anti,.dg .e.gh{stroke-width:1.6}
+.dg .e.mu{stroke:var(--muted)}
+.dg .e.ok{stroke:var(--ok)} .dg .e.bad{stroke:var(--bad)}
+.dg .dash{stroke-dasharray:6 4}
+.dg .life{stroke:var(--rule);stroke-width:1.2;stroke-dasharray:3 4}
+.dg .band{fill:var(--sunk);stroke:none}
+.dg .t-claude{fill:var(--claude)} .dg .t-codex{fill:var(--codex)} .dg .t-anti{fill:var(--anti)} .dg .t-gh{fill:var(--gh)}
+.dg .t-ok{fill:var(--ok)} .dg .t-bad{fill:var(--bad)} .dg .t-warn{fill:var(--warn)}
+.dg .dot-claude{fill:var(--claude)} .dg .dot-codex{fill:var(--codex)} .dg .dot-anti{fill:var(--anti)} .dg .dot-gh{fill:var(--gh)}
+.dg .termbg{fill:var(--term-bg)} .dg .term{fill:var(--term-fg);font-family:var(--mono);font-size:11.5px} .dg .termdim{fill:var(--term-dim);font-family:var(--mono);font-size:11.5px}
+.mk-ink{fill:var(--ink)} .mk-mu{fill:var(--muted)} .mk-claude{fill:var(--claude)} .mk-codex{fill:var(--codex)} .mk-anti{fill:var(--anti)} .mk-gh{fill:var(--gh)} .mk-ok{fill:var(--ok)} .mk-bad{fill:var(--bad)}
+
+/* --- tablas --- */
+.tablewrap{overflow-x:auto;border:1px solid var(--rule);border-radius:12px;background:var(--card)}
+table{border-collapse:collapse;width:100%;font-size:.9rem;min-width:640px}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600;background:var(--sunk)}
+tr:last-child td{border-bottom:none}
+.who{display:inline-flex;align-items:center;gap:6px;font-weight:600;white-space:nowrap}
+.who::before{content:"";width:10px;height:10px;border-radius:50%;background:currentColor}
+.who.claude{color:var(--claude)} .who.codex{color:var(--codex)} .who.anti{color:var(--anti)} .who.gh{color:var(--gh)} .who.you{color:var(--ink)}
+.cost{display:inline-flex;gap:3px;vertical-align:middle}
+.cost i{width:9px;height:9px;border-radius:2px;background:var(--rule)}
+.cost i.on{background:var(--cantera)}
+
+/* --- árbol --- */
+.tree{background:var(--card);border:1px solid var(--rule);border-radius:14px;padding:18px 20px;overflow-x:auto;font-family:var(--mono);font-size:.84rem;line-height:1.85}
+.tree ul{list-style:none;margin:0;padding-left:22px;border-left:1px dashed var(--rule)}
+.tree > ul{padding-left:0;border-left:none}
+.tree li{white-space:nowrap}
+.tree .d{font-weight:500}
+.tree .n{font-family:var(--sans);color:var(--muted);font-size:.8rem;margin-left:10px}
+.tag{font-family:var(--sans);font-size:.7rem;font-weight:600;padding:1px 7px;border-radius:99px;margin-left:8px;border:1.5px solid;vertical-align:1px}
+.tag.claude{color:var(--claude);border-color:var(--claude)} .tag.anti{color:var(--anti);border-color:var(--anti)} .tag.gh{color:var(--gh);border-color:var(--gh)} .tag.all{color:var(--muted);border-color:var(--rule)} .tag.you{color:var(--ink);border-color:var(--ink)}
+
+/* --- E/S --- */
+.filters{display:flex;flex-wrap:wrap;gap:8px}
+.filters button{font:500 .84rem var(--sans);padding:6px 14px;border-radius:99px;border:1px solid var(--rule);background:var(--card);color:var(--ink);cursor:pointer}
+.filters button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.filters button:focus-visible{outline:2px solid var(--cantera);outline-offset:2px}
+.io{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,330px),1fr));gap:14px}
+.io article{background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:16px;display:grid;gap:10px;align-content:start;min-width:0}
+.io .top{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.io h4{margin:0;font:600 .98rem var(--mono);overflow-wrap:anywhere}
+.io .kind{font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+.io dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:6px 12px;font-size:.86rem}
+.io dt{font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding-top:3px;font-weight:600}
+.io dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.io dt.in{color:var(--codex)} .io dt.out{color:var(--ok)} .io dt.trg{color:var(--cantera)}
+
+/* --- runbook --- */
+.progress{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--paper);padding:10px 0;display:flex;gap:14px;align-items:center;border-bottom:1px solid var(--rule)}
+.progress .bar{flex:1;height:8px;border-radius:99px;background:var(--sunk);overflow:hidden}
+.progress .bar i{display:block;height:100%;width:0;background:var(--ok);transition:width .3s}
+.progress span{font-size:.85rem;font-variant-numeric:tabular-nums;white-space:nowrap}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--paper)}
+.stage{border:1px solid var(--rule);border-radius:16px;background:var(--card);overflow:hidden}
+.stage > .head{display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center;padding:18px 20px;background:var(--sunk)}
+.stage .num{font:700 2rem/1 var(--display);color:var(--cantera);font-variant-numeric:tabular-nums;min-width:1.4ch}
+.stage .meta{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.8rem;color:var(--muted);margin-top:4px}
+.stage .done{display:flex;align-items:center;gap:8px;font-size:.85rem;cursor:pointer;white-space:nowrap}
+.stage .done input{width:18px;height:18px;accent-color:var(--ok)}
+.stage.is-done > .head{background:color-mix(in srgb, var(--ok) 14%, var(--sunk))}
+.stage .body{padding:20px;display:grid;gap:18px}
+.stage .body > *{min-width:0}
+.stage h4{margin:0;font:600 .74rem var(--sans);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.steps{margin:0;padding-left:1.4em;display:grid;gap:12px}
+.steps li{padding-left:4px}
+.steps li > p + .code, .steps li > .code{margin-top:8px}
+.code{position:relative;background:var(--term-bg);color:var(--term-fg);border-radius:10px;padding:14px 16px;font:400 .84rem/1.6 var(--mono);overflow-x:auto;white-space:pre}
+.code .c{color:var(--term-dim)}
+.code .pass{color:#7FD39E} .code .fail{color:#FF9A8B} .code .warn{color:#F0C46B}
+.code .where{position:absolute;top:9px;right:74px;font:600 .64rem var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--term-dim)}
+.copy{position:absolute;top:6px;right:6px;font:500 .72rem var(--sans);padding:4px 8px;border-radius:6px;border:1px solid #4A3F3A;background:#2B2421;color:#EDE5DD;cursor:pointer}
+.copy:focus-visible{outline:2px solid var(--cantera)}
+.test{border:2px solid var(--ok);border-radius:12px;padding:14px 16px;display:grid;gap:10px;background:color-mix(in srgb, var(--ok) 6%, var(--card))}
+.test h4{color:var(--ok)}
+.manual{margin:0;padding-left:1.2em;display:grid;gap:6px;font-size:.92rem}
+.fix table{min-width:560px}
+.note{border-left:3px solid var(--warn);padding:8px 14px;background:color-mix(in srgb, var(--warn) 8%, var(--card));border-radius:0 8px 8px 0;font-size:.92rem}
+.note.bad{border-color:var(--bad);background:color-mix(in srgb, var(--bad) 8%, var(--card))}
+.two{display:grid;gap:16px}
+@media(min-width:760px){.two{grid-template-columns:1fr 1fr}}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style></head><body>
+
+<!-- marcadores de flecha compartidos por todos los diagramas -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <marker id="a-ink" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mk-ink" d="M0,0 L10,5 L0,10 z"/></marker>
+    <marker id="a-mu" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mk-mu" d="M0,0 L10,5 L0,10 z"/></marker>
+    <marker id="a-claude" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mk-claude" d="M0,0 L10,5 L0,10 z"/></marker>
+    <marker id="a-codex" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mk-codex" d="M0,0 L10,5 L0,10 z"/></marker>
+    <marker id="a-anti" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mk-anti" d="M0,0 L10,5 L0,10 z"/></marker>
+    <marker id="a-gh" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mk-gh" d="M0,0 L10,5 L0,10 z"/></marker>
+    <marker id="a-ok" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mk-ok" d="M0,0 L10,5 L0,10 z"/></marker>
+    <marker id="a-bad" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mk-bad" d="M0,0 L10,5 L0,10 z"/></marker>
+  </defs>
+</svg>
+
+<div class="shell">
+<nav class="toc" aria-label="Índice">
+  <ol>
+    <li class="part eyebrow">Parte I · Atlas</li>
+    <li><a href="#arquitectura">1. Arquitectura general</a></li>
+    <li><a href="#concepto">2. Mapa conceptual</a></li>
+    <li><a href="#ciclo">3. Ciclo de una feature</a></li>
+    <li><a href="#estados">4. Vida de una issue</a></li>
+    <li><a href="#scout">5. Herramientas justo a tiempo</a></li>
+    <li><a href="#barreras">6. Barreras de calidad</a></li>
+    <li><a href="#runtime">7. La app en ejecución</a></li>
+    <li><a href="#relevo">8. Relevo por cuota</a></li>
+    <li><a href="#escritorio">9. Tu escritorio</a></li>
+    <li><a href="#carpetas">10. Mapa de carpetas</a></li>
+    <li><a href="#routing">11. Quién hace qué</a></li>
+    <li><a href="#es">12. Entradas y salidas</a></li>
+    <li class="part eyebrow">Parte II · Instalación</li>
+    <li><a href="#etapa-0">0. Seguridad</a></li>
+    <li><a href="#etapa-1">1. Herramientas</a></li>
+    <li><a href="#etapa-2">2. Cuentas</a></li>
+    <li><a href="#etapa-3">3. Repositorio</a></li>
+    <li><a href="#etapa-4">4. Suite</a></li>
+    <li><a href="#etapa-5">5. Agentes y MCP</a></li>
+    <li><a href="#etapa-6">6. GitHub</a></li>
+    <li><a href="#etapa-7">7. Backend Python</a></li>
+    <li><a href="#etapa-8">8. Ensayo general</a></li>
+  </ol>
+</nav>
+
+<main>
+<header class="hero">
+  <span class="eyebrow">Zacatecas Deslumbrante · suite multiagente v5</span>
+  <h1>Atlas de la suite</h1>
+  <p class="lede">Cómo encajan Warp, Claude Code, Codex, Antigravity y GitHub en tu repo de prototipos: qué entra y qué sale de cada pieza, por dónde viaja el trabajo y cómo instalar todo en Windows con una prueba al final de cada etapa.</p>
+  <div class="legend" aria-label="Colores de los diagramas">
+    <span><i class="sw claude"></i>Claude Code · backend y orquestación</span>
+    <span><i class="sw codex"></i>Codex · revisión y relevo</span>
+    <span><i class="sw anti"></i>Antigravity · frontend</span>
+    <span><i class="sw gh"></i>GitHub · issues, PRs, CI</span>
+    <span><i class="sw you"></i>Tú · decides y apruebas</span>
+  </div>
+  <div class="chipnav" aria-label="Índice rápido">
+    <a href="#arquitectura">Arquitectura</a><a href="#concepto">Mapa conceptual</a><a href="#ciclo">Ciclo</a><a href="#estados">Issue</a><a href="#scout">Scout</a><a href="#barreras">Calidad</a><a href="#runtime">Runtime</a><a href="#relevo">Relevo</a><a href="#escritorio">Escritorio</a><a href="#carpetas">Carpetas</a><a href="#routing">Routing</a><a href="#es">E/S</a><a href="#etapa-0">Instalación</a>
+  </div>
+</header>
+
+<!-- ============================================================ 1 -->
+<section id="arquitectura">
+  <header>
+    <span class="eyebrow">Diagrama 1</span>
+    <h2>Arquitectura general</h2>
+    <p>Los tres agentes no hablan entre sí por una red: se coordinan a través de archivos del repo que los tres leen. Claude es el único que llama a otro agente directamente, cuando pide una revisión a Codex con el plugin.</p>
+  </header>
+  <figure>
+    <div class="scroll">
+    <svg class="dg" viewBox="0 0 1100 760" role="img" aria-label="Tú usas Warp con cuatro pestañas y Antigravity; cada pestaña ejecuta un agente o servidor; los agentes leen la capa compartida del repo y escriben en sus zonas; el repo sincroniza con GitHub; dev.sh levanta Express y FastAPI.">
+      <!-- Tú -->
+      <rect class="box you f-you" x="20" y="30" width="180" height="56" rx="10"/>
+      <text class="h" x="110" y="54" text-anchor="middle">Tú</text>
+      <text class="s" x="110" y="72" text-anchor="middle">decides, apruebas, mergeas</text>
+      <line class="e" x1="110" y1="86" x2="110" y2="116" marker-end="url(#a-ink)"/>
+      <text class="lbl" x="120" y="106">usa</text>
+
+      <!-- Warp -->
+      <rect class="grp" x="20" y="120" width="180" height="330" rx="12"/>
+      <text class="gt" x="32" y="141">WARP · GIT BASH</text>
+      <rect class="box claude" x="34" y="154" width="152" height="52" rx="8"/>
+      <text class="h" x="110" y="176" text-anchor="middle">1 · claude</text>
+      <text class="s" x="110" y="194" text-anchor="middle">Claude Code</text>
+      <rect class="box" x="34" y="220" width="152" height="52" rx="8"/>
+      <text class="h" x="110" y="242" text-anchor="middle">2 · dev.sh</text>
+      <text class="s" x="110" y="260" text-anchor="middle">web :3000 + py :8000</text>
+      <rect class="box codex" x="34" y="286" width="152" height="52" rx="8"/>
+      <text class="h" x="110" y="308" text-anchor="middle">3 · codex</text>
+      <text class="s" x="110" y="326" text-anchor="middle">Codex CLI</text>
+      <rect class="box gh" x="34" y="352" width="152" height="52" rx="8"/>
+      <text class="h" x="110" y="374" text-anchor="middle">4 · main</text>
+      <text class="s" x="110" y="392" text-anchor="middle">git · gh · merges</text>
+      <text class="s" x="110" y="430" text-anchor="middle">pestañas verticales</text>
+
+      <rect class="box anti" x="20" y="480" width="180" height="64" rx="10"/>
+      <text class="h" x="110" y="506" text-anchor="middle">Antigravity IDE</text>
+      <text class="s" x="110" y="526" text-anchor="middle">carpeta local, no WSL</text>
+
+      <!-- Agentes -->
+      <rect class="box claude f-claude" x="250" y="150" width="200" height="80" rx="10"/>
+      <text class="h" x="350" y="175" text-anchor="middle">Claude Code</text>
+      <text class="s" x="350" y="194" text-anchor="middle">Pro · Sonnet + subagentes Haiku</text>
+      <text class="s" x="350" y="211" text-anchor="middle">backends · orquesta · issues</text>
+      <rect class="box codex f-codex" x="250" y="284" width="200" height="80" rx="10"/>
+      <text class="h" x="350" y="309" text-anchor="middle">Codex</text>
+      <text class="s" x="350" y="328" text-anchor="middle">Plus · modelo por defecto</text>
+      <text class="s" x="350" y="345" text-anchor="middle">revisa diffs · relevo</text>
+      <rect class="box anti f-anti" x="250" y="470" width="200" height="80" rx="10"/>
+      <text class="h" x="350" y="495" text-anchor="middle">Agente de Antigravity</text>
+      <text class="s" x="350" y="514" text-anchor="middle">gratis · límite semanal</text>
+      <text class="s" x="350" y="531" text-anchor="middle">frontend · verifica en navegador</text>
+
+      <line class="e claude" x1="186" y1="180" x2="246" y2="186" marker-end="url(#a-claude)"/>
+      <text class="lbl" x="216" y="173" text-anchor="middle">ejecuta</text>
+      <line class="e codex" x1="186" y1="312" x2="246" y2="318" marker-end="url(#a-codex)"/>
+      <text class="lbl" x="216" y="305" text-anchor="middle">ejecuta</text>
+      <line class="e anti" x1="200" y1="512" x2="246" y2="510" marker-end="url(#a-anti)"/>
+      <text class="lbl" x="223" y="503" text-anchor="middle">integra</text>
+      <line class="e codex dash" x1="350" y1="230" x2="350" y2="280" marker-end="url(#a-codex)"/>
+      <text class="lbl" x="358" y="259">/codex:review (plugin)</text>
+
+      <!-- Repo -->
+      <rect class="grp" x="500" y="30" width="370" height="530" rx="12"/>
+      <text class="gt" x="512" y="51">REPO LOCAL · C:\DEV\ZACDESLUMBRANTE</text>
+      <rect class="box" x="514" y="64" width="342" height="196" rx="8"/>
+      <text class="gt" x="526" y="84">CAPA COMPARTIDA · LA LEEN LOS TRES</text>
+      <text class="m" x="530" y="110">AGENTS.md · CLAUDE.md</text><text class="s" x="844" y="110" text-anchor="end">reglas y zonas</text>
+      <text class="m" x="530" y="136">.agents/skills/ (8)</text><text class="s" x="844" y="136" text-anchor="end">métodos</text>
+      <text class="m" x="530" y="162">toolbox/</text><text class="s" x="844" y="162" text-anchor="end">herramientas · modelos · hook</text>
+      <text class="m" x="530" y="188">docs/API.md</text><text class="s" x="844" y="188" text-anchor="end">contrato front ↔ back</text>
+      <text class="m" x="530" y="214">docs/HANDOFF.md</text><text class="s" x="844" y="214" text-anchor="end">pedidos entre zonas</text>
+      <text class="m" x="530" y="240">.claude/agents/ (3)</text><text class="s" x="844" y="240" text-anchor="end">subagentes de Claude</text>
+
+      <rect class="box" x="514" y="276" width="342" height="176" rx="8"/>
+      <text class="gt" x="526" y="296">ZONAS DE CÓDIGO · UN DUEÑO CADA UNA</text>
+      <rect class="claude f-claude" x="526" y="306" width="318" height="30" rx="6"/>
+      <text class="m" x="538" y="326">services/api/</text><text class="s" x="834" y="326" text-anchor="end">Python · Claude</text>
+      <rect class="claude f-claude" x="526" y="342" width="318" height="30" rx="6"/>
+      <text class="m" x="538" y="362">server.ts · src/server · src/data</text><text class="s" x="834" y="362" text-anchor="end">Claude</text>
+      <rect class="anti f-anti" x="526" y="378" width="318" height="30" rx="6"/>
+      <text class="m" x="538" y="398">src/components · App.tsx · css</text><text class="s" x="834" y="398" text-anchor="end">Antigravity</text>
+      <rect class="gh f-gh" x="526" y="414" width="318" height="30" rx="6"/>
+      <text class="m" x="538" y="434">src/types · docs/API.md</text><text class="s" x="834" y="434" text-anchor="end">compartido</text>
+
+      <rect class="box" x="514" y="468" width="342" height="78" rx="8"/>
+      <text class="gt" x="526" y="488">BARRERAS LOCALES</text>
+      <text class="m" x="530" y="512">.githooks/pre-commit</text><text class="s" x="844" y="512" text-anchor="end">llaves · .env · tsc · ruff</text>
+      <text class="m" x="530" y="534">.githooks/commit-msg</text><text class="s" x="844" y="534" text-anchor="end">commits convencionales</text>
+
+      <line class="e claude" x1="450" y1="168" x2="510" y2="140" marker-end="url(#a-claude)"/>
+      <text class="lbl" x="482" y="146" text-anchor="middle">lee</text>
+      <path class="e claude" d="M450,212 C488,212 486,321 522,321" marker-end="url(#a-claude)"/>
+      <text class="lbl" x="474" y="276" text-anchor="middle">escribe</text>
+      <line class="e codex dash" x1="450" y1="335" x2="510" y2="335" marker-end="url(#a-codex)"/>
+      <text class="lbl" x="480" y="328" text-anchor="middle">lee diff</text>
+      <path class="e anti" d="M450,500 C490,500 488,393 522,393" marker-end="url(#a-anti)"/>
+      <text class="lbl" x="474" y="452" text-anchor="middle">escribe</text>
+
+      <!-- GitHub -->
+      <rect class="box gh f-gh" x="920" y="30" width="160" height="340" rx="12"/>
+      <text class="h" x="1000" y="58" text-anchor="middle">GitHub</text>
+      <text x="1000" y="96" text-anchor="middle">Issues</text><text class="s" x="1000" y="113" text-anchor="middle">plantillas · etiquetas</text>
+      <text x="1000" y="152" text-anchor="middle">Pull requests</text><text class="s" x="1000" y="169" text-anchor="middle">plantilla · Closes #n</text>
+      <text x="1000" y="208" text-anchor="middle">Actions · CI</text><text class="s" x="1000" y="225" text-anchor="middle">tsc · ruff · pytest</text>
+      <text x="1000" y="264" text-anchor="middle">Forks</text><text class="s" x="1000" y="281" text-anchor="middle">contribuidores externos</text>
+      <text x="1000" y="320" text-anchor="middle">CONTRIBUTING</text><text class="s" x="1000" y="337" text-anchor="middle">niveles y reglas</text>
+      <line class="e gh" x1="874" y1="150" x2="916" y2="150" marker-start="url(#a-gh)" marker-end="url(#a-gh)"/>
+      <text class="lbl" x="895" y="140" text-anchor="middle">push</text>
+      <text class="lbl" x="895" y="168" text-anchor="middle">pull</text>
+      <path class="e gh dash" d="M34,388 H8 V14 H1000 V26" marker-end="url(#a-gh)"/>
+      <text class="lbl" x="620" y="18" text-anchor="middle">gh issue · gh pr · gh label (desde la pestaña 4 o desde Claude)</text>
+
+      <!-- Runtime -->
+      <rect class="grp" x="250" y="590" width="830" height="156" rx="12"/>
+      <text class="gt" x="262" y="611">EJECUCIÓN LOCAL · LA LEVANTA DEV.SH</text>
+      <rect class="box" x="270" y="628" width="140" height="80" rx="8"/>
+      <text class="h" x="340" y="660" text-anchor="middle">Navegador</text>
+      <text class="s" x="340" y="678" text-anchor="middle">localhost:3000</text>
+      <rect class="box claude" x="470" y="628" width="170" height="80" rx="8"/>
+      <text class="h" x="555" y="653" text-anchor="middle">Express :3000</text>
+      <text class="s" x="555" y="671" text-anchor="middle">Vite + React · chat SSE</text>
+      <text class="s" x="555" y="687" text-anchor="middle">proxy /api/py</text>
+      <rect class="box claude" x="700" y="628" width="170" height="80" rx="8"/>
+      <text class="h" x="785" y="653" text-anchor="middle">FastAPI :8000</text>
+      <text class="s" x="785" y="671" text-anchor="middle">routers → services</text>
+      <text class="s" x="785" y="687" text-anchor="middle">→ fixtures (mock)</text>
+      <rect class="box" x="930" y="628" width="140" height="80" rx="8"/>
+      <text class="h" x="1000" y="660" text-anchor="middle">Gemini · Maps</text>
+      <text class="s" x="1000" y="678" text-anchor="middle">llaves solo en .env</text>
+      <line class="e" x1="410" y1="668" x2="466" y2="668" marker-end="url(#a-ink)"/>
+      <text class="lbl" x="438" y="660" text-anchor="middle">HTTP</text>
+      <line class="e" x1="640" y1="668" x2="696" y2="668" marker-end="url(#a-ink)"/>
+      <text class="lbl" x="668" y="660" text-anchor="middle">/api/py/*</text>
+      <line class="e mu dash" x1="870" y1="668" x2="926" y2="668" marker-end="url(#a-mu)"/>
+      <text class="lbl" x="898" y="660" text-anchor="middle">futuro</text>
+      <path class="e" d="M555,628 V618 H1000 V624" marker-end="url(#a-ink)"/>
+      <text class="lbl" x="860" y="621" text-anchor="middle">chat → Gemini</text>
+      <path class="e mu dash" d="M34,256 H16 V732 H555 V712" marker-end="url(#a-mu)"/>
+      <text class="lbl" x="380" y="736" text-anchor="middle">levanta :3000 y :8000</text>
+    </svg>
+    </div>
+    <figcaption><strong>Cómo leerlo:</strong> flechas sólidas = acción directa; punteadas = lectura, revisión o algo que solo pasa a veces. Las tres zonas de código tienen un solo dueño; si un agente necesita un cambio fuera de su zona lo pide en <code>docs/HANDOFF.md</code>. Antigravity también lee la capa compartida (flecha omitida para no cruzar líneas).</figcaption>
+  </figure>
+</section>
+
+<!-- ============================================================ 2 -->
+<section id="concepto">
+  <header>
+    <span class="eyebrow">Diagrama 2</span>
+    <h2>Mapa conceptual</h2>
+    <p>Los conceptos de la suite y cómo se relacionan. Todo parte de una issue y vuelve a una issue: la que propone el siguiente nivel.</p>
+  </header>
+  <figure>
+    <div class="scroll">
+    <svg class="dg" viewBox="0 0 1100 520" role="img" aria-label="Mapa conceptual: la issue tiene nivel y criterios y se implementa en una rama; la rama toca una zona con dueño; el agente sigue skills que consultan el toolbox; la rama produce un PR que pasa barreras, cierra la issue y propone el siguiente nivel; el hook sugiere scout que registra en el toolbox.">
+      <!-- nodos: rect 164x44 centrados -->
+      <g>
+        <rect class="box" x="108" y="48" width="164" height="44" rx="22"/><text class="h" x="190" y="67" text-anchor="middle">Nivel</text><text class="s" x="190" y="83" text-anchor="middle">sketch · mock · demo · poc</text>
+        <rect class="box gh f-gh" x="398" y="48" width="164" height="44" rx="22"/><text class="h" x="480" y="67" text-anchor="middle">Issue de GitHub</text><text class="s" x="480" y="83" text-anchor="middle">plantilla + etiquetas</text>
+        <rect class="box" x="688" y="48" width="164" height="44" rx="22"/><text class="h" x="770" y="67" text-anchor="middle">Criterios</text><text class="s" x="770" y="83" text-anchor="middle">verificables</text>
+        <rect class="box gh dash" x="908" y="48" width="164" height="44" rx="22"/><text class="h" x="990" y="67" text-anchor="middle">Siguiente nivel</text><text class="s" x="990" y="83" text-anchor="middle">una issue nueva</text>
+
+        <rect class="box" x="108" y="178" width="164" height="44" rx="22"/><text class="h" x="190" y="197" text-anchor="middle">Zona</text><text class="s" x="190" y="213" text-anchor="middle">back py · back ts · front</text>
+        <rect class="box" x="398" y="178" width="164" height="44" rx="22"/><text class="h" x="480" y="197" text-anchor="middle">Rama + worktree</text><text class="s" x="480" y="213" text-anchor="middle">nivel/issue-tema</text>
+        <rect class="box gh f-gh" x="688" y="178" width="164" height="44" rx="22"/><text class="h" x="770" y="197" text-anchor="middle">Pull request</text><text class="s" x="770" y="213" text-anchor="middle">plantilla · Closes #n</text>
+
+        <rect class="box" x="108" y="308" width="164" height="44" rx="22"/><text class="h" x="190" y="327" text-anchor="middle">Agente</text><text class="s" x="190" y="343" text-anchor="middle">Claude · Codex · Antigravity</text>
+        <rect class="box" x="688" y="308" width="164" height="44" rx="22"/><text class="h" x="770" y="327" text-anchor="middle">Contribuidor externo</text><text class="s" x="770" y="343" text-anchor="middle">revisado con pr-intake</text>
+        <rect class="box" x="908" y="308" width="164" height="44" rx="22"/><text class="h" x="990" y="327" text-anchor="middle">Barreras</text><text class="s" x="990" y="343" text-anchor="middle">hooks · Codex · CI</text>
+
+        <rect class="box" x="108" y="438" width="164" height="44" rx="22"/><text class="h" x="190" y="457" text-anchor="middle">Skills</text><text class="s" x="190" y="473" text-anchor="middle">8 métodos en .agents/</text>
+        <rect class="box" x="398" y="438" width="164" height="44" rx="22"/><text class="h" x="480" y="457" text-anchor="middle">Toolbox</text><text class="s" x="480" y="473" text-anchor="middle">capabilities · models</text>
+        <rect class="box" x="688" y="438" width="164" height="44" rx="22"/><text class="h" x="770" y="457" text-anchor="middle">Scout</text><text class="s" x="770" y="473" text-anchor="middle">herramientas a tiempo</text>
+        <rect class="box" x="908" y="438" width="164" height="44" rx="22"/><text class="h" x="990" y="457" text-anchor="middle">Hook scout-hint</text><text class="s" x="990" y="473" text-anchor="middle">vigila prompts · 0 tokens</text>
+      </g>
+      <g>
+        <line class="e" x1="398" y1="70" x2="276" y2="70" marker-end="url(#a-ink)"/><text class="lbl" x="335" y="62" text-anchor="middle">tiene un</text>
+        <line class="e" x1="562" y1="70" x2="684" y2="70" marker-end="url(#a-ink)"/><text class="lbl" x="623" y="62" text-anchor="middle">define</text>
+        <line class="e" x1="480" y1="92" x2="480" y2="174" marker-end="url(#a-ink)"/><text class="lbl" x="488" y="138">se implementa en</text>
+        <line class="e" x1="398" y1="200" x2="276" y2="200" marker-end="url(#a-ink)"/><text class="lbl" x="335" y="192" text-anchor="middle">toca una</text>
+        <line class="e" x1="190" y1="222" x2="190" y2="304" marker-end="url(#a-ink)"/><text class="lbl" x="198" y="268">tiene dueño</text>
+        <line class="e" x1="262" y1="312" x2="420" y2="224" marker-end="url(#a-ink)"/><text class="lbl" x="350" y="276" text-anchor="middle">trabaja en</text>
+        <line class="e" x1="190" y1="352" x2="190" y2="434" marker-end="url(#a-ink)"/><text class="lbl" x="198" y="398">sigue</text>
+        <line class="e" x1="272" y1="460" x2="394" y2="460" marker-end="url(#a-ink)"/><text class="lbl" x="333" y="452" text-anchor="middle">consultan</text>
+        <line class="e" x1="562" y1="200" x2="684" y2="200" marker-end="url(#a-ink)"/><text class="lbl" x="623" y="192" text-anchor="middle">produce</text>
+        <line class="e gh" x1="830" y1="222" x2="944" y2="306" marker-end="url(#a-gh)"/><text class="lbl" x="900" y="258" text-anchor="middle">pasa por</text>
+        <line class="e gh" x1="710" y1="178" x2="540" y2="94" marker-end="url(#a-gh)"/><text class="lbl" x="640" y="132" text-anchor="middle">cierra</text>
+        <line class="e gh dash" x1="830" y1="178" x2="944" y2="96" marker-end="url(#a-gh)"/><text class="lbl" x="900" y="130" text-anchor="middle">propone (con tu sí)</text>
+        <line class="e" x1="770" y1="308" x2="770" y2="226" marker-end="url(#a-ink)"/><text class="lbl" x="778" y="270">abre desde fork</text>
+        <line class="e" x1="908" y1="460" x2="856" y2="460" marker-end="url(#a-ink)"/><text class="lbl" x="882" y="452" text-anchor="middle">sugiere</text>
+        <line class="e" x1="688" y1="460" x2="566" y2="460" marker-end="url(#a-ink)"/><text class="lbl" x="627" y="452" text-anchor="middle">registra</text>
+        <path class="e mu" d="M108,322 C52,300 52,360 104,340" marker-end="url(#a-mu)"/><text class="lbl" x="20" y="384">relay: pasa trabajo</text><text class="lbl" x="20" y="398">entre agentes</text>
+      </g>
+    </svg>
+    </div>
+    <figcaption><strong>Idea clave:</strong> las reglas (AGENTS.md) y los métodos (skills) son los mismos para personas, agentes y contribuidores externos. Lo único que cambia entre ellos es la zona y quién revisa.</figcaption>
+  </figure>
+</section>
+
+<!-- ============================================================ 3 -->
+<section id="ciclo">
+  <header>
+    <span class="eyebrow">Diagrama 3 · secuencia</span>
+    <h2>Ciclo de una feature, de la issue al merge</h2>
+    <p>Ejemplo real: la issue #12, <code>[mock] Eventos culturales</code>, que toca backend Python y frontend. Cada flecha es un mensaje o comando; las cajas sobre una línea son trabajo interno de ese actor.</p>
+  </header>
+  <figure>
+    <div class="scroll">
+    <svg class="dg" viewBox="0 0 1100 940" role="img" aria-label="Diagrama de secuencia con cinco actores: tú, Claude, Codex, Antigravity y GitHub, en dieciséis pasos desde elegir la issue hasta proponer el siguiente nivel.">
+      <!-- actores -->
+      <rect class="box you f-you" x="30" y="20" width="160" height="48" rx="10"/><text class="h" x="110" y="49" text-anchor="middle">Tú</text>
+      <rect class="box claude f-claude" x="250" y="20" width="160" height="48" rx="10"/><text class="h" x="330" y="49" text-anchor="middle">Claude Code</text>
+      <rect class="box codex f-codex" x="470" y="20" width="160" height="48" rx="10"/><text class="h" x="550" y="49" text-anchor="middle">Codex</text>
+      <rect class="box anti f-anti" x="690" y="20" width="160" height="48" rx="10"/><text class="h" x="770" y="49" text-anchor="middle">Antigravity</text>
+      <rect class="box gh f-gh" x="910" y="20" width="160" height="48" rx="10"/><text class="h" x="990" y="49" text-anchor="middle">GitHub</text>
+      <line class="life" x1="110" y1="68" x2="110" y2="925"/>
+      <line class="life" x1="330" y1="68" x2="330" y2="925"/>
+      <line class="life" x1="550" y1="68" x2="550" y2="925"/>
+      <line class="life" x1="770" y1="68" x2="770" y2="925"/>
+      <line class="life" x1="990" y1="68" x2="990" y2="925"/>
+
+      <!-- pasos; número a la izquierda -->
+      <g class="s">
+        <text class="s" x="14" y="114">1</text><text class="s" x="14" y="164">2</text><text class="s" x="14" y="214">3</text><text class="s" x="14" y="264">4</text>
+        <text class="s" x="14" y="314">5</text><text class="s" x="14" y="364">6</text><text class="s" x="14" y="414">7</text><text class="s" x="14" y="464">8</text>
+        <text class="s" x="14" y="534">9</text><text class="s" x="14" y="594">10</text><text class="s" x="14" y="644">11</text><text class="s" x="14" y="694">12</text>
+        <text class="s" x="14" y="744">13</text><text class="s" x="14" y="794">14</text><text class="s" x="14" y="844">15</text><text class="s" x="14" y="894">16</text>
+      </g>
+
+      <line class="e" x1="114" y1="110" x2="324" y2="110" marker-end="url(#a-ink)"/>
+      <text class="lbl" x="220" y="103" text-anchor="middle">«usa orchestrate para la issue #12»</text>
+
+      <line class="e gh" x1="334" y1="160" x2="984" y2="160" marker-end="url(#a-gh)"/>
+      <text class="lbl" x="660" y="153" text-anchor="middle">gh issue view 12 → nivel mock, criterios, zonas</text>
+
+      <rect class="box claude" x="336" y="196" width="300" height="28" rx="6"/>
+      <text x="346" y="215">mini-spec + endpoint propuesto en docs/API.md</text>
+
+      <line class="e codex" x1="334" y1="260" x2="544" y2="260" marker-end="url(#a-codex)"/>
+      <text class="lbl" x="440" y="253" text-anchor="middle">/codex:adversarial-review</text>
+      <text class="s" x="560" y="264">solo en demo y PoC; en mock se salta</text>
+
+      <line class="e codex dash" x1="546" y1="310" x2="336" y2="310" marker-end="url(#a-codex)"/>
+      <text class="lbl" x="440" y="303" text-anchor="middle">hallazgos del plan</text>
+
+      <line class="e claude dash" x1="326" y1="360" x2="116" y2="360" marker-end="url(#a-claude)"/>
+      <text class="lbl" x="220" y="353" text-anchor="middle">plan + tareas con dueño</text>
+
+      <rect class="box you" x="116" y="396" width="330" height="28" rx="6"/>
+      <text class="m" x="126" y="415">worktrees.sh mock/12-api mock/12-ui</text>
+
+      <line class="e anti" x1="114" y1="460" x2="764" y2="460" marker-end="url(#a-anti)"/>
+      <text class="lbl" x="440" y="453" text-anchor="middle">abres -front en Antigravity: «usa orchestrate, tu parte de la #12»</text>
+
+      <rect class="band" x="200" y="496" width="890" height="64" rx="8"/>
+      <text class="gt" x="212" y="511">EN PARALELO · RAMAS DISTINTAS</text>
+      <rect class="box claude" x="336" y="518" width="300" height="30" rx="6"/>
+      <text x="346" y="538">backend-python: endpoint + fixtures</text>
+            <rect class="box anti" x="776" y="518" width="300" height="30" rx="6"/>
+      <text x="786" y="538">UI contra el contrato + verifica</text>
+
+      <rect class="box claude" x="336" y="576" width="320" height="28" rx="6"/>
+      <text x="346" y="595">git commit → pre-commit ✓ · commit-msg ✓</text>
+
+      <line class="e codex" x1="334" y1="640" x2="544" y2="640" marker-end="url(#a-codex)"/>
+      <text class="lbl" x="440" y="633" text-anchor="middle">/codex:review --base main</text>
+
+      <line class="e codex dash" x1="546" y1="690" x2="336" y2="690" marker-end="url(#a-codex)"/>
+      <text class="lbl" x="440" y="683" text-anchor="middle">hallazgos (archivo:línea, severidad)</text>
+
+      <line class="e gh" x1="334" y1="740" x2="984" y2="740" marker-end="url(#a-gh)"/>
+      <text class="lbl" x="660" y="733" text-anchor="middle">git push (ambas ramas) · gh pr create con la plantilla</text>
+
+      <rect class="box gh" x="776" y="776" width="208" height="28" rx="6"/>
+      <text x="786" y="795">CI: tsc · ruff · pytest ✓</text>
+
+      <line class="e" x1="114" y1="840" x2="984" y2="840" marker-end="url(#a-ink)"/>
+      <text class="lbl" x="550" y="833" text-anchor="middle">revisas la evidencia (captura, curl) y haces merge</text>
+
+      <line class="e gh dash" x1="334" y1="890" x2="984" y2="890" marker-end="url(#a-gh)"/>
+      <text class="lbl" x="660" y="883" text-anchor="middle">comenta y propone la issue del siguiente nivel (con tu sí)</text>
+    </svg>
+    </div>
+    <figcaption><strong>Dónde intervienes tú:</strong> pasos 1, 7, 8, 15 y cada aprobación de issue. Si Claude se queda sin cuota entre los pasos 9 y 13, el diagrama 8 muestra el relevo a Codex.</figcaption>
+  </figure>
+</section>
+
+<!-- ============================================================ 4 -->
+<section id="estados">
+  <header>
+    <span class="eyebrow">Diagrama 4 · máquina de estados</span>
+    <h2>Vida de una issue</h2>
+    <p>Los estados que ve un contribuidor en GitHub y qué hace avanzar a la issue de uno a otro.</p>
+  </header>
+  <figure>
+    <div class="scroll">
+    <svg class="dg" viewBox="0 0 1100 330" role="img" aria-label="Estados: triage, lista, en curso, PR abierto, en revisión, mergeada, cerrada, siguiente nivel; con bucle de cambios pedidos y estado inactiva tras 30 días.">
+      <rect class="box gh" x="50" y="44" width="120" height="52" rx="10"/><text class="h" x="110" y="66" text-anchor="middle">Triage</text><text class="s" x="110" y="83" text-anchor="middle">status:triage</text>
+      <rect class="box gh" x="270" y="44" width="120" height="52" rx="10"/><text class="h" x="330" y="66" text-anchor="middle">Lista</text><text class="s" x="330" y="83" text-anchor="middle">status:ready</text>
+      <rect class="box" x="490" y="44" width="120" height="52" rx="10"/><text class="h" x="550" y="66" text-anchor="middle">En curso</text><text class="s" x="550" y="83" text-anchor="middle">rama + worktree</text>
+      <rect class="box" x="710" y="44" width="120" height="52" rx="10"/><text class="h" x="770" y="66" text-anchor="middle">PR abierto</text><text class="s" x="770" y="83" text-anchor="middle">Closes #n</text>
+      <rect class="box codex" x="930" y="44" width="120" height="52" rx="10"/><text class="h" x="990" y="66" text-anchor="middle">En revisión</text><text class="s" x="990" y="83" text-anchor="middle">Codex + CI</text>
+
+      <rect class="box ok" x="930" y="214" width="120" height="52" rx="10" style="stroke:var(--ok);stroke-width:2"/><text class="h" x="990" y="236" text-anchor="middle">Mergeada</text><text class="s" x="990" y="253" text-anchor="middle">en main</text>
+      <rect class="box" x="710" y="214" width="120" height="52" rx="10"/><text class="h" x="770" y="236" text-anchor="middle">Cerrada</text><text class="s" x="770" y="253" text-anchor="middle">automática</text>
+      <rect class="box gh dash" x="490" y="214" width="120" height="52" rx="10"/><text class="h" x="550" y="236" text-anchor="middle">Siguiente nivel</text><text class="s" x="550" y="253" text-anchor="middle">propuesta</text>
+      <rect class="box" x="270" y="214" width="120" height="52" rx="10" style="stroke-dasharray:3 3"/><text class="h" x="330" y="236" text-anchor="middle">Inactiva</text><text class="s" x="330" y="253" text-anchor="middle">status:stale</text>
+
+      <line class="e" x1="170" y1="70" x2="266" y2="70" marker-end="url(#a-ink)"/><text class="lbl" x="218" y="62" text-anchor="middle">nivel + área</text>
+      <line class="e" x1="390" y1="70" x2="486" y2="70" marker-end="url(#a-ink)"/><text class="lbl" x="438" y="62" text-anchor="middle">«la tomo»</text>
+      <line class="e" x1="610" y1="70" x2="706" y2="70" marker-end="url(#a-ink)"/><text class="lbl" x="658" y="62" text-anchor="middle">push + gh pr</text>
+      <line class="e" x1="830" y1="70" x2="926" y2="70" marker-end="url(#a-ink)"/><text class="lbl" x="878" y="62" text-anchor="middle">pr-intake</text>
+      <path class="e bad" d="M990,44 C990,8 550,8 550,40" marker-end="url(#a-bad)"/><text class="lbl t-bad" x="770" y="20" text-anchor="middle" style="fill:var(--bad)">cambios pedidos → se corrige en la misma rama</text>
+      <line class="e ok" x1="990" y1="96" x2="990" y2="210" marker-end="url(#a-ok)"/><text class="lbl" x="982" y="158" text-anchor="end">CI ✓ + tu merge</text>
+      <line class="e" x1="930" y1="240" x2="834" y2="240" marker-end="url(#a-ink)"/><text class="lbl" x="882" y="232" text-anchor="middle">Closes #n</text>
+      <line class="e gh dash" x1="710" y1="240" x2="614" y2="240" marker-end="url(#a-gh)"/><text class="lbl" x="662" y="232" text-anchor="middle">propone</text>
+      <line class="e mu dash" x1="330" y1="96" x2="330" y2="210" marker-end="url(#a-mu)"/><text class="lbl" x="338" y="158">30 días sin actividad</text>
+      <path class="e gh dash" d="M550,266 V302 H22 V70 H46" marker-end="url(#a-gh)"/><text class="lbl" x="290" y="306" text-anchor="middle">vuelve a entrar como issue nueva (siguiente nivel)</text>
+    </svg>
+    </div>
+    <figcaption><strong>Etiquetas que mueven el estado:</strong> <code>status:triage</code> la pone la plantilla; <code>status:ready</code>, el nivel y el área los pones tú o Claude con la skill gh-issues; <code>Closes #n</code> en el PR cierra la issue al hacer merge.</figcaption>
+  </figure>
+</section>
+
+<!-- ============================================================ 5 -->
+<section id="scout">
+  <header>
+    <span class="eyebrow">Diagrama 5 · flujo de decisión</span>
+    <h2>Herramientas justo a tiempo</h2>
+    <p>Así la suite se acuerda por ti de las ideas pendientes, como los avatares o los edificios isométricos, sin instalar nada antes de tiempo.</p>
+  </header>
+  <figure>
+    <div class="scroll">
+    <svg class="dg" viewBox="0 0 1100 450" role="img" aria-label="Flujo: escribes una tarea, el hook busca coincidencias con ideas parked; si coincide avisa y Claude te lo dice; scout revisa si algo instalado lo cubre, si hace falta hoy, busca hasta 3 opciones, te las muestra y solo instala con tu sí, registrando la decisión.">
+      <rect class="box you f-you" x="10" y="58" width="140" height="48" rx="24"/><text class="h" x="80" y="78" text-anchor="middle">Escribes una tarea</text><text class="s" x="80" y="94" text-anchor="middle">en claude</text>
+      <rect class="box" x="185" y="58" width="150" height="48" rx="8"/><text class="h" x="260" y="78" text-anchor="middle">hook scout-hint</text><text class="s" x="260" y="94" text-anchor="middle">local · 0 tokens</text>
+      <polygon class="box" points="450,35 525,82 450,129 375,82"/><text class="h" x="450" y="78" text-anchor="middle">¿toca una idea</text><text class="h" x="450" y="94" text-anchor="middle">parked?</text>
+      <rect class="box claude" x="575" y="58" width="150" height="48" rx="8"/><text class="h" x="650" y="78" text-anchor="middle">aviso [scout]</text><text class="s" x="650" y="94" text-anchor="middle">máx. 1 vez al día</text>
+      <rect class="box claude f-claude" x="765" y="58" width="150" height="48" rx="8"/><text class="h" x="840" y="78" text-anchor="middle">Claude te avisa</text><text class="s" x="840" y="94" text-anchor="middle">en una línea</text>
+      <rect class="box you f-you" x="940" y="58" width="150" height="48" rx="8"/><text class="h" x="1015" y="78" text-anchor="middle">«usa scout»</text><text class="s" x="1015" y="94" text-anchor="middle">o lo dejas para después</text>
+      <line class="e" x1="150" y1="82" x2="181" y2="82" marker-end="url(#a-ink)"/>
+      <line class="e" x1="335" y1="82" x2="371" y2="82" marker-end="url(#a-ink)"/>
+      <line class="e ok" x1="525" y1="82" x2="571" y2="82" marker-end="url(#a-ok)"/><text class="lbl" x="548" y="74" text-anchor="middle">sí</text>
+      <line class="e" x1="725" y1="82" x2="761" y2="82" marker-end="url(#a-ink)"/>
+      <line class="e" x1="915" y1="82" x2="936" y2="82" marker-end="url(#a-ink)"/>
+      <line class="e mu" x1="450" y1="129" x2="450" y2="166" marker-end="url(#a-mu)"/><text class="lbl" x="458" y="152">no</text>
+      <rect class="box" x="375" y="170" width="150" height="44" rx="8" style="stroke-dasharray:3 3"/><text class="h" x="450" y="189" text-anchor="middle">sigue normal</text><text class="s" x="450" y="205" text-anchor="middle">sin aviso, sin costo</text>
+
+      <line class="e" x1="1015" y1="106" x2="1003" y2="222" marker-end="url(#a-ink)"/>
+      <polygon class="box" points="1000,226 1075,272 1000,318 925,272"/><text class="h" x="1000" y="268" text-anchor="middle">¿algo instalado</text><text class="h" x="1000" y="284" text-anchor="middle">lo cubre?</text>
+      <polygon class="box" points="790,226 865,272 790,318 715,272"/><text class="h" x="790" y="268" text-anchor="middle">¿hace falta</text><text class="h" x="790" y="284" text-anchor="middle">hoy?</text>
+      <rect class="box" x="495" y="248" width="170" height="48" rx="8"/><text class="h" x="580" y="268" text-anchor="middle">busca ≤ 3 opciones</text><text class="s" x="580" y="284" text-anchor="middle">oficial › mantenida › comunidad</text>
+      <rect class="box" x="305" y="248" width="150" height="48" rx="8"/><text class="h" x="380" y="268" text-anchor="middle">te muestra</text><text class="s" x="380" y="284" text-anchor="middle">costo · riesgo · comando</text>
+      <polygon class="box you" points="190,232 255,272 190,312 125,272"/><text class="h" x="190" y="277" text-anchor="middle">¿tu sí?</text>
+
+      <line class="e" x1="925" y1="272" x2="869" y2="272" marker-end="url(#a-ink)"/><text class="lbl" x="897" y="264" text-anchor="middle">no</text>
+      <line class="e" x1="715" y1="272" x2="669" y2="272" marker-end="url(#a-ink)"/><text class="lbl" x="692" y="264" text-anchor="middle">sí</text>
+      <line class="e" x1="495" y1="272" x2="459" y2="272" marker-end="url(#a-ink)"/>
+      <line class="e" x1="305" y1="272" x2="259" y2="272" marker-end="url(#a-ink)"/>
+
+      <line class="e ok" x1="1000" y1="318" x2="1000" y2="372" marker-end="url(#a-ok)"/><text class="lbl" x="1008" y="350">sí</text>
+      <rect class="box" x="930" y="376" width="140" height="44" rx="8"/><text class="h" x="1000" y="395" text-anchor="middle">úsalo</text><text class="s" x="1000" y="411" text-anchor="middle">nada que instalar</text>
+      <line class="e mu" x1="790" y1="318" x2="790" y2="372" marker-end="url(#a-mu)"/><text class="lbl" x="798" y="350">no</text>
+      <rect class="box" x="715" y="376" width="150" height="44" rx="8"/><text class="h" x="790" y="395" text-anchor="middle">queda en parked</text><text class="s" x="790" y="411" text-anchor="middle">con sus disparadores</text>
+      <path class="e ok" d="M190,312 V344 H250 V372" marker-end="url(#a-ok)"/><text class="lbl" x="214" y="338" text-anchor="middle">sí</text>
+      <rect class="box" x="160" y="376" width="180" height="44" rx="8" style="stroke:var(--ok);stroke-width:2"/><text class="h" x="250" y="395" text-anchor="middle">instala y registra</text><text class="s" x="250" y="411" text-anchor="middle">capabilities.json · decisions.md</text>
+      <path class="e mu" d="M125,272 H70 V372" marker-end="url(#a-mu)"/><text class="lbl" x="98" y="264" text-anchor="middle">no</text>
+      <rect class="box" x="10" y="376" width="120" height="44" rx="8" style="stroke-dasharray:3 3"/><text class="h" x="70" y="395" text-anchor="middle">descartada</text><text class="s" x="70" y="411" text-anchor="middle">anotada, no se repite</text>
+    </svg>
+    </div>
+    <figcaption><strong>Ideas pendientes ya registradas:</strong> assets 3D/isométricos y avatares, geolocalización/AR, base de datos, deploy, tests de TypeScript y monitor de cuota. Cada una tiene palabras disparadoras en <code>toolbox/capabilities.json</code>; puedes agregar más diciéndole a Claude «agrega esta idea a parked». El radar de modelos funciona igual: si <code>toolbox/models.md</code> tiene más de 30 días, aparece un aviso <code>[radar]</code>.</figcaption>
+  </figure>
+</section>
+
+<!-- ============================================================ 6 -->
+<section id="barreras">
+  <header>
+    <span class="eyebrow">Diagrama 6 · tubería de calidad</span>
+    <h2>Barreras de calidad</h2>
+    <p>Cada cambio pasa por cuatro filtros antes de llegar a <code>main</code>. Los dos primeros corren solos en tu máquina; los agentes también pasan por ellos.</p>
+  </header>
+  <figure>
+    <div class="scroll">
+    <svg class="dg" viewBox="0 0 1100 330" role="img" aria-label="Seis etapas: edición, pre-commit, commit-msg, revisión de Codex, CI en GitHub y merge; con lo que detecta cada una y qué pasa si falla.">
+      <g>
+        <rect class="box" x="10" y="40" width="160" height="64" rx="10"/><text class="h" x="90" y="66" text-anchor="middle">Edición</text><text class="s" x="90" y="84" text-anchor="middle">agente o persona</text>
+        <rect class="box" x="192" y="40" width="160" height="64" rx="10" style="stroke:var(--ink);stroke-width:2"/><text class="h" x="272" y="66" text-anchor="middle">pre-commit</text><text class="s" x="272" y="84" text-anchor="middle">automático · local</text>
+        <rect class="box" x="374" y="40" width="160" height="64" rx="10" style="stroke:var(--ink);stroke-width:2"/><text class="h" x="454" y="66" text-anchor="middle">commit-msg</text><text class="s" x="454" y="84" text-anchor="middle">automático · local</text>
+        <rect class="box codex f-codex" x="556" y="40" width="160" height="64" rx="10"/><text class="h" x="636" y="66" text-anchor="middle">Revisión Codex</text><text class="s" x="636" y="84" text-anchor="middle">la pide Claude</text>
+        <rect class="box gh f-gh" x="738" y="40" width="160" height="64" rx="10"/><text class="h" x="818" y="66" text-anchor="middle">CI · GitHub</text><text class="s" x="818" y="84" text-anchor="middle">cada PR y push</text>
+        <rect class="box you f-you" x="920" y="40" width="160" height="64" rx="10"/><text class="h" x="1000" y="66" text-anchor="middle">Merge</text><text class="s" x="1000" y="84" text-anchor="middle">lo decides tú</text>
+      </g>
+      <line class="e" x1="170" y1="72" x2="188" y2="72" marker-end="url(#a-ink)"/>
+      <line class="e" x1="352" y1="72" x2="370" y2="72" marker-end="url(#a-ink)"/>
+      <line class="e" x1="534" y1="72" x2="552" y2="72" marker-end="url(#a-ink)"/>
+      <line class="e" x1="716" y1="72" x2="734" y2="72" marker-end="url(#a-ink)"/>
+      <line class="e" x1="898" y1="72" x2="916" y2="72" marker-end="url(#a-ink)"/>
+      <text class="gt" x="10" y="136">DETECTA</text>
+      <g class="s">
+        <text class="s" x="18" y="160">trabaja en su zona</text><text class="s" x="18" y="178">marca mocks y PROTO:</text><text class="s" x="18" y="196">lint mientras trabaja</text>
+        <text class="s" x="200" y="160">llaves AIza, sk-, ghp_</text><text class="s" x="200" y="178">archivos .env</text><text class="s" x="200" y="196">tsc si cambió TypeScript</text><text class="s" x="200" y="214">ruff si cambió Python</text>
+        <text class="s" x="382" y="160">formato tipo(ámbito): …</text><text class="s" x="382" y="178">feat · fix · docs · test</text><text class="s" x="382" y="196">chore · refactor · proto</text>
+        <text class="s" x="564" y="160">bugs y seguridad</text><text class="s" x="564" y="178">respeto de zonas</text><text class="s" x="564" y="196">contrato y tipos</text><text class="s" x="564" y="214">mocks marcados, i18n</text>
+        <text class="s" x="746" y="160">tsc (bun run lint)</text><text class="s" x="746" y="178">ruff check + format</text><text class="s" x="746" y="196">pytest</text><text class="s" x="746" y="214">también en forks</text>
+        <text class="s" x="928" y="160">nivel cumplido</text><text class="s" x="928" y="178">evidencia en el PR</text><text class="s" x="928" y="196">siguiente nivel propuesto</text>
+      </g>
+      <line class="life" x1="10" y1="236" x2="1080" y2="236"/>
+      <text class="gt" x="10" y="262">SI FALLA</text>
+      <text class="t-bad" x="200" y="288" style="font-size:12px">✗ bloquea el commit</text>
+      <text class="t-bad" x="382" y="288" style="font-size:12px">✗ bloquea el commit</text>
+      <text class="t-bad" x="564" y="288" style="font-size:12px">✗ hallazgos → corrige</text>
+      <text class="t-bad" x="746" y="288" style="font-size:12px">✗ PR en rojo</text>
+      <text class="t-ok" x="928" y="288" style="font-size:12px">✓ Closes #n</text>
+      <text class="s" x="200" y="308">escape: git commit --no-verify</text>
+      <text class="s" x="746" y="308">gh run view --log-failed</text>
+    </svg>
+    </div>
+    <figcaption><strong>Por qué dos proveedores:</strong> Claude escribe y Codex revisa (o al revés en un relevo), así los errores de un modelo no se repiten en la revisión. <code>--no-verify</code> existe solo para emergencias; CI vuelve a revisar todo de todos modos.</figcaption>
+  </figure>
+</section>
+
+<!-- ============================================================ 7 -->
+<section id="runtime">
+  <header>
+    <span class="eyebrow">Diagrama 7 · flujo de peticiones</span>
+    <h2>La app en ejecución</h2>
+    <p>Qué pasa cuando el navegador pide algo. Express se queda como puerta de entrada; las features nuevas viven en Python detrás de <code>/api/py</code>.</p>
+  </header>
+  <figure>
+    <div class="scroll">
+    <svg class="dg" viewBox="0 0 1100 410" role="img" aria-label="El navegador habla con Express en el puerto 3000, que sirve React, datos de lugares, el chat por streaming con Gemini, health y un proxy hacia FastAPI en el puerto 8000, donde routers llaman a services que leen fixtures marcados como mock.">
+      <rect class="box" x="20" y="150" width="140" height="80" rx="10"/><text class="h" x="90" y="184" text-anchor="middle">Navegador</text><text class="s" x="90" y="202" text-anchor="middle">localhost:3000</text>
+      <rect class="box" x="20" y="300" width="140" height="64" rx="10"/><text class="h" x="90" y="326" text-anchor="middle">Google Maps JS</text><text class="s" x="90" y="344" text-anchor="middle">VITE_MAPS_API_KEY</text>
+      <line class="e mu" x1="90" y1="230" x2="90" y2="296" marker-end="url(#a-mu)"/><text class="lbl" x="98" y="268">carga el mapa</text>
+
+      <rect class="box claude" x="210" y="20" width="340" height="372" rx="12"/>
+      <text class="h" x="226" y="46">Express :3000</text><text class="s" x="534" y="46" text-anchor="end">server.ts</text>
+      <g>
+        <rect class="sunk" x="226" y="64" width="308" height="50" rx="6"/><text class="m" x="238" y="86">/</text><text class="s" x="238" y="104">Vite + React (src/) en dev; dist/ en build</text>
+        <rect class="sunk" x="226" y="124" width="308" height="50" rx="6"/><text class="m" x="238" y="146">GET /api/places</text><text class="s" x="238" y="164">src/data/places.ts</text>
+        <rect class="sunk" x="226" y="184" width="308" height="50" rx="6"/><text class="m" x="238" y="206">POST /api/chat/stream</text><text class="s" x="238" y="224">SSE: {chunk} … {error} … [DONE]</text>
+        <rect class="sunk" x="226" y="244" width="308" height="50" rx="6"/><text class="m" x="238" y="266">GET /api/health</text><text class="s" x="238" y="284">status + hasApiKey</text>
+        <rect class="claude f-claude" x="226" y="310" width="308" height="64" rx="6"/><text class="m" x="238" y="334">/api/py/*  (proxy)</text><text class="s" x="238" y="352">reenvía método y body a PY_API_URL</text><text class="s" x="238" y="367">si :8000 no responde → 503</text>
+      </g>
+      <line class="e" x1="160" y1="190" x2="206" y2="190" marker-start="url(#a-ink)" marker-end="url(#a-ink)"/><text class="lbl" x="183" y="182" text-anchor="middle">HTTP</text>
+
+      <rect class="box" x="630" y="170" width="170" height="60" rx="10"/><text class="h" x="715" y="196" text-anchor="middle">Gemini API</text><text class="s" x="715" y="214" text-anchor="middle">GEMINI_API_KEY</text>
+      <line class="e" x1="534" y1="209" x2="626" y2="200" marker-end="url(#a-ink)"/><text class="lbl" x="580" y="196" text-anchor="middle">stream</text>
+
+      <rect class="box claude" x="620" y="264" width="460" height="128" rx="12"/>
+      <text class="h" x="636" y="288">FastAPI :8000</text><text class="s" x="1064" y="288" text-anchor="end">services/api/app</text>
+      <rect class="box" x="636" y="304" width="124" height="64" rx="8"/><text class="h" x="698" y="330" text-anchor="middle">routers/</text><text class="s" x="698" y="348" text-anchor="middle">validan (Pydantic)</text>
+      <rect class="box" x="790" y="304" width="124" height="64" rx="8"/><text class="h" x="852" y="330" text-anchor="middle">services/</text><text class="s" x="852" y="348" text-anchor="middle">mock hoy, real mañana</text>
+      <rect class="box" x="944" y="304" width="124" height="64" rx="8"/><text class="h" x="1006" y="330" text-anchor="middle">fixtures/*.json</text><text class="s" x="1006" y="348" text-anchor="middle">"_mock": true</text>
+      <line class="e" x1="534" y1="342" x2="632" y2="336" marker-end="url(#a-ink)"/><text class="lbl" x="582" y="330" text-anchor="middle">reenvía</text>
+      <line class="e" x1="760" y1="336" x2="786" y2="336" marker-end="url(#a-ink)"/>
+      <line class="e" x1="914" y1="336" x2="940" y2="336" marker-end="url(#a-ink)"/>
+
+      <rect class="box" x="900" y="150" width="180" height="60" rx="10" style="stroke-dasharray:4 4"/><text class="h" x="990" y="176" text-anchor="middle">APIs reales</text><text class="s" x="990" y="194" text-anchor="middle">en demo/PoC, vía scout</text>
+      <path class="e mu dash" d="M852,304 V258 H990 V214" marker-end="url(#a-mu)"/><text class="lbl" x="920" y="254" text-anchor="middle">cuando la issue lo pida</text>
+    </svg>
+    </div>
+    <figcaption><strong>Respuesta tipo de un mock Python:</strong> <code>GET /api/py/events → {"_mock": true, "items": [{"id": "e1", "title": "…", "startDate": "…"}]}</code>. Los campos salen en camelCase para que coincidan con <code>src/types</code> sin traducciones en el frontend.</figcaption>
+  </figure>
+</section>
+
+<!-- ============================================================ 8 -->
+<section id="relevo">
+  <header>
+    <span class="eyebrow">Diagrama 8 · línea de tiempo</span>
+    <h2>Relevo cuando se acaba la cuota</h2>
+    <p>Con Claude Pro, ChatGPT Plus y Antigravity gratis, alguno se quedará sin cuota a media tarea. La skill <code>relay</code> deja el contexto por escrito para que otro agente siga sin releer todo.</p>
+  </header>
+  <figure>
+    <div class="scroll">
+    <svg class="dg" viewBox="0 0 1100 300" role="img" aria-label="Claude implementa hasta agotar cuota, hace commit y deja un comentario de relevo en la issue; Codex lo lee, verifica y continúa, hace commit; cuando Claude vuelve revisa el tramo de Codex.">
+      <rect class="box claude f-claude" x="20" y="46" width="110" height="44" rx="8"/><text class="h" x="75" y="73" text-anchor="middle">Claude</text>
+      <rect class="box gh f-gh" x="20" y="136" width="110" height="44" rx="8"/><text class="h" x="75" y="156" text-anchor="middle">Repo + issue</text><text class="s" x="75" y="171" text-anchor="middle">#12</text>
+      <rect class="box codex f-codex" x="20" y="226" width="110" height="44" rx="8"/><text class="h" x="75" y="253" text-anchor="middle">Codex</text>
+      <line class="life" x1="140" y1="68" x2="1090" y2="68"/><line class="life" x1="140" y1="158" x2="1090" y2="158"/><line class="life" x1="140" y1="248" x2="1090" y2="248"/>
+
+      <rect class="claude f-claude" x="150" y="54" width="270" height="28" rx="6"/><text x="162" y="73">implementa la #12 (backend)</text>
+      <text class="t-bad h" x="430" y="46" style="font-size:12px">⏸ cuota agotada</text>
+      <line class="e claude" x1="424" y1="84" x2="486" y2="138" marker-end="url(#a-claude)"/><text class="lbl" x="430" y="118" text-anchor="end">proto: wip + push</text>
+      <rect class="box gh" x="490" y="138" width="210" height="44" rx="8"/><text class="h" x="595" y="157" text-anchor="middle">comentario de relevo</text><text class="s" x="595" y="173" text-anchor="middle">hecho · falta · verificar · cuidado</text>
+      <line class="e codex" x1="680" y1="182" x2="716" y2="232" marker-end="url(#a-codex)"/><text class="lbl" x="712" y="204">lee</text>
+      <rect class="codex f-codex" x="720" y="234" width="190" height="28" rx="6"/><text x="732" y="253">verifica → sigue «Falta»</text>
+      <line class="e codex" x1="912" y1="234" x2="944" y2="184" marker-end="url(#a-codex)"/><text class="lbl" x="934" y="214">commit + push</text>
+      <rect class="box gh" x="946" y="138" width="140" height="44" rx="8"/><text class="h" x="1016" y="164" text-anchor="middle">rama al día</text>
+      <line class="e claude" x1="1016" y1="138" x2="1016" y2="88" marker-end="url(#a-claude)"/>
+      <rect class="claude f-claude" x="900" y="54" width="186" height="28" rx="6"/><text x="912" y="73">vuelve: revisa a Codex</text>
+      <text class="s" x="150" y="290">Regla: nunca dos agentes en la misma rama a la vez. Quien no escribió el tramo, lo revisa.</text>
+    </svg>
+    </div>
+    <figcaption><strong>Plantilla del relevo</strong> (máx. ~20 líneas): rama y último commit · Hecho · Falta (en orden) · Decisiones y por qué · Cómo verificar · Cuidado con. Si no hay issue, va en <code>docs/HANDOFF.md</code>.</figcaption>
+  </figure>
+</section>
+
+<!-- ============================================================ 9 -->
+<section id="escritorio">
+  <header>
+    <span class="eyebrow">Diagrama 9 · ilustración</span>
+    <h2>Tu escritorio en Windows</h2>
+    <p>Dos ventanas: Warp con cuatro pestañas verticales y Antigravity con la carpeta del frontend. Todo nativo, sin WSL.</p>
+  </header>
+  <figure>
+    <div class="scroll">
+    <svg class="dg" viewBox="0 0 1100 440" role="img" aria-label="Ventana de Warp con barra lateral de cuatro pestañas y una terminal con Claude trabajando en la issue 12; ventana de Antigravity con explorador, editor, panel de agente y vista previa del navegador.">
+      <!-- Warp -->
+      <rect class="box" x="20" y="20" width="640" height="400" rx="12"/>
+      <rect class="sunk" x="21" y="21" width="638" height="30" rx="11"/>
+      <circle cx="40" cy="36" r="5" class="dot-claude"/><circle cx="56" cy="36" r="5" class="dot-anti"/><circle cx="72" cy="36" r="5" class="dot-codex"/>
+      <text class="s" x="340" y="40" text-anchor="middle">Warp · Git Bash</text>
+      <rect class="sunk" x="21" y="51" width="180" height="368"/>
+      <g>
+        <rect class="box claude" x="31" y="62" width="160" height="50" rx="8"/><circle cx="46" cy="80" r="5" class="dot-claude"/><text class="h" x="58" y="84">1 · claude</text><text class="s" x="46" y="102">mock/12-api · ● trabajando</text>
+        <rect class="box" x="31" y="120" width="160" height="50" rx="8"/><circle cx="46" cy="138" r="5" class="dot-gh"/><text class="h" x="58" y="142">2 · dev.sh</text><text class="s" x="46" y="160">:3000 ✓ · :8000 ✓</text>
+        <rect class="box" x="31" y="178" width="160" height="50" rx="8"/><circle cx="46" cy="196" r="5" class="dot-codex"/><text class="h" x="58" y="200">3 · codex</text><text class="s" x="46" y="218">en espera</text>
+        <rect class="box" x="31" y="236" width="160" height="50" rx="8"/><circle cx="46" cy="254" r="5" class="dot-gh"/><text class="h" x="58" y="258">4 · main</text><text class="s" x="46" y="276">git · gh</text>
+      </g>
+      <rect class="termbg" x="201" y="51" width="458" height="368"/>
+      <text class="termdim" x="216" y="78">/c/dev/zacdeslumbrante-back (mock/12-api)</text>
+      <text class="term" x="216" y="100">$ claude</text>
+      <text class="term" x="216" y="126">&gt; usa orchestrate para la issue #12</text>
+      <text class="termdim" x="216" y="150">[scout] sin ideas pendientes para esta tarea</text>
+      <text class="term" x="216" y="174">● Leyendo issue #12 · nivel mock</text>
+      <text class="term" x="216" y="196">● Spec: GET /api/py/events → docs/API.md</text>
+      <text class="term" x="216" y="218">● Subagente backend-python (Sonnet)</text>
+      <text class="termdim" x="232" y="240">services/api/app/routers/events.py</text>
+      <text class="termdim" x="232" y="260">services/api/app/fixtures/events.json</text>
+      <text class="term" x="216" y="284">● ruff ✓  pytest ✓</text>
+      <text class="term" x="216" y="306">● /codex:review --base main …</text>
+      <text class="termdim" x="216" y="400">ctx 38% · Sonnet · Pro</text>
+
+      <!-- Antigravity -->
+      <rect class="box anti" x="690" y="50" width="390" height="370" rx="12"/>
+      <rect class="f-anti" x="691" y="51" width="388" height="30" rx="11"/>
+      <text class="s" x="885" y="70" text-anchor="middle">Antigravity · zacdeslumbrante-front</text>
+      <rect class="sunk" x="691" y="81" width="118" height="338"/>
+      <text class="m s" x="698" y="104">src/</text>
+      <text class="m s" x="704" y="124">components/</text>
+      <text class="m s" x="710" y="144">EventCard.tsx</text>
+      <text class="m s" x="710" y="164">Sidebar.tsx</text>
+      <text class="m s" x="704" y="184">App.tsx</text>
+      <text class="m s" x="704" y="204">index.css</text>
+      <rect class="box" x="816" y="90" width="144" height="160" rx="6"/>
+      <text class="m s" x="824" y="110">export function</text><text class="m s" x="824" y="126">  EventCard(…) {</text><text class="m s" x="824" y="142">  …badge "Demo"</text>
+      <rect class="box anti f-anti" x="968" y="90" width="104" height="160" rx="6"/>
+      <text class="h" x="976" y="110" style="font-size:12px">Agente</text>
+      <text class="s" x="976" y="130">«tu parte de</text><text class="s" x="976" y="144">la #12»</text>
+      <text class="s" x="976" y="170">● contra el</text><text class="s" x="976" y="184">contrato</text>
+      <text class="s" x="976" y="210">● verifica en</text><text class="s" x="976" y="224">navegador</text>
+      <rect class="box" x="816" y="260" width="256" height="150" rx="6"/>
+      <text class="s" x="820" y="278">vista previa · localhost:3001</text>
+      <rect class="sunk" x="820" y="288" width="242" height="112" rx="4"/>
+      <rect class="box" x="832" y="300" width="104" height="88" rx="6"/><text class="h" x="842" y="320" style="font-size:11px">Festival Cultural</text><text class="s" x="842" y="338">abril · Centro</text><rect x="842" y="350" width="40" height="16" rx="8" class="f-anti"/><text class="s" x="848" y="362">Demo</text>
+      <rect class="box" x="946" y="300" width="104" height="88" rx="6"/><text class="h" x="956" y="320" style="font-size:11px">Morisma de Bracho</text><text class="s" x="956" y="338">agosto</text><rect x="956" y="350" width="40" height="16" rx="8" class="f-anti"/><text class="s" x="962" y="362">Demo</text>
+    </svg>
+    </div>
+    <figcaption><strong>Puertos:</strong> el worktree de backend usa <code>:3000</code> y <code>:8000</code>; el de frontend corre con <code>PORT=3001</code> para no chocar. Las pestañas se guardan en Warp como configuración para abrirlas de un clic.</figcaption>
+  </figure>
+</section>
+
+<!-- ============================================================ 10 -->
+<section id="carpetas">
+  <header>
+    <span class="eyebrow">Mapa 10</span>
+    <h2>Mapa de carpetas y dueños</h2>
+    <p>Lo que agrega la suite a tu repo, con el dueño de cada parte. Las etiquetas de color son las mismas de los diagramas.</p>
+  </header>
+  <div class="tree" role="tree" aria-label="Estructura del repositorio">
+    <ul>
+      <li class="d">zacdeslumbrante/</li>
+      <li><ul>
+        <li>AGENTS.md <span class="tag all">los 3</span><span class="n">reglas, zonas, convenciones</span></li>
+        <li>CLAUDE.md <span class="tag claude">Claude</span><span class="n">importa AGENTS.md + rol de Claude</span></li>
+        <li>CONTRIBUTING.md <span class="tag gh">forks</span><span class="n">niveles, cómo correr, reglas</span></li>
+        <li>SETUP.md · WORKSTATION.md<span class="n">versión en texto de este atlas</span></li>
+        <li>.mcp.json <span class="tag claude">Claude</span><span class="n">Context7 + Playwright</span></li>
+        <li>.gitattributes<span class="n">finales LF (scripts sanos en Windows)</span></li>
+        <li class="d">.agents/skills/ <span class="tag all">los 3</span></li>
+        <li><ul>
+          <li>orchestrate · prototype-scope · python-backend · gh-issues</li>
+          <li>pr-intake · relay · scout · radar</li>
+        </ul></li>
+        <li class="d">.claude/</li>
+        <li><ul>
+          <li>settings.json<span class="n">permisos + hook UserPromptSubmit</span></li>
+          <li>agents/ backend-python · backend-express · data-curator</li>
+          <li>skills → ../.agents/skills<span class="n">symlink creado por suite-init</span></li>
+        </ul></li>
+        <li class="d">.githooks/<span class="n">pre-commit · commit-msg</span></li>
+        <li class="d">.github/ <span class="tag gh">GitHub</span></li>
+        <li><ul>
+          <li>ISSUE_TEMPLATE/ prototype · idea · bug · config</li>
+          <li>pull_request_template.md · workflows/ci.yml</li>
+        </ul></li>
+        <li class="d">toolbox/</li>
+        <li><ul>
+          <li>capabilities.json<span class="n">instalado + ideas parked</span></li>
+          <li>models.md · decisions.md · hooks/scout-hint.mjs</li>
+        </ul></li>
+        <li class="d">scripts/ <span class="tag you">tú</span></li>
+        <li><ul>
+          <li>windows-bootstrap.ps1 · suite-init.sh · verify.sh</li>
+          <li>dev.sh · worktrees.sh · gh-labels.sh · lib-ports.sh</li>
+        </ul></li>
+        <li class="d">docs/<span class="n">API.md (contrato) · HANDOFF.md</span></li>
+        <li class="d">services/api/ <span class="tag claude">Claude</span><span class="n">FastAPI · se crea en la etapa 7</span></li>
+        <li class="d">server.ts · src/server/ · src/data/ <span class="tag claude">Claude</span><span class="n">existente, mantenimiento</span></li>
+        <li class="d">src/components/ · App.tsx · index.css <span class="tag anti">Antigravity</span></li>
+        <li class="d">src/types/ <span class="tag all">compartido</span></li>
+      </ul></li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============================================================ 11 -->
+<section id="routing">
+  <header>
+    <span class="eyebrow">Tabla 11</span>
+    <h2>Quién hace qué y con qué modelo</h2>
+    <p>Ajustado a tus planes. El costo es relativo dentro de cada agente. Esta tabla vive en <code>toolbox/models.md</code> y la actualiza la skill radar.</p>
+  </header>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Tarea</th><th>Agente</th><th>Modelo / esfuerzo</th><th>Costo</th><th>Por qué</th></tr></thead>
+      <tbody>
+        <tr><td>Spec de demo o PoC</td><td><span class="who claude">Claude</span></td><td>Opus si tu plan lo ofrece; si no, Sonnet con esfuerzo alto</td><td><span class="cost" aria-label="alto"><i class="on"></i><i class="on"></i><i class="on"></i></span></td><td>mejor razonamiento en tareas largas</td></tr>
+        <tr><td>Spec de mock o boceto</td><td><span class="who claude">Claude</span></td><td>Sonnet</td><td><span class="cost" aria-label="medio"><i class="on"></i><i class="on"></i><i></i></span></td><td>media página basta</td></tr>
+        <tr><td>Revisión del plan</td><td><span class="who codex">Codex</span></td><td>por defecto</td><td><span class="cost" aria-label="medio"><i class="on"></i><i class="on"></i><i></i></span></td><td>otro proveedor, errores no correlacionados</td></tr>
+        <tr><td>Backend Python</td><td><span class="who claude">Claude</span></td><td>subagente backend-python · Sonnet</td><td><span class="cost" aria-label="medio"><i class="on"></i><i class="on"></i><i></i></span></td><td>líder en tareas de terminal</td></tr>
+        <tr><td>Fixtures y datos de la ciudad</td><td><span class="who claude">Claude</span></td><td>subagente data-curator · Haiku</td><td><span class="cost" aria-label="bajo"><i class="on"></i><i></i><i></i></span></td><td>mucho volumen, poca dificultad</td></tr>
+        <tr><td>Frontend y UI</td><td><span class="who anti">Antigravity</span></td><td>el de su panel</td><td><span class="cost" aria-label="semanal"><i class="on"></i><i class="on"></i><i></i></span></td><td>verifica en su propio navegador</td></tr>
+        <tr><td>Revisión de código</td><td><span class="who codex">Codex</span></td><td>por defecto, solo el diff</td><td><span class="cost" aria-label="medio"><i class="on"></i><i class="on"></i><i></i></span></td><td>gasta cuota de ChatGPT, no de Claude</td></tr>
+        <tr><td>Relevo de backend</td><td><span class="who codex">Codex</span></td><td>por defecto</td><td><span class="cost" aria-label="medio"><i class="on"></i><i class="on"></i><i></i></span></td><td>cuando Claude se queda sin cuota</td></tr>
+        <tr><td>Issues y PRs externos</td><td><span class="who claude">Claude</span></td><td>Sonnet + gh</td><td><span class="cost" aria-label="bajo"><i class="on"></i><i></i><i></i></span></td><td>skills gh-issues y pr-intake</td></tr>
+        <tr><td>3D, iconos, avatares</td><td><span class="who you">por decidir</span></td><td>scout prueba 2 opciones</td><td>—</td><td>no hay ranking confiable para 3D</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note">Paralelo máximo con tus planes: <strong>2 constructores</strong> (Claude en backend y Antigravity en frontend) y <strong>Codex revisando</strong>. Un solo Claude a la vez.</p>
+</section>
+
+<!-- ============================================================ 12 -->
+<section id="es">
+  <header>
+    <span class="eyebrow">Fichas 12</span>
+    <h2>Entradas y salidas de cada pieza</h2>
+    <p>Para cada skill, script, hook y subagente: qué recibe, qué produce y qué lo activa. Filtra por tipo.</p>
+  </header>
+  <div class="filters" role="group" aria-label="Filtrar piezas">
+    <button type="button" id="f-all" data-f="all" aria-pressed="true">Todas</button>
+    <button type="button" id="f-skill" data-f="skill" aria-pressed="false">Skills</button>
+    <button type="button" id="f-script" data-f="script" aria-pressed="false">Scripts</button>
+    <button type="button" id="f-hook" data-f="hook" aria-pressed="false">Hooks y CI</button>
+    <button type="button" id="f-agent" data-f="agent" aria-pressed="false">Subagentes</button>
+  </div>
+  <div class="io" id="io"></div>
+</section>
+
+<!-- ============================================================ PARTE II -->
+<div class="partmark" id="instalacion">
+  <span class="eyebrow">Parte II</span>
+  <h2>Instalación por etapas, con pruebas</h2>
+  <p>Nueve etapas en orden. Cada una termina con una prueba automática (<code>verify.sh</code>) y, cuando hace falta, pruebas manuales. No avances si la prueba muestra ✗: la tabla «Si falla» de cada etapa dice qué hacer. Marca cada etapa al terminarla; el avance se guarda en este navegador.</p>
+</div>
+
+<div class="progress" aria-live="polite"><div class="bar"><i id="pbar"></i></div><span id="ptext">0 de 9 etapas</span></div>
+
+<p class="note">Lugar de cada comando: <strong>PowerShell</strong> solo en la etapa 1. Todo lo demás en <strong>Warp con Git Bash</strong>, salvo lo marcado como <strong>dentro de claude</strong> (escrito en la sesión de Claude Code) o <strong>navegador</strong>.</p>
+
+<!-- 0 -->
+<section class="stage" id="etapa-0">
+  <div class="head"><span class="num">0</span><div><h3>Seguridad primero</h3><div class="meta"><span>5 min</span><span>navegador + editor</span></div></div><label class="done"><input type="checkbox" id="done-0" data-stage="0">Hecha</label></div>
+  <div class="body">
+    <p class="note bad">El <code>.env.example</code> de tu repo público trae una llave real de Google Maps. Cualquiera puede usarla y cargarla a tu cuenta.</p>
+    <h4>Pasos</h4>
+    <ol class="steps">
+      <li><p>En <a href="https://console.cloud.google.com/apis/credentials">Google Cloud → Credenciales</a>, crea una llave nueva y restríngela: <em>Referentes HTTP</em> = <code>http://localhost:*/*</code> (y tu dominio cuando exista); <em>APIs</em> = solo Maps JavaScript API.</p></li>
+      <li><p>Borra o desactiva la llave vieja (la que empieza con <code>AIzaSyCxLb…</code>).</p></li>
+      <li><p>En <code>.env.example</code> deja el placeholder; la llave nueva va solo en <code>.env</code> (lo harás en la etapa 3):</p>
+        <div class="code">VITE_MAPS_API_KEY="MY_MAPS_API_KEY"</div></li>
+    </ol>
+    <div class="test">
+      <h4>Prueba</h4>
+      <ul class="manual">
+        <li>En Credenciales, la llave vieja ya no aparece o dice «Deshabilitada».</li>
+        <li>La nueva muestra el ícono de restricciones (referentes + 1 API).</li>
+        <li>La comprobación automática llega en la etapa 3: <code>✓ .env.example sin llaves reales</code>.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 1 -->
+<section class="stage" id="etapa-1">
+  <div class="head"><span class="num">1</span><div><h3>Herramientas</h3><div class="meta"><span>20 min</span><span>PowerShell, luego Warp</span></div></div><label class="done"><input type="checkbox" id="done-1" data-stage="1">Hecha</label></div>
+  <div class="body">
+    <h4>Pasos</h4>
+    <ol class="steps">
+      <li><p>Descomprime <code>suite-v5-zacdeslumbrante.zip</code> en <code>C:\dev\suite-v5</code> (temporal; en la etapa 3 lo copias al repo).</p></li>
+      <li><p>Abre <strong>PowerShell normal</strong> (no admin) y corre el instalador:</p>
+        <div class="code"><span class="where">PowerShell</span>cd C:\dev\suite-v5
+Set-ExecutionPolicy -Scope Process Bypass
+.\scripts\windows-bootstrap.ps1</div>
+        <p class="muted">Instala con winget Git (incluye Git Bash), Node LTS, GitHub CLI, uv, Bun y Warp; luego Claude Code y Codex. Puedes correrlo varias veces sin problema.</p></li>
+      <li><p>Activa <strong>Configuración → Sistema → Para programadores → Modo de desarrollador</strong> (permite symlinks sin admin).</p></li>
+      <li><p>Instala <strong>Antigravity</strong> desde antigravity.google.</p></li>
+      <li><p>Abre <strong>Warp</strong> → Settings → Features → Session → <em>Default shell</em>: <strong>Git Bash</strong>. Settings → Appearance → Tabs → <em>Use vertical tab layout</em>. Cierra y abre Warp.</p></li>
+    </ol>
+    <div class="test">
+      <h4>Prueba automática</h4>
+      <div class="code"><span class="where">Warp · Git Bash</span>bash /c/dev/suite-v5/scripts/verify.sh 1</div>
+      <p>Resultado esperado:</p>
+      <div class="code out"><b>[1] Herramientas instaladas</b>
+  <span class="pass">✓</span> git 2.47.1
+  <span class="pass">✓</span> node 22.12.0
+  <span class="pass">✓</span> bun 1.4.2
+  <span class="pass">✓</span> uv 0.11.3
+  <span class="pass">✓</span> gh 2.89.0
+  <span class="pass">✓</span> claude 2.1.307
+  <span class="pass">✓</span> codex 0.162.0
+  <span class="pass">✓</span> Node ≥ 20
+  <span class="warn">~</span> agy no está en PATH (normal si solo usas el IDE de Antigravity)
+  <span class="warn">~</span> codebase-memory-mcp aún no instalado (etapa 5)
+  <span class="pass">✓</span> git core.longpaths
+  <span class="pass">✓</span> Modo de desarrollador (symlinks)
+  <span class="pass">✓</span> corriendo en Git Bash</div>
+      <ul class="manual"><li>Una pestaña nueva de Warp muestra <code>MINGW64</code> en el prompt (es Git Bash).</li></ul>
+    </div>
+    <div class="tablewrap fix"><table><thead><tr><th>Si falla</th><th>Arreglo</th></tr></thead><tbody>
+      <tr><td><code>✗ claude no encontrado</code> justo después de instalar</td><td>Cierra y abre Warp (el PATH nuevo no llega a terminales abiertas).</td></tr>
+      <tr><td><code>winget no existe</code></td><td>Instala «App Installer» desde Microsoft Store.</td></tr>
+      <tr><td><code>✗ Modo de desarrollador apagado</code></td><td>Paso 3; no hace falta reiniciar Windows.</td></tr>
+      <tr><td>Warp abre PowerShell</td><td>Paso 5; si Git Bash no aparece en la lista, reinstala Git: <code>winget install Git.Git</code>.</td></tr>
+    </tbody></table></div>
+  </div>
+</section>
+
+<!-- 2 -->
+<section class="stage" id="etapa-2">
+  <div class="head"><span class="num">2</span><div><h3>Cuentas</h3><div class="meta"><span>10 min</span><span>Warp · Git Bash + navegador</span></div></div><label class="done"><input type="checkbox" id="done-2" data-stage="2">Hecha</label></div>
+  <div class="body">
+    <h4>Pasos</h4>
+    <ol class="steps">
+      <li><p>Claude Code (Claude Pro). Se abre el navegador; inicia sesión y vuelve. Sal con <code>/exit</code>.</p><div class="code"><span class="where">Git Bash</span>claude</div></li>
+      <li><p>Codex (ChatGPT Plus):</p><div class="code"><span class="where">Git Bash</span>codex login</div></li>
+      <li><p>GitHub: elige <em>GitHub.com → HTTPS → Login with a web browser</em>.</p><div class="code"><span class="where">Git Bash</span>gh auth login</div></li>
+      <li><p>Identidad de git (si nunca la configuraste):</p><div class="code"><span class="where">Git Bash</span>git config --global user.name "Tu Nombre"
+git config --global user.email "tu@correo.com"</div></li>
+    </ol>
+    <div class="test">
+      <h4>Prueba automática</h4>
+      <div class="code"><span class="where">Git Bash</span>bash /c/dev/suite-v5/scripts/verify.sh 2</div>
+      <div class="code out"><b>[2] Cuentas</b>
+  <span class="pass">✓</span> GitHub: zaned897
+  <span class="pass">✓</span> Codex con sesión
+  <span class="pass">✓</span> Claude Code configurado (confirma el login abriendo 'claude')
+  <span class="pass">✓</span> git user.email: tu@correo.com</div>
+      <ul class="manual"><li><code>claude</code> abre sin pedir login y <code>/status</code> muestra tu plan Pro.</li></ul>
+    </div>
+    <div class="tablewrap fix"><table><thead><tr><th>Si falla</th><th>Arreglo</th></tr></thead><tbody>
+      <tr><td>El navegador no regresa a la terminal</td><td>Copia el código que muestra la página y pégalo en la terminal.</td></tr>
+      <tr><td><code>✗ gh sin sesión</code></td><td><code>gh auth status</code> para ver el detalle; repite <code>gh auth login</code>.</td></tr>
+    </tbody></table></div>
+  </div>
+</section>
+
+<!-- 3 -->
+<section class="stage" id="etapa-3">
+  <div class="head"><span class="num">3</span><div><h3>Repositorio</h3><div class="meta"><span>10 min</span><span>Warp · Git Bash</span></div></div><label class="done"><input type="checkbox" id="done-3" data-stage="3">Hecha</label></div>
+  <div class="body">
+    <h4>Pasos</h4>
+    <ol class="steps">
+      <li><p>Clona en una ruta corta, sin espacios y fuera de OneDrive:</p><div class="code"><span class="where">Git Bash</span>mkdir -p /c/dev && cd /c/dev
+gh repo clone zaned897/zacdeslumbrante
+cd zacdeslumbrante</div></li>
+      <li><p>Copia la suite a la raíz del repo (sobrescribe versiones anteriores):</p><div class="code"><span class="where">Git Bash</span>cp -r /c/dev/suite-v5/. .</div></li>
+      <li><p>Crea <code>.env</code> con tus llaves reales (Gemini y la llave nueva de Maps de la etapa 0):</p><div class="code"><span class="where">Git Bash</span>cp .env.example .env
+notepad .env</div></li>
+      <li><p>Instala dependencias:</p><div class="code"><span class="where">Git Bash</span>bun install</div></li>
+    </ol>
+    <div class="test">
+      <h4>Prueba automática</h4>
+      <div class="code"><span class="where">Git Bash</span>./scripts/verify.sh 3</div>
+      <div class="code out"><b>[3] Repositorio</b>
+  <span class="pass">✓</span> dentro de un repo git
+  <span class="pass">✓</span> origin → https://github.com/zaned897/zacdeslumbrante.git
+  <span class="pass">✓</span> ruta limpia: /c/dev/zacdeslumbrante
+  <span class="pass">✓</span> .gitattributes
+  <span class="pass">✓</span> scripts con finales LF
+  <span class="pass">✓</span> .env existe
+  <span class="pass">✓</span> .env.example sin llaves reales
+  <span class="pass">✓</span> .env ignorado por git
+  <span class="pass">✓</span> dependencias instaladas
+  <span class="pass">✓</span> bun run lint (tsc) en verde</div>
+      <ul class="manual"><li><code>bun run dev</code> → abre <code>http://localhost:3000</code>: la app carga y el mapa se ve. Detén con Ctrl+C.</li></ul>
+    </div>
+    <div class="tablewrap fix"><table><thead><tr><th>Si falla</th><th>Arreglo</th></tr></thead><tbody>
+      <tr><td><code>✗ llave real en .env.example</code></td><td>Etapa 0, paso 3.</td></tr>
+      <tr><td><code>✗ scripts con CRLF</code></td><td><code>git add --renormalize . && git checkout -- .</code></td></tr>
+      <tr><td><code>✗ ruta con espacios u OneDrive</code></td><td>Mueve la carpeta a <code>C:\dev\zacdeslumbrante</code>.</td></tr>
+      <tr><td>El mapa sale gris con error de llave</td><td>Revisa que la restricción de referentes incluya <code>http://localhost:*/*</code>.</td></tr>
+    </tbody></table></div>
+  </div>
+</section>
+
+<!-- 4 -->
+<section class="stage" id="etapa-4">
+  <div class="head"><span class="num">4</span><div><h3>Suite</h3><div class="meta"><span>5 min</span><span>Warp · Git Bash</span></div></div><label class="done"><input type="checkbox" id="done-4" data-stage="4">Hecha</label></div>
+  <div class="body">
+    <h4>Pasos</h4>
+    <ol class="steps">
+      <li><p>Conecta skills, hooks y permisos:</p><div class="code"><span class="where">Git Bash</span>./scripts/suite-init.sh --antigravity</div></li>
+      <li><p>Guarda la suite en el repo. Este commit ya pasa por los git hooks:</p><div class="code"><span class="where">Git Bash</span>git add -A
+git commit -m "chore: suite multiagente v5"
+git push</div></li>
+    </ol>
+    <div class="test">
+      <h4>Prueba automática</h4>
+      <div class="code"><span class="where">Git Bash</span>./scripts/verify.sh 4</div>
+      <div class="code out"><b>[4] Suite</b>
+  <span class="pass">✓</span> AGENTS.md
+  <span class="pass">✓</span> CLAUDE.md
+  <span class="pass">✓</span> .mcp.json
+  <span class="pass">✓</span> .claude/settings.json
+  <span class="pass">✓</span> toolbox/capabilities.json
+  <span class="pass">✓</span> toolbox/models.md
+  <span class="pass">✓</span> toolbox/hooks/scout-hint.mjs
+  <span class="pass">✓</span> 8 skills en .agents/skills
+  <span class="pass">✓</span> Claude Code ve las skills (symlink)
+  <span class="pass">✓</span> scripts ejecutables en git (Linux/macOS de contribuidores)
+  <span class="pass">✓</span> git hooks activos
+  <span class="pass">✓</span> commit-msg rechaza 'agrega cosas'
+  <span class="pass">✓</span> commit-msg acepta 'feat(api): eventos mock (#12)'
+  <span class="pass">✓</span> hook scout detecta ideas parked ('avatares')
+  <span class="pass">✓</span> hook registrado en .claude/settings.json
+  <span class="pass">✓</span> skills enlazadas para Antigravity</div>
+      <h4>Pruebas manuales de las barreras</h4>
+      <div class="code"><span class="where">Git Bash</span><span class="c"># 1. mensaje no convencional → debe rechazarse</span>
+git commit --allow-empty -m "prueba"
+<span class="fail">✗ Mensaje no convencional: "prueba"</span>
+
+<span class="c"># 2. llave falsa → debe rechazarse (y se limpia)</span>
+echo 'k="AIzaSyA0000000000000000000000000000000000"' &gt; src/x.ts
+git add src/x.ts && git commit -m "test: llave"
+<span class="fail">✗ Posible secreto en el commit (arriba). Muévelo a .env.</span>
+git rm -q --cached src/x.ts && rm src/x.ts</div>
+    </div>
+    <div class="tablewrap fix"><table><thead><tr><th>Si falla</th><th>Arreglo</th></tr></thead><tbody>
+      <tr><td><code>~ skills copiadas, no enlazadas</code></td><td>Activa el Modo de desarrollador y repite el paso 1.</td></tr>
+      <tr><td><code>✗ git hooks inactivos</code></td><td>Repite el paso 1 (configura <code>core.hooksPath</code>).</td></tr>
+      <tr><td>El commit del paso 2 falla en tsc</td><td>Corre <code>bun run lint</code> y lee el error; no uses <code>--no-verify</code>.</td></tr>
+    </tbody></table></div>
+  </div>
+</section>
+
+<!-- 5 -->
+<section class="stage" id="etapa-5">
+  <div class="head"><span class="num">5</span><div><h3>Agentes y MCP</h3><div class="meta"><span>20 min</span><span>dentro de claude + Antigravity + Warp</span></div></div><label class="done"><input type="checkbox" id="done-5" data-stage="5">Hecha</label></div>
+  <div class="body">
+    <h4>Pasos</h4>
+    <ol class="steps">
+      <li><p>Abre Claude en el repo y aprueba los servidores de <code>.mcp.json</code> (Context7 y Playwright) cuando lo pregunte:</p><div class="code"><span class="where">Git Bash</span>cd /c/dev/zacdeslumbrante && claude</div></li>
+      <li><p>Memoria del código. Escríbelo tal cual; Claude descarga el binario y lo registra en Claude y Codex:</p><div class="code"><span class="where">dentro de claude</span>Install this MCP server: https://github.com/DeusData/codebase-memory-mcp</div>
+        <p>Sal (<code>/exit</code>), vuelve a abrir <code>claude</code> y escribe:</p><div class="code"><span class="where">dentro de claude</span>Index this project</div></li>
+      <li><p>Codex como revisor:</p><div class="code"><span class="where">dentro de claude</span>/plugin marketplace add openai/codex-plugin-cc
+/plugin install codex@openai-codex</div></li>
+      <li><p>Antigravity: <em>Open Folder</em> → <code>C:\dev\zacdeslumbrante</code> (carpeta local).</p></li>
+      <li><p>Warp: crea las 4 pestañas (<code>claude</code>, <code>./scripts/dev.sh</code>, <code>codex</code>, <code>main</code>) en la carpeta del repo y guárdalas como configuración de pestañas.</p></li>
+    </ol>
+    <div class="test">
+      <h4>Prueba automática</h4>
+      <div class="code"><span class="where">Git Bash · pestaña 4</span>./scripts/verify.sh 5</div>
+      <div class="code out"><b>[5] Agentes y MCP</b>
+  <span class="pass">✓</span> MCP context7 registrado
+  <span class="pass">✓</span> MCP playwright registrado
+  <span class="pass">✓</span> MCP codebase-memory registrado
+  <span class="pass">✓</span> plugin de Codex presente
+  <span class="pass">✓</span> codebase-memory tiene índice
+  <span class="warn">~</span> manual: en 'claude' escribe 'diseña avatares' → debe aparecer el aviso [scout]
+  <span class="warn">~</span> manual: en 'claude' corre /codex:review → debe responder Codex</div>
+      <h4>Pruebas manuales, una por agente</h4>
+      <div class="tablewrap"><table><thead><tr><th>Dónde</th><th>Escribe</th><th>Esperado</th></tr></thead><tbody>
+        <tr><td><span class="who claude">claude</span></td><td><code>/mcp</code></td><td>3 servidores en verde: context7, playwright, codebase-memory</td></tr>
+        <tr><td><span class="who claude">claude</span></td><td><code>/hooks</code></td><td>aparece UserPromptSubmit → scout-hint.mjs</td></tr>
+        <tr><td><span class="who claude">claude</span></td><td>«quiero diseñar avatares para el mapa»</td><td>Claude menciona el aviso [scout] sobre assets 3D/avatares y no instala nada</td></tr>
+        <tr><td><span class="who claude">claude</span></td><td>«¿qué skills tienes de este proyecto?»</td><td>lista las 8: orchestrate, prototype-scope, python-backend, gh-issues, pr-intake, relay, scout, radar</td></tr>
+        <tr><td><span class="who codex">claude → Codex</span></td><td><code>/codex:review</code></td><td>Codex responde con una revisión (sin cambios: «nada que revisar»)</td></tr>
+        <tr><td><span class="who codex">codex</span></td><td>«según AGENTS.md, ¿cuál es tu rol?»</td><td>revisor de solo lectura que reporta archivo, línea, severidad y sugerencia</td></tr>
+        <tr><td><span class="who anti">Antigravity</span></td><td>«según AGENTS.md, ¿qué archivos puedes editar?»</td><td>src/components, App.tsx, index.css, main.tsx, index.html</td></tr>
+      </tbody></table></div>
+    </div>
+    <div class="tablewrap fix"><table><thead><tr><th>Si falla</th><th>Arreglo</th></tr></thead><tbody>
+      <tr><td><code>✗ MCP … no registrado</code></td><td>Abre <code>claude</code> desde la raíz del repo (lee <code>.mcp.json</code> de ahí) y acepta el aviso.</td></tr>
+      <tr><td>No aparece el aviso [scout]</td><td><code>/hooks</code>; si no está, Claude no se abrió desde Git Bash. Revisa el shell por defecto de Warp.</td></tr>
+      <tr><td><code>/codex:review</code> pide login</td><td>En claude: <code>!codex login</code>.</td></tr>
+      <tr><td>Antigravity no ve las reglas</td><td>Confirma que abriste la carpeta local, no una ruta <code>\\wsl$</code>.</td></tr>
+    </tbody></table></div>
+  </div>
+</section>
+
+<!-- 6 -->
+<section class="stage" id="etapa-6">
+  <div class="head"><span class="num">6</span><div><h3>GitHub abierto a contribuciones</h3><div class="meta"><span>10 min</span><span>Git Bash + navegador</span></div></div><label class="done"><input type="checkbox" id="done-6" data-stage="6">Hecha</label></div>
+  <div class="body">
+    <h4>Pasos</h4>
+    <ol class="steps">
+      <li><p>Etiquetas de niveles, áreas y estado:</p><div class="code"><span class="where">Git Bash</span>./scripts/gh-labels.sh</div></li>
+      <li><p>Licencia: en GitHub → <em>Add file → Create new file</em> → nombre <code>LICENSE</code> → <em>Choose a license template</em> (MIT es la más simple). Luego <code>git pull</code>.</p></li>
+      <li><p>Espera a que corra el CI del push de la etapa 4 (pestaña <em>Actions</em>).</p></li>
+    </ol>
+    <div class="test">
+      <h4>Prueba automática</h4>
+      <div class="code"><span class="where">Git Bash</span>./scripts/verify.sh 6</div>
+      <div class="code out"><b>[6] GitHub</b>
+  <span class="pass">✓</span> etiquetas creadas
+  <span class="pass">✓</span> plantillas de issue publicadas
+  <span class="pass">✓</span> workflow CI registrado
+  <span class="pass">✓</span> último CI en verde
+  <span class="pass">✓</span> LICENSE
+  <span class="pass">✓</span> repo público (forks posibles)</div>
+      <ul class="manual">
+        <li>En GitHub → <em>Issues → New issue</em> aparecen 3 plantillas: Prototipo, Idea, Bug.</li>
+        <li>Abre la plantilla Prototipo: tiene los campos Nivel, Área, Contexto, Qué entregar y Criterios. No la envíes.</li>
+      </ul>
+    </div>
+    <div class="tablewrap fix"><table><thead><tr><th>Si falla</th><th>Arreglo</th></tr></thead><tbody>
+      <tr><td><code>✗ último CI: failure</code></td><td><code>gh run view --log-failed</code>; casi siempre es <code>bun run lint</code>.</td></tr>
+      <tr><td><code>✗ plantillas no están en origin/main</code></td><td><code>git push</code> y luego <code>git fetch</code>.</td></tr>
+    </tbody></table></div>
+  </div>
+</section>
+
+<!-- 7 -->
+<section class="stage" id="etapa-7">
+  <div class="head"><span class="num">7</span><div><h3>Backend Python: la primera issue</h3><div class="meta"><span>30–45 min</span><span>lo hacen tus agentes</span></div></div><label class="done"><input type="checkbox" id="done-7" data-stage="7">Hecha</label></div>
+  <div class="body">
+    <p>Esta etapa ya usa el flujo real: issue → orchestrate → review → PR → merge. El resultado es el servicio FastAPI y el proxy en Express.</p>
+    <h4>Pasos</h4>
+    <ol class="steps">
+      <li><div class="code"><span class="where">dentro de claude</span>Con la skill gh-issues, crea una issue [poc] para levantar el servicio Python en services/api con GET /health, el proxy /api/py en server.ts, el script dev:py y la sección Python en docs/API.md.</div>
+        <p>Revisa el texto que te muestra y responde «sí».</p></li>
+      <li><div class="code"><span class="where">dentro de claude</span>Usa orchestrate para implementar la issue #N.</div>
+        <p>Claude crea la rama <code>poc/N-servicio-python</code>, delega en <code>backend-python</code>, pide <code>/codex:review</code> y abre el PR.</p></li>
+      <li><p>Revisa el PR en GitHub (plantilla llena, CI verde) y haz merge. Luego:</p><div class="code"><span class="where">Git Bash · pestaña 4</span>git switch main && git pull</div></li>
+    </ol>
+    <div class="test">
+      <h4>Prueba automática</h4>
+      <div class="code"><span class="where">Git Bash</span>./scripts/verify.sh 7</div>
+      <div class="code out"><b>[7] Backend Python</b>
+  <span class="pass">✓</span> uv sync
+  <span class="pass">✓</span> ruff check
+  <span class="pass">✓</span> ruff format
+  <span class="pass">✓</span> pytest
+  <span class="pass">✓</span> FastAPI responde /health
+  <span class="pass">✓</span> proxy /api/py en server.ts
+  <span class="pass">✓</span> script dev:py</div>
+      <h4>Prueba manual de punta a punta</h4>
+      <div class="code"><span class="where">pestaña 2</span>./scripts/dev.sh
+<span class="c">web → http://localhost:3000   py → http://localhost:8000   Ctrl+C para detener</span></div>
+      <div class="code"><span class="where">pestaña 4</span>curl localhost:3000/api/py/health
+<span class="pass">{"status":"ok"}</span>
+<span class="c"># detén solo Python (o todo dev.sh y levanta solo bun run dev) y repite:</span>
+curl -i localhost:3000/api/py/health
+<span class="warn">HTTP/1.1 503 … {"error":"python api offline"}</span></div>
+    </div>
+    <div class="tablewrap fix"><table><thead><tr><th>Si falla</th><th>Arreglo</th></tr></thead><tbody>
+      <tr><td>pytest: <code>No module named 'app'</code></td><td>Falta <code>pythonpath = ["."]</code> en pyproject.toml (lo indica la skill python-backend).</td></tr>
+      <tr><td><code>✗ formato pendiente</code></td><td><code>cd services/api && uv run ruff format .</code></td></tr>
+      <tr><td>Claude se quedó sin cuota a medias</td><td>«usa relay para pasarle esto a Codex» y continúa en la pestaña 3.</td></tr>
+    </tbody></table></div>
+  </div>
+</section>
+
+<!-- 8 -->
+<section class="stage" id="etapa-8">
+  <div class="head"><span class="num">8</span><div><h3>Ensayo general</h3><div class="meta"><span>45–60 min</span><span>todos los agentes</span></div></div><label class="done"><input type="checkbox" id="done-8" data-stage="8">Hecha</label></div>
+  <div class="body">
+    <p>Una feature pequeña con backend y frontend en paralelo, para probar worktrees, Antigravity, relevo y revisión cruzada antes de trabajar en serio.</p>
+    <h4>Pasos</h4>
+    <ol class="steps">
+      <li><div class="code"><span class="where">dentro de claude</span>Con gh-issues, crea una issue [mock] de eventos culturales: GET /api/py/events con 5 eventos de ejemplo y una tarjeta de evento con badge "Demo" en el panel lateral.</div></li>
+      <li><div class="code"><span class="where">pestaña 4</span>./scripts/worktrees.sh mock/N-eventos-api mock/N-eventos-ui</div></li>
+      <li><p>Pestaña 1: <code>cd ../zacdeslumbrante-back && claude</code> → «usa orchestrate, tu parte de la issue #N».</p></li>
+      <li><p>Antigravity: abre <code>C:\dev\zacdeslumbrante-front</code> → «usa orchestrate, tu parte de la issue #N». Servidor del front con <code>PORT=3001 ./scripts/dev.sh</code>.</p></li>
+      <li><p>Prueba de relevo (a propósito, a mitad del backend):</p><div class="code"><span class="where">dentro de claude</span>Usa relay para pasarle esto a Codex.</div>
+        <p>Pestaña 3: <code>cd ../zacdeslumbrante-back && codex</code> → «usa relay para recibir la issue #N».</p></li>
+      <li><p>Revisión cruzada, PRs, CI y merge de las dos ramas. Limpieza:</p><div class="code"><span class="where">pestaña 4</span>git worktree remove ../zacdeslumbrante-back ../zacdeslumbrante-front</div></li>
+    </ol>
+    <div class="test">
+      <h4>Prueba automática final</h4>
+      <div class="code"><span class="where">Git Bash</span>./scripts/verify.sh</div>
+      <div class="code out"><b>[8] Flujo de trabajo</b>
+  <span class="pass">✓</span> suite incluida en git (los worktrees y forks la reciben)
+  <span class="pass">✓</span> worktrees funcionan
+  <span class="pass">✓</span> dev.sh levanta la web (/api/health)
+  <span class="pass">✓</span> web → proxy → Python OK
+  <span class="pass">✓</span> dev.sh libera los puertos al detenerse
+  <span class="pass">✓</span> rama con formato válido: main
+
+<b>Resultado:</b> <span class="pass">NN ✓</span>  <span class="pass">0 ✗</span>  2 ~   <span class="c"># lo que importa: 0 ✗</span></div>
+      <h4>Lo que debes ver en GitHub</h4>
+      <ul class="manual">
+        <li>La issue tiene un comentario de relevo con «Hecho / Falta / Cómo verificar».</li>
+        <li>Dos PRs con <code>Closes #N</code>, CI verde y una revisión de Codex en la conversación.</li>
+        <li><code>curl localhost:3000/api/py/events</code> devuelve 5 eventos con <code>"_mock": true</code>.</li>
+        <li>La tarjeta de evento aparece con el badge «Demo».</li>
+        <li>Claude propone una issue del siguiente nivel (demo) y espera tu sí.</li>
+      </ul>
+    </div>
+    <div class="tablewrap fix"><table><thead><tr><th>Si falla</th><th>Arreglo</th></tr></thead><tbody>
+      <tr><td><code>✗ el puerto … siguió ocupado</code></td><td>Cierra la pestaña de dev.sh; si persiste, <code>netstat -ano | findstr :3000</code> y <code>taskkill /F /PID &lt;n&gt;</code>.</td></tr>
+      <tr><td>Antigravity editó archivos del backend</td><td>Pídele que lo deshaga y lo anote en <code>docs/HANDOFF.md</code>; la revisión de Codex también lo marca.</td></tr>
+      <tr><td><code>worktree add</code>: «already exists»</td><td>La rama ya existe: usa otro nombre o <code>git worktree list</code> para ver la anterior.</td></tr>
+    </tbody></table></div>
+  </div>
+</section>
+
+</main>
+</div>
+
+<script>
+// ---- fichas de entradas y salidas
+const IO = [
+  {n:"orchestrate", t:"skill", k:"Skill · los 3", in:"Número de issue, nivel, zonas", out:"Spec, tareas con dueño, ramas, PR con evidencia, propuesta de siguiente nivel", trg:"«usa orchestrate para la issue #N»"},
+  {n:"prototype-scope", t:"skill", k:"Skill · los 3", in:"Issue y su nivel (sketch, mock, demo, poc)", out:"Límites: qué está prohibido, qué tests exige, cuándo está hecho", trg:"Al empezar una issue o cuando la tarea crece"},
+  {n:"python-backend", t:"skill", k:"Skill · Claude/Codex", in:"Feature de backend nueva", out:"services/api con routers, models (camelCase), services, fixtures, tests; proxy y dev:py la primera vez", trg:"Endpoints, mocks o PoCs en Python"},
+  {n:"gh-issues", t:"skill", k:"Skill · Claude", in:"Idea, spec o hallazgo de review", out:"Issues con plantilla, nivel, área, criterios y etiquetas (publica solo con tu sí)", trg:"«crea una issue…», «divide esto en issues»"},
+  {n:"pr-intake", t:"skill", k:"Skill · Claude", in:"Número de PR (propio o de un fork)", out:"Alerta de archivos sensibles, checks en worktree aislado, review de Codex, comentario redactado para tu aprobación", trg:"«revisa el PR #N»"},
+  {n:"relay", t:"skill", k:"Skill · los 3", in:"Trabajo a medias de un agente", out:"Commit proto: wip + comentario de relevo (hecho, falta, verificar, cuidado)", trg:"Cuota agotada, cambio de rol o fin de sesión"},
+  {n:"scout", t:"skill", k:"Skill · los 3", in:"Tarea actual + capabilities.json + decisions.md", out:"Usa lo instalado, aplaza a parked, o propone ≤3 herramientas; instala y registra con tu sí", trg:"Aviso [scout], tarea atorada o «¿qué instalo para…?»"},
+  {n:"radar", t:"skill", k:"Skill · los 3", in:"models.md, capabilities.json, fecha de verificación", out:"Reporte de ≤10 líneas: modelos y features nuevas, qué cambiar o quitar; actualiza models.md con tu sí", trg:"Aviso [radar] cada 30 días o fase nueva"},
+  {n:"scout-hint.mjs", t:"hook", k:"Hook · Claude", in:"Cada prompt que escribes (JSON por stdin)", out:"Línea [scout] o [radar] en el contexto de Claude, o nada", trg:"Automático (UserPromptSubmit), máx. 1 aviso por idea al día"},
+  {n:".githooks/pre-commit", t:"hook", k:"Git hook · todos", in:"Archivos en stage", out:"✓ o ✗ con el comando de arreglo; bloquea el commit si falla", trg:"Automático en cada git commit"},
+  {n:".githooks/commit-msg", t:"hook", k:"Git hook · todos", in:"Mensaje del commit", out:"Acepta tipo(ámbito): descripción; rechaza el resto", trg:"Automático en cada git commit"},
+  {n:"workflows/ci.yml", t:"hook", k:"CI · GitHub", in:"Push a main o cualquier PR (también de forks)", out:"Job TypeScript (tsc) y job Python (ruff, format, pytest) en verde o rojo", trg:"Automático en GitHub"},
+  {n:"windows-bootstrap.ps1", t:"script", k:"Script · PowerShell", in:"Windows 10/11 con winget", out:"Git, Node, gh, uv, Bun, Warp, Claude Code, Codex; git configurado", trg:"Una vez (etapa 1)"},
+  {n:"suite-init.sh", t:"script", k:"Script · Git Bash", in:"Repo con la suite copiada", out:"Symlinks de skills (Claude, Antigravity), hooks activos, bits de ejecución, .gitignore", trg:"Una vez y tras actualizar la suite"},
+  {n:"verify.sh", t:"script", k:"Script · Git Bash", in:"Número o rango de etapa (1–8)", out:"Lista ✓ ✗ ~ con el arreglo de cada falla; código de salida 1 si algo falla", trg:"Al final de cada etapa o cuando algo raro pase"},
+  {n:"dev.sh", t:"script", k:"Script · Git Bash", in:"PORT y PY_PORT opcionales", out:"Web :3000 y Python :8000 con logs [web]/[py]; Ctrl+C libera los puertos", trg:"Pestaña 2, al trabajar"},
+  {n:"worktrees.sh", t:"script", k:"Script · Git Bash", in:"Dos nombres de rama nivel/issue-tema", out:"Carpetas -back y -front con .env y dependencias listas", trg:"Al paralelizar una issue"},
+  {n:"gh-labels.sh", t:"script", k:"Script · Git Bash", in:"Sesión de gh", out:"Etiquetas level:*, area:*, type:*, status:*, good first issue", trg:"Una vez (etapa 6)"},
+  {n:"backend-python", t:"agent", k:"Subagente · Sonnet", in:"Issue + skills python-backend y prototype-scope", out:"Cambios solo en services/api, ruff y pytest, curl de ejemplo, lista de PROTO:", trg:"Lo invoca Claude en orchestrate"},
+  {n:"backend-express", t:"agent", k:"Subagente · Sonnet", in:"Cambio en server.ts o src/server", out:"Mantenimiento del chat SSE y del proxy /api/py", trg:"Solo mantenimiento; lo nuevo va a Python"},
+  {n:"data-curator", t:"agent", k:"Subagente · Haiku", in:"Pedido de contenido de la ciudad", out:"Fixtures y src/data con fuente, tipo (historia, leyenda, recomendación) y es/en", trg:"Lugares, eventos, gastronomía, comercios"}
+];
+const ioEl = document.getElementById('io');
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;')}
+ioEl.innerHTML = IO.map(c => `<article data-t="${c.t}"><div class="top"><h4>${esc(c.n)}</h4><span class="kind">${esc(c.k)}</span></div><dl><dt class="in">Entra</dt><dd>${esc(c.in)}</dd><dt class="out">Sale</dt><dd>${esc(c.out)}</dd><dt class="trg">Se activa</dt><dd>${esc(c.trg)}</dd></dl></article>`).join('');
+document.querySelectorAll('.filters button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('.filters button').forEach(x => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
+  const f = b.dataset.f;
+  ioEl.querySelectorAll('article').forEach(a => { a.hidden = !(f === 'all' || a.dataset.t === f); });
+}));
+
+// ---- botones de copiar (no en bloques de salida esperada)
+document.querySelectorAll('.code:not(.out)').forEach(block => {
+  const raw = Array.from(block.childNodes).filter(n => !(n.nodeType === 1 && n.classList.contains('where'))).map(n => n.textContent).join('');
+  const clean = raw.split('\n').filter(l => !/^(✓|✗|~|\{"|HTTP\/|web →)/.test(l.trim())).join('\n').trim();
+  const b = document.createElement('button'); b.type = 'button'; b.className = 'copy'; b.textContent = 'Copiar';
+  b.addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText(clean); b.textContent = 'Copiado'; }
+    catch(e){ const r = document.createRange(); r.selectNodeContents(block); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); b.textContent = 'Selecciona y copia'; }
+    setTimeout(() => { b.textContent = 'Copiar'; }, 1600);
+  });
+  block.appendChild(b);
+});
+
+// ---- avance del runbook
+const KEY = 'zacdes-atlas-etapas';
+let done = {};
+try { done = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch(e) { done = {}; }
+const boxes = document.querySelectorAll('input[data-stage]');
+function paint(){
+  let n = 0;
+  boxes.forEach(cb => { cb.checked = !!done[cb.dataset.stage]; cb.closest('.stage').classList.toggle('is-done', cb.checked); if (cb.checked) n++; });
+  document.getElementById('pbar').style.width = (n / boxes.length * 100) + '%';
+  document.getElementById('ptext').textContent = n + ' de ' + boxes.length + ' etapas';
+}
+boxes.forEach(cb => cb.addEventListener('change', () => {
+  done[cb.dataset.stage] = cb.checked;
+  try { localStorage.setItem(KEY, JSON.stringify(done)); } catch(e) {}
+  paint();
+}));
+paint();
+</script>
+</body></html>
