@@ -45,5 +45,26 @@ Retos e insignias para el modo juego. Datos en `services/api/app/fixtures/challe
 - `placeIds`: ids de `src/data/places.ts` (el test lo valida).
 - `badge.icon`: nombre de ícono de lucide (`landmark`, `mountain`, `pickaxe`…).
 
+### GET /api/py/recommendations?lat=&lng=&visited=  · mock · dueño: Claude Code (#24)
+Los 3 lugares no visitados más cercanos (haversine), compatibles con `ScenePoi`. `lat` y `lng` obligatorios; `visited` son ids separados por coma. Lugares en `services/api/app/fixtures/places.json` (generado desde `src/data/places.ts`).
+```json
+{
+  "_mock": true,
+  "recommendations": [
+    {
+      "id": "recommendation:teatro-calderon",
+      "kind": "recommendation",
+      "title": { "es": "Teatro Fernando Calderón", "en": "Fernando Calderón Theater" },
+      "lat": 22.7748, "lng": -102.5729,
+      "placeId": "teatro-calderon",
+      "isMock": true,
+      "reason": { "es": "A 90 m de ti", "en": "90 m from you" },
+      "distanceMeters": 90
+    }
+  ]
+}
+```
+Sin precios ni reseñas: la razón es solo la distancia.
+
 ## Propuestas pendientes
 (Agrega aquí endpoints nuevos antes de implementarlos: método, ruta, body, respuesta, dueño.)
