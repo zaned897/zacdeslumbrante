@@ -38,7 +38,7 @@ export const Sheet: React.FC<SheetProps> = ({ open, onClose, title, subtitle, fo
         role="dialog"
         aria-modal="true"
         tabIndex={-1}
-        className="relative w-full md:max-w-xl max-h-[88dvh] flex flex-col bg-papel text-carbon rounded-t-[28px] md:rounded-[28px] shadow-2xl outline-none animate-sube"
+        className="relative w-full md:max-w-xl max-h-[88dvh] flex flex-col bg-papel tinte-temporada text-carbon rounded-t-[28px] md:rounded-[28px] shadow-2xl outline-none animate-sube"
         style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
       >
         <span className="self-center mt-2.5 w-10 h-1 rounded-full bg-linea md:hidden" aria-hidden="true" />

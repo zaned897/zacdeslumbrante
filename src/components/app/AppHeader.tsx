@@ -8,6 +8,8 @@ interface AppHeaderProps {
   onToggleLanguage: () => void;
   isMapOpen?: boolean;
   onToggleMap?: () => void;
+  /** Temporada o fiesta activa: se muestra como chip junto al subtítulo. */
+  season?: { name: string; accent: string };
   /** Hueco a la derecha (p. ej. el avatar de la cuenta). */
   trailing?: React.ReactNode;
 }
@@ -15,12 +17,12 @@ interface AppHeaderProps {
 const iconBtn =
   'h-9 min-w-9 px-2.5 grid place-items-center rounded-full text-xs font-bold cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cantera';
 
-export const AppHeader: React.FC<AppHeaderProps> = ({ language, onToggleLanguage, isMapOpen, onToggleMap, trailing }) => {
+export const AppHeader: React.FC<AppHeaderProps> = ({ language, onToggleLanguage, isMapOpen, onToggleMap, season, trailing }) => {
   const t = TRANSLATIONS[language];
 
   return (
     <header
-      className="shrink-0 flex items-center gap-2 px-4 pb-2 bg-papel/85 backdrop-blur-xl"
+      className="shrink-0 flex items-center gap-2 px-4 pb-2 bg-papel/85 backdrop-blur-xl tinte-temporada"
       style={{ paddingTop: 'max(0.75rem, env(safe-area-inset-top, 0px))' }}
     >
       <div className="w-8 h-8 rounded-[10px] bg-cantera text-sobre-cantera grid place-items-center shrink-0">
@@ -33,7 +35,14 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ language, onToggleLanguage
             {t.demoBadge}
           </span>
         </div>
-        <span className="block text-[11px] text-tenue truncate">{t.appTagline}</span>
+        {season ? (
+          <span className="flex items-center gap-1 text-[11px] font-semibold truncate" style={{ color: season.accent }}>
+            <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: season.accent }} aria-hidden="true" />
+            {season.name}
+          </span>
+        ) : (
+          <span className="block text-[11px] text-tenue truncate">{t.appTagline}</span>
+        )}
       </div>
 
       {onToggleMap && (
