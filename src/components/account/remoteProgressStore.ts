@@ -1,17 +1,8 @@
 import { PROGRESS_KEYS, ProgressKey, ProgressValue, accountApi } from './accountApi';
-import { getAccessToken } from './useAccount';
 
-/**
- * Misma forma que `ProgressStore` (src/progress/progressStore.ts, hilo de la mascota); se repite
- * aquí para no depender del orden de los PRs. TypeScript las trata como compatibles.
- */
-export interface ProgressStoreLike {
-  read<T>(key: ProgressKey): T | null;
-  write<T>(key: ProgressKey, value: T): void;
-  subscribe(cb: (key: ProgressKey) => void): () => void;
-}
+import { ProgressStore } from '../../progress/progressStore';
 
-export interface RemoteProgressStore extends ProgressStoreLike {
+export interface RemoteProgressStore extends ProgressStore {
   /** Trae el progreso de la cuenta y lo mezcla con el local: gana el `updatedAt` más reciente. */
   hydrate(): Promise<void>;
 }
@@ -27,9 +18,13 @@ function time(value: unknown): number {
 /**
  * Progreso en la cuenta con caché síncrona. Lee y escribe en `local` (el store de localStorage)
  * para que todo siga funcionando sin red, y sube cada clave a /api/py/me/progress en segundo plano.
- * Uso al iniciar sesión: `const s = createRemoteProgressStore(local); setProgressStore(s); await s.hydrate();`
+ * Lo instala useAccount al iniciar sesión; `getToken` es su getAccessToken (se inyecta para no
+ * crear un import circular).
  */
-export function createRemoteProgressStore(local: ProgressStoreLike): RemoteProgressStore {
+export function createRemoteProgressStore(
+  local: ProgressStore,
+  getToken: () => Promise<string | null>,
+): RemoteProgressStore {
   const listeners = new Set<(key: ProgressKey) => void>();
   const timers = new Map<ProgressKey, ReturnType<typeof setTimeout>>();
 
@@ -42,7 +37,7 @@ export function createRemoteProgressStore(local: ProgressStoreLike): RemoteProgr
       setTimeout(async () => {
         timers.delete(key);
         const value = local.read<ProgressValue>(key);
-        const token = await getAccessToken();
+        const token = await getToken();
         if (!value || !token) return;
         try {
           const kept = await accountApi.writeProgress(token, key, value);
@@ -74,7 +69,7 @@ export function createRemoteProgressStore(local: ProgressStoreLike): RemoteProgr
       };
     },
     async hydrate() {
-      const token = await getAccessToken();
+      const token = await getToken();
       if (!token) return;
       const remote = await accountApi.readProgress(token);
       for (const key of PROGRESS_KEYS) {

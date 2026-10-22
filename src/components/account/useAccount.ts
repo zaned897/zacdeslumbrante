@@ -1,5 +1,7 @@
 import { useSyncExternalStore } from 'react';
+import { createLocalProgressStore, setProgressStore } from '../../progress/progressStore';
 import { AccountApiError, AccountSession, AccountUser, AuthProvider, accountApi } from './accountApi';
+import { createRemoteProgressStore } from './remoteProgressStore';
 
 const STORAGE_KEY = 'zacatecas_session_v1';
 
@@ -32,8 +34,25 @@ function readSession(): AccountSession | null {
   }
 }
 
+// Una sola instancia local: cada createLocalProgressStore() agrega un listener de 'storage'.
+const localProgress = createLocalProgressStore();
+
+/** Con sesión, el progreso (mascota, visitas, colección) se sincroniza con la cuenta. */
+function syncProgressStore(prev: AccountState['status'], next: AccountState['status']) {
+  if (prev === next) return;
+  if (next === 'signedIn') {
+    const remote = createRemoteProgressStore(localProgress, getAccessToken);
+    setProgressStore(remote);
+    remote.hydrate().catch(() => undefined); // sin red: sigue con lo local y sube en la próxima escritura
+  } else if (prev === 'signedIn') {
+    setProgressStore(localProgress);
+  }
+}
+
 function setState(patch: Partial<AccountState>) {
+  const prev = state.status;
   state = { ...state, ...patch };
+  syncProgressStore(prev, state.status);
   listeners.forEach((l) => l());
 }
 

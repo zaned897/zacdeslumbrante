@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { recordPlaceVisit } from '../pet/visits';
 
 const STORAGE_KEY = 'zacatecas_collection_v1';
 
@@ -26,6 +27,8 @@ export function useCollection() {
   }, [collection]);
 
   const discover = useCallback((placeId: string) => {
+    // La mascota cuenta cada llegada a un lugar, aunque su pantalla no esté abierta.
+    recordPlaceVisit(placeId);
     setCollection((prev) =>
       prev[placeId] ? prev : { ...prev, [placeId]: new Date().toISOString() },
     );
