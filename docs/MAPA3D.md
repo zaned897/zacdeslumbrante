@@ -48,8 +48,8 @@ Límites conocidos, que abren issues:
 
 1. Recorrido animado de cámara (hecho en el mock).
 2. Avatar en la escena, movido con teclado o joystick táctil.
-3. Posición por GPS, con modo simulado para probar desde casa.
-4. Descubrir lugares al entrar en un radio y guardarlos en una colección local.
+3. Posición por GPS, con modo simulado para probar desde casa (hecho: `usePlayerPosition`, `?sim=1#3d` lo fuerza; tocar el mapa mueve al jugador a mano).
+4. Descubrir lugares al entrar en un radio de 40 m y guardarlos en una colección local (hecho: `useCollection`, `localStorage` `zacatecas_collection_v1`).
 5. Retos e insignias servidos desde FastAPI.
 6. Desde la tarjeta de un lugar, abrir el chat RAG con ese lugar como contexto.
 

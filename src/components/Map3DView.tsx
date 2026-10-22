@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { ArrowLeft, Globe, Home, Play, Square, X } from 'lucide-react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ArrowLeft, Footprints, Globe, Home, LocateFixed, Play, RotateCcw, Square, Trophy, X } from 'lucide-react';
 import { Language } from '../types';
 import type { SceneEngine, ScenePoi, Tour } from '../types/scene3d';
 import { TRANSLATIONS } from '../data/i18n';
@@ -7,10 +7,18 @@ import { TOURS_3D, ZACATECAS_3D_HOME } from '../data/tours3d';
 import { ZACATECAS_PLACES } from '../data/places';
 import { SCENE_LAYERS } from '../scene3d/layers';
 import { GoogleMaps3dEngine } from '../scene3d/googleMaps3dEngine';
+import { distanceMeters } from '../scene3d/geo';
+import { usePlayerPosition, type FallbackReason } from '../scene3d/usePlayerPosition';
+import { useCollection } from '../scene3d/useCollection';
 
 type Status = 'loading' | 'ready' | 'nokey' | 'error';
 
 const FLIGHT_MILLIS = 4500;
+const DISCOVER_RADIUS_M = 40;
+const UNDISCOVERED_COLOR = '#A8A29E';
+// PROTO: altitud fija del centro para la cámara que sigue al jugador; el terreno varía ±100 m.
+const FOLLOW_ALTITUDE = 2450;
+const SIMULATED_PATH = (TOURS_3D[0]?.stops ?? []).map((s) => ({ lat: s.camera.lat, lng: s.camera.lng }));
 
 function resolveApiKey(): string {
   return (
@@ -34,12 +42,26 @@ export const Map3DView: React.FC = () => {
   const [selected, setSelected] = useState<ScenePoi | null>(null);
   const [caption, setCaption] = useState<string | null>(null);
   const [isTouring, setIsTouring] = useState(false);
+  const [isExploring, setIsExploring] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const engineRef = useRef<SceneEngine | null>(null);
   const tourRunRef = useRef(0);
 
   const t = TRANSLATIONS[language];
+
+  const { position, fallbackReason, isManual, teleport, resume } = usePlayerPosition({
+    enabled: isExploring,
+    simulatedPath: SIMULATED_PATH,
+    playArea: ZACATECAS_3D_HOME,
+  });
+  const { collection, discover, reset } = useCollection();
+  const teleportRef = useRef<typeof teleport | null>(null);
+  teleportRef.current = isExploring ? teleport : null;
+
+  const placePois = useMemo(() => pois.filter((p) => p.kind === 'place' && p.placeId), [pois]);
+  const discoveredCount = placePois.filter((p) => p.placeId && collection[p.placeId]).length;
 
   useEffect(() => {
     localStorage.setItem('zacatecas_lang', language);
@@ -65,6 +87,7 @@ export const Map3DView: React.FC = () => {
       .then(async () => {
         if (cancelled) return;
         engine.onPoiClick(setSelected);
+        engine.onGroundClick((at) => teleportRef.current?.(at));
         const loaded = await Promise.all(
           SCENE_LAYERS.filter((l) => l.enabledByDefault).map((l) => l.load()),
         );
@@ -86,10 +109,45 @@ export const Map3DView: React.FC = () => {
     };
   }, []);
 
-  // Repintar marcadores al cambiar puntos o idioma.
+  // Repintar marcadores al cambiar puntos, idioma o colección (en exploración, lo no descubierto va en gris).
   useEffect(() => {
-    if (status === 'ready') engineRef.current?.setPois(pois, language);
-  }, [pois, language, status]);
+    if (status !== 'ready') return;
+    const shown = isExploring
+      ? pois.map((p) =>
+          p.placeId && !collection[p.placeId] ? { ...p, color: UNDISCOVERED_COLOR } : p,
+        )
+      : pois;
+    engineRef.current?.setPois(shown, language);
+  }, [pois, language, status, isExploring, collection]);
+
+  // Jugador: moverlo, seguirlo con la cámara y descubrir lugares cercanos.
+  useEffect(() => {
+    const engine = engineRef.current;
+    if (!engine || status !== 'ready') return;
+    engine.setPlayer(position);
+    if (!position) return;
+    engine.jumpTo({
+      lat: position.lat,
+      lng: position.lng,
+      altitude: FOLLOW_ALTITUDE,
+      range: 260,
+      tilt: 62,
+      heading: position.heading,
+    });
+    const found = placePois.find(
+      (p) => p.placeId && !collection[p.placeId] && distanceMeters(position, p) <= DISCOVER_RADIUS_M,
+    );
+    if (found?.placeId) {
+      discover(found.placeId);
+      setToast(t.view3dDiscovered.replace('{name}', found.title[language]));
+    }
+  }, [position, status, placePois, collection, discover, t, language]);
+
+  useEffect(() => {
+    if (!toast) return;
+    const id = setTimeout(() => setToast(null), 3500);
+    return () => clearTimeout(id);
+  }, [toast]);
 
   const stopTour = useCallback(() => {
     tourRunRef.current++;
@@ -128,7 +186,24 @@ export const Map3DView: React.FC = () => {
     [language],
   );
 
+  const toggleExplore = () => {
+    stopTour();
+    setSelected(null);
+    setIsExploring((v) => !v);
+  };
+
+  const fallbackText: Record<FallbackReason, string> = {
+    denied: t.view3dFallbackDenied,
+    far: t.view3dFallbackFar,
+    unavailable: t.view3dFallbackUnavailable,
+    forced: t.view3dFallbackForced,
+  };
+  const sourceText = position
+    ? { gps: t.view3dSourceGps, simulated: t.view3dSourceSimulated, manual: t.view3dSourceManual }[position.source]
+    : null;
+
   const goHome = () => {
+    setIsExploring(false);
     stopTour();
     void engineRef.current?.flyTo(ZACATECAS_3D_HOME, 2500);
   };
@@ -188,6 +263,53 @@ export const Map3DView: React.FC = () => {
         </div>
       )}
 
+      {/* HUD de exploración */}
+      {isExploring && (
+        <div className="absolute top-16 inset-x-3 md:inset-x-auto md:left-4 md:w-72 z-10 bg-[#FBF9F5]/95 border border-stone-200 rounded-xl shadow-sm p-3 text-xs">
+          <div className="flex items-center justify-between gap-2">
+            <span className="flex items-center gap-1.5 font-semibold text-stone-800">
+              <Trophy className="w-4 h-4 text-[#D97706]" />
+              {t.view3dCollection}: {discoveredCount}/{placePois.length}
+            </span>
+            <button
+              onClick={reset}
+              className="p-1 text-stone-500 hover:text-stone-900 cursor-pointer"
+              title={t.view3dResetCollection}
+              aria-label={t.view3dResetCollection}
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+            </button>
+          </div>
+          <div className="mt-2 h-1.5 rounded-full bg-stone-200 overflow-hidden">
+            <div
+              className="h-full bg-[#9A3412] transition-all"
+              style={{ width: `${placePois.length ? (discoveredCount / placePois.length) * 100 : 0}%` }}
+            />
+          </div>
+          <p className="mt-2 text-stone-600">
+            {sourceText && <span className="font-semibold text-stone-800">{sourceText}. </span>}
+            {fallbackReason && !isManual && fallbackText[fallbackReason]} {t.view3dTapToMove}
+          </p>
+          {isManual && (
+            <button
+              onClick={resume}
+              className="mt-2 flex items-center gap-1.5 font-semibold text-[#9A3412] hover:underline cursor-pointer"
+            >
+              <LocateFixed className="w-3.5 h-3.5" />
+              {t.view3dResume}
+            </button>
+          )}
+        </div>
+      )}
+
+      {toast && (
+        <div className="absolute inset-x-0 top-1/3 z-20 flex justify-center px-4 pointer-events-none">
+          <p className="animate-bounce text-center text-sm md:text-base font-bold text-white bg-[#9A3412] rounded-full shadow-lg px-5 py-3">
+            {toast}
+          </p>
+        </div>
+      )}
+
       {/* Subtítulo del recorrido */}
       {caption && (
         <div className="absolute inset-x-0 bottom-24 z-10 flex justify-center px-4 pointer-events-none">
@@ -232,7 +354,7 @@ export const Map3DView: React.FC = () => {
               <Square className="w-4 h-4" />
               {t.view3dStop}
             </button>
-          ) : (
+          ) : isExploring ? null : (
             tour && (
               <button
                 onClick={() => void playTour(tour)}
@@ -242,6 +364,19 @@ export const Map3DView: React.FC = () => {
                 {t.view3dTour}
               </button>
             )
+          )}
+          {!isTouring && (
+            <button
+              onClick={toggleExplore}
+              className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold rounded-full shadow-lg cursor-pointer ${
+                isExploring
+                  ? 'text-white bg-stone-800 hover:bg-stone-700'
+                  : 'text-white bg-[#2563EB] hover:bg-[#1D4ED8]'
+              }`}
+            >
+              <Footprints className="w-4 h-4" />
+              {isExploring ? t.view3dExploreStop : t.view3dExplore}
+            </button>
           )}
           <button
             onClick={goHome}

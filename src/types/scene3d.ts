@@ -37,6 +37,13 @@ export interface ScenePoi {
   isMock?: boolean;
 }
 
+/** Jugador en la escena (marcador o avatar). */
+export interface ScenePlayer {
+  lat: number;
+  lng: number;
+  heading: number;
+}
+
 export interface TourStop {
   placeId: string;
   camera: SceneCamera;
@@ -77,6 +84,12 @@ export interface SceneEngine {
   flyTo(camera: SceneCamera, durationMillis: number): Promise<void>;
   orbit(camera: SceneCamera, durationMillis: number): Promise<void>;
   stop(): void;
+  /** Mueve la cámara sin animación (seguir al jugador). */
+  jumpTo(camera: SceneCamera): void;
+  /** Clic en el suelo o en un edificio (no en un marcador). */
+  onGroundClick(handler: (at: { lat: number; lng: number }) => void): void;
+  /** Muestra, mueve u oculta (null) al jugador. */
+  setPlayer(player: ScenePlayer | null): void;
   /** Dibuja una línea sobre el terreno (p. ej. la ruta de un recorrido). */
   setRoute(points: Array<{ lat: number; lng: number }> | null): void;
   destroy(): void;

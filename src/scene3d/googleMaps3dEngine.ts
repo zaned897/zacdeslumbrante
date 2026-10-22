@@ -1,6 +1,6 @@
 import { importLibrary, setOptions } from '@googlemaps/js-api-loader';
 import type { Language } from '../types';
-import type { SceneCamera, SceneEngine, ScenePoi } from '../types/scene3d';
+import type { SceneCamera, SceneEngine, ScenePlayer, ScenePoi } from '../types/scene3d';
 
 type Maps3dLibrary = google.maps.Maps3DLibrary;
 type MarkerLibrary = google.maps.MarkerLibrary;
@@ -41,7 +41,9 @@ export class GoogleMaps3dEngine implements SceneEngine {
   private map: google.maps.maps3d.Map3DElement | null = null;
   private markers: HTMLElement[] = [];
   private route: google.maps.maps3d.Polyline3DElement | null = null;
+  private player: google.maps.maps3d.Marker3DElement | null = null;
   private clickHandler: ((poi: ScenePoi) => void) | null = null;
+  private groundClickHandler: ((at: { lat: number; lng: number }) => void) | null = null;
   private pendingAnimation: (() => void) | null = null;
 
   constructor(private readonly apiKey: string) {}
@@ -57,6 +59,13 @@ export class GoogleMaps3dEngine implements SceneEngine {
     map.style.width = '100%';
     map.style.height = '100%';
     map.addEventListener('gmp-animationend', () => this.finishAnimation());
+    map.addEventListener('gmp-click', (event) => {
+      const { position } = event as google.maps.maps3d.LocationClickEvent;
+      if (!position || !this.groundClickHandler) return;
+      // Sin el popover de Google sobre lugares: el clic es para el juego.
+      event.preventDefault();
+      this.groundClickHandler({ lat: position.lat, lng: position.lng });
+    });
     container.appendChild(map);
     this.map = map;
   }
@@ -103,6 +112,42 @@ export class GoogleMaps3dEngine implements SceneEngine {
     );
   }
 
+  jumpTo(camera: SceneCamera): void {
+    const { map } = this;
+    if (!map) return;
+    map.center = { lat: camera.lat, lng: camera.lng, altitude: camera.altitude };
+    map.range = camera.range;
+    map.tilt = camera.tilt;
+    map.heading = camera.heading;
+  }
+
+  onGroundClick(handler: (at: { lat: number; lng: number }) => void): void {
+    this.groundClickHandler = handler;
+  }
+
+  setPlayer(player: ScenePlayer | null): void {
+    const { lib, markerLib, map } = this;
+    if (!lib || !markerLib || !map) return;
+    if (!player) {
+      this.player?.remove();
+      this.player = null;
+      return;
+    }
+    if (!this.player) {
+      this.player = new lib.Marker3DElement({
+        altitudeMode: lib.AltitudeMode.RELATIVE_TO_GROUND,
+        extruded: true,
+        drawsWhenOccluded: true,
+        zIndex: 1000,
+      });
+      this.player.append(
+        new markerLib.PinElement({ background: '#2563EB', borderColor: '#FFFFFF', glyphColor: '#FFFFFF', scale: 1.3 }),
+      );
+      map.append(this.player);
+    }
+    this.player.position = { lat: player.lat, lng: player.lng, altitude: 6 };
+  }
+
   stop(): void {
     this.map?.stopCameraAnimation();
     this.finishAnimation();
@@ -131,6 +176,7 @@ export class GoogleMaps3dEngine implements SceneEngine {
     this.map = null;
     this.markers = [];
     this.route = null;
+    this.player = null;
   }
 
   private animate(start: () => void): Promise<void> {
