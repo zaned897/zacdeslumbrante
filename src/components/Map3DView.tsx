@@ -36,6 +36,7 @@ import { useCollection } from '../scene3d/useCollection';
 import { useAvatarControls, type AvatarAction } from '../scene3d/useAvatarControls';
 import { loadPlacePhotos, type PlacePhoto } from '../scene3d/placePhotos';
 import { MapAssistantSheet } from './app/MapAssistantSheet';
+import { recordPlaceVisit } from '../pet/visits';
 
 type Status = 'loading' | 'ready' | 'error';
 
@@ -325,6 +326,12 @@ const Map3DScene: React.FC = () => {
       discover(found.placeId);
       setToast(t.view3dDiscovered.replace('{name}', found.title[language]));
     }
+    // Regresar a un lugar ya descubierto también cuenta para los paseos de la mascota
+    // (recordPlaceVisit no repite el mismo lugar en 30 min).
+    const revisited = placePois.find(
+      (p) => p.placeId && collection[p.placeId] && distanceMeters(position, p) <= DISCOVER_RADIUS_M,
+    );
+    if (revisited?.placeId) recordPlaceVisit(revisited.placeId);
     const heard = pois.find(
       (p) => p.nearbyNotice && !announcedRef.current.has(p.id) && distanceMeters(position, p) <= DISCOVER_RADIUS_M,
     );
