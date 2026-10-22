@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { X, Search, RotateCcw, Plus, ExternalLink, Check, ShieldCheck } from 'lucide-react';
-import { KnowledgeBaseURL, KnowledgeCategory, Language } from '../types';
+import { Search, RotateCcw, Plus, ExternalLink } from 'lucide-react';
+import { KnowledgeBaseURL, Language } from '../types';
 import { TRANSLATIONS } from '../data/i18n';
+import { Sheet } from './app/Sheet';
 
 interface KnowledgeBaseModalProps {
   isOpen: boolean;
@@ -28,18 +29,18 @@ export const KnowledgeBaseModal: React.FC<KnowledgeBaseModalProps> = ({
   const [customUrl, setCustomUrl] = useState('');
   const [isAdding, setIsAdding] = useState(false);
 
-  if (!isOpen) return null;
-
   const t = TRANSLATIONS[language];
+  const es = language === 'es';
+  const activeCount = knowledgeBase.filter((k) => k.isEnabled).length;
 
-  const filteredList = knowledgeBase.filter((item) => {
-    const matchesSearch =
-      item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.url.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = categoryFilter === 'all' || item.category === categoryFilter;
-    return matchesSearch && matchesCategory;
-  });
+  const q = searchTerm.toLowerCase();
+  const filteredList = knowledgeBase.filter(
+    (item) =>
+      (categoryFilter === 'all' || item.category === categoryFilter) &&
+      (item.title.toLowerCase().includes(q) ||
+        item.url.toLowerCase().includes(q) ||
+        item.description.toLowerCase().includes(q)),
+  );
 
   const handleAddSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,201 +60,135 @@ export const KnowledgeBaseModal: React.FC<KnowledgeBaseModalProps> = ({
     { id: 'archives', label: t.sourceCategoryArchives },
   ];
 
+  const field =
+    'w-full h-10 px-3.5 text-sm bg-superficie border border-linea rounded-full focus:outline-none focus:border-cantera placeholder:text-tenue';
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="bg-[#FBF9F5] w-full max-w-4xl max-h-[90vh] rounded-2xl shadow-2xl border border-stone-300 flex flex-col overflow-hidden">
-        {/* Header */}
-        <div className="px-6 py-4 border-b border-stone-200 flex items-center justify-between bg-white">
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 bg-[#9A3412]/10 text-[#9A3412] rounded-lg">
-              <ShieldCheck className="w-5 h-5" />
-            </div>
-            <div>
-              <h2 className="font-serif font-bold text-lg text-stone-900 leading-snug">
-                {t.knowledgeBaseTitle}
-              </h2>
-              <p className="text-xs text-stone-500">
-                {knowledgeBase.filter((k) => k.isEnabled).length} {t.sourcesActiveCount.replace('{count}', '')}
-                · UNESCO, INAH, SECTUR, Archivos y Portales del Estado
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-2 text-stone-400 hover:text-stone-700 hover:bg-stone-100 rounded-lg transition-colors cursor-pointer"
-          >
-            <X className="w-5 h-5" />
-          </button>
+    <Sheet
+      open={isOpen}
+      onClose={onClose}
+      closeLabel={t.closeModal}
+      title={t.knowledgeBaseTitle}
+      subtitle={t.plansSourcesBody.replace('{count}', `${activeCount}/${knowledgeBase.length}`)}
+    >
+      <div className="space-y-4">
+        <div className="relative">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-tenue" />
+          <input
+            type="search"
+            placeholder={es ? 'Buscar fuente' : 'Search sources'}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className={`${field} pl-10`}
+          />
         </div>
 
-        {/* Toolbar: Search, Filters & Reset */}
-        <div className="px-6 py-3.5 bg-[#F7F4EE] border-b border-stone-200 flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
+        <div className="flex gap-1.5 overflow-x-auto -mx-5 px-5 pb-1">
+          {categories.map((cat) => (
+            <button
+              key={cat.id}
+              type="button"
+              onClick={() => setCategoryFilter(cat.id)}
+              aria-pressed={categoryFilter === cat.id}
+              className={`px-3.5 h-8 text-xs font-semibold rounded-full whitespace-nowrap cursor-pointer transition-colors ${
+                categoryFilter === cat.id ? 'bg-carbon text-papel' : 'bg-caliza text-tenue hover:text-carbon'
+              }`}
+            >
+              {cat.label}
+            </button>
+          ))}
+        </div>
+
+        {isAdding ? (
+          <form onSubmit={handleAddSubmit} className="p-3 bg-caliza rounded-2xl space-y-2 animate-sube">
             <input
               type="text"
-              placeholder={language === 'es' ? 'Buscar fuente por título o URL...' : 'Search source by name or URL...'}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-3 py-1.5 text-xs bg-white border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9A3412]/30"
+              placeholder={es ? 'Título o dependencia' : 'Title or agency'}
+              value={customTitle}
+              onChange={(e) => setCustomTitle(e.target.value)}
+              required
+              className={field}
             />
-          </div>
-
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0">
-            {categories.map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => setCategoryFilter(cat.id)}
-                className={`px-2.5 py-1 text-xs font-medium rounded-md whitespace-nowrap transition-colors cursor-pointer ${
-                  categoryFilter === cat.id
-                    ? 'bg-[#9A3412] text-white'
-                    : 'bg-white text-stone-600 hover:text-stone-900 border border-stone-200'
-                }`}
-              >
-                {cat.label}
+            <input
+              type="url"
+              placeholder={t.addUrlPlaceholder}
+              value={customUrl}
+              onChange={(e) => setCustomUrl(e.target.value)}
+              required
+              className={field}
+            />
+            <div className="flex justify-end gap-2 pt-1">
+              <button type="button" onClick={() => setIsAdding(false)} className="px-4 h-9 text-sm text-tenue cursor-pointer">
+                {es ? 'Cancelar' : 'Cancel'}
               </button>
-            ))}
-          </div>
-
-          <div className="flex items-center gap-2 shrink-0">
-            <button
-              onClick={() => setIsAdding(!isAdding)}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-stone-800 bg-white hover:bg-stone-50 border border-stone-300 rounded-lg transition-colors cursor-pointer"
-            >
-              <Plus className="w-3.5 h-3.5 text-[#9A3412]" />
-              <span>{t.addCustomSource}</span>
-            </button>
-            <button
-              onClick={onResetDefault}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-stone-600 hover:text-stone-900 bg-white hover:bg-stone-50 border border-stone-300 rounded-lg transition-colors cursor-pointer"
-              title={t.resetDefaultSources}
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">{language === 'es' ? 'Restablecer' : 'Reset'}</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Add custom source drawer */}
-        {isAdding && (
-          <form onSubmit={handleAddSubmit} className="p-4 bg-white border-b border-stone-200 space-y-3">
-            <p className="text-xs font-bold text-stone-900 uppercase tracking-wider">
-              {t.addCustomSource}
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <input
-                type="text"
-                placeholder={language === 'es' ? 'Título o Dependencia' : 'Title or Agency'}
-                value={customTitle}
-                onChange={(e) => setCustomTitle(e.target.value)}
-                required
-                className="px-3 py-1.5 text-xs border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9A3412]"
-              />
-              <input
-                type="url"
-                placeholder={t.addUrlPlaceholder}
-                value={customUrl}
-                onChange={(e) => setCustomUrl(e.target.value)}
-                required
-                className="px-3 py-1.5 text-xs border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9A3412]"
-              />
-            </div>
-            <div className="flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setIsAdding(false)}
-                className="px-3 py-1 text-xs text-stone-600 hover:text-stone-900 cursor-pointer"
-              >
-                Cancelar
-              </button>
-              <button
-                type="submit"
-                className="px-4 py-1.5 text-xs font-bold text-white bg-[#9A3412] hover:bg-[#78350F] rounded-lg transition-colors cursor-pointer"
-              >
-                Guardar Fuente
+              <button type="submit" className="px-4 h-9 text-sm font-semibold text-sobre-cantera bg-cantera rounded-full cursor-pointer">
+                {es ? 'Guardar' : 'Save'}
               </button>
             </div>
           </form>
+        ) : (
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setIsAdding(true)}
+              className="flex items-center gap-1.5 px-3.5 h-9 text-xs font-semibold text-cantera bg-caliza rounded-full cursor-pointer"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              {t.addCustomSource}
+            </button>
+            <button
+              type="button"
+              onClick={onResetDefault}
+              title={t.resetDefaultSources}
+              className="flex items-center gap-1.5 px-3.5 h-9 text-xs font-semibold text-tenue bg-caliza rounded-full cursor-pointer hover:text-carbon"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              {es ? 'Restablecer' : 'Reset'}
+            </button>
+          </div>
         )}
 
-        {/* Scrollable Sources List */}
-        <div className="p-6 overflow-y-auto space-y-3 flex-1 divide-y divide-stone-200/60">
+        <ul className="divide-y divide-linea">
           {filteredList.map((source) => (
-            <div
-              key={source.id}
-              className={`pt-3 first:pt-0 flex items-start justify-between gap-4 p-3 rounded-xl transition-colors ${
-                source.isEnabled ? 'bg-white' : 'bg-stone-100/60 opacity-60'
-              }`}
-            >
-              <div className="flex-1 min-w-0 space-y-1">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h3 className="text-xs font-bold text-stone-900 leading-snug">
-                    {source.title}
-                  </h3>
-                  <span className="text-[10px] font-mono uppercase tracking-wider text-stone-500 bg-stone-100 px-1.5 py-0.5 rounded border border-stone-200">
-                    {source.category}
-                  </span>
-                  <span className="text-[10px] text-stone-500">
-                    · {t.verifiedOn}: {source.lastVerified}
-                  </span>
-                </div>
-
-                <p className="text-xs text-stone-600 line-clamp-2">
-                  {source.description}
-                </p>
-
+            <li key={source.id} className={`flex items-start gap-3 py-3 transition-opacity ${source.isEnabled ? '' : 'opacity-50'}`}>
+              <div className="flex-1 min-w-0">
+                <b className="block text-sm leading-snug">{source.title}</b>
+                <p className="text-xs text-tenue line-clamp-2 mt-0.5">{source.description}</p>
                 <a
                   href={source.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-[11px] font-mono text-[#9A3412] hover:underline"
+                  className="inline-flex items-center gap-1 mt-1 font-mono text-[11px] text-cantera hover:underline max-w-full"
                 >
-                  <span className="truncate max-w-md">{source.url}</span>
+                  <span className="truncate">{source.url.replace(/^https?:\/\/(www\.)?/, '')}</span>
                   <ExternalLink className="w-3 h-3 shrink-0" />
                 </a>
               </div>
-
-              {/* Toggle Enable Switch */}
               <button
-                onClick={() => onToggleUrl(source.id)}
-                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[#9A3412] focus:ring-offset-2 ${
-                  source.isEnabled ? 'bg-[#9A3412]' : 'bg-stone-300'
-                }`}
+                type="button"
                 role="switch"
                 aria-checked={source.isEnabled}
-                title={source.isEnabled ? 'Desactivar fuente' : 'Activar fuente'}
+                aria-label={source.title}
+                onClick={() => onToggleUrl(source.id)}
+                className={`relative mt-0.5 h-6 w-10 shrink-0 rounded-full cursor-pointer transition-colors ${
+                  source.isEnabled ? 'bg-cantera' : 'bg-linea'
+                }`}
               >
                 <span
-                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out flex items-center justify-center ${
-                    source.isEnabled ? 'translate-x-5' : 'translate-x-0'
+                  className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${
+                    source.isEnabled ? 'translate-x-4' : ''
                   }`}
-                >
-                  {source.isEnabled && <Check className="w-3 h-3 text-[#9A3412]" />}
-                </span>
+                />
               </button>
-            </div>
+            </li>
           ))}
-
           {filteredList.length === 0 && (
-            <div className="text-center py-12 text-stone-500 text-xs">
-              {language === 'es' ? 'No se encontraron fuentes con el criterio de búsqueda.' : 'No sources found matching search criteria.'}
-            </div>
+            <li className="py-10 text-center text-sm text-tenue">
+              {es ? 'Ninguna fuente coincide con la búsqueda.' : 'No sources match your search.'}
+            </li>
           )}
-        </div>
-
-        {/* Footer */}
-        <div className="px-6 py-3.5 border-t border-stone-200 bg-white flex items-center justify-between text-xs text-stone-600">
-          <span>
-            {knowledgeBase.filter((k) => k.isEnabled).length} de {knowledgeBase.length} fuentes activas para consulta en tiempo real.
-          </span>
-          <button
-            onClick={onClose}
-            className="px-4 py-2 font-bold text-stone-800 bg-stone-100 hover:bg-stone-200 rounded-lg transition-colors cursor-pointer"
-          >
-            {t.closeModal}
-          </button>
-        </div>
+        </ul>
       </div>
-    </div>
+    </Sheet>
   );
 };

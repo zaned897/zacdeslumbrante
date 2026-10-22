@@ -101,14 +101,14 @@ export const MapAssistantSheet: React.FC<MapAssistantSheetProps> = ({ language, 
       className="absolute inset-x-0 bottom-0 top-[46%] z-30 flex flex-col bg-papel rounded-t-[22px] shadow-[0_-8px_24px_-8px_rgba(0,0,0,0.3)] md:inset-x-auto md:right-4 md:bottom-4 md:top-auto md:w-96 md:h-[60%] md:rounded-[22px]"
       aria-label={t.mapAssistantAbout.replace('{name}', name)}
     >
-      <span className="self-center mt-2 w-9 h-1 rounded-full bg-stone-300 md:hidden" aria-hidden="true" />
-      <header className="flex items-center gap-2 px-4 pt-2 pb-2 border-b border-linea text-xs font-semibold text-stone-600">
+      <span className="self-center mt-2 w-9 h-1 rounded-full bg-linea md:hidden" aria-hidden="true" />
+      <header className="flex items-center gap-2 px-4 pt-2 pb-2 border-b border-linea text-xs font-semibold text-tenue">
         <span className="w-6 h-6 rounded-md shrink-0" style={{ background: place.color || '#C9826B' }} aria-hidden="true" />
         <span className="truncate">{t.mapAssistantAbout.replace('{name}', name)}</span>
         <button
           type="button"
           onClick={onClose}
-          className="ml-auto p-1 rounded-md text-stone-400 hover:text-stone-700 cursor-pointer"
+          className="ml-auto p-1 rounded-md text-tenue hover:text-carbon cursor-pointer"
           aria-label={t.view3dClose}
         >
           <X className="w-4 h-4" />
@@ -123,7 +123,7 @@ export const MapAssistantSheet: React.FC<MapAssistantSheetProps> = ({ language, 
                 key={s}
                 type="button"
                 onClick={() => send(s)}
-                className="px-3 py-1.5 text-xs font-semibold text-cantera bg-white border border-[#E7DCCB] rounded-full hover:bg-caliza cursor-pointer"
+                className="px-3 py-1.5 text-xs font-semibold text-cantera bg-superficie border border-linea rounded-full hover:bg-caliza cursor-pointer"
               >
                 {s}
               </button>
@@ -142,19 +142,19 @@ export const MapAssistantSheet: React.FC<MapAssistantSheetProps> = ({ language, 
           e.preventDefault();
           send(input);
         }}
-        className="mx-3 mt-1 mb-3 flex items-center gap-1 pl-4 pr-1.5 py-1.5 bg-white border border-[#E7DCCB] rounded-full focus-within:border-cantera"
+        className="mx-3 mt-1 mb-3 flex items-center gap-1 pl-4 pr-1.5 py-1.5 bg-superficie border border-linea rounded-full focus-within:border-cantera"
       >
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder={t.mapAssistantPlaceholder.replace('{name}', name)}
-          className="flex-1 min-w-0 py-1.5 text-sm bg-transparent focus:outline-none placeholder:text-stone-400"
+          className="flex-1 min-w-0 py-1.5 text-sm bg-transparent focus:outline-none placeholder:text-tenue"
         />
         {busy ? (
           <button
             type="button"
             onClick={() => abortRef.current?.abort()}
-            className="w-8 h-8 grid place-items-center rounded-full bg-carbon text-white cursor-pointer shrink-0"
+            className="w-8 h-8 grid place-items-center rounded-full bg-carbon text-papel cursor-pointer shrink-0"
             aria-label={t.stopStreaming}
           >
             <Square className="w-3 h-3 fill-current" />
@@ -163,7 +163,7 @@ export const MapAssistantSheet: React.FC<MapAssistantSheetProps> = ({ language, 
           <button
             type="submit"
             disabled={!input.trim()}
-            className="w-8 h-8 grid place-items-center rounded-full bg-cantera text-white disabled:opacity-35 cursor-pointer shrink-0"
+            className="w-8 h-8 grid place-items-center rounded-full bg-cantera text-sobre-cantera disabled:opacity-35 cursor-pointer shrink-0"
             aria-label={t.sendButton}
           >
             <ArrowUp className="w-4 h-4" />
