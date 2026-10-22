@@ -73,6 +73,8 @@ export const TRANSLATIONS = {
     badgeDetailPending: 'Por descubrir',
     badgeNewTitle: '¡Nueva insignia!',
     badgeNewCta: 'Genial',
+    badgesSeasonal: 'De temporada',
+    badgeSeasonEarned: 'Ganada el {date}',
     itineraryAskShort: 'Preguntar en el chat',
     
     // Sidebar
@@ -406,6 +408,8 @@ export const TRANSLATIONS = {
     badgeDetailPending: 'To discover',
     badgeNewTitle: 'New badge!',
     badgeNewCta: 'Nice',
+    badgesSeasonal: 'Seasonal',
+    badgeSeasonEarned: 'Earned on {date}',
     itineraryAskShort: 'Ask in chat',
     
     // Sidebar

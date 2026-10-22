@@ -12,6 +12,7 @@ import {
   Lock,
   Footprints,
   Check,
+  Flag,
   type LucideIcon,
 } from 'lucide-react';
 import { Language } from '../../types';
@@ -29,6 +30,39 @@ function readSeen(): string[] {
     return [];
   }
 }
+
+/** Insignias de tiempo limitado (#87). Las escribe el mapa 3D en esta clave. */
+// PROTO: lector local; cuando #88 esté en main, usar readSeasonBadges() de src/data/panamericana.ts.
+const SEASON_BADGES_KEY = 'zacatecas_insignias_temporada';
+
+interface SeasonBadge {
+  id: string;
+  seasonId: string;
+  title: Record<Language, string>;
+  detail: Record<Language, string>;
+  earnedAt: string;
+}
+
+function readSeasonBadges(): SeasonBadge[] {
+  try {
+    const list: unknown = JSON.parse(localStorage.getItem(SEASON_BADGES_KEY) || '[]');
+    return Array.isArray(list) ? (list as SeasonBadge[]).filter((b) => b && typeof b.id === 'string' && b.title) : [];
+  } catch {
+    return [];
+  }
+}
+
+/** Medallón a cuadros con aro del color de la temporada. */
+const CheckeredMedal: React.FC<{ size?: 'md' | 'lg' }> = ({ size = 'md' }) => (
+  <span
+    className={`relative ${size === 'lg' ? 'w-28 h-28 border-[6px]' : 'w-16 h-16 border-4'} rounded-full grid place-items-center border-[#DC2626] shadow-[0_6px_16px_-6px_rgba(220,38,38,0.6)]`}
+    style={{ background: 'repeating-conic-gradient(#1A1715 0 25%, #FFFFFF 0 50%)', backgroundSize: size === 'lg' ? '24px 24px' : '14px 14px' }}
+  >
+    <span className={`${size === 'lg' ? 'w-12 h-12' : 'w-7 h-7'} rounded-full grid place-items-center bg-[#DC2626] text-white`}>
+      <Flag className={size === 'lg' ? 'w-6 h-6' : 'w-3.5 h-3.5'} strokeWidth={2.25} />
+    </span>
+  </span>
+);
 
 const Medal: React.FC<{ icon: string; won: boolean; size?: 'md' | 'lg' }> = ({ icon, won, size = 'md' }) => {
   const Icon = ICONS[icon] ?? Trophy;
@@ -101,6 +135,8 @@ export const BadgesScreen: React.FC<BadgesScreenProps> = ({ language, onGoExplor
   const [challenges, setChallenges] = useState<Challenge[] | null>(null);
   const [offline, setOffline] = useState(false);
   const [openId, setOpenId] = useState<string | null>(null);
+  const [seasonBadges] = useState<SeasonBadge[]>(readSeasonBadges);
+  const [openSeasonId, setOpenSeasonId] = useState<string | null>(null);
   const [seen, setSeen] = useState<string[]>(readSeen);
 
   useEffect(() => {
@@ -148,6 +184,7 @@ export const BadgesScreen: React.FC<BadgesScreenProps> = ({ language, onGoExplor
     }
   };
   const open = rows.find((r) => r.id === openId);
+  const openSeason = seasonBadges.find((b) => b.id === openSeasonId);
 
   return (
     <div className="h-full overflow-y-auto bg-papel">
@@ -182,6 +219,26 @@ export const BadgesScreen: React.FC<BadgesScreenProps> = ({ language, onGoExplor
               <div key={i} className="aspect-square rounded-full bg-caliza animate-pulse" />
             ))}
           </div>
+        )}
+
+        {seasonBadges.length > 0 && (
+          <section>
+            <h2 className="text-xs font-bold uppercase tracking-wider text-tenue mb-3">{t.badgesSeasonal}</h2>
+            <ul className="grid grid-cols-4 gap-x-2 gap-y-5">
+              {seasonBadges.map((b) => (
+                <li key={b.id} className="animate-sube">
+                  <button
+                    type="button"
+                    onClick={() => setOpenSeasonId(b.id)}
+                    className="w-full flex flex-col items-center gap-1.5 text-center cursor-pointer active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cantera rounded-2xl"
+                  >
+                    <CheckeredMedal />
+                    <b className="text-[11px] leading-tight">{b.title[language]}</b>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </section>
         )}
 
         {offline && <p className="text-xs text-tenue bg-caliza rounded-2xl px-4 py-3">{t.badgesOffline}</p>}
@@ -243,6 +300,27 @@ export const BadgesScreen: React.FC<BadgesScreenProps> = ({ language, onGoExplor
         </button>
         <p className="text-[11px] text-tenue text-center">{t.badgesHint}</p>
       </div>
+
+      <Sheet
+        open={Boolean(openSeason)}
+        onClose={() => setOpenSeasonId(null)}
+        closeLabel={t.closeModal}
+        title={openSeason?.title[language]}
+        subtitle={t.badgesSeasonal}
+      >
+        {openSeason && (
+          <div className="flex flex-col items-center gap-3 py-2 text-center">
+            <CheckeredMedal size="lg" />
+            <p className="text-sm">{openSeason.detail[language]}</p>
+            <p className="font-mono text-xs text-tenue">
+              {t.badgeSeasonEarned.replace(
+                '{date}',
+                new Date(openSeason.earnedAt).toLocaleDateString(language === 'es' ? 'es-MX' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' }),
+              )}
+            </p>
+          </div>
+        )}
+      </Sheet>
 
       <Sheet
         open={Boolean(open)}
