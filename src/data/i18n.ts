@@ -179,6 +179,7 @@ export const TRANSLATIONS = {
     view3dKeyRejected: 'Google rechazó la llave en este dominio (revisa que tenga Maps JavaScript API y Map Tiles API, y que el dominio esté autorizado). Mientras, ciudad estilizada.',
     view3dCrashTitle: 'La vista 3D falló',
     view3dCrashRetry: 'Reintentar en modo estilizado',
+    view3dAsk: 'Preguntar al asistente',
   },
   en: {
     // App & Header
@@ -360,5 +361,6 @@ export const TRANSLATIONS = {
     view3dKeyRejected: 'Google rejected the key on this domain (check it has Maps JavaScript API and Map Tiles API, and that the domain is allowed). Showing the stylized city meanwhile.',
     view3dCrashTitle: 'The 3D view failed',
     view3dCrashRetry: 'Retry in stylized mode',
+    view3dAsk: 'Ask the assistant',
   },
 };
