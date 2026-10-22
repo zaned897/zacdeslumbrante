@@ -26,6 +26,7 @@ Lo que funcionó en este repo, sin nada de Zacatecas, para copiar a otro proyect
 | `.github/` | Plantillas de issue (prototipo con enlace al diseño, idea, bug), plantilla de PR y CI |
 | `scripts/` | `check.sh` (punto único de calidad), `dev.sh`, `suite-init.sh`, `gh-labels.sh`, `worktrees.sh` |
 | `docs/` | `API.md` (contrato) y `HANDOFF.md` (pedidos entre zonas) |
+| `CONTRIBUTING.md`, `.github/CODEOWNERS` | Flujo visual primero para contribuidores y cómo proteger `main` (tu aprobación + CI en verde) |
 | `render.yaml.example` | Despliegue gratis con previews por PR |
 
 ## Instalar en otro repo

@@ -12,6 +12,13 @@ Asistente turístico y cultural de Zacatecas (chat con IA, mapa, base de conocim
 - **Features nuevas de backend: Python** (FastAPI) en `services/api/` (:8000), detrás de Express en `/api/py/*`. Skill `python-backend`. `bun run dev:py` · `uv run ruff check . && uv run pytest`
 - Datos mock en `services/api/app/fixtures/` (Python) o `src/data/` (existente).
 
+## Flujo de contribución (visual primero)
+1. **Visual:** los cambios con UI se piden en comentarios del [adelanto](https://claude.ai/artifact/6hZzQuFhqKU9qJmpXsirzp) o en un PR `[sketch]` que solo toca `docs/design/`. Se muestran como mock; **sin código** (skill `design-first`).
+2. **Aprobación:** solo la del dueño del proyecto.
+3. **Issues:** con el sí se crean, actualizan o cierran (obsoletas → `not planned`) y las listas llevan `status:ready`.
+4. **Código:** solo sobre issues `status:ready`, PR pequeño contra main con capturas.
+5. **Merge:** lo hace el dueño, a mano, tras revisar y con CI en verde. Ningún agente fusiona ni aprueba PRs.
+
 ## Zonas (no editar fuera de la tuya)
 - Backend Python — Claude Code: `services/api/**`
 - Backend TS existente — Claude Code: `server.ts`, `src/server/**`, `src/data/**` (solo mantenimiento y proxy)
@@ -21,7 +28,7 @@ Asistente turístico y cultural de Zacatecas (chat con IA, mapa, base de conocim
 Cambio en zona ajena → `docs/HANDOFF.md`. Contribuidores externos: cualquier zona, vía PR.
 
 ## Suite (`toolbox/`, `.agents/skills/`)
-- Feature nueva: `orchestrate`. Nivel y límites: `prototype-scope`.
+- Feature nueva: `design-first` (si hay UI) → `orchestrate`. Varios PRs a la vez: `parallel-prs`. Nivel y límites: `prototype-scope`.
 - Issues: `gh-issues`. PRs (sobre todo de forks): `pr-intake`.
 - ¿Falta una herramienta o la tarea toca algo `parked` en `toolbox/capabilities.json`? `scout`. Nunca instalar sin un sí del usuario.
 - Modelo/agente por tarea: `toolbox/models.md`; si tiene más de 30 días, `radar`.

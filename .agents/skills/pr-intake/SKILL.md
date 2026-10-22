@@ -10,6 +10,7 @@ description: Revisa pull requests, sobre todo de forks y contribuidores externos
 - Ejecuta en un worktree aparte: `gh pr checkout <n>` dentro de `git worktree add ../review-pr-<n>`. Sin copiar `.env`.
 
 ## Revisión
+0. ¿Es código de UI? La issue debe tener `status:ready` y enlace al visual aprobado. Si no, pide primero un PR `[sketch]` en `docs/design/` (`design-first`). Un PR `[sketch]` solo puede tocar bocetos.
 1. Lee la issue enlazada y el nivel declarado (`prototype-scope`). ¿Entrega exactamente eso? Señala sobrealcance igual que faltantes.
 2. Zona y contrato: respeta `AGENTS.md` y `docs/API.md`.
 3. Checks: `bun run lint`; si toca Python: `cd services/api && uv run ruff check . && uv run pytest`.
@@ -17,6 +18,6 @@ description: Revisa pull requests, sobre todo de forks y contribuidores externos
 5. Mocks marcados (`_mock`, badge), sin datos falsos presentados como reales, sin secretos.
 
 ## Respuesta
-Redacta un comentario de review amable y concreto: qué está bien, cambios necesarios (con archivo:línea), sugerencias opcionales. Agradece siempre a contribuidores externos. **Muestra el comentario al usuario y espera su sí** antes de `gh pr review`. Merge solo si el usuario lo pide.
+Redacta un comentario de review amable y concreto: qué está bien, cambios necesarios (con archivo:línea), sugerencias opcionales. Agradece siempre a contribuidores externos. **Muestra el comentario al usuario y espera su sí** antes de `gh pr review`. **Nunca apruebes ni fusiones:** el dueño revisa a mano y fusiona cuando CI está en verde.
 
 Limpieza: `git worktree remove ../review-pr-<n>`.

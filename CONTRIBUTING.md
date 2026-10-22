@@ -30,12 +30,19 @@ Sin llaves, el chat y el mapa muestran avisos; los mocks funcionan igual.
 - `services/api/` backend Python (FastAPI) — **aquí van las features nuevas de backend**
 - `docs/API.md` contrato entre frontend y backend
 
-## Flujo
-1. Elige una issue (empieza por `good first issue`) y comenta que la tomas.
-2. Fork → rama `<nivel>/<issue>-<tema>` (p. ej. `mock/12-eventos`).
-3. Commits convencionales: `feat: eventos mock (#12)`.
-4. Checks: `bun run lint`; si tocas Python: `uv run ruff check . && uv run ruff format --check . && uv run pytest`.
-5. PR con la plantilla: nivel, `Closes #n`, cómo verlo y evidencia (captura o gif si es visual).
+## Flujo: visual primero, código después
+Ninguna feature con interfaz se programa antes de que su visual esté aprobado.
+
+1. **Propón el visual.** Dos caminos, los dos sin código:
+   - Si tienes acceso al [adelanto](https://claude.ai/artifact/6hZzQuFhqKU9qJmpXsirzp) (la referencia de diseño), deja un comentario en la pantalla que quieres cambiar.
+   - Si no, abre un PR `[sketch]` que **solo** agregue un boceto en `docs/design/<issue>-<tema>/` (HTML estático o PNG). Nada de código, datos ni configuración.
+   El boceto se lleva al adelanto como «Propuesta» y se te responde con el enlace.
+2. **Aprobación.** El dueño del proyecto aprueba, pide cambios o descarta.
+3. **Se liberan las tareas.** Con el visual aprobado se crean o actualizan las issues (con enlace a la pantalla y la etiqueta `status:ready`) y se cierran las que quedaron obsoletas.
+4. **Código.** Toma una issue `status:ready` (empieza por `good first issue`) y comenta que la tomas. Fork → rama `<nivel>/<issue>-<tema>`, commits convencionales (`feat: eventos mock (#12)`), checks (`bun run lint`; si tocas Python: `uv run ruff check . && uv run ruff format --check . && uv run pytest`) y PR con la plantilla: nivel, `Closes #n`, enlace al visual y capturas.
+5. **Revisión y merge.** El dueño revisa cada PR a mano y lo fusiona solo con CI en verde. Ni contribuidores ni agentes de IA aprueban o fusionan.
+
+Cambios sin interfaz (backend, datos, docs) saltan los pasos 1 a 3 pero igual nacen de una issue.
 
 ## Reglas
 - **Mocks honestos:** marca los datos de ejemplo (`"_mock": true` o badge "Demo"). No publiques precios, horarios, reseñas ni contactos de negocios inventados como si fueran reales.
@@ -46,3 +53,11 @@ Sin llaves, el chat y el mapa muestran avisos; los mocks funcionan igual.
 
 ## Usar agentes de IA
 Bienvenido. El repo trae `AGENTS.md` y skills en `.agents/skills/` que Claude Code, Codex y otros agentes leen solos. Tú sigues siendo responsable de revisar lo que envías.
+
+## Para el dueño: proteger `main`
+Una vez, en GitHub → **Settings → Rules → Rulesets → New branch ruleset** (o *Branches → Add rule* en la vista clásica), rama `main`:
+- **Require a pull request before merging**, con 1 aprobación y **Require review from Code Owners** (`.github/CODEOWNERS` te nombra a ti).
+- **Require status checks to pass**: `typescript` y `python` (los jobs de `.github/workflows/ci.yml`). Si agregas CircleCI, suma su check (`ci/circleci: <job>`).
+- **Block force pushes** y **Restrict deletions**.
+- En **Bypass list** agrega *Repository admin* en modo *For pull requests only*. Los PRs que abren los agentes salen con tu cuenta y GitHub no deja aprobar un PR propio; así los fusionas tú tras revisarlos, siempre con CI en verde. Los de otras personas necesitan tu aprobación.
+- En **Settings → General** activa **Automatically delete head branches** (evita PRs apilados perdidos).

@@ -24,6 +24,10 @@ Herramienta: `gh` CLI (autenticado con `gh auth status`). Repo: el de `git remot
 ## Publicar
 Crear issues es contenido público: **muestra al usuario el título, cuerpo y etiquetas de cada issue y espera su sí** antes de `gh issue create --title ... --body-file ... --label ...`. Para lotes, muestra la lista completa una vez y pide un solo sí.
 
+## Estado
+- `status:design`: espera visual aprobado. `status:ready`: lista para código. Solo se pasa a `ready` tras la aprobación del dueño.
+- Al aprobarse un visual, actualiza las issues que cambian y cierra las obsoletas con `not planned` y un comentario de qué las reemplaza.
+
 ## Mantenimiento
 - Al cerrar un PR: comenta en la issue qué quedó y propone (sin crear) la issue del siguiente nivel.
 - Issues sin actividad en 30 días: sugiere al usuario `status:stale` o cerrarlas.

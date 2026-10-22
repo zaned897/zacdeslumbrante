@@ -7,7 +7,7 @@ description: Metodología para llevar una idea de issue a PR mergeado con varios
 Principios: todo nace de una issue, cada entrega tiene un nivel (`prototype-scope`), especificación antes que código, cada agente en su zona y worktree, revisión por un modelo de otro proveedor, evidencia en vez de opiniones.
 
 ## 0. Encaje (2 min)
-- ¿Cambia la UI? Primero `design-first`: propuesta en el artefacto de diseño y aprobación.
+- ¿Cambia la UI? Primero `design-first`: mock aprobado en el artefacto y issue con `status:ready`. Sin eso no hay código.
 - ¿Hay issue? Si no, créala con `gh-issues` (con el sí del usuario). Si es grande, issue padre + hijas.
 - Nivel: sketch, mock, demo o PoC. Escríbelo.
 - ¿Necesita algo fuera de `toolbox/capabilities.json`? `scout` antes de seguir.
@@ -33,7 +33,7 @@ Solo para demo y PoC: `/codex:adversarial-review` sobre la spec. Una ronda, máx
 Checks del nivel (`prototype-scope`): lint siempre; smoke test en demo; evidencia en PoC. Captura o gif para cualquier cambio visual.
 
 ## 6. PR y merge
-PR con la plantilla (nivel, `Closes #n`, cómo correrlo, evidencia, `PROTO:`). `/codex:review --base main`. Corrige altos/medios. Merge; actualiza los PRs hermanos contra main (`parallel-prs`).
+PR con la plantilla (nivel, `Closes #n`, cómo correrlo, evidencia, `PROTO:`). `/codex:review --base main`. Corrige altos/medios. Avisa al dueño que está listo; él revisa y fusiona con CI en verde. Después actualiza los PRs hermanos contra main (`parallel-prs`).
 
 ## 7. Cierre
 - `docs/API.md`: de Propuesta a vigente.

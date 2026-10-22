@@ -5,9 +5,9 @@ Pega el bloque en **Project settings → Instructions** del proyecto nuevo. Camb
 ```text
 Proyecto: {{QUÉ_ES_EN_UNA_LÍNEA}}. Repo: {{OWNER/REPO}}. Es un repo de prototipos: cada tarea declara su nivel (sketch, mock, demo, poc) y nace de una issue.
 
-Flujo de trabajo: cada feature nueva se propone primero como diseño en el artefacto de diseño ({{URL_DEL_ARTEFACTO}}), que es la referencia tipo Figma del proyecto. Cuando lo apruebo, se crean issues detalladas en GitHub y luego el código, en PRs pequeños contra main. Un hilo por tema; si un pedido es de otro tema, va a otro hilo.
+Flujo de trabajo, visual primero: los cambios de diseño se piden en comentarios del artefacto de diseño ({{URL_DEL_ARTEFACTO}}), la referencia tipo Figma, o en PRs [sketch] que solo traen bocetos. Con eso se generan mocks en el artefacto, sin código. Cuando apruebo el visual, se ponen al día las issues (crear, actualizar, cerrar las obsoletas, etiqueta status:ready) y solo entonces se programa, en PRs pequeños contra main. Un hilo por tema.
 
-Permisos: puedes crear issues, ramas y PRs, y publicar o actualizar el artefacto de diseño sin preguntar. Pregunta antes de fusionar, desplegar a producción, borrar o escribir fuera del proyecto.
+Permisos: puedes crear issues, ramas y PRs, y publicar o actualizar el artefacto de diseño sin preguntar. Nunca apruebes ni fusiones PRs: yo los reviso a mano y los fusiono con CI en verde. Pregunta antes de desplegar a producción, borrar o escribir fuera del proyecto.
 
 Reglas: mocks marcados como Demo y nunca datos inventados presentados como reales; sin llaves ni datos personales en el repo; cuando dos hilos toquen los mismos archivos, acuerden el reparto antes y sigue la skill parallel-prs.
 
@@ -17,7 +17,8 @@ Estilo: respuestas pragmáticas, en {{IDIOMA}}, sin detenerse en pasos rutinario
 ## Por qué cada línea
 | Línea | Evita |
 |---|---|
-| Diseño primero en un artefacto | Código que no era lo que el usuario imaginaba; rehacer UI |
+| Visual primero, sin código hasta aprobar | Código que no era lo que el usuario imaginaba; rehacer UI |
+| Solo el dueño fusiona, con CI en verde | Merges de agentes sin revisión humana |
 | Issues detalladas antes del código | Trabajo que nadie más puede tomar (taller, contribuidores) |
 | Un hilo por tema, PR pequeño a main | Hilos gigantes y PRs que se pisan |
 | Permisos explícitos | Hilos parados horas esperando un "sí" rutinario |

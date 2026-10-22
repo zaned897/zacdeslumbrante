@@ -25,5 +25,5 @@ Un hilo (o agente) por tema, un PR por issue, siempre contra `main`. Estas regla
 - Ojo con commits que entraron y luego se revirtieron en `main`: Git puede tomar tus archivos como borrados. Revisa `git diff origin/main --stat` antes de empujar.
 
 ## Merge
-- El orden de merge lo decide el usuario; propónlo en una línea («fusiona #A antes que #B»).
+- Solo el dueño del proyecto fusiona, a mano y con CI en verde. Propón el orden en una línea («fusiona #A antes que #B»).
 - Nunca reescribas historia en ramas ajenas ni cierres y reabras PRs para relanzar CI.
