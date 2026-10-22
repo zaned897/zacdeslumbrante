@@ -45,5 +45,27 @@ Retos e insignias para el modo juego. Datos en `services/api/app/fixtures/challe
 - `placeIds`: ids de `src/data/places.ts` (el test lo valida).
 - `badge.icon`: nombre de ícono de lucide (`landmark`, `mountain`, `pickaxe`…).
 
+### GET /api/py/places/{placeId}/photos  · mock · dueño: Claude Code (#23)
+Fotos curadas de Wikimedia Commons (`services/api/app/fixtures/photos.json`, #22). Lugar sin fotos → `photos: []`.
+```json
+{
+  "placeId": "catedral-zacatecas",
+  "source": "Wikimedia Commons",
+  "_mock": true,
+  "photos": [
+    {
+      "id": "catedral-zacatecas-1",
+      "placeId": "catedral-zacatecas",
+      "url": "https://upload.wikimedia.org/...",
+      "author": "…",
+      "license": "CC BY-SA 3.0",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:…",
+      "caption": { "es": "Fachada principal de la Catedral", "en": "Main façade of the Cathedral" }
+    }
+  ]
+}
+```
+La UI debe mostrar `author` y `license` bajo cada foto, con enlace a `sourceUrl`.
+
 ## Propuestas pendientes
 (Agrega aquí endpoints nuevos antes de implementarlos: método, ruta, body, respuesta, dueño.)
