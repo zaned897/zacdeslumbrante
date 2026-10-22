@@ -8,6 +8,7 @@ import { BottomTabBar } from './components/app/BottomTabBar';
 import { BadgesScreen } from './components/app/BadgesScreen';
 import { PlansScreen } from './components/app/PlansScreen';
 import { AppTab, goToTab, tabFromHash } from './components/app/tabs';
+import { Onboarding, shouldShowOnboarding } from './components/app/Onboarding';
 import { Language, ChatMessage, Place, KnowledgeBaseURL } from './types';
 import { getStoredKnowledgeBase, saveStoredKnowledgeBase, resetKnowledgeBase } from './data/knowledgeBase';
 import { ZACATECAS_PLACES } from './data/places';
@@ -33,6 +34,8 @@ export default function App() {
     window.addEventListener('hashchange', onChange);
     return () => window.removeEventListener('hashchange', onChange);
   }, []);
+
+  const [showOnboarding, setShowOnboarding] = useState<boolean>(shouldShowOnboarding);
 
   // UI Panels state
   const [isMapOpen, setIsMapOpen] = useState<boolean>(() => {
@@ -299,6 +302,8 @@ export default function App() {
   };
 
   const handleHighlightPlacesOnMap = (placeIds: string[]) => {
+    // El mapa 2D vive en la pestaña de chat
+    goToTab('chat');
     setHighlightedPlaceIds(placeIds);
     if (placeIds.length > 0) {
       const first = ZACATECAS_PLACES.find((p) => p.id === placeIds[0]);
@@ -418,6 +423,10 @@ export default function App() {
       )}
 
       <BottomTabBar language={language} active={tab} onSelect={goToTab} />
+
+      {showOnboarding && (
+        <Onboarding language={language} onToggleLanguage={toggleLanguage} onDone={() => setShowOnboarding(false)} />
+      )}
 
       {/* Modals */}
       <KnowledgeBaseModal

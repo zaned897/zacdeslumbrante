@@ -17,7 +17,7 @@ const URL_RE = /https?:\/\/[^\s)\],·]+/g;
 /** Chip de cita numerada, como en el adelanto: [1] [2]… */
 const Cite: React.FC<{ n: number; url?: string }> = ({ n, url }) => {
   const cls =
-    'inline-grid place-items-center min-w-[1.15rem] h-[1.15rem] px-1 mx-0.5 rounded bg-[#FDEBD8] text-cantera font-mono text-[10px] font-semibold align-[1px] no-underline';
+    'inline-grid place-items-center min-w-[1.15rem] h-[1.15rem] px-1 mx-0.5 rounded bg-cita text-cantera font-mono text-[10px] font-semibold align-[1px] no-underline';
   return url ? (
     <a href={url} target="_blank" rel="noopener noreferrer" className={cls} title={url}>
       {n}
@@ -75,9 +75,9 @@ function renderInline(text: string, sources: SourceCitation[], keyPrefix: string
 }
 
 const SECTION_STYLES = {
-  history: { icon: BookOpen, cls: 'text-amber-800 bg-amber-50 border-amber-200' },
-  legend: { icon: Sparkles, cls: 'text-purple-800 bg-purple-50 border-purple-200' },
-  recommendation: { icon: Compass, cls: 'text-emerald-800 bg-emerald-50 border-emerald-200' },
+  history: { icon: BookOpen, cls: 'text-amber-800 bg-amber-50 border-amber-200 dark:text-amber-300 dark:bg-amber-950/40 dark:border-amber-900' },
+  legend: { icon: Sparkles, cls: 'text-purple-800 bg-purple-50 border-purple-200 dark:text-purple-300 dark:bg-purple-950/40 dark:border-purple-900' },
+  recommendation: { icon: Compass, cls: 'text-emerald-800 bg-emerald-50 border-emerald-200 dark:text-emerald-300 dark:bg-emerald-950/40 dark:border-emerald-900' },
 } as const;
 
 type SectionKind = keyof typeof SECTION_STYLES;
@@ -112,8 +112,8 @@ export const ChatMessageItem: React.FC<ChatMessageItemProps> = ({
 
   if (message.role === 'user') {
     return (
-      <div className="flex justify-end mb-3">
-        <div className="max-w-[82%] px-3.5 py-2.5 bg-cantera text-white rounded-[18px] rounded-br-[5px] text-sm leading-relaxed whitespace-pre-wrap">
+      <div className="flex justify-end mb-3 animate-sube">
+        <div className="max-w-[82%] px-3.5 py-2.5 bg-cantera text-sobre-cantera rounded-[18px] rounded-br-[5px] text-sm leading-relaxed whitespace-pre-wrap">
           {message.content}
         </div>
       </div>
@@ -177,8 +177,8 @@ export const ChatMessageItem: React.FC<ChatMessageItemProps> = ({
   };
 
   return (
-    <div className="flex flex-col items-start mb-4 gap-2">
-      <div className="max-w-[94%] sm:max-w-[85%] px-3.5 py-3 bg-white border border-linea rounded-[18px] rounded-bl-[5px] text-sm leading-relaxed text-stone-800 space-y-2.5 break-words">
+    <div className="flex flex-col items-start mb-4 gap-2 animate-sube">
+      <div className="max-w-[94%] sm:max-w-[85%] px-3.5 py-3 bg-superficie border border-linea rounded-[18px] rounded-bl-[5px] text-sm leading-relaxed text-carbon space-y-2.5 break-words">
         {paragraphs.map((p, idx) => {
           const section = sectionOf(p);
           if (!section) return renderParagraph(p, idx);
@@ -206,13 +206,13 @@ export const ChatMessageItem: React.FC<ChatMessageItemProps> = ({
         {message.isStreaming && !rawText && (
           <span className="inline-flex gap-1 py-1" aria-label="…">
             {[0, 1, 2].map((i) => (
-              <span key={i} className="w-1.5 h-1.5 rounded-full bg-stone-300 animate-bounce" style={{ animationDelay: `${i * 120}ms` }} />
+              <span key={i} className="w-1.5 h-1.5 rounded-full bg-linea animate-bounce" style={{ animationDelay: `${i * 120}ms` }} />
             ))}
           </span>
         )}
 
         {hasDataGap && (
-          <div className="p-2.5 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-2 text-xs text-amber-950">
+          <div className="p-2.5 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-2 text-xs text-amber-950 dark:bg-amber-950/40 dark:border-amber-900 dark:text-amber-200">
             <AlertTriangle className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
             <div>
               <p className="font-bold">{t.dataGapTitle}</p>
@@ -222,14 +222,14 @@ export const ChatMessageItem: React.FC<ChatMessageItemProps> = ({
         )}
 
         {sources.length > 0 && !message.isStreaming && (
-          <ol className="pt-2 border-t border-dashed border-[#E7DCCB] space-y-1">
+          <ol className="pt-2 border-t border-dashed border-linea space-y-1">
             {sources.slice(0, 6).map((s, i) => (
-              <li key={s.url + i} className="flex items-start gap-1.5 text-[11px] text-stone-600">
+              <li key={s.url + i} className="flex items-start gap-1.5 text-[11px] text-tenue">
                 <Cite n={i + 1} />
                 <a href={s.url} target="_blank" rel="noopener noreferrer" className="hover:text-cantera hover:underline min-w-0">
                   <span className="block line-clamp-1">{s.title}</span>
                   {s.verificationDate && (
-                    <span className="block font-mono text-[10px] text-stone-400">{s.verificationDate}</span>
+                    <span className="block font-mono text-[10px] text-tenue">{s.verificationDate}</span>
                   )}
                 </a>
               </li>
@@ -245,7 +245,7 @@ export const ChatMessageItem: React.FC<ChatMessageItemProps> = ({
               key={place.id}
               type="button"
               onClick={() => onPlaceClick(place)}
-              className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-semibold text-cantera bg-white border border-[#E7DCCB] rounded-full hover:bg-caliza cursor-pointer"
+              className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-semibold text-cantera bg-superficie border border-linea rounded-full hover:bg-caliza cursor-pointer"
             >
               <MapPin className="w-3 h-3" />
               {language === 'es' ? place.nameEs : place.name}
@@ -255,7 +255,7 @@ export const ChatMessageItem: React.FC<ChatMessageItemProps> = ({
             <button
               type="button"
               onClick={onOpen3d}
-              className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-semibold text-white bg-cantera border border-cantera rounded-full hover:bg-[#7C2D12] cursor-pointer"
+              className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-semibold text-sobre-cantera bg-cantera border border-cantera rounded-full hover:brightness-95 cursor-pointer"
             >
               <Box className="w-3 h-3" />
               {t.chatSee3d}
@@ -264,7 +264,7 @@ export const ChatMessageItem: React.FC<ChatMessageItemProps> = ({
           <button
             type="button"
             onClick={handleCopy}
-            className="flex items-center gap-1 px-2 py-1.5 text-[11px] text-stone-400 hover:text-stone-700 cursor-pointer"
+            className="flex items-center gap-1 px-2 py-1.5 text-[11px] text-tenue hover:text-carbon cursor-pointer"
           >
             {copied ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
             {copied ? t.copiedText : t.copyText}
