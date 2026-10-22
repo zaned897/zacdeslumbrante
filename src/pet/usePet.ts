@@ -3,10 +3,12 @@ import { progress } from '../progress/progressStore';
 import { readVisits, recordLegendaryFind, recordPlaceVisit } from './visits';
 import {
   adoptPet,
+  availableSpecies,
   cancelWalk,
   cuddle,
   feed,
   setDesign,
+  setSpecies,
   startWalk,
   tick,
   toPetState,
@@ -27,6 +29,7 @@ function readPet(): PetState | null {
 export function usePet() {
   const [pet, setPet] = useState<PetState | null>(readPet);
   const [events, setEvents] = useState<PetEvent[]>([]);
+  const [available, setAvailable] = useState<Species[]>(() => availableSpecies(readVisits()));
   const petRef = useRef(pet);
   petRef.current = pet;
 
@@ -50,7 +53,10 @@ export function usePet() {
     const onVisible = () => document.visibilityState === 'visible' && runTick();
     document.addEventListener('visibilitychange', onVisible);
     const unsubscribe = progress.subscribe((key) => {
-      if (key === 'visits') runTick();
+      if (key === 'visits') {
+        setAvailable(availableSpecies(readVisits()));
+        runTick();
+      }
       if (key === 'pet') {
         // Otra pestaña o la cuenta cambiaron la mascota: tomar la versión guardada.
         const stored = readPet();
@@ -84,6 +90,11 @@ export function usePet() {
       [save],
     ),
     setDesign: useCallback((design: Design) => update((p, now) => setDesign(p, design, now)), [update]),
+    available,
+    setSpecies: useCallback(
+      (species: Species) => update((p, now) => setSpecies(p, species, availableSpecies(readVisits()), now)),
+      [update],
+    ),
     feed: useCallback((snack: SnackId) => update((p, now) => feed(p, snack, now)), [update]),
     cuddle: useCallback(() => update(cuddle), [update]),
     startWalk: useCallback(

@@ -8,8 +8,22 @@
 import type { PlaceVisit } from './visits';
 import { EMPTY_INVENTORY, dropsFor, rankOf, type Inventory, type ResourceId } from './resources';
 
-export type Species = 'gatito' | 'perrito' | 'burrito' | 'coyote' | 'tlacuache';
+export type Species = 'gatito' | 'perrito' | 'burrito' | 'coyote' | 'tlacuache' | 'raton';
+/** Los cinco que se eligen desde el principio. */
 export const SPECIES: Species[] = ['gatito', 'perrito', 'burrito', 'coyote', 'tlacuache'];
+/** El sexto (#71): el ratón de campo, que se gana al llegar a un Pueblo Mágico. */
+export const EARNED_SPECIES: Species = 'raton';
+const ALL_SPECIES: Species[] = [...SPECIES, EARNED_SPECIES];
+
+// PROTO: mientras no haya misiones presenciales (#62), basta una visita en la Ciudad 3D.
+export function isPuebloMagico(placeId: string) {
+  return placeId.endsWith('-pueblo-magico') || placeId.startsWith('pueblo-magico-');
+}
+
+/** Animales disponibles según el registro de visitas: los cinco y, si ya llegaste a un Pueblo Mágico, el ratón. */
+export function availableSpecies(visits: PlaceVisit[]): Species[] {
+  return visits.some((v) => !v.legendary && isPuebloMagico(v.placeId)) ? ALL_SPECIES : SPECIES;
+}
 /** Diseños de pelaje: 0 y 1 libres; 2 y 3 se desbloquean con el oro (rango 3). */
 export type Design = 0 | 1 | 2 | 3;
 export const FREE_DESIGNS = 2;
@@ -58,7 +72,8 @@ export interface PetState {
 export type PetEvent =
   | { type: 'visit'; placeId: string; onWalk: boolean; found: ResourceId[] }
   | { type: 'walkDone'; tourId: string }
-  | { type: 'rankUp'; rank: number; resource: ResourceId; legendary: boolean };
+  | { type: 'rankUp'; rank: number; resource: ResourceId; legendary: boolean }
+  | { type: 'speciesEarned'; species: Species };
 
 export const MOOD_DECAY_PER_HOUR = 3;
 export const ENERGY_REST_PER_HOUR = 6;
@@ -140,6 +155,7 @@ export function tick(state: PetState, now: Date, visits: PlaceVisit[]): { state:
   const fresh = visits
     .filter((v) => v.at > state.lastVisitAt)
     .sort((a, b) => a.at.localeCompare(b.at));
+  let earned = availableSpecies(visits.filter((v) => v.at <= state.lastVisitAt)).includes(EARNED_SPECIES);
 
   for (const visit of fresh) {
     if (visit.legendary) {
@@ -164,6 +180,10 @@ export function tick(state: PetState, now: Date, visits: PlaceVisit[]): { state:
     };
     next = addFinds(next, found, visit.placeId, visit.at, events);
     events.push({ type: 'visit', placeId: visit.placeId, onWalk, found });
+    if (!earned && isPuebloMagico(visit.placeId)) {
+      earned = true;
+      events.push({ type: 'speciesEarned', species: EARNED_SPECIES });
+    }
 
     if (walk && onWalk) {
       const visited = [...walk.visited, visit.placeId];
@@ -219,6 +239,12 @@ export function setDesign(state: PetState, design: Design, now: Date): PetState 
   return { ...state, design, updatedAt: now.toISOString() };
 }
 
+/** Cambiar de compañero conserva todo el progreso: todos suben de rango igual. */
+export function setSpecies(state: PetState, species: Species, available: Species[], now: Date): PetState {
+  if (!available.includes(species)) return state;
+  return { ...state, species, updatedAt: now.toISOString() };
+}
+
 export function startWalk(state: PetState, tourId: string, stopPlaceIds: string[], now: Date): PetState {
   if (isTired(state) || stopPlaceIds.length === 0) return state;
   const iso = now.toISOString();
@@ -260,7 +286,7 @@ function isV2(v: unknown): v is PetState {
   return (
     p.version === 2 &&
     typeof p.name === 'string' &&
-    SPECIES.includes(p.species) &&
+    ALL_SPECIES.includes(p.species) &&
     typeof p.mood === 'number' &&
     typeof p.energy === 'number' &&
     typeof p.inventory === 'object' && p.inventory !== null &&

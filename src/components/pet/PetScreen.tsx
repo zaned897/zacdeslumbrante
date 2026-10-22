@@ -52,7 +52,7 @@ const Bar: React.FC<{ label: string; value: number; tone: string }> = ({ label, 
 
 export const PetScreen: React.FC<PetScreenProps> = ({ language, onGoExplore }) => {
   const t = TRANSLATIONS[language];
-  const { pet, events, clearEvents, adopt, setDesign, feed, cuddle, startWalk, cancelWalk, simulateVisit, release } = usePet();
+  const { pet, events, clearEvents, adopt, setDesign, available, setSpecies, feed, cuddle, startWalk, cancelWalk, simulateVisit, release } = usePet();
   const [tours, setTours] = useState<Tour[]>(TOURS_3D);
   const [toast, setToast] = useState<string | null>(null);
   const [snacksOpen, setSnacksOpen] = useState(false);
@@ -83,9 +83,11 @@ export const PetScreen: React.FC<PetScreenProps> = ({ language, onGoExplore }) =
   useEffect(() => {
     if (!events.length || !pet) return;
     const pick = (type: PetEvent['type']) => [...events].reverse().find((e) => e.type === type);
-    const last = pick('rankUp') ?? pick('walkDone') ?? events[events.length - 1];
+    const last = pick('speciesEarned') ?? pick('rankUp') ?? pick('walkDone') ?? events[events.length - 1];
     const text =
-      last.type === 'rankUp'
+      last.type === 'speciesEarned'
+        ? t.petSpeciesEarnedToast.replace('{species}', t[`petSpecies_${last.species}`].toLocaleLowerCase(language))
+        : last.type === 'rankUp'
         ? t.petRankUpToast.replace('{name}', pet.name).replace('{rank}', rankLabel(pet))
         : last.type === 'walkDone'
           ? `${t.petWalkDone.replace('{tour}', tourTitle(last.tourId))} ${t.petGoldToast}`
@@ -105,7 +107,7 @@ export const PetScreen: React.FC<PetScreenProps> = ({ language, onGoExplore }) =
 
   const walkTour = useMemo(() => (pet?.walk ? tours.find((x) => x.id === pet.walk?.tourId) : undefined), [pet?.walk, tours]);
 
-  if (!pet) return <PetAdopt language={language} onAdopt={adopt} />;
+  if (!pet) return <PetAdopt language={language} available={available} onAdopt={adopt} />;
 
   const mood = moodOf(pet);
   const tired = isTired(pet);
@@ -238,6 +240,27 @@ export const PetScreen: React.FC<PetScreenProps> = ({ language, onGoExplore }) =
               );
             })}
           </div>
+          {available.length > 1 && (
+            <div className="flex items-center gap-1.5 p-1 -mx-1 overflow-x-auto" role="radiogroup" aria-label={t.petCompanionLabel}>
+              <span className="text-xs font-bold text-tenue shrink-0">{t.petCompanionLabel}</span>
+              {available.map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  role="radio"
+                  aria-checked={s === pet.species}
+                  aria-label={t[`petSpecies_${s}`]}
+                  title={t[`petSpecies_${s}`]}
+                  onClick={() => setSpecies(s)}
+                  className={`shrink-0 rounded-full p-0.5 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-terracota ${
+                    s === pet.species ? 'bg-cita ring-2 ring-cantera' : 'hover:bg-caliza'
+                  }`}
+                >
+                  <AnimalSprite species={s} design={pet.design} size={34} animate={false} />
+                </button>
+              ))}
+            </div>
+          )}
           <p className="text-[11px] text-tenue">{sourceNote ? `${sourceNote}.` : t.petSourceEmpty}</p>
         </section>
 

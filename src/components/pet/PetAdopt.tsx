@@ -2,18 +2,20 @@ import React, { useState } from 'react';
 import { Lock } from 'lucide-react';
 import { Language } from '../../types';
 import { TRANSLATIONS } from '../../data/i18n';
-import { FREE_DESIGNS, SPECIES, type Design, type Species } from '../../pet/petEngine';
+import { EARNED_SPECIES, FREE_DESIGNS, SPECIES, type Design, type Species } from '../../pet/petEngine';
 import { AnimalSprite, swatchOf } from './AnimalSprite';
 
 const DESIGNS: Design[] = [0, 1, 2, 3];
 
 interface PetAdoptProps {
   language: Language;
+  /** Animales que se pueden elegir; el ratón aparece si ya llegaste a un Pueblo Mágico. */
+  available: Species[];
   onAdopt: (name: string, species: Species, design: Design) => void;
 }
 
 /** "Elige a tu compañero" (#67), como la primera pantalla de la propuesta A. */
-export const PetAdopt: React.FC<PetAdoptProps> = ({ language, onAdopt }) => {
+export const PetAdopt: React.FC<PetAdoptProps> = ({ language, available, onAdopt }) => {
   const t = TRANSLATIONS[language];
   const [species, setSpecies] = useState<Species>('gatito');
   const [design, setDesign] = useState<Design>(0);
@@ -35,7 +37,7 @@ export const PetAdopt: React.FC<PetAdoptProps> = ({ language, onAdopt }) => {
         </div>
 
         <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label={t.petAdoptTitle}>
-          {SPECIES.map((s) => {
+          {[...SPECIES, ...(available.includes(EARNED_SPECIES) ? [EARNED_SPECIES] : [])].map((s) => {
             const on = s === species;
             return (
               <button
@@ -53,13 +55,15 @@ export const PetAdopt: React.FC<PetAdoptProps> = ({ language, onAdopt }) => {
               </button>
             );
           })}
-          <div
-            className="min-w-0 flex flex-col items-center justify-center gap-1 rounded-2xl border-[1.5px] border-dashed border-linea bg-caliza px-2 py-2 text-center text-tenue"
-            aria-disabled="true"
-          >
-            <span className="font-extrabold text-3xl leading-none">?</span>
-            <span className="text-[10px] font-bold leading-tight">{t.petSixthLocked}</span>
-          </div>
+          {!available.includes(EARNED_SPECIES) && (
+            <div
+              className="min-w-0 flex flex-col items-center justify-center gap-1 rounded-2xl border-[1.5px] border-dashed border-linea bg-caliza px-2 py-2 text-center text-tenue"
+              aria-disabled="true"
+            >
+              <span className="font-extrabold text-3xl leading-none">?</span>
+              <span className="text-[10px] font-bold leading-tight">{t.petSixthLocked}</span>
+            </div>
+          )}
         </div>
 
         <div className="flex items-center gap-2.5" role="radiogroup" aria-label={t.petDesignsLabel}>

@@ -17,6 +17,8 @@ const BASE: Record<Species, Fur> = {
   burrito: { fur: '#A8A29E', accent: '#57534E', light: '#E7E5E4' },
   coyote: { fur: '#D6A86A', accent: '#C08A4A', light: '#F7EBDD' },
   tlacuache: { fur: '#D6D3D1', accent: '#57534E', light: '#F5F5F4' },
+  // Ratón de campo (#71): orejas grandes y redondas, pelaje pardo.
+  raton: { fur: '#B08968', accent: '#7F5539', light: '#F1E3D3' },
 };
 
 // Diseños 1–3, iguales para todos: carbón, caliza y cantera.
@@ -80,6 +82,15 @@ function Ears({ species, f }: { species: Species; f: Fur }) {
           <polygon points="70,38 70,20 60,32" fill={f.light} />
         </>
       );
+    case 'raton':
+      return (
+        <>
+          <circle cx="24" cy="30" r="15" fill={f.fur} />
+          <circle cx="76" cy="30" r="15" fill={f.fur} />
+          <circle cx="24" cy="30" r="9" fill="#F9C6CF" />
+          <circle cx="76" cy="30" r="9" fill="#F9C6CF" />
+        </>
+      );
     case 'tlacuache':
       return (
         <>
@@ -117,6 +128,13 @@ function Markings({ species, f }: { species: Species; f: Fur }) {
       );
     case 'coyote':
       return <path d="M28 62 Q50 92 72 62 Q50 74 28 62Z" fill={f.light} />;
+    case 'raton':
+      return (
+        <>
+          <ellipse cx="50" cy="68" rx="12" ry="9" fill={f.light} />
+          <path d="M24 62 h11 M25 68 l10 -3 M65 62 h11 M65 65 l10 3" stroke={f.accent} strokeWidth="1.3" strokeLinecap="round" />
+        </>
+      );
     case 'tlacuache':
       return (
         <>
@@ -152,7 +170,7 @@ export const AnimalSprite: React.FC<AnimalSpriteProps> = ({
   animate = true,
 }) => {
   const f = furOf(species, design);
-  const ink = species === 'tlacuache' ? '#BE185D' : '#3B1D12';
+  const ink = species === 'tlacuache' || species === 'raton' ? '#BE185D' : '#3B1D12';
   const darkFur = DARK.has(f.fur);
   const bounce = animate && !tired && (mood === 'feliz' || mood === 'contento' || walking);
   const bobSpeed = walking ? '0.5s' : mood === 'feliz' ? '0.9s' : '1.6s';
