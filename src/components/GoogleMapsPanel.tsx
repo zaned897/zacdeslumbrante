@@ -30,6 +30,9 @@ interface GoogleMapsPanelProps {
   onToggleSplitRatio: () => void;
 }
 
+// Google avisa del fallo de autenticación una sola vez por página; lo recordamos para no volver a dejar el lienzo gris.
+let mapsAuthFailed = false;
+
 export const GoogleMapsPanel: React.FC<GoogleMapsPanelProps> = ({
   isOpen,
   onClose,
@@ -47,6 +50,7 @@ export const GoogleMapsPanel: React.FC<GoogleMapsPanelProps> = ({
   const infoWindowRef = useRef<google.maps.InfoWindow | null>(null);
 
   const [mapLoaded, setMapLoaded] = useState(false);
+  const [tilesReady, setTilesReady] = useState(false);
   const [mapError, setMapError] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [activeInfoWindowPlace, setActiveInfoWindowPlace] = useState<Place | null>(null);
@@ -82,6 +86,30 @@ export const GoogleMapsPanel: React.FC<GoogleMapsPanelProps> = ({
     }
 
     let isMounted = true;
+    const fallback = () => {
+      if (!isMounted) return;
+      setMapError('Interactive Spatial Canvas Active');
+      setMapLoaded(true);
+    };
+
+    // Llave inválida, API sin habilitar o dominio no autorizado: Google deja el lienzo gris
+    // y solo avisa por gm_authFailure. En ese caso pasamos a la cartografía de respaldo.
+    const authWindow = window as Window & { gm_authFailure?: () => void };
+    const previousAuthFailure = authWindow.gm_authFailure;
+    authWindow.gm_authFailure = () => {
+      mapsAuthFailed = true;
+      previousAuthFailure?.();
+      fallback();
+    };
+    if (mapsAuthFailed) {
+      fallback();
+      return () => {
+        isMounted = false;
+        authWindow.gm_authFailure = previousAuthFailure;
+      };
+    }
+    // Si los mosaicos no llegan a tiempo (red lenta o bloqueada), también.
+    let tilesTimer: ReturnType<typeof setTimeout> | undefined;
 
     const initMapWithGoogle = (googleMaps: typeof google.maps) => {
       if (!isMounted || !mapContainerRef.current) return;
@@ -106,14 +134,25 @@ export const GoogleMapsPanel: React.FC<GoogleMapsPanelProps> = ({
 
       mapInstanceRef.current = map;
       infoWindowRef.current = new googleMaps.InfoWindow();
+      tilesTimer = setTimeout(fallback, 10000);
+      googleMaps.event.addListenerOnce(map, 'tilesloaded', () => {
+        clearTimeout(tilesTimer);
+        if (isMounted) setTilesReady(true);
+      });
       setMapLoaded(true);
       setMapError(null);
+    };
+
+    const cleanup = () => {
+      isMounted = false;
+      clearTimeout(tilesTimer);
+      authWindow.gm_authFailure = previousAuthFailure;
     };
 
     // If window.google.maps is already initialized
     if (window.google?.maps) {
       initMapWithGoogle(window.google.maps);
-      return;
+      return cleanup;
     }
 
     // Check if script element already exists
@@ -125,7 +164,10 @@ export const GoogleMapsPanel: React.FC<GoogleMapsPanelProps> = ({
           initMapWithGoogle(window.google.maps);
         }
       }, 100);
-      return () => clearInterval(checkInterval);
+      return () => {
+        clearInterval(checkInterval);
+        cleanup();
+      };
     }
 
     // Inject Google Maps script directly with the provided API key
@@ -139,22 +181,18 @@ export const GoogleMapsPanel: React.FC<GoogleMapsPanelProps> = ({
       if (window.google?.maps) {
         initMapWithGoogle(window.google.maps);
       } else {
-        setMapError('Interactive Spatial Canvas Active');
-        setMapLoaded(true);
+        fallback();
       }
     };
 
     script.onerror = (err) => {
       console.warn('Google Maps script tag error:', err);
-      setMapError('Interactive Spatial Canvas Active');
-      setMapLoaded(true);
+      fallback();
     };
 
     document.head.appendChild(script);
 
-    return () => {
-      isMounted = false;
-    };
+    return cleanup;
   }, [isOpen, currentApiKey]);
 
   // Handle marker creation and updates
@@ -262,21 +300,21 @@ export const GoogleMapsPanel: React.FC<GoogleMapsPanelProps> = ({
 
   return (
     <div
-      className={`h-[calc(100vh-61px)] flex flex-col bg-[#F7F4EE] border-l border-stone-200 transition-all duration-300 z-10 ${
+      className={`h-full min-h-0 flex flex-col bg-papel border-l border-linea transition-all duration-300 z-10 ${
         splitRatio === 'full' ? 'w-full' : 'w-full lg:w-1/2'
       }`}
     >
       {/* Map Header Toolbar */}
-      <div className="px-4 py-3 bg-white border-b border-stone-200 flex items-center justify-between gap-2 flex-wrap">
+      <div className="px-4 py-3 bg-superficie border-b border-linea flex items-center justify-between gap-2 flex-wrap">
         <div className="flex items-center gap-2">
-          <div className="p-1.5 bg-[#9A3412]/10 text-[#9A3412] rounded-lg">
+          <div className="p-1.5 bg-cantera/10 text-cantera rounded-lg">
             <Compass className="w-4 h-4" />
           </div>
           <div>
-            <h2 className="font-serif font-bold text-sm text-stone-900 leading-tight">
+            <h2 className="font-serif font-bold text-sm text-carbon leading-tight">
               {t.mapTitle}
             </h2>
-            <span className="text-[10px] text-stone-500 font-mono">
+            <span className="text-[10px] text-tenue font-mono">
               {ZACATECAS_PLACES.length} {t.placesInState}
             </span>
           </div>
@@ -303,14 +341,14 @@ export const GoogleMapsPanel: React.FC<GoogleMapsPanelProps> = ({
           </button>
           <button
             onClick={handleCenterCapital}
-            className="px-2.5 py-1 text-xs font-medium text-stone-700 bg-stone-100 hover:bg-stone-200 rounded-md transition-colors cursor-pointer"
+            className="px-2.5 py-1 text-xs font-medium text-tenue bg-caliza hover:bg-linea rounded-md transition-colors cursor-pointer"
             title={t.centerOnCapital}
           >
             {language === 'es' ? 'Capital' : 'Capital'}
           </button>
           <button
             onClick={handleCenterState}
-            className="px-2.5 py-1 text-xs font-medium text-stone-700 bg-stone-100 hover:bg-stone-200 rounded-md transition-colors cursor-pointer"
+            className="px-2.5 py-1 text-xs font-medium text-tenue bg-caliza hover:bg-linea rounded-md transition-colors cursor-pointer"
             title={t.centerOnState}
           >
             {language === 'es' ? 'Estado' : 'State'}
@@ -319,7 +357,7 @@ export const GoogleMapsPanel: React.FC<GoogleMapsPanelProps> = ({
           {/* 50/50 vs Full Screen Toggle */}
           <button
             onClick={onToggleSplitRatio}
-            className="p-1.5 text-stone-600 hover:text-stone-900 hover:bg-stone-100 rounded-md transition-colors cursor-pointer"
+            className="p-1.5 text-tenue hover:text-carbon hover:bg-linea rounded-md transition-colors cursor-pointer"
             title={splitRatio === 'full' ? t.mapSplit50 : t.mapFullScreen}
           >
             {splitRatio === 'full' ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
@@ -328,7 +366,7 @@ export const GoogleMapsPanel: React.FC<GoogleMapsPanelProps> = ({
           {/* Close Map */}
           <button
             onClick={onClose}
-            className="p-1.5 text-stone-400 hover:text-stone-700 hover:bg-stone-100 rounded-md transition-colors cursor-pointer"
+            className="p-1.5 text-tenue hover:text-carbon hover:bg-linea rounded-md transition-colors cursor-pointer"
             title={t.mapClose}
           >
             <X className="w-4 h-4" />
@@ -337,7 +375,7 @@ export const GoogleMapsPanel: React.FC<GoogleMapsPanelProps> = ({
       </div>
 
       {/* Category Filter Bar */}
-      <div className="px-4 py-2 bg-[#FBF9F5] border-b border-stone-200 flex items-center gap-1.5 overflow-x-auto text-xs">
+      <div className="px-4 py-2 bg-caliza border-b border-linea flex items-center gap-1.5 overflow-x-auto text-xs">
         {[
           { id: 'all', label: t.filterAll },
           { id: 'monument', label: t.filterMonuments },
@@ -350,8 +388,8 @@ export const GoogleMapsPanel: React.FC<GoogleMapsPanelProps> = ({
             onClick={() => setActiveCategory(cat.id)}
             className={`px-2.5 py-1 rounded-md font-medium whitespace-nowrap transition-colors cursor-pointer ${
               activeCategory === cat.id
-                ? 'bg-[#9A3412] text-white shadow-2xs'
-                : 'bg-white text-stone-600 hover:text-stone-900 border border-stone-200'
+                ? 'bg-cantera text-sobre-cantera shadow-2xs'
+                : 'bg-superficie text-tenue hover:text-carbon border border-linea'
             }`}
           >
             {cat.label}
@@ -360,21 +398,30 @@ export const GoogleMapsPanel: React.FC<GoogleMapsPanelProps> = ({
       </div>
 
       {/* Main Map Viewport */}
-      <div className="relative flex-1 bg-stone-200 overflow-hidden">
+      <div className="relative flex-1 bg-caliza overflow-hidden">
         {/* Google Maps Real Container */}
         <div ref={mapContainerRef} className="w-full h-full" />
 
+        {!mapError && !tilesReady && (
+          <div className="absolute inset-0 grid place-items-center bg-papel" role="status">
+            <span className="flex items-center gap-2 text-xs text-tenue">
+              <span className="w-4 h-4 rounded-full border-2 border-linea border-t-cantera animate-spin" aria-hidden="true" />
+              {t.mapLoading}
+            </span>
+          </div>
+        )}
+
         {/* Fallback Interactive Spatial Map when script loader notifies fallback */}
         {mapError && (
-          <div className="absolute inset-0 bg-[#F5EFEB] p-4 flex flex-col justify-between overflow-y-auto">
-            <div className="bg-white/90 backdrop-blur-xs p-3 rounded-xl border border-stone-300 shadow-xs mb-3 flex items-center justify-between">
+          <div className="absolute inset-0 bg-papel p-4 flex flex-col justify-between overflow-y-auto">
+            <div className="bg-superficie/90 backdrop-blur-xs p-3 rounded-xl border border-linea shadow-xs mb-3 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Navigation className="w-4 h-4 text-[#9A3412]" />
-                <span className="text-xs font-bold text-stone-900">
+                <Navigation className="w-4 h-4 text-cantera" />
+                <span className="text-xs font-bold text-carbon">
                   {language === 'es' ? 'Cartografía Espacial Oficial de Zacatecas' : 'Official Zacatecas Spatial Mapping'}
                 </span>
               </div>
-              <span className="text-[10px] font-mono text-stone-500 bg-stone-100 px-2 py-0.5 rounded">
+              <span className="text-[10px] font-mono text-tenue bg-caliza px-2 py-0.5 rounded">
                 GPS Coords Activas
               </span>
             </div>
@@ -392,12 +439,12 @@ export const GoogleMapsPanel: React.FC<GoogleMapsPanelProps> = ({
                   }}
                   className={`p-3 rounded-xl text-left border transition-all cursor-pointer ${
                     activeInfoWindowPlace?.id === place.id
-                      ? 'bg-white border-[#9A3412] ring-2 ring-[#9A3412]/20 shadow-md'
-                      : 'bg-white/80 hover:bg-white border-stone-200 hover:border-stone-300'
+                      ? 'bg-superficie border-cantera ring-2 ring-cantera/20 shadow-md'
+                      : 'bg-superficie/80 hover:bg-superficie border-linea hover:border-linea'
                   }`}
                 >
                   <div className="flex items-start justify-between gap-2">
-                    <span className="font-serif font-bold text-xs text-stone-900 leading-snug">
+                    <span className="font-serif font-bold text-xs text-carbon leading-snug">
                       {language === 'es' ? place.nameEs : place.name}
                     </span>
                     <span
@@ -405,10 +452,10 @@ export const GoogleMapsPanel: React.FC<GoogleMapsPanelProps> = ({
                       style={{ backgroundColor: place.color }}
                     />
                   </div>
-                  <p className="text-[11px] text-stone-500 font-mono mt-1">
+                  <p className="text-[11px] text-tenue font-mono mt-1">
                     {place.lat.toFixed(4)}, {place.lng.toFixed(4)}
                   </p>
-                  <p className="text-[11px] text-stone-600 line-clamp-1 mt-1">
+                  <p className="text-[11px] text-tenue line-clamp-1 mt-1">
                     {place.fee}
                   </p>
                 </button>
@@ -419,27 +466,27 @@ export const GoogleMapsPanel: React.FC<GoogleMapsPanelProps> = ({
 
         {/* Selected Place Detail Floating Card */}
         {activeInfoWindowPlace && (
-          <div className="absolute bottom-4 left-4 right-4 max-w-lg mx-auto bg-white/95 backdrop-blur-md border border-stone-300 rounded-2xl shadow-xl p-4 animate-in slide-in-from-bottom-4 duration-200 space-y-3 z-10">
+          <div className="absolute bottom-4 left-4 right-4 max-w-lg mx-auto bg-superficie/95 backdrop-blur-md border border-linea rounded-2xl shadow-xl p-4 animate-in slide-in-from-bottom-4 duration-200 space-y-3 z-10">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[#9A3412] bg-[#9A3412]/10 px-2 py-0.5 rounded">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-cantera bg-cantera/10 px-2 py-0.5 rounded">
                   {language === 'es'
                     ? activeInfoWindowPlace.categoryLabel.es
                     : activeInfoWindowPlace.categoryLabel.en}
                 </span>
-                <h3 className="font-serif font-bold text-base text-stone-900 mt-1">
+                <h3 className="font-serif font-bold text-base text-carbon mt-1">
                   {language === 'es'
                     ? activeInfoWindowPlace.nameEs
                     : activeInfoWindowPlace.name}
                 </h3>
-                <p className="text-xs text-stone-500 mt-0.5">
+                <p className="text-xs text-tenue mt-0.5">
                   {activeInfoWindowPlace.address}
                 </p>
               </div>
 
               <button
                 onClick={() => setActiveInfoWindowPlace(null)}
-                className="p-1 text-stone-400 hover:text-stone-700 rounded-md cursor-pointer"
+                className="p-1 text-tenue hover:text-carbon rounded-md cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -447,25 +494,25 @@ export const GoogleMapsPanel: React.FC<GoogleMapsPanelProps> = ({
 
             {/* Practical Info Pill Grid */}
             <div className="grid grid-cols-2 gap-2 text-xs">
-              <div className="p-2 bg-stone-50 border border-stone-200 rounded-lg flex items-start gap-1.5">
-                <Clock className="w-3.5 h-3.5 text-stone-500 shrink-0 mt-0.5" />
+              <div className="p-2 bg-caliza border border-linea rounded-lg flex items-start gap-1.5">
+                <Clock className="w-3.5 h-3.5 text-tenue shrink-0 mt-0.5" />
                 <div>
-                  <span className="font-bold block text-[10px] text-stone-500 uppercase">{t.scheduleLabel}</span>
-                  <span className="text-stone-800 text-[11px] leading-tight">{activeInfoWindowPlace.schedule}</span>
+                  <span className="font-bold block text-[10px] text-tenue uppercase">{t.scheduleLabel}</span>
+                  <span className="text-carbon text-[11px] leading-tight">{activeInfoWindowPlace.schedule}</span>
                 </div>
               </div>
 
-              <div className="p-2 bg-stone-50 border border-stone-200 rounded-lg flex items-start gap-1.5">
-                <Coins className="w-3.5 h-3.5 text-stone-500 shrink-0 mt-0.5" />
+              <div className="p-2 bg-caliza border border-linea rounded-lg flex items-start gap-1.5">
+                <Coins className="w-3.5 h-3.5 text-tenue shrink-0 mt-0.5" />
                 <div>
-                  <span className="font-bold block text-[10px] text-stone-500 uppercase">{t.feeLabel}</span>
-                  <span className="text-stone-800 text-[11px] leading-tight">{activeInfoWindowPlace.fee}</span>
+                  <span className="font-bold block text-[10px] text-tenue uppercase">{t.feeLabel}</span>
+                  <span className="text-carbon text-[11px] leading-tight">{activeInfoWindowPlace.fee}</span>
                 </div>
               </div>
             </div>
 
             {/* Description */}
-            <p className="text-xs text-stone-700 leading-relaxed">
+            <p className="text-xs text-tenue leading-relaxed">
               {language === 'es'
                 ? activeInfoWindowPlace.descriptionEs
                 : activeInfoWindowPlace.descriptionEn}
@@ -473,8 +520,8 @@ export const GoogleMapsPanel: React.FC<GoogleMapsPanelProps> = ({
 
             {/* Nearby Walking Cluster / Combined Circuit Highlight */}
             {nearbyPlacesList.length > 0 && (
-              <div className="pt-2 border-t border-stone-200/80 space-y-1.5">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-stone-500">
+              <div className="pt-2 border-t border-linea/80 space-y-1.5">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-tenue">
                   {t.walkingCluster}
                 </span>
                 <div className="flex flex-wrap gap-1">
@@ -485,7 +532,7 @@ export const GoogleMapsPanel: React.FC<GoogleMapsPanelProps> = ({
                         onPlaceSelect(near);
                         setActiveInfoWindowPlace(near);
                       }}
-                      className="px-2 py-0.5 text-[11px] bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-md transition-colors cursor-pointer"
+                      className="px-2 py-0.5 text-[11px] bg-caliza hover:bg-linea text-tenue rounded-md transition-colors cursor-pointer"
                     >
                       {language === 'es' ? near.nameEs : near.name}
                     </button>
@@ -495,12 +542,12 @@ export const GoogleMapsPanel: React.FC<GoogleMapsPanelProps> = ({
             )}
 
             {/* Card Actions */}
-            <div className="pt-2 border-t border-stone-200/80 flex items-center justify-between gap-2">
+            <div className="pt-2 border-t border-linea/80 flex items-center justify-between gap-2">
               <a
                 href={activeInfoWindowPlace.officialUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-[11px] text-[#9A3412] hover:underline"
+                className="inline-flex items-center gap-1 text-[11px] text-cantera hover:underline"
               >
                 <span>{language === 'es' ? 'Ficha Oficial' : 'Official Portal'}</span>
                 <ExternalLink className="w-3 h-3" />
@@ -508,7 +555,7 @@ export const GoogleMapsPanel: React.FC<GoogleMapsPanelProps> = ({
 
               <button
                 onClick={() => onAskAboutPlace(activeInfoWindowPlace)}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-[#9A3412] hover:bg-[#78350F] text-white text-xs font-bold rounded-lg shadow-2xs transition-colors cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-cantera hover:brightness-95 text-sobre-cantera text-xs font-bold rounded-lg shadow-2xs transition-colors cursor-pointer"
               >
                 <MessageSquare className="w-3.5 h-3.5" />
                 <span>{t.askAboutThisPlace}</span>
@@ -521,30 +568,30 @@ export const GoogleMapsPanel: React.FC<GoogleMapsPanelProps> = ({
       {/* Key Edit Modal */}
       {showKeyModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
-          <div className="bg-white w-full max-w-md p-6 rounded-2xl shadow-2xl border border-stone-300 space-y-4">
+          <div className="bg-superficie w-full max-w-md p-6 rounded-2xl shadow-2xl border border-linea space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Key className="w-5 h-5 text-[#9A3412]" />
-                <h3 className="font-serif font-bold text-base text-stone-900">
+                <Key className="w-5 h-5 text-cantera" />
+                <h3 className="font-serif font-bold text-base text-carbon">
                   {language === 'es' ? 'Clave de Google Maps API' : 'Google Maps API Key'}
                 </h3>
               </div>
               <button
                 onClick={() => setShowKeyModal(false)}
-                className="p-1 text-stone-400 hover:text-stone-700 cursor-pointer"
+                className="p-1 text-tenue hover:text-carbon cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <p className="text-xs text-stone-600 leading-relaxed">
+            <p className="text-xs text-tenue leading-relaxed">
               {language === 'es'
                 ? 'La clave actual cargada en la aplicación se muestra a continuación. Puedes actualizarla o verificarla.'
                 : 'The current active API key is shown below. You can update or verify it.'}
             </p>
 
             <div className="space-y-1.5">
-              <label className="text-[11px] font-bold text-stone-500 uppercase tracking-wider block">
+              <label className="text-[11px] font-bold text-tenue uppercase tracking-wider block">
                 API Key
               </label>
               <input
@@ -552,14 +599,14 @@ export const GoogleMapsPanel: React.FC<GoogleMapsPanelProps> = ({
                 value={customKeyInput}
                 onChange={(e) => setCustomKeyInput(e.target.value)}
                 placeholder="AIzaSy..."
-                className="w-full px-3 py-2 text-xs font-mono border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9A3412]"
+                className="w-full px-3 py-2 text-xs font-mono border border-linea rounded-lg focus:outline-none focus:ring-2 focus:ring-cantera"
               />
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-stone-100">
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-linea">
               <button
                 onClick={() => setShowKeyModal(false)}
-                className="px-3 py-1.5 text-xs text-stone-600 hover:text-stone-900 cursor-pointer"
+                className="px-3 py-1.5 text-xs text-tenue hover:text-carbon cursor-pointer"
               >
                 {language === 'es' ? 'Cancelar' : 'Cancel'}
               </button>
@@ -576,7 +623,7 @@ export const GoogleMapsPanel: React.FC<GoogleMapsPanelProps> = ({
                   }
                   setShowKeyModal(false);
                 }}
-                className="px-4 py-1.5 text-xs font-bold text-white bg-[#9A3412] hover:bg-[#78350F] rounded-lg transition-colors cursor-pointer"
+                className="px-4 py-1.5 text-xs font-bold text-sobre-cantera bg-cantera hover:brightness-95 rounded-lg transition-colors cursor-pointer"
               >
                 {language === 'es' ? 'Guardar y Recargar' : 'Save & Reload'}
               </button>

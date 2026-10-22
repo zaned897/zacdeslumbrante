@@ -74,6 +74,7 @@ export const TRANSLATIONS = {
     badgeNewTitle: '¡Nueva insignia!',
     badgeNewCta: 'Genial',
     badgesSeasonal: 'De temporada',
+    mapLoading: 'Cargando mapa…',
     badgeSeasonEarned: 'Ganada el {date}',
     itineraryAskShort: 'Preguntar en el chat',
     
@@ -409,6 +410,7 @@ export const TRANSLATIONS = {
     badgeNewTitle: 'New badge!',
     badgeNewCta: 'Nice',
     badgesSeasonal: 'Seasonal',
+    mapLoading: 'Loading map…',
     badgeSeasonEarned: 'Earned on {date}',
     itineraryAskShort: 'Ask in chat',
     
