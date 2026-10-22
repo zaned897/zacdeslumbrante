@@ -28,6 +28,10 @@ export interface ScenePoi {
   kind: ScenePoiKind;
   title: Localized;
   summary?: Localized;
+  /** Línea corta sobre el título de la tarjeta, p. ej. "Música · cerca de Plaza de Armas". */
+  subtitle?: Localized;
+  /** Dato extra con ícono de reloj en la tarjeta, p. ej. cuándo suele verse un puesto. */
+  note?: Localized;
   lat: number;
   lng: number;
   /** Id en src/data/places.ts, si el punto es (o pertenece a) un lugar conocido. */

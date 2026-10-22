@@ -182,6 +182,11 @@ export const TRANSLATIONS = {
     view3dAsk: 'Preguntar al asistente',
     view3dNearby: 'Cerca de ti: {name}',
     view3dNearbyOpen: 'Ver',
+    view3dStopOf: 'Parada {i} de {n}',
+    view3dStopsCount: '{n} paradas',
+    view3dFound: 'Descubierto',
+    view3dRecommended: 'Recomendado para ti',
+    view3dNearestPlace: 'Lugar cerca: {name}, a {m} m',
   },
   en: {
     // App & Header
@@ -366,5 +371,10 @@ export const TRANSLATIONS = {
     view3dAsk: 'Ask the assistant',
     view3dNearby: 'Near you: {name}',
     view3dNearbyOpen: 'View',
+    view3dStopOf: 'Stop {i} of {n}',
+    view3dStopsCount: '{n} stops',
+    view3dFound: 'Discovered',
+    view3dRecommended: 'Recommended for you',
+    view3dNearestPlace: 'Place nearby: {name}, {m} m away',
   },
 };

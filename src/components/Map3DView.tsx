@@ -3,13 +3,16 @@ import {
   ArrowDown,
   ArrowLeft,
   ArrowUp,
+  Check,
   ChevronLeft,
   ChevronRight,
+  Clock,
   Footprints,
   Globe,
   Home,
   Layers,
   LocateFixed,
+  MapPin,
   MessageCircle,
   Play,
   RotateCcw,
@@ -37,6 +40,7 @@ type Status = 'loading' | 'ready' | 'error';
 
 const FLIGHT_MILLIS = 4500;
 const DISCOVER_RADIUS_M = 40;
+const NEAREST_HINT_M = 200;
 const AVATARS = ['minero', 'danzante', 'visitante'] as const;
 type AvatarId = (typeof AVATARS)[number];
 const AVATAR_STORAGE_KEY = 'zacatecas_avatar';
@@ -65,6 +69,11 @@ function resolveApiKey(): string {
   );
 }
 
+function placeName(placeId: string | undefined, language: Language): string {
+  const place = ZACATECAS_PLACES.find((p) => p.id === placeId);
+  return place ? (language === 'es' ? place.nameEs : place.name) : '';
+}
+
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 type GoogleAuthWindow = Window & { gm_authFailure?: () => void };
@@ -85,7 +94,8 @@ const Map3DScene: React.FC = () => {
   const [enabledLayers, setEnabledLayers] = useState<Set<string>>(DEFAULT_LAYERS);
   const [layerPois, setLayerPois] = useState<Record<string, ScenePoi[]>>({});
   const [selected, setSelected] = useState<ScenePoi | null>(null);
-  const [caption, setCaption] = useState<string | null>(null);
+  // Parada en curso del recorrido: alimenta la hoja con subtítulo y progreso.
+  const [tourStep, setTourStep] = useState<{ tour: Tour; index: number } | null>(null);
   const [isTouring, setIsTouring] = useState(false);
   const [tours, setTours] = useState<Tour[]>(TOURS_3D);
   const [tourId, setTourId] = useState<string | null>(null);
@@ -333,7 +343,7 @@ const Map3DScene: React.FC = () => {
     engineRef.current?.stop();
     engineRef.current?.setRoute(null);
     setIsTouring(false);
-    setCaption(null);
+    setTourStep(null);
   }, []);
 
   const playTour = useCallback(
@@ -347,8 +357,8 @@ const Map3DScene: React.FC = () => {
       setIsTouring(true);
       engine.setRoute(tour.stops.map((s) => ({ lat: s.camera.lat, lng: s.camera.lng })));
 
-      for (const stop of tour.stops) {
-        setCaption(stop.caption[language]);
+      for (const [index, stop] of tour.stops.entries()) {
+        setTourStep({ tour, index });
         await engine.flyTo(stop.camera, FLIGHT_MILLIS);
         if (!isCurrent()) return;
         await wait(stop.holdMillis);
@@ -360,10 +370,10 @@ const Map3DScene: React.FC = () => {
       await engine.flyTo(ZACATECAS_3D_HOME, FLIGHT_MILLIS);
       if (!isCurrent()) return;
       engine.setRoute(null);
-      setCaption(null);
+      setTourStep(null);
       setIsTouring(false);
     },
-    [language],
+    [],
   );
 
   const toggleExplore = () => {
@@ -393,6 +403,17 @@ const Map3DScene: React.FC = () => {
     ? ZACATECAS_PLACES.find((p) => p.id === selected.placeId)
     : undefined;
   const tour = tours.find((x) => x.id === tourId) ?? tours[0];
+  // Pista de juego: el lugar sin descubrir más cercano, si está a menos de NEAREST_HINT_M.
+  const nearestPlace = useMemo(() => {
+    if (!isExploring || !position) return null;
+    let best: { poi: ScenePoi; meters: number } | null = null;
+    for (const poi of placePois) {
+      if (!poi.placeId || collection[poi.placeId]) continue;
+      const meters = distanceMeters(position, poi);
+      if (meters <= NEAREST_HINT_M && (!best || meters < best.meters)) best = { poi, meters };
+    }
+    return best;
+  }, [isExploring, position, placePois, collection]);
   const photo = photos[photoIndex];
   const stepPhoto = (delta: number) =>
     setPhotoIndex((i) => (i + delta + photos.length) % photos.length);
@@ -482,7 +503,20 @@ const Map3DScene: React.FC = () => {
               style={{ width: `${placePois.length ? (discoveredCount / placePois.length) * 100 : 0}%` }}
             />
           </div>
+          {nearestPlace && (
+            <p className="mt-2 flex items-center gap-1.5 font-semibold text-[#B45309]">
+              <MapPin className="w-3.5 h-3.5 shrink-0" />
+              {t.view3dNearestPlace
+                .replace('{name}', nearestPlace.poi.title[language])
+                .replace('{m}', String(Math.round(nearestPlace.meters)))}
+            </p>
+          )}
           <p className="mt-2 text-stone-600">
+            {position?.source === 'gps' && position.accuracy !== null && (
+              <span className="mr-1.5 inline-flex items-center gap-1 px-1.5 py-px text-[10px] font-bold text-green-700 bg-green-100 rounded-full">
+                GPS ±{Math.round(position.accuracy)} m
+              </span>
+            )}
             {sourceText && <span className="font-semibold text-stone-800">{sourceText}. </span>}
             {fallbackReason && !isManual && fallbackText[fallbackReason]} {t.view3dTapToMove}
           </p>
@@ -578,18 +612,9 @@ const Map3DScene: React.FC = () => {
         </div>
       )}
 
-      {/* Subtítulo del recorrido */}
-      {caption && (
-        <div className="absolute inset-x-0 bottom-24 z-10 flex justify-center px-4 pointer-events-none">
-          <p className="max-w-xl text-center text-sm md:text-base font-medium text-white bg-stone-900/75 rounded-lg px-4 py-3">
-            {caption}
-          </p>
-        </div>
-      )}
-
       {/* Tarjeta del lugar */}
       {selected && !isTouring && (
-        <div className={`absolute inset-x-3 ${isExploring ? 'bottom-56 md:bottom-24 md:right-48' : 'bottom-32 md:right-4'} md:inset-x-auto md:w-80 z-10 max-h-[60dvh] overflow-y-auto bg-[#FBF9F5] rounded-xl shadow-lg border border-stone-200 p-4`}>
+        <div className={`absolute inset-x-3 ${isExploring ? 'bottom-56 md:bottom-24 md:right-48' : 'bottom-20 md:right-4'} md:inset-x-auto md:w-80 z-10 max-h-[62dvh] overflow-y-auto bg-[#FBF9F5] rounded-2xl shadow-lg border border-stone-200 p-4 ${selected.kind === 'vendor' ? 'border-t-4 border-t-[#E4007C]' : ''}`}>
           {photo && (
             <figure className="-mx-4 -mt-4 mb-3">
               <div className="relative aspect-video overflow-hidden rounded-t-xl bg-stone-200">
@@ -620,8 +645,10 @@ const Map3DScene: React.FC = () => {
                     >
                       <ChevronRight className="w-4 h-4" />
                     </button>
-                    <span className="absolute bottom-2 right-2 px-1.5 py-0.5 text-[10px] font-semibold text-white bg-stone-900/60 rounded">
-                      {photoIndex + 1}/{photos.length}
+                    <span className="absolute bottom-2 inset-x-0 flex justify-center gap-1" aria-hidden="true">
+                      {photos.map((p, i) => (
+                        <i key={p.id} className={`w-1.5 h-1.5 rounded-full ${i === photoIndex ? 'bg-white' : 'bg-white/55'}`} />
+                      ))}
                     </span>
                   </>
                 )}
@@ -635,8 +662,13 @@ const Map3DScene: React.FC = () => {
               </figcaption>
             </figure>
           )}
+          {(selected.subtitle || selected.kind === 'recommendation') && (
+            <p className={`text-[10px] font-bold uppercase tracking-wider ${selected.kind === 'vendor' ? 'text-[#E4007C]' : 'text-[#7C3AED]'}`}>
+              {selected.subtitle?.[language] ?? t.view3dRecommended}
+            </p>
+          )}
           <div className="flex items-start justify-between gap-2">
-            <h3 className="font-serif font-bold text-base text-[#9A3412]">
+            <h3 className="font-serif font-bold text-base leading-snug text-stone-900">
               {selected.icon && <span className="mr-1">{selected.icon}</span>}
               {selected.title[language]}
               {selected.isMock && (
@@ -645,21 +677,41 @@ const Map3DScene: React.FC = () => {
                 </span>
               )}
             </h3>
-            <button
-              onClick={() => setSelected(null)}
-              className="p-1 text-stone-500 hover:text-stone-900 cursor-pointer"
-              aria-label={t.view3dClose}
-            >
-              <X className="w-4 h-4" />
-            </button>
+            <div className="flex items-center gap-1 shrink-0">
+              {selected.placeId && collection[selected.placeId] && (
+                <span className="flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold text-green-700 bg-green-100 rounded-full whitespace-nowrap">
+                  <Check className="w-3 h-3" />
+                  {t.view3dFound}
+                </span>
+              )}
+              <button
+                onClick={() => setSelected(null)}
+                className="p-1 text-stone-500 hover:text-stone-900 cursor-pointer"
+                aria-label={t.view3dClose}
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
           </div>
-          {selected.summary && (
-            <p className="mt-2 text-xs leading-relaxed text-stone-700">{selected.summary[language]}</p>
+          {selected.summary &&
+            (selected.kind === 'vendor' ? (
+              <blockquote className="mt-2 pl-2 border-l-[3px] border-pink-200 font-serif italic font-semibold text-xs leading-relaxed text-stone-700">
+                {selected.summary[language]}
+              </blockquote>
+            ) : (
+              <p className="mt-2 text-xs leading-relaxed text-stone-700">{selected.summary[language]}</p>
+            ))}
+          {selected.note && (
+            <p className="mt-2 flex items-center gap-1.5 text-[11px] text-stone-500">
+              <Clock className="w-3.5 h-3.5 shrink-0" />
+              {selected.note[language]}
+            </p>
           )}
           {selectedPlace && (
             <>
-              <p className="mt-2 text-[11px] text-stone-500">
-                <span className="font-semibold">{t.scheduleLabel}</span> {selectedPlace.schedule}
+              <p className="mt-2 flex items-center gap-1.5 text-[11px] text-stone-500">
+                <Clock className="w-3.5 h-3.5 shrink-0" />
+                {selectedPlace.schedule}
               </p>
               <button
                 onClick={() => {
@@ -699,23 +751,47 @@ const Map3DScene: React.FC = () => {
         </div>
       )}
 
-      {/* Selector de recorrido (#34) */}
-      {status === 'ready' && !isTouring && !isExploring && tours.length > 1 && (
-        <div className="absolute inset-x-0 bottom-[4.5rem] z-10 flex justify-center px-4">
-          <label className="flex items-center gap-2 px-3 py-1.5 text-xs bg-[#FBF9F5]/95 border border-stone-200 rounded-full shadow-sm">
-            <span className="text-stone-500">{t.view3dTourPick}</span>
-            <select
-              value={tour?.id}
-              onChange={(e) => setTourId(e.target.value)}
-              className="max-w-[12rem] bg-transparent font-semibold text-stone-800 cursor-pointer focus:outline-none"
-            >
+      {/* Hoja del recorrido: elegir uno (#34) o seguir la parada en curso */}
+      {status === 'ready' && !isExploring && !selected && !askPlace && (isTouring ? tourStep : tours.length > 1) && (
+        <div className="absolute inset-x-3 bottom-20 md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:w-[28rem] z-10 bg-[#FBF9F5] rounded-2xl shadow-lg border border-stone-200 p-3">
+          {tourStep ? (
+            <>
+              <div className="flex items-center justify-between gap-2 text-[10px] font-bold uppercase tracking-wider text-[#9A3412]">
+                <span>
+                  {tourStep.tour.title[language]} · {t.view3dStopOf.replace('{i}', String(tourStep.index + 1)).replace('{n}', String(tourStep.tour.stops.length))}
+                </span>
+                <span className="truncate">{placeName(tourStep.tour.stops[tourStep.index]?.placeId, language)}</span>
+              </div>
+              <p className="mt-1.5 text-xs md:text-sm leading-relaxed text-stone-700">
+                {tourStep.tour.stops[tourStep.index]?.caption[language]}
+              </p>
+              <div className="mt-2 h-1.5 rounded-full bg-stone-200 overflow-hidden">
+                <div
+                  className="h-full bg-[#9A3412] transition-all duration-700"
+                  style={{ width: `${((tourStep.index + 1) / tourStep.tour.stops.length) * 100}%` }}
+                />
+              </div>
+            </>
+          ) : (
+            <div className="flex gap-2 overflow-x-auto" role="radiogroup" aria-label={t.view3dTourPick}>
               {tours.map((x) => (
-                <option key={x.id} value={x.id}>
-                  {x.title[language]}
-                </option>
+                <button
+                  key={x.id}
+                  role="radio"
+                  aria-checked={x.id === tour?.id}
+                  onClick={() => setTourId(x.id)}
+                  className={`flex-1 min-w-[7.5rem] text-left px-2.5 py-1.5 rounded-xl border cursor-pointer ${
+                    x.id === tour?.id ? 'border-[#9A3412] bg-[#FFF4EC]' : 'border-stone-200 bg-white hover:border-stone-300'
+                  }`}
+                >
+                  <span className="block text-xs font-bold leading-tight text-stone-900">{x.title[language]}</span>
+                  <span className="block text-[10px] text-stone-500">
+                    {t.view3dStopsCount.replace('{n}', String(x.stops.length))}
+                  </span>
+                </button>
               ))}
-            </select>
-          </label>
+            </div>
+          )}
         </div>
       )}
 
