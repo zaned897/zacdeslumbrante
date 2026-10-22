@@ -1,26 +1,25 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { progress } from '../progress/progressStore';
-import { readVisits, recordLegendaryFind, recordPlaceVisit } from './visits';
+import { readVisits, recordPlaceVisit } from './visits';
 import {
   adoptPet,
   cancelWalk,
   cuddle,
   feed,
-  setDesign,
+  isPetState,
   startWalk,
   tick,
-  toPetState,
-  type Design,
+  type PetColor,
   type PetEvent,
   type PetState,
   type SnackId,
-  type Species,
 } from './petEngine';
 
 const TICK_EVERY_MS = 60_000;
 
 function readPet(): PetState | null {
-  return toPetState(progress.read<unknown>('pet'));
+  const raw = progress.read<unknown>('pet');
+  return isPetState(raw) ? raw : null;
 }
 
 /** Estado de la mascota guardado en el almacén de progreso, con el reloj corriendo. */
@@ -79,11 +78,7 @@ export function usePet() {
     pet,
     events,
     clearEvents: useCallback(() => setEvents([]), []),
-    adopt: useCallback(
-      (name: string, species: Species, design: Design) => save(adoptPet(name, species, design, new Date())),
-      [save],
-    ),
-    setDesign: useCallback((design: Design) => update((p, now) => setDesign(p, design, now)), [update]),
+    adopt: useCallback((name: string, color: PetColor) => save(adoptPet(name, color, new Date())), [save]),
     feed: useCallback((snack: SnackId) => update((p, now) => feed(p, snack, now)), [update]),
     cuddle: useCallback(() => update(cuddle), [update]),
     startWalk: useCallback(
@@ -92,11 +87,7 @@ export function usePet() {
     ),
     cancelWalk: useCallback(() => update(cancelWalk), [update]),
     // PROTO: atajo de demo para jugar sin ir al centro; la visita real llega desde la Ciudad 3D.
-    simulateVisit: useCallback((placeId: string) => {
-      recordPlaceVisit(placeId);
-      // PROTO: `?meteorito` en la URL simula que la parada tenía el meteorito de temporada.
-      if (new URLSearchParams(window.location.search).has('meteorito')) recordLegendaryFind(placeId, new Date(Date.now() + 1));
-    }, []),
+    simulateVisit: useCallback((placeId: string) => recordPlaceVisit(placeId), []),
     release: useCallback(() => save(null), [save]),
   };
 }
