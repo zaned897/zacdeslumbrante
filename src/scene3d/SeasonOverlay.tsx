@@ -23,6 +23,17 @@ function PapelPicado() {
   );
 }
 
+/** Tira de bandera a cuadros de la Carrera Panamericana (#87). */
+function Checkers() {
+  return (
+    <div
+      className="absolute top-14 md:top-16 inset-x-0 h-3.5 z-[5] pointer-events-none shadow"
+      style={{ background: 'repeating-conic-gradient(#1C1917 0 25%, #fff 0 50%) 0 0 / 14px 14px' }}
+      aria-hidden="true"
+    />
+  );
+}
+
 interface Spark {
   x: number;
   y: number;
@@ -132,6 +143,7 @@ export function SeasonOverlay({ season, tintNight }: { season: Season; tintNight
       )}
       {season.fireworks && <Fireworks />}
       {season.papelPicado && <PapelPicado />}
+      {season.race && <Checkers />}
     </>
   );
 }

@@ -90,6 +90,8 @@ export interface SceneLayer {
 export interface SceneSeasonLook {
   night: boolean;
   petals: boolean;
+  /** Ruta de una carrera con autos clásicos que la recorren (Carrera Panamericana, #87). */
+  raceRoute?: Array<{ lat: number; lng: number }>;
 }
 
 /** Lo que sabe la vista al pedir los puntos de una capa. */

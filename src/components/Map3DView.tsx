@@ -27,6 +27,16 @@ import { TRANSLATIONS } from '../data/i18n';
 import { SEASONAL_TOURS_3D, TOURS_3D, ZACATECAS_3D_HOME, loadTours } from '../data/tours3d';
 import { activeSeason, type Season } from '../data/seasons';
 import { SeasonOverlay } from '../scene3d/SeasonOverlay';
+import {
+  BANDERA_A_CUADROS,
+  BANDERAZO,
+  DESFILE_ROUTE,
+  PANAMERICANA_SOURCE_URL,
+  PANAMERICANA_TEXT,
+  PREMIACION,
+  awardSeasonBadge,
+  readSeasonBadges,
+} from '../data/panamericana';
 import { ZACATECAS_PLACES } from '../data/places';
 import { SCENE_LAYERS } from '../scene3d/layers';
 import { createEngine, selectedEngineId, type EngineId } from '../scene3d/createEngine';
@@ -134,6 +144,11 @@ const Map3DScene: React.FC = () => {
   const [tours, setTours] = useState<Tour[]>(() => toursForSeason([...TOURS_3D, ...SEASONAL_TOURS_3D], season));
   const [meteorFound, setMeteorFound] = useState(meteorFoundToday);
   const [meteorCard, setMeteorCard] = useState(false);
+  // Misión de la Carrera Panamericana (#87): llegar al banderazo da la insignia y un meteorito.
+  const [raceBadgeCard, setRaceBadgeCard] = useState(false);
+  const [raceMissionDone, setRaceMissionDone] = useState(() =>
+    readSeasonBadges().some((b) => b.id === BANDERA_A_CUADROS.id),
+  );
   const [tourId, setTourId] = useState<string | null>(null);
   const [photos, setPhotos] = useState<PlacePhoto[]>([]);
   const [photoIndex, setPhotoIndex] = useState(0);
@@ -181,7 +196,8 @@ const Map3DScene: React.FC = () => {
   );
   // Meteorito legendario (#74): en fechas especiales cae en una parada del primer recorrido, distinta cada día.
   const meteor = useMemo<ScenePoi | null>(() => {
-    if (!season?.legendaryDrops || meteorFound) return null;
+    // En la carrera el meteorito lo da la misión del banderazo, no una parada.
+    if (!season?.legendaryDrops || season.race || meteorFound) return null;
     const stops = tours[0]?.stops ?? [];
     if (!stops.length) return null;
     const day = Math.floor(Date.now() / 86_400_000);
@@ -201,7 +217,38 @@ const Map3DScene: React.FC = () => {
       isMock: true,
     };
   }, [season, meteorFound, tours]);
-  const scenePois = useMemo(() => (meteor ? [...pois, meteor] : pois), [pois, meteor]);
+  const racePois = useMemo<ScenePoi[]>(() => {
+    if (!season?.race) return [];
+    const text = (k: 'view3dBanderazo' | 'view3dPremiacion') => ({ es: TRANSLATIONS.es[k], en: TRANSLATIONS.en[k] });
+    return [
+      {
+        id: 'panamericana-banderazo',
+        kind: 'challenge',
+        title: text('view3dBanderazo'),
+        subtitle: season.name,
+        summary: PANAMERICANA_TEXT.mission,
+        note: PANAMERICANA_TEXT.route,
+        ...BANDERAZO,
+        color: '#DC2626',
+        icon: '🏁',
+        isMock: true,
+      },
+      {
+        id: 'panamericana-premiacion',
+        kind: 'challenge',
+        title: text('view3dPremiacion'),
+        subtitle: season.name,
+        summary: PANAMERICANA_TEXT.premiacion,
+        ...PREMIACION,
+        color: '#DC2626',
+        icon: '🏆',
+      },
+    ];
+  }, [season]);
+  const scenePois = useMemo(
+    () => [...pois, ...racePois, ...(meteor ? [meteor] : [])],
+    [pois, racePois, meteor],
+  );
   const placePois = useMemo(() => pois.filter((p) => p.kind === 'place' && p.placeId), [pois]);
   const discoveredCount = placePois.filter((p) => p.placeId && collection[p.placeId]).length;
   const collectedCount = Object.keys(collection).length;
@@ -366,7 +413,9 @@ const Map3DScene: React.FC = () => {
   // Noche, pétalos y demás de la temporada. Google y Cesium no tienen noche propia: velo en SeasonOverlay.
   useEffect(() => {
     if (status !== 'ready') return;
-    engineRef.current?.setSeason?.(season ? { night: season.night, petals: season.petals } : null);
+    engineRef.current?.setSeason?.(
+      season ? { night: season.night, petals: season.petals, raceRoute: season.race ? DESFILE_ROUTE : undefined } : null,
+    );
   }, [season, status, engineId]);
 
   // Jugador: moverlo, seguirlo con la cámara y descubrir lugares cercanos.
@@ -408,7 +457,14 @@ const Map3DScene: React.FC = () => {
       setMeteorFound(true);
       setMeteorCard(true);
     }
-  }, [position, status, placePois, pois, collection, discover, t, language, meteor, season]);
+    if (season?.race && !raceMissionDone && distanceMeters(position, BANDERAZO) <= DISCOVER_RADIUS_M) {
+      setRaceMissionDone(true);
+      if (awardSeasonBadge(BANDERA_A_CUADROS)) {
+        recordLegendary('catedral-zacatecas', season.id);
+        setRaceBadgeCard(true);
+      }
+    }
+  }, [position, status, placePois, pois, collection, discover, t, language, meteor, season, raceMissionDone]);
 
   useEffect(() => {
     if (!nearby) return;
@@ -520,8 +576,24 @@ const Map3DScene: React.FC = () => {
             style={{ background: season.accent }}
           >
             {season.name[language]} · {season.dateLabel[language]}
-            <span className="font-semibold opacity-85">({t.view3dSeasonUnconfirmed})</span>
+            {season.provisional && <span className="font-semibold opacity-85">({t.view3dSeasonUnconfirmed})</span>}
           </p>
+        </div>
+      )}
+
+      {/* Misión de hoy en la Carrera Panamericana (#87) */}
+      {season?.race && status === 'ready' && !raceMissionDone && !selected && !(isExploring && nearby) && (
+        <div
+          className={`absolute ${isExploring ? 'bottom-52 md:bottom-24' : 'top-[10rem] md:top-40'} inset-x-3 md:inset-x-auto md:left-4 md:w-80 z-10 bg-[#FBF9F5] border-l-4 border-[#DC2626] rounded-xl shadow-lg p-3`}
+        >
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[#DC2626]">🏁 {t.view3dMissionToday}</p>
+            <span className="px-1 py-px text-[9px] font-bold uppercase text-white bg-[#D97706] rounded">{t.view3dDemoBadge}</span>
+          </div>
+          <p className="mt-1 text-[11px] leading-snug text-stone-700">{PANAMERICANA_TEXT.mission[language]}</p>
+          <a href={PANAMERICANA_SOURCE_URL} target="_blank" rel="noreferrer" className="mt-1 inline-block text-[10px] text-stone-500 underline">
+            {t.view3dSource}: Gobierno de Zacatecas
+          </a>
         </div>
       )}
 
@@ -569,9 +641,13 @@ const Map3DScene: React.FC = () => {
         <div className="absolute top-16 inset-x-3 md:inset-x-auto md:left-4 md:max-w-xs z-10 text-[11px] text-stone-700 bg-[#FBF9F5]/90 border border-stone-200 rounded-lg px-3 py-2">
           {engineFallback ? (
             <>
-              {engineFailure ? t.view3dEngineFailed : t.view3dKeyRejected}
-              {(engineFailure ?? keyErrorCode) && (
-                <span className="block mt-1 font-mono text-stone-500 break-words">{engineFailure ?? keyErrorCode}</span>
+              {/* Si Google avisó un error de la llave o del proyecto, esa es la causa: después de ese aviso
+                  la librería ya no crea marcadores y setPois falla con "reading 'keys'" (probado con 3.66). */}
+              {keyErrorCode || !engineFailure ? t.view3dKeyRejected : t.view3dEngineFailed}
+              {(keyErrorCode || engineFailure) && (
+                <span className="block mt-1 font-mono text-stone-500 break-words">
+                  {[keyErrorCode, engineFailure].filter(Boolean).join(' · ')}
+                </span>
               )}
             </>
           ) : apiKey ? (
@@ -726,6 +802,35 @@ const Map3DScene: React.FC = () => {
           >
             {t.view3dClose}
           </button>
+        </div>
+      )}
+
+      {/* Insignia de tiempo limitado al llegar al banderazo (#87) */}
+      {raceBadgeCard && (
+        <div className="absolute inset-0 z-30 grid place-items-center bg-stone-900/50 p-6">
+          <div className="w-full max-w-xs bg-[#FBF9F5] rounded-2xl shadow-xl p-5 text-center">
+            <div className="flex items-center justify-between">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-[#DC2626]">{t.view3dNewBadge}</p>
+              <span className="px-1 py-px text-[9px] font-bold uppercase text-white bg-[#D97706] rounded">{t.view3dDemoBadge}</span>
+            </div>
+            <span
+              className="mx-auto mt-4 block w-24 h-24 rounded-full -rotate-6 shadow-[0_0_0_5px_#DC2626,0_0_0_9px_#FECACA]"
+              style={{ background: 'repeating-conic-gradient(#1C1917 0 25%, #fff 0 50%) 0 0 / 24px 24px' }}
+              aria-hidden="true"
+            />
+            <p className="mt-4 text-lg font-extrabold text-stone-900">{BANDERA_A_CUADROS.title[language]}</p>
+            <p className="mt-1 text-xs text-stone-600">{BANDERA_A_CUADROS.detail[language]}</p>
+            <div className="mt-3 rounded-xl bg-[#F5F3FF] border border-[#DDD6FE] p-2 text-xs">
+              <p className="text-[9px] font-bold uppercase tracking-wider text-[#7C3AED]">{t.view3dSeasonResource}</p>
+              <p className="font-bold text-stone-900">☄️ {t.view3dMeteorLegendary}</p>
+            </div>
+            <button
+              onClick={() => setRaceBadgeCard(false)}
+              className="mt-4 w-full px-3 py-2 text-sm font-bold text-white bg-[#DC2626] rounded-full cursor-pointer hover:bg-[#B91C1C]"
+            >
+              {t.view3dClose}
+            </button>
+          </div>
         </div>
       )}
 

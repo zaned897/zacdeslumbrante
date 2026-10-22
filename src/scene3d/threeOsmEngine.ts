@@ -97,6 +97,10 @@ const NIGHT = {
 const PETAL_COLOR = '#F97316'; // cempasúchil
 const PETAL_COUNT = 2000;
 const PETAL_RADIUS_M = 450;
+// Autos clásicos de la Panamericana (#87): colores de época, tamaño exagerado para verse de lejos.
+const RACE_CAR_COLORS = ['#DC2626', '#F8FAFC', '#0EA5E9', '#FACC15', '#16A34A'];
+const RACE_CAR_SCALE = 3;
+const RACE_LAP_MILLIS = 22000;
 
 function toLocal(lat: number, lng: number): { x: number; z: number } {
   return { x: (lng - ORIGIN.lng) * M_PER_DEG_LNG, z: -(lat - ORIGIN.lat) * M_PER_DEG_LAT };
@@ -223,6 +227,10 @@ export class ThreeOsmEngine implements SceneEngine {
   private streetPoints: Array<{ x: number; z: number }> = [];
   private petals: THREE.InstancedMesh | null = null;
   private seasonLook: SceneSeasonLook | null = null;
+  private readonly reducedMotion =
+    typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  private raceParked = false;
+  private race: { group: THREE.Group; curve: THREE.CatmullRomCurve3; cars: THREE.Object3D[] } | null = null;
   private gltfLoaderPromise: Promise<typeof import('three/examples/jsm/loaders/GLTFLoader.js')> | null = null;
 
   async mount(container: HTMLElement, initial: SceneCamera): Promise<void> {
@@ -600,9 +608,74 @@ export class ThreeOsmEngine implements SceneEngine {
       this.buildingMaterial.emissive.set(night ? NIGHT.buildingGlow : '#000000');
       this.buildingMaterial.emissiveIntensity = night ? 0.12 : 0;
     }
+    this.setRace(T, scene, this.seasonLook?.raceRoute ?? null);
     const wantPetals = (this.seasonLook?.petals ?? false) && this.streetPoints.length > 0;
     if (wantPetals && !this.petals) this.petals = this.makePetals(T, scene);
     if (this.petals) this.petals.visible = wantPetals;
+  }
+
+  /** Ruta de la carrera a cuadros sobre el relieve y autos clásicos que la recorren en bucle. */
+  private setRace(T: Three, scene: THREE.Scene, route: Array<{ lat: number; lng: number }> | null): void {
+    if (this.race) {
+      scene.remove(this.race.group);
+      this.race.group.traverse((o) => {
+        if (o instanceof T.Mesh) o.geometry.dispose();
+      });
+      this.race = null;
+    }
+    this.raceParked = false;
+    if (!route || route.length < 2) return;
+    const local = route.map((p) => toLocal(p.lat, p.lng));
+    const path: THREE.Vector3[] = [];
+    local.forEach((a, i) => {
+      const b = local[i + 1];
+      const steps = b ? Math.max(1, Math.ceil(Math.hypot(b.x - a.x, b.z - a.z) / 8)) : 1;
+      for (let s = 0; s < steps; s++) {
+        const x = b ? a.x + ((b.x - a.x) * s) / steps : a.x;
+        const z = b ? a.z + ((b.z - a.z) * s) / steps : a.z;
+        path.push(new T.Vector3(x, this.heightAt(x, z) + 1, z));
+        if (!b) break;
+      }
+    });
+    const curve = new T.CatmullRomCurve3(path, false, 'catmullrom', 0.1);
+    const group = new T.Group();
+    // Franja a cuadros: segmentos alternos rojo y blanco.
+    const pieces = Math.max(8, Math.round(curve.getLength() / 10));
+    const red = new T.MeshBasicMaterial({ color: '#DC2626' });
+    const white = new T.MeshBasicMaterial({ color: '#FFFFFF' });
+    for (let i = 0; i < pieces; i++) {
+      const piece = new T.CatmullRomCurve3(
+        [curve.getPointAt(i / pieces), curve.getPointAt((i + 0.5) / pieces), curve.getPointAt((i + 1) / pieces)],
+        false,
+      );
+      group.add(new T.Mesh(new T.TubeGeometry(piece, 2, 2.2, 6, false), i % 2 ? white : red));
+    }
+    const cars = RACE_CAR_COLORS.map((color) => {
+      const car = new T.Group();
+      const body = new T.Mesh(new T.BoxGeometry(1.8, 0.9, 4.4), new T.MeshLambertMaterial({ color }));
+      body.position.y = 0.75;
+      const cabin = new T.Mesh(new T.BoxGeometry(1.5, 0.7, 2), new T.MeshLambertMaterial({ color: '#1C1917' }));
+      cabin.position.set(0, 1.5, -0.3);
+      car.add(body, cabin);
+      car.scale.setScalar(RACE_CAR_SCALE);
+      group.add(car);
+      return car;
+    });
+    scene.add(group);
+    this.race = { group, curve, cars };
+  }
+
+  private moveRaceCars(now: number): void {
+    const race = this.race;
+    if (!race) return;
+    const tangent = new (this.T as Three).Vector3();
+    race.cars.forEach((car, i) => {
+      const t = ((now / RACE_LAP_MILLIS + i / race.cars.length) % 1 + 1) % 1;
+      const p = race.curve.getPointAt(t);
+      race.curve.getTangentAt(t, tangent);
+      car.position.set(p.x, p.y, p.z);
+      car.rotation.y = Math.atan2(tangent.x, tangent.z);
+    });
   }
 
   /** PROTO: pétalos de cempasúchil repartidos al azar sobre las calles cercanas a la Catedral. */
@@ -643,6 +716,11 @@ export class ThreeOsmEngine implements SceneEngine {
       this.walkAction.paused = !walking;
     }
     this.mixer?.update(dt);
+    if (!this.reducedMotion) this.moveRaceCars(now);
+    else if (this.race && !this.raceParked) {
+      this.moveRaceCars(0);
+      this.raceParked = true;
+    }
     renderer.render(scene, camera);
     labels.render(scene, camera);
   }
