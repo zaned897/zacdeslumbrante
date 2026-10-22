@@ -12,7 +12,8 @@ Lo que funcionó en este repo, sin nada de Zacatecas, para copiar a otro proyect
 | `project-instructions.md` | Bloque para pegar en las instrucciones del proyecto en claude.ai |
 | `mcp/` | `.mcp.json` base y cómo dar los mismos MCP a Codex y al agente de frontend |
 | `LECCIONES.md` | Lo que salió mal y qué regla lo evita |
-| `install.sh` | Copia `template/` a otro repo sin pisar archivos |
+| `INTEGRAR.md` | Pasos para sumarlo a un proyecto que ya trabaja, sin romper sus flujos |
+| `install.sh` | Copia `template/` a otro repo sin pisar archivos (`--dry-run` para ver antes) |
 
 ### `template/`
 | Pieza | Para qué |
