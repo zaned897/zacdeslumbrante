@@ -1,7 +1,6 @@
 import type { Localized, SceneLayer, ScenePoi } from '../../types/scene3d';
 
-const COLLECTION_KEY = 'zacatecas_collection_v1';
-// PROTO: SceneLayer.load() no recibe la posición del jugador; se recomienda desde el centro.
+// Sin jugador (fuera del modo Explorar) se recomienda desde la Plaza de Armas.
 const ORIGIN = { lat: 22.7754, lng: -102.5724 };
 const RECOMMENDATION_COLOR = '#7C3AED';
 
@@ -9,24 +8,19 @@ interface RecommendationDto extends ScenePoi {
   reason: Localized;
 }
 
-function visitedIds(): string[] {
-  try {
-    return Object.keys(JSON.parse(localStorage.getItem(COLLECTION_KEY) || '{}'));
-  } catch {
-    return [];
-  }
-}
-
 /** Tres lugares cercanos no visitados, desde `GET /api/py/recommendations` (#24). */
 export const recommendationsLayer: SceneLayer = {
   id: 'recommendations',
   label: { es: 'Recomendaciones', en: 'Recommendations' },
   enabledByDefault: false,
-  async load() {
+  toggleable: true,
+  reloadOnDiscover: true,
+  async load(context) {
+    const from = context?.player ?? ORIGIN;
     const params = new URLSearchParams({
-      lat: String(ORIGIN.lat),
-      lng: String(ORIGIN.lng),
-      visited: visitedIds().join(','),
+      lat: String(from.lat),
+      lng: String(from.lng),
+      visited: (context?.visitedPlaceIds ?? []).join(','),
     });
     try {
       const res = await fetch(`/api/py/recommendations?${params}`, { signal: AbortSignal.timeout(3000) });
