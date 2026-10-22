@@ -20,7 +20,7 @@ export interface SceneCamera {
   heading: number;
 }
 
-export type ScenePoiKind = 'place' | 'photo' | 'recommendation' | 'challenge';
+export type ScenePoiKind = 'place' | 'photo' | 'recommendation' | 'challenge' | 'vendor';
 
 /** Punto que una capa pinta en la escena. */
 export interface ScenePoi {
