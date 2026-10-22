@@ -3,13 +3,16 @@ import {
   ArrowDown,
   ArrowLeft,
   ArrowUp,
+  Check,
   ChevronLeft,
   ChevronRight,
+  Clock,
   Footprints,
   Globe,
   Home,
   Layers,
   LocateFixed,
+  MapPin,
   MessageCircle,
   Play,
   RotateCcw,
@@ -21,10 +24,13 @@ import {
 import { Language, type Place } from '../types';
 import type { SceneEngine, SceneLayerContext, ScenePoi, Tour } from '../types/scene3d';
 import { TRANSLATIONS } from '../data/i18n';
-import { TOURS_3D, ZACATECAS_3D_HOME, loadTours } from '../data/tours3d';
+import { SEASONAL_TOURS_3D, TOURS_3D, ZACATECAS_3D_HOME, loadTours } from '../data/tours3d';
+import { activeSeason, type Season } from '../data/seasons';
+import { SeasonOverlay } from '../scene3d/SeasonOverlay';
 import { ZACATECAS_PLACES } from '../data/places';
 import { SCENE_LAYERS } from '../scene3d/layers';
 import { createEngine, selectedEngineId, type EngineId } from '../scene3d/createEngine';
+import { guardEngine } from '../scene3d/guardEngine';
 import { SceneStats, isStatsEnabled } from '../scene3d/SceneStats';
 import { distanceMeters } from '../scene3d/geo';
 import { usePlayerPosition, type FallbackReason } from '../scene3d/usePlayerPosition';
@@ -32,11 +38,45 @@ import { useCollection } from '../scene3d/useCollection';
 import { useAvatarControls, type AvatarAction } from '../scene3d/useAvatarControls';
 import { loadPlacePhotos, type PlacePhoto } from '../scene3d/placePhotos';
 import { MapAssistantSheet } from './app/MapAssistantSheet';
+import * as petVisits from '../pet/visits';
+
+const { recordPlaceVisit } = petVisits;
+
+/** Recorridos que tocan hoy: los de temporada solo en su temporada, y primero. */
+function toursForSeason(all: Tour[], season: Season | null): Tour[] {
+  const seasonal = all.filter((x) => x.season && x.season === season?.id);
+  return [...seasonal, ...all.filter((x) => !x.season)];
+}
+
+const todayKey = () => new Date().toISOString().slice(0, 10);
+const METEOR_STORAGE_KEY = 'zacatecas_meteorito';
+
+function meteorFoundToday(): boolean {
+  try {
+    return localStorage.getItem(METEOR_STORAGE_KEY) === todayKey();
+  } catch {
+    return false;
+  }
+}
+
+/** Avisa a la mascota (#65) que se encontró el meteorito en esa parada. */
+function recordLegendary(placeId: string, seasonId: string): void {
+  try {
+    localStorage.setItem(METEOR_STORAGE_KEY, todayKey());
+  } catch {
+    // Sin almacenamiento: vale solo en esta visita.
+  }
+  // PROTO: recordLegendaryFind llega con el PR de mascotas animales (#65); mientras no exista, un evento.
+  const record = (petVisits as unknown as Record<string, unknown>).recordLegendaryFind;
+  if (typeof record === 'function') (record as (id: string) => void)(placeId);
+  else window.dispatchEvent(new CustomEvent('zd:legendary-found', { detail: { placeId, seasonId, at: new Date().toISOString() } }));
+}
 
 type Status = 'loading' | 'ready' | 'error';
 
 const FLIGHT_MILLIS = 4500;
 const DISCOVER_RADIUS_M = 40;
+const NEAREST_HINT_M = 200;
 const AVATARS = ['minero', 'danzante', 'visitante'] as const;
 type AvatarId = (typeof AVATARS)[number];
 const AVATAR_STORAGE_KEY = 'zacatecas_avatar';
@@ -65,6 +105,11 @@ function resolveApiKey(): string {
   );
 }
 
+function placeName(placeId: string | undefined, language: Language): string {
+  const place = ZACATECAS_PLACES.find((p) => p.id === placeId);
+  return place ? (language === 'es' ? place.nameEs : place.name) : '';
+}
+
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 type GoogleAuthWindow = Window & { gm_authFailure?: () => void };
@@ -85,13 +130,21 @@ const Map3DScene: React.FC = () => {
   const [enabledLayers, setEnabledLayers] = useState<Set<string>>(DEFAULT_LAYERS);
   const [layerPois, setLayerPois] = useState<Record<string, ScenePoi[]>>({});
   const [selected, setSelected] = useState<ScenePoi | null>(null);
-  const [caption, setCaption] = useState<string | null>(null);
+  // Parada en curso del recorrido: alimenta la hoja con subtítulo y progreso.
+  const [tourStep, setTourStep] = useState<{ tour: Tour; index: number } | null>(null);
   const [isTouring, setIsTouring] = useState(false);
-  const [tours, setTours] = useState<Tour[]>(TOURS_3D);
+  // Temporada o fiesta de hoy (#68); fechas provisionales hasta confirmarlas.
+  const season = useMemo(() => activeSeason(new Date()), []);
+  const [tours, setTours] = useState<Tour[]>(() => toursForSeason([...TOURS_3D, ...SEASONAL_TOURS_3D], season));
+  const [meteorFound, setMeteorFound] = useState(meteorFoundToday);
+  const [meteorCard, setMeteorCard] = useState(false);
   const [tourId, setTourId] = useState<string | null>(null);
   const [photos, setPhotos] = useState<PlacePhoto[]>([]);
   const [photoIndex, setPhotoIndex] = useState(0);
   const [askPlace, setAskPlace] = useState<Place | null>(null);
+  const [nearby, setNearby] = useState<ScenePoi | null>(null);
+  // Puestos ya anunciados en esta visita: el aviso sale una sola vez por puesto.
+  const announcedRef = useRef(new Set<string>());
   const [isExploring, setIsExploring] = useState(false);
   const [avatar, setAvatar] = useState<AvatarId>(readAvatar);
   const [toast, setToast] = useState<string | null>(null);
@@ -103,6 +156,7 @@ const Map3DScene: React.FC = () => {
   // Si Google rechaza la llave o no hay 3D Tiles, se cae a la ciudad estilizada en vez de quedar en error.
   const [engineFallback, setEngineFallback] = useState<EngineId | null>(null);
   const [keyErrorCode, setKeyErrorCode] = useState<string | null>(null);
+  const [engineFailure, setEngineFailure] = useState<string | null>(null);
   const engineId = useMemo(
     () => engineFallback ?? selectedEngineId(Boolean(apiKey)),
     [apiKey, engineFallback],
@@ -129,6 +183,29 @@ const Map3DScene: React.FC = () => {
     () => SCENE_LAYERS.filter((l) => enabledLayers.has(l.id)).flatMap((l) => layerPois[l.id] ?? []),
     [enabledLayers, layerPois],
   );
+  // Meteorito legendario (#74): en fechas especiales cae en una parada del primer recorrido, distinta cada día.
+  const meteor = useMemo<ScenePoi | null>(() => {
+    if (!season?.legendaryDrops || meteorFound) return null;
+    const stops = tours[0]?.stops ?? [];
+    if (!stops.length) return null;
+    const day = Math.floor(Date.now() / 86_400_000);
+    const stop = stops[day % stops.length];
+    const place = ZACATECAS_PLACES.find((p) => p.id === stop.placeId);
+    return {
+      id: 'meteorito',
+      kind: 'challenge',
+      title: { es: TRANSLATIONS.es.view3dMeteorTitle, en: TRANSLATIONS.en.view3dMeteorTitle },
+      summary: { es: TRANSLATIONS.es.view3dMeteorSummary, en: TRANSLATIONS.en.view3dMeteorSummary },
+      subtitle: season.name,
+      lat: (place?.lat ?? stop.camera.lat) + 0.00015,
+      lng: (place?.lng ?? stop.camera.lng) + 0.00015,
+      placeId: stop.placeId,
+      color: '#4C1D95',
+      icon: '☄️',
+      isMock: true,
+    };
+  }, [season, meteorFound, tours]);
+  const scenePois = useMemo(() => (meteor ? [...pois, meteor] : pois), [pois, meteor]);
   const placePois = useMemo(() => pois.filter((p) => p.kind === 'place' && p.placeId), [pois]);
   const discoveredCount = placePois.filter((p) => p.placeId && collection[p.placeId]).length;
   const collectedCount = Object.keys(collection).length;
@@ -149,17 +226,27 @@ const Map3DScene: React.FC = () => {
 
   // Recorridos desde la API Python; si no responde, se quedan los de src/data/tours3d.ts.
   useEffect(() => {
-    void loadTours().then(setTours);
-  }, []);
+    void loadTours().then((all) => setTours(toursForSeason(all, season)));
+  }, [season]);
 
   // Montar el motor una sola vez.
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
-    const engine = createEngine(engineId, apiKey);
-    engineRef.current = engine;
     let cancelled = false;
+    const engine = guardEngine(createEngine(engineId, apiKey), (err, method) => {
+      console.error(`[Map3DView] ${engineId}.${method} falló`, err);
+      if (cancelled) return;
+      if (engineId === 'three') {
+        setErrorDetail(err instanceof Error ? err.message : String(err));
+        setStatus('error');
+        return;
+      }
+      setEngineFailure(`${method}: ${err instanceof Error ? err.message : String(err)}`);
+      setEngineFallback('three');
+    });
+    engineRef.current = engine;
     setStatus('loading');
     // Google avisa así de una llave inválida o de un dominio no autorizado (pinta "Oops! Something went wrong").
     const authWindow = window as GoogleAuthWindow;
@@ -253,31 +340,38 @@ const Map3DScene: React.FC = () => {
       return next;
     });
 
-  // Fotos del lugar seleccionado (#23).
+  // Fotos del lugar seleccionado (#23); las de la temporada activa primero (#75).
   const selectedPlaceId = selected?.placeId;
+  const seasonId = season?.id;
   useEffect(() => {
     setPhotos([]);
     setPhotoIndex(0);
     if (!selectedPlaceId) return;
     let cancelled = false;
-    void loadPlacePhotos(selectedPlaceId).then((list) => {
+    void loadPlacePhotos(selectedPlaceId, seasonId).then((list) => {
       if (!cancelled) setPhotos(list);
     });
     return () => {
       cancelled = true;
     };
-  }, [selectedPlaceId]);
+  }, [selectedPlaceId, seasonId]);
 
   // Repintar marcadores al cambiar puntos, idioma o colección (en exploración, lo no descubierto va en gris).
   useEffect(() => {
     if (status !== 'ready') return;
     const shown = isExploring
-      ? pois.map((p) =>
+      ? scenePois.map((p) =>
           p.kind === 'place' && p.placeId && !collection[p.placeId] ? { ...p, color: UNDISCOVERED_COLOR } : p,
         )
-      : pois;
+      : scenePois;
     engineRef.current?.setPois(shown, language);
-  }, [pois, language, status, isExploring, collection]);
+  }, [scenePois, language, status, isExploring, collection]);
+
+  // Noche, pétalos y demás de la temporada. Google y Cesium no tienen noche propia: velo en SeasonOverlay.
+  useEffect(() => {
+    if (status !== 'ready') return;
+    engineRef.current?.setSeason?.(season ? { night: season.night, petals: season.petals } : null);
+  }, [season, status, engineId]);
 
   // Jugador: moverlo, seguirlo con la cámara y descubrir lugares cercanos.
   useEffect(() => {
@@ -300,7 +394,35 @@ const Map3DScene: React.FC = () => {
       discover(found.placeId);
       setToast(t.view3dDiscovered.replace('{name}', found.title[language]));
     }
-  }, [position, status, placePois, collection, discover, t, language]);
+    // Regresar a un lugar ya descubierto también cuenta para los paseos de la mascota
+    // (recordPlaceVisit no repite el mismo lugar en 30 min).
+    const revisited = placePois.find(
+      (p) => p.placeId && collection[p.placeId] && distanceMeters(position, p) <= DISCOVER_RADIUS_M,
+    );
+    if (revisited?.placeId) recordPlaceVisit(revisited.placeId);
+    const heard = pois.find(
+      (p) => p.nearbyNotice && !announcedRef.current.has(p.id) && distanceMeters(position, p) <= DISCOVER_RADIUS_M,
+    );
+    if (heard) {
+      announcedRef.current.add(heard.id);
+      setNearby(heard);
+    }
+    if (meteor?.placeId && season && distanceMeters(position, meteor) <= DISCOVER_RADIUS_M) {
+      recordLegendary(meteor.placeId, season.id);
+      setMeteorFound(true);
+      setMeteorCard(true);
+    }
+  }, [position, status, placePois, pois, collection, discover, t, language, meteor, season]);
+
+  useEffect(() => {
+    if (!nearby) return;
+    const id = setTimeout(() => setNearby(null), 8000);
+    return () => clearTimeout(id);
+  }, [nearby]);
+
+  useEffect(() => {
+    if (!isExploring) setNearby(null);
+  }, [isExploring]);
 
   useEffect(() => {
     if (!toast) return;
@@ -313,7 +435,7 @@ const Map3DScene: React.FC = () => {
     engineRef.current?.stop();
     engineRef.current?.setRoute(null);
     setIsTouring(false);
-    setCaption(null);
+    setTourStep(null);
   }, []);
 
   const playTour = useCallback(
@@ -327,8 +449,8 @@ const Map3DScene: React.FC = () => {
       setIsTouring(true);
       engine.setRoute(tour.stops.map((s) => ({ lat: s.camera.lat, lng: s.camera.lng })));
 
-      for (const stop of tour.stops) {
-        setCaption(stop.caption[language]);
+      for (const [index, stop] of tour.stops.entries()) {
+        setTourStep({ tour, index });
         await engine.flyTo(stop.camera, FLIGHT_MILLIS);
         if (!isCurrent()) return;
         await wait(stop.holdMillis);
@@ -340,10 +462,10 @@ const Map3DScene: React.FC = () => {
       await engine.flyTo(ZACATECAS_3D_HOME, FLIGHT_MILLIS);
       if (!isCurrent()) return;
       engine.setRoute(null);
-      setCaption(null);
+      setTourStep(null);
       setIsTouring(false);
     },
-    [language],
+    [],
   );
 
   const toggleExplore = () => {
@@ -373,6 +495,17 @@ const Map3DScene: React.FC = () => {
     ? ZACATECAS_PLACES.find((p) => p.id === selected.placeId)
     : undefined;
   const tour = tours.find((x) => x.id === tourId) ?? tours[0];
+  // Pista de juego: el lugar sin descubrir más cercano, si está a menos de NEAREST_HINT_M.
+  const nearestPlace = useMemo(() => {
+    if (!isExploring || !position) return null;
+    let best: { poi: ScenePoi; meters: number } | null = null;
+    for (const poi of placePois) {
+      if (!poi.placeId || collection[poi.placeId]) continue;
+      const meters = distanceMeters(position, poi);
+      if (meters <= NEAREST_HINT_M && (!best || meters < best.meters)) best = { poi, meters };
+    }
+    return best;
+  }, [isExploring, position, placePois, collection]);
   const photo = photos[photoIndex];
   const stepPhoto = (delta: number) =>
     setPhotoIndex((i) => (i + delta + photos.length) % photos.length);
@@ -381,6 +514,20 @@ const Map3DScene: React.FC = () => {
     <div className="relative h-dvh w-full overflow-hidden bg-stone-900 text-stone-900">
       {/* isolate: las etiquetas CSS2D de three.js traen z-index propio y no deben tapar la UI. */}
       <div ref={containerRef} className="absolute inset-0 isolate" />
+      {season && status === 'ready' && <SeasonOverlay season={season} tintNight={engineId !== 'three'} />}
+
+      {/* Chip de la temporada (#68): siempre con "fechas por confirmar" hasta tener el calendario oficial. */}
+      {season && status === 'ready' && !isExploring && (
+        <div className="absolute top-[7.5rem] md:top-28 inset-x-0 z-10 flex justify-center px-3 pointer-events-none">
+          <p
+            className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-extrabold text-white rounded-full shadow-lg whitespace-nowrap"
+            style={{ background: season.accent }}
+          >
+            {season.name[language]} · {season.dateLabel[language]}
+            <span className="font-semibold opacity-85">({t.view3dSeasonUnconfirmed})</span>
+          </p>
+        </div>
+      )}
 
       {/* Barra superior */}
       <div className="absolute top-0 inset-x-0 z-10 flex items-center justify-between gap-2 p-3 md:p-4 pointer-events-none">
@@ -426,8 +573,10 @@ const Map3DScene: React.FC = () => {
         <div className="absolute top-16 inset-x-3 md:inset-x-auto md:left-4 md:max-w-xs z-10 text-[11px] text-stone-700 bg-[#FBF9F5]/90 border border-stone-200 rounded-lg px-3 py-2">
           {engineFallback ? (
             <>
-              {t.view3dKeyRejected}
-              {keyErrorCode && <span className="block mt-1 font-mono text-stone-500">{keyErrorCode}</span>}
+              {engineFailure ? t.view3dEngineFailed : t.view3dKeyRejected}
+              {(engineFailure ?? keyErrorCode) && (
+                <span className="block mt-1 font-mono text-stone-500 break-words">{engineFailure ?? keyErrorCode}</span>
+              )}
             </>
           ) : apiKey ? (
             t.view3dStylized
@@ -462,7 +611,20 @@ const Map3DScene: React.FC = () => {
               style={{ width: `${placePois.length ? (discoveredCount / placePois.length) * 100 : 0}%` }}
             />
           </div>
+          {nearestPlace && (
+            <p className="mt-2 flex items-center gap-1.5 font-semibold text-[#B45309]">
+              <MapPin className="w-3.5 h-3.5 shrink-0" />
+              {t.view3dNearestPlace
+                .replace('{name}', nearestPlace.poi.title[language])
+                .replace('{m}', String(Math.round(nearestPlace.meters)))}
+            </p>
+          )}
           <p className="mt-2 text-stone-600">
+            {position?.source === 'gps' && position.accuracy !== null && (
+              <span className="mr-1.5 inline-flex items-center gap-1 px-1.5 py-px text-[10px] font-bold text-green-700 bg-green-100 rounded-full">
+                GPS ±{Math.round(position.accuracy)} m
+              </span>
+            )}
             {sourceText && <span className="font-semibold text-stone-800">{sourceText}. </span>}
             {fallbackReason && !isManual && fallbackText[fallbackReason]} {t.view3dTapToMove}
           </p>
@@ -519,6 +681,58 @@ const Map3DScene: React.FC = () => {
         </div>
       )}
 
+      {/* Aviso al acercarse a un puesto de la vida de calle (#51) */}
+      {nearby?.nearbyNotice && isExploring && !selected && (
+        <div className="absolute inset-x-3 bottom-52 md:inset-x-auto md:left-4 md:bottom-24 md:w-80 z-10 flex items-center gap-3 bg-[#FBF9F5] border-2 border-[#E4007C] rounded-xl shadow-lg p-3">
+          <span className="grid place-items-center w-10 h-10 shrink-0 rounded-full bg-[#FCE7F3] text-xl motion-safe:animate-pulse">
+            {nearby.icon ?? '📍'}
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-bold text-stone-900">
+              {t.view3dNearby.replace('{name}', nearby.title[language])}
+              {nearby.isMock && (
+                <span className="ml-1.5 align-middle px-1 py-px text-[9px] font-bold uppercase text-white bg-[#D97706] rounded">
+                  {t.view3dDemoBadge}
+                </span>
+              )}
+            </p>
+            <p className="mt-0.5 text-[11px] italic leading-snug text-stone-600 line-clamp-2">
+              «{nearby.nearbyNotice[language]}»
+            </p>
+          </div>
+          <button
+            onClick={() => {
+              setSelected(nearby);
+              setNearby(null);
+            }}
+            className="shrink-0 px-2.5 py-1.5 text-xs font-bold text-white bg-[#E4007C] rounded-lg cursor-pointer hover:bg-[#BE0068]"
+          >
+            {t.view3dNearbyOpen}
+          </button>
+        </div>
+      )}
+
+      {/* Hallazgo del meteorito legendario (#74) */}
+      {meteorCard && season && (
+        <div className="absolute inset-x-3 bottom-52 md:inset-x-auto md:left-4 md:bottom-24 md:w-80 z-20 bg-[#FBF9F5] border-2 border-[#4C1D95] rounded-xl shadow-lg p-3">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[#4C1D95]">{t.view3dMeteorKicker} · {season.name[language]}</p>
+            <span className="px-1 py-px text-[9px] font-bold uppercase text-white bg-[#D97706] rounded">{t.view3dDemoBadge}</span>
+          </div>
+          <p className="mt-1 flex items-center gap-2 text-sm font-bold text-stone-900">
+            <span className="text-xl motion-safe:animate-bounce" aria-hidden="true">☄️</span>
+            {t.view3dMeteorFound}
+          </p>
+          <p className="mt-1 text-[11px] leading-snug text-stone-600">{t.view3dMeteorFoundBody}</p>
+          <button
+            onClick={() => setMeteorCard(false)}
+            className="mt-2 w-full px-2.5 py-1.5 text-xs font-bold text-white bg-[#4C1D95] rounded-lg cursor-pointer hover:bg-[#3B1673]"
+          >
+            {t.view3dClose}
+          </button>
+        </div>
+      )}
+
       {toast && (
         <div className="absolute inset-x-0 top-1/3 z-20 flex justify-center px-4 pointer-events-none">
           <p className="animate-bounce text-center text-sm md:text-base font-bold text-white bg-[#9A3412] rounded-full shadow-lg px-5 py-3">
@@ -527,18 +741,9 @@ const Map3DScene: React.FC = () => {
         </div>
       )}
 
-      {/* Subtítulo del recorrido */}
-      {caption && (
-        <div className="absolute inset-x-0 bottom-24 z-10 flex justify-center px-4 pointer-events-none">
-          <p className="max-w-xl text-center text-sm md:text-base font-medium text-white bg-stone-900/75 rounded-lg px-4 py-3">
-            {caption}
-          </p>
-        </div>
-      )}
-
       {/* Tarjeta del lugar */}
       {selected && !isTouring && (
-        <div className={`absolute inset-x-3 ${isExploring ? 'bottom-56 md:bottom-24 md:right-48' : 'bottom-32 md:right-4'} md:inset-x-auto md:w-80 z-10 max-h-[60dvh] overflow-y-auto bg-[#FBF9F5] rounded-xl shadow-lg border border-stone-200 p-4`}>
+        <div className={`absolute inset-x-3 ${isExploring ? 'bottom-56 md:bottom-24 md:right-48' : 'bottom-20 md:right-4'} md:inset-x-auto md:w-80 z-10 max-h-[62dvh] overflow-y-auto bg-[#FBF9F5] rounded-2xl shadow-lg border border-stone-200 p-4 ${selected.kind === 'vendor' ? 'border-t-4 border-t-[#E4007C]' : ''}`}>
           {photo && (
             <figure className="-mx-4 -mt-4 mb-3">
               <div className="relative aspect-video overflow-hidden rounded-t-xl bg-stone-200">
@@ -569,8 +774,10 @@ const Map3DScene: React.FC = () => {
                     >
                       <ChevronRight className="w-4 h-4" />
                     </button>
-                    <span className="absolute bottom-2 right-2 px-1.5 py-0.5 text-[10px] font-semibold text-white bg-stone-900/60 rounded">
-                      {photoIndex + 1}/{photos.length}
+                    <span className="absolute bottom-2 inset-x-0 flex justify-center gap-1" aria-hidden="true">
+                      {photos.map((p, i) => (
+                        <i key={p.id} className={`w-1.5 h-1.5 rounded-full ${i === photoIndex ? 'bg-white' : 'bg-white/55'}`} />
+                      ))}
                     </span>
                   </>
                 )}
@@ -584,23 +791,56 @@ const Map3DScene: React.FC = () => {
               </figcaption>
             </figure>
           )}
+          {(selected.subtitle || selected.kind === 'recommendation') && (
+            <p className={`text-[10px] font-bold uppercase tracking-wider ${selected.kind === 'vendor' ? 'text-[#E4007C]' : 'text-[#7C3AED]'}`}>
+              {selected.subtitle?.[language] ?? t.view3dRecommended}
+            </p>
+          )}
           <div className="flex items-start justify-between gap-2">
-            <h3 className="font-serif font-bold text-base text-[#9A3412]">{selected.title[language]}</h3>
-            <button
-              onClick={() => setSelected(null)}
-              className="p-1 text-stone-500 hover:text-stone-900 cursor-pointer"
-              aria-label={t.view3dClose}
-            >
-              <X className="w-4 h-4" />
-            </button>
+            <h3 className="font-serif font-bold text-base leading-snug text-stone-900">
+              {selected.icon && <span className="mr-1">{selected.icon}</span>}
+              {selected.title[language]}
+              {selected.isMock && (
+                <span className="ml-2 align-middle px-1.5 py-0.5 text-[10px] font-sans font-bold uppercase tracking-wider text-white bg-[#D97706] rounded">
+                  {t.view3dDemoBadge}
+                </span>
+              )}
+            </h3>
+            <div className="flex items-center gap-1 shrink-0">
+              {selected.placeId && collection[selected.placeId] && (
+                <span className="flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold text-green-700 bg-green-100 rounded-full whitespace-nowrap">
+                  <Check className="w-3 h-3" />
+                  {t.view3dFound}
+                </span>
+              )}
+              <button
+                onClick={() => setSelected(null)}
+                className="p-1 text-stone-500 hover:text-stone-900 cursor-pointer"
+                aria-label={t.view3dClose}
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
           </div>
-          {selected.summary && (
-            <p className="mt-2 text-xs leading-relaxed text-stone-700">{selected.summary[language]}</p>
+          {selected.summary &&
+            (selected.kind === 'vendor' ? (
+              <blockquote className="mt-2 pl-2 border-l-[3px] border-pink-200 font-serif italic font-semibold text-xs leading-relaxed text-stone-700">
+                {selected.summary[language]}
+              </blockquote>
+            ) : (
+              <p className="mt-2 text-xs leading-relaxed text-stone-700">{selected.summary[language]}</p>
+            ))}
+          {selected.note && (
+            <p className="mt-2 flex items-center gap-1.5 text-[11px] text-stone-500">
+              <Clock className="w-3.5 h-3.5 shrink-0" />
+              {selected.note[language]}
+            </p>
           )}
           {selectedPlace && (
             <>
-              <p className="mt-2 text-[11px] text-stone-500">
-                <span className="font-semibold">{t.scheduleLabel}</span> {selectedPlace.schedule}
+              <p className="mt-2 flex items-center gap-1.5 text-[11px] text-stone-500">
+                <Clock className="w-3.5 h-3.5 shrink-0" />
+                {selectedPlace.schedule}
               </p>
               <button
                 onClick={() => {
@@ -640,23 +880,52 @@ const Map3DScene: React.FC = () => {
         </div>
       )}
 
-      {/* Selector de recorrido (#34) */}
-      {status === 'ready' && !isTouring && !isExploring && tours.length > 1 && (
-        <div className="absolute inset-x-0 bottom-[4.5rem] z-10 flex justify-center px-4">
-          <label className="flex items-center gap-2 px-3 py-1.5 text-xs bg-[#FBF9F5]/95 border border-stone-200 rounded-full shadow-sm">
-            <span className="text-stone-500">{t.view3dTourPick}</span>
-            <select
-              value={tour?.id}
-              onChange={(e) => setTourId(e.target.value)}
-              className="max-w-[12rem] bg-transparent font-semibold text-stone-800 cursor-pointer focus:outline-none"
-            >
+      {/* Hoja del recorrido: elegir uno (#34) o seguir la parada en curso */}
+      {status === 'ready' && !isExploring && !selected && !askPlace && (isTouring ? tourStep : tours.length > 1) && (
+        <div className="absolute inset-x-3 bottom-20 md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:w-[28rem] z-10 bg-[#FBF9F5] rounded-2xl shadow-lg border border-stone-200 p-3">
+          {tourStep ? (
+            <>
+              <div className="flex items-center justify-between gap-2 text-[10px] font-bold uppercase tracking-wider text-[#9A3412]">
+                <span>
+                  {tourStep.tour.title[language]} · {t.view3dStopOf.replace('{i}', String(tourStep.index + 1)).replace('{n}', String(tourStep.tour.stops.length))}
+                </span>
+                <span className="truncate">{placeName(tourStep.tour.stops[tourStep.index]?.placeId, language)}</span>
+              </div>
+              <p className="mt-1.5 text-xs md:text-sm leading-relaxed text-stone-700">
+                {tourStep.tour.stops[tourStep.index]?.caption[language]}
+              </p>
+              <div className="mt-2 h-1.5 rounded-full bg-stone-200 overflow-hidden">
+                <div
+                  className="h-full bg-[#9A3412] transition-all duration-700"
+                  style={{ width: `${((tourStep.index + 1) / tourStep.tour.stops.length) * 100}%` }}
+                />
+              </div>
+            </>
+          ) : (
+            <div className="flex gap-2 overflow-x-auto" role="radiogroup" aria-label={t.view3dTourPick}>
               {tours.map((x) => (
-                <option key={x.id} value={x.id}>
-                  {x.title[language]}
-                </option>
+                <button
+                  key={x.id}
+                  role="radio"
+                  aria-checked={x.id === tour?.id}
+                  onClick={() => setTourId(x.id)}
+                  className={`flex-1 min-w-[7.5rem] text-left px-2.5 py-1.5 rounded-xl border cursor-pointer ${
+                    x.id === tour?.id ? 'border-[#9A3412] bg-[#FFF4EC]' : 'border-stone-200 bg-white hover:border-stone-300'
+                  }`}
+                >
+                  <span className="block text-xs font-bold leading-tight text-stone-900">{x.title[language]}</span>
+                  {x.season && (
+                    <span className="mt-0.5 inline-block px-1 py-px text-[9px] font-bold uppercase text-white bg-[#D97706] rounded">
+                      {t.view3dSeasonalTour} · {t.view3dDemoBadge}
+                    </span>
+                  )}
+                  <span className="block text-[10px] text-stone-500">
+                    {t.view3dStopsCount.replace('{n}', String(x.stops.length))}
+                  </span>
+                </button>
               ))}
-            </select>
-          </label>
+            </div>
+          )}
         </div>
       )}
 
@@ -767,6 +1036,12 @@ class Map3DErrorBoundary extends React.Component<{ children: React.ReactNode }, 
         <div className="max-w-sm text-center bg-[#FBF9F5] rounded-xl p-6 shadow-lg">
           <h2 className="font-serif font-bold text-lg mb-2">{t.view3dCrashTitle}</h2>
           <p className="text-xs text-stone-500 font-mono break-words">{error.message}</p>
+          {/* Primeras líneas de la pila: para que una captura baste para diagnosticar. */}
+          {error.stack && (
+            <pre className="mt-2 max-h-24 overflow-auto text-left text-[10px] leading-tight text-stone-400 whitespace-pre-wrap break-all">
+              {error.stack.split('\n').slice(0, 4).join('\n')}
+            </pre>
+          )}
           <div className="mt-4 flex flex-col gap-2">
             <button
               onClick={retryStylized}

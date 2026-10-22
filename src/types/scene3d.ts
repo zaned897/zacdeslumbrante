@@ -28,11 +28,19 @@ export interface ScenePoi {
   kind: ScenePoiKind;
   title: Localized;
   summary?: Localized;
+  /** Línea corta sobre el título de la tarjeta, p. ej. "Música · cerca de Plaza de Armas". */
+  subtitle?: Localized;
+  /** Dato extra con ícono de reloj en la tarjeta, p. ej. cuándo suele verse un puesto. */
+  note?: Localized;
   lat: number;
   lng: number;
   /** Id en src/data/places.ts, si el punto es (o pertenece a) un lugar conocido. */
   placeId?: string;
   color?: string;
+  /** Glifo corto (emoji) que el motor pone en el marcador, p. ej. la categoría de un puesto. */
+  icon?: string;
+  /** Si existe, Explorar lo muestra como aviso cuando el jugador se acerca (sin coleccionarlo). */
+  nearbyNotice?: Localized;
   /** true si el dato es de ejemplo; la UI muestra el badge "Demo". */
   isMock?: boolean;
 }
@@ -56,6 +64,8 @@ export interface Tour {
   id: string;
   title: Localized;
   stops: TourStop[];
+  /** Solo se ofrece durante esa temporada (id de src/data/seasons.ts). */
+  season?: string;
   _mock: true;
 }
 
@@ -74,6 +84,12 @@ export interface SceneLayer {
   /** Volver a cargar cuando el jugador descubre un lugar (p. ej. recomendaciones). */
   reloadOnDiscover?: boolean;
   load(context?: SceneLayerContext): Promise<ScenePoi[]>;
+}
+
+/** Lo que el motor necesita saber de la temporada activa. */
+export interface SceneSeasonLook {
+  night: boolean;
+  petals: boolean;
 }
 
 /** Lo que sabe la vista al pedir los puntos de una capa. */
@@ -106,5 +122,7 @@ export interface SceneEngine {
   setAvatar(src: string | null): void;
   /** Dibuja una línea sobre el terreno (p. ej. la ruta de un recorrido). */
   setRoute(points: Array<{ lat: number; lng: number }> | null): void;
+  /** Viste la escena según la temporada (#68); null = como siempre. Opcional: Google y Cesium usan un filtro CSS. */
+  setSeason?(look: SceneSeasonLook | null): void;
   destroy(): void;
 }
