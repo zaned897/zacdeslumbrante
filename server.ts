@@ -50,7 +50,11 @@ app.all('/api/py/*', async (req, res) => {
   try {
     const upstream = await fetch(target, {
       method: req.method,
-      headers: hasBody ? { 'content-type': req.get('content-type') || 'application/json' } : undefined,
+      headers: {
+        ...(hasBody ? { 'content-type': req.get('content-type') || 'application/json' } : {}),
+        // Sesión de cuentas (#53): FastAPI valida el token; Express solo lo reenvía.
+        ...(req.get('authorization') ? { authorization: req.get('authorization') as string } : {}),
+      },
       body: hasBody ? JSON.stringify(req.body ?? {}) : undefined,
       signal: AbortSignal.timeout(15000),
     });
