@@ -1,0 +1,66 @@
+name: Prototipo (boceto, mock, demo o PoC)
+description: Una entrega concreta y acotada que alguien puede tomar
+title: "[mock] "
+labels: ["status:triage"]
+body:
+  - type: dropdown
+    id: level
+    attributes:
+      label: Nivel
+      description: Ver la tabla de niveles en CONTRIBUTING.md
+      options:
+        - sketch — boceto, wireframe, diagrama
+        - mock — UI o endpoint con datos fijos
+        - demo — flujo presentable de punta a punta
+        - poc — prueba de viabilidad técnica
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Área
+      multiple: true
+      options:
+        - frontend
+        - backend-python
+        - backend-express
+        - data
+        - design
+        - docs
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Contexto
+      description: ¿Para quién es (turistas, locales, comercios) y por qué importa?
+    validations:
+      required: true
+  - type: textarea
+    id: deliverables
+    attributes:
+      label: Qué entregar
+      placeholder: |
+        - Endpoint GET /api/py/events que lee fixtures/events.json
+        - Tarjeta de evento en el panel lateral
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Criterios de aceptación
+      description: Verificables con un comando, una URL o una captura
+      placeholder: |
+        - [ ] `curl localhost:3000/api/py/events` devuelve 5 eventos con "_mock": true
+        - [ ] La UI muestra el badge "Demo"
+    validations:
+      required: true
+  - type: textarea
+    id: out_of_scope
+    attributes:
+      label: Fuera de alcance
+  - type: textarea
+    id: hints
+    attributes:
+      label: Pistas
+      description: Archivos relevantes, contrato en docs/API.md, skill aplicable

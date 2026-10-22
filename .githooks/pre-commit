@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# Calidad mínima antes de cada commit (personas y agentes). Saltar en emergencias: git commit --no-verify
+set -uo pipefail
+STAGED=$(git diff --cached --name-only --diff-filter=ACM)
+[ -z "$STAGED" ] && exit 0
+fail=0
+
+# 1. Secretos (patrones comunes de llaves) en lo que se agrega
+if git diff --cached -U0 --diff-filter=ACM | grep -E '^\+' | grep -v '^+++' |
+   grep -nE 'AIza[0-9A-Za-z_-]{35}|sk-(proj-|ant-)?[0-9A-Za-z_-]{20,}|ghp_[0-9A-Za-z]{36}|github_pat_[0-9A-Za-z_]{40,}|-----BEGIN [A-Z ]*PRIVATE KEY-----' ; then
+  echo "✗ Posible secreto en el commit (arriba). Muévelo a .env."; fail=1
+fi
+if echo "$STAGED" | grep -qE '(^|/)\.env($|\.)' && ! echo "$STAGED" | grep -qxE '(.*/)?\.env\.example'; then
+  echo "✗ No hagas commit de archivos .env"; fail=1
+fi
+
+# 2. TypeScript
+if echo "$STAGED" | grep -qE '\.(ts|tsx)$'; then
+  bun run --silent lint >/dev/null 2>&1 || { echo "✗ tsc falló: corre 'bun run lint'"; fail=1; }
+fi
+
+# 3. Python
+PY=$(echo "$STAGED" | grep -E '^services/api/.*\.py$' || true)
+if [ -n "$PY" ]; then
+  (cd services/api && uv run --quiet ruff check . && uv run --quiet ruff format --check .) >/dev/null 2>&1 ||
+    { echo "✗ ruff falló: cd services/api && uv run ruff check --fix . && uv run ruff format ."; fail=1; }
+fi
+
+[ $fail -eq 0 ] && echo "✓ pre-commit ok"
+exit $fail
