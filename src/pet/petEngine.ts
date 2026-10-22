@@ -8,9 +8,9 @@
 import type { PlaceVisit } from './visits';
 import { EMPTY_INVENTORY, dropsFor, rankOf, type Inventory, type ResourceId } from './resources';
 
-export type Species = 'gatito' | 'perrito' | 'burrito' | 'coyote' | 'tlacuache' | 'raton';
+export type Species = 'gatito' | 'perrito' | 'burrito' | 'coyote' | 'ratoncito' | 'raton';
 /** Los cinco que se eligen desde el principio. */
-export const SPECIES: Species[] = ['gatito', 'perrito', 'burrito', 'coyote', 'tlacuache'];
+export const SPECIES: Species[] = ['gatito', 'perrito', 'burrito', 'coyote', 'ratoncito'];
 /** El sexto (#71): el ratón de campo, que se gana al llegar a un Pueblo Mágico. */
 export const EARNED_SPECIES: Species = 'raton';
 const ALL_SPECIES: Species[] = [...SPECIES, EARNED_SPECIES];
@@ -286,7 +286,7 @@ function isV2(v: unknown): v is PetState {
   return (
     p.version === 2 &&
     typeof p.name === 'string' &&
-    ALL_SPECIES.includes(p.species) &&
+    (ALL_SPECIES.includes(p.species) || (p.species as string) === 'tlacuache') &&
     typeof p.mood === 'number' &&
     typeof p.energy === 'number' &&
     typeof p.inventory === 'object' && p.inventory !== null &&
@@ -299,7 +299,11 @@ function isV2(v: unknown): v is PetState {
 
 /** Valida y, si hace falta, migra lo leído del almacén (puede venir de otra versión o de la cuenta). */
 export function toPetState(v: unknown): PetState | null {
-  if (isV2(v)) return { ...v, inventory: { ...EMPTY_INVENTORY, ...v.inventory } };
+  if (isV2(v)) {
+    // El tlacuache se cambió por el ratoncito en la propuesta A: quien ya lo tenía, se queda con el ratoncito.
+    const species = (v.species as string) === 'tlacuache' ? 'ratoncito' : v.species;
+    return { ...v, species, inventory: { ...EMPTY_INVENTORY, ...v.inventory } };
+  }
   if (isV1(v)) {
     return {
       version: 2,
