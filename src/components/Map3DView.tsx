@@ -38,9 +38,8 @@ import { useCollection } from '../scene3d/useCollection';
 import { useAvatarControls, type AvatarAction } from '../scene3d/useAvatarControls';
 import { loadPlacePhotos, type PlacePhoto } from '../scene3d/placePhotos';
 import { MapAssistantSheet } from './app/MapAssistantSheet';
-import * as petVisits from '../pet/visits';
+import { recordLegendaryFind, recordPlaceVisit } from '../pet/visits';
 
-const { recordPlaceVisit } = petVisits;
 
 /** Recorridos que tocan hoy: los de temporada solo en su temporada, y primero. */
 function toursForSeason(all: Tour[], season: Season | null): Tour[] {
@@ -66,10 +65,7 @@ function recordLegendary(placeId: string, seasonId: string): void {
   } catch {
     // Sin almacenamiento: vale solo en esta visita.
   }
-  // PROTO: recordLegendaryFind llega con el PR de mascotas animales (#65); mientras no exista, un evento.
-  const record = (petVisits as unknown as Record<string, unknown>).recordLegendaryFind;
-  if (typeof record === 'function') (record as (id: string) => void)(placeId);
-  else window.dispatchEvent(new CustomEvent('zd:legendary-found', { detail: { placeId, seasonId, at: new Date().toISOString() } }));
+  recordLegendaryFind(placeId);
 }
 
 type Status = 'loading' | 'ready' | 'error';
