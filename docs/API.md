@@ -22,7 +22,28 @@ Respuestas: `400` si falta `message`. Si no, flujo SSE de líneas `data: ...`:
 ## Python (`/api/py/*` → FastAPI :8000)
 Express reenvía `/api/py/<ruta>` a `PY_API_URL/<ruta>`. Si Python no responde: `503 { "error": "python api offline" }`. Respuestas mock incluyen `"_mock": true`.
 
-(Aún sin endpoints; se agregan aquí al implementarse.)
+Arranque: `bun run dev:py` (o `./scripts/dev.sh` para web + Python).
+
+### GET /api/py/health
+`{ "status": "ok" }`
+
+### GET /api/py/challenges  · mock · dueño: Claude Code (#21)
+Retos e insignias para el modo juego. Datos en `services/api/app/fixtures/challenges.json`.
+```json
+{
+  "_mock": true,
+  "challenges": [
+    {
+      "id": "bajo-tierra",
+      "title": { "es": "Bajo tierra", "en": "Underground" },
+      "placeIds": ["mina-el-eden"],
+      "badge": { "id": "minero-de-plata", "name": { "es": "Minero de Plata", "en": "Silver Miner" }, "icon": "pickaxe" }
+    }
+  ]
+}
+```
+- `placeIds`: ids de `src/data/places.ts` (el test lo valida).
+- `badge.icon`: nombre de ícono de lucide (`landmark`, `mountain`, `pickaxe`…).
 
 ## Propuestas pendientes
 (Agrega aquí endpoints nuevos antes de implementarlos: método, ruta, body, respuesta, dueño.)
