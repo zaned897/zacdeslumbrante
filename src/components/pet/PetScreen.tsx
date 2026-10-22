@@ -30,7 +30,7 @@ interface PetScreenProps {
 
 const Bar: React.FC<{ label: string; value: number; tone: string }> = ({ label, value, tone }) => (
   <div className="space-y-1">
-    <div className="flex justify-between text-[11px] font-semibold text-stone-600">
+    <div className="flex justify-between text-[11px] font-semibold text-tenue">
       <span>{label}</span>
       <span className="font-mono">{Math.round(value)}</span>
     </div>
@@ -93,7 +93,7 @@ export const PetScreen: React.FC<PetScreenProps> = ({ language, onGoExplore }) =
           </div>
           <div className="space-y-1.5">
             <h1 className="font-serif font-bold text-2xl text-carbon">{t.petAdoptTitle}</h1>
-            <p className="text-sm text-stone-600">{t.petAdoptBody}</p>
+            <p className="text-sm text-tenue">{t.petAdoptBody}</p>
           </div>
           <form
             className="space-y-4 text-left"
@@ -103,16 +103,16 @@ export const PetScreen: React.FC<PetScreenProps> = ({ language, onGoExplore }) =
             }}
           >
             <label className="block space-y-1">
-              <span className="text-xs font-semibold text-stone-600">{t.petNameLabel}</span>
+              <span className="text-xs font-semibold text-tenue">{t.petNameLabel}</span>
               <input
                 value={name}
                 maxLength={20}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full rounded-xl border border-linea bg-white px-3 py-2.5 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-terracota"
+                className="w-full rounded-xl border border-linea bg-superficie px-3 py-2.5 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-terracota"
               />
             </label>
             <fieldset className="space-y-1">
-              <legend className="text-xs font-semibold text-stone-600">{t.petColorLabel}</legend>
+              <legend className="text-xs font-semibold text-tenue">{t.petColorLabel}</legend>
               <div className="grid grid-cols-3 gap-2" role="radiogroup">
                 {COLORS.map((c) => (
                   <button
@@ -122,7 +122,7 @@ export const PetScreen: React.FC<PetScreenProps> = ({ language, onGoExplore }) =
                     aria-checked={color === c}
                     onClick={() => setColor(c)}
                     className={`flex flex-col items-center gap-1 rounded-xl border py-2 text-xs font-semibold cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-terracota ${
-                      color === c ? 'border-cantera bg-caliza text-cantera' : 'border-linea bg-white text-stone-500 hover:bg-caliza'
+                      color === c ? 'border-cantera bg-caliza text-cantera' : 'border-linea bg-superficie text-tenue hover:bg-caliza'
                     }`}
                   >
                     <PetSprite color={c} mood="contento" tired={false} size={44} />
@@ -133,12 +133,12 @@ export const PetScreen: React.FC<PetScreenProps> = ({ language, onGoExplore }) =
             </fieldset>
             <button
               type="submit"
-              className="w-full py-3 rounded-xl bg-carbon text-white text-sm font-bold cursor-pointer hover:bg-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-terracota"
+              className="w-full py-3 rounded-xl bg-carbon text-papel text-sm font-bold cursor-pointer hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-terracota"
             >
               {t.petAdopt}
             </button>
           </form>
-          <p className="text-[11px] text-stone-500">{t.petSaveHint}</p>
+          <p className="text-[11px] text-tenue">{t.petSaveHint}</p>
         </div>
       </div>
     );
@@ -162,7 +162,7 @@ export const PetScreen: React.FC<PetScreenProps> = ({ language, onGoExplore }) =
   return (
     <div className="h-full overflow-y-auto bg-papel">
       <header
-        className="px-4 pb-4 bg-gradient-to-b from-cantera to-[#7C2D12] text-white"
+        className="px-4 pb-4 bg-gradient-to-b from-[#B4462C] to-[#7C2D12] text-white"
         style={{ paddingTop: 'max(1rem, env(safe-area-inset-top, 0px))' }}
       >
         <div className="mx-auto max-w-lg flex items-center justify-between">
@@ -180,16 +180,16 @@ export const PetScreen: React.FC<PetScreenProps> = ({ language, onGoExplore }) =
 
       <div className="mx-auto max-w-lg px-3 py-4 space-y-4">
         <section className="relative rounded-3xl bg-caliza border border-linea pt-5 pb-3 px-4 flex flex-col items-center">
-          <p className="relative max-w-[85%] text-center text-sm bg-white border border-linea rounded-2xl px-3 py-2 shadow-sm" aria-live="polite">
+          <p className="relative max-w-[85%] text-center text-sm bg-superficie border border-linea rounded-2xl px-3 py-2 shadow-sm" aria-live="polite">
             {speech}
-            <span className="absolute left-1/2 -bottom-1.5 w-3 h-3 -translate-x-1/2 rotate-45 bg-white border-r border-b border-linea" />
+            <span className="absolute left-1/2 -bottom-1.5 w-3 h-3 -translate-x-1/2 rotate-45 bg-superficie border-r border-b border-linea" />
           </p>
           <button type="button" onClick={cuddle} className="cursor-pointer rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-terracota" aria-label={t.petCuddle}>
             <PetSprite color={pet.color} mood={mood} tired={tired} walking={!!pet.walk} size={170} title={pet.name} />
           </button>
         </section>
 
-        <section className="space-y-2.5 rounded-2xl bg-white border border-linea p-3">
+        <section className="space-y-2.5 rounded-2xl bg-superficie border border-linea p-3">
           <Bar label={t.petMoodLabel} value={pet.mood} tone="bg-rosa" />
           <Bar label={t.petEnergyLabel} value={pet.energy} tone="bg-terracota" />
           <Bar label={`${t.petXpLabel} · ${t.petLevel.replace('{level}', String(level))}`} value={(xpInLevel / XP_PER_LEVEL) * 100} tone="bg-rec" />
@@ -200,7 +200,7 @@ export const PetScreen: React.FC<PetScreenProps> = ({ language, onGoExplore }) =
             type="button"
             onClick={() => setSnacksOpen((v) => !v)}
             aria-expanded={snacksOpen}
-            className="flex items-center justify-center gap-2 py-3 rounded-xl border border-linea bg-white text-sm font-bold cursor-pointer hover:bg-caliza focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-terracota"
+            className="flex items-center justify-center gap-2 py-3 rounded-xl border border-linea bg-superficie text-sm font-bold cursor-pointer hover:bg-caliza focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-terracota"
           >
             <UtensilsCrossed className="w-4 h-4 text-terracota" />
             {t.petFeed}
@@ -208,13 +208,13 @@ export const PetScreen: React.FC<PetScreenProps> = ({ language, onGoExplore }) =
           <button
             type="button"
             onClick={cuddle}
-            className="flex items-center justify-center gap-2 py-3 rounded-xl border border-linea bg-white text-sm font-bold cursor-pointer hover:bg-caliza focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-terracota"
+            className="flex items-center justify-center gap-2 py-3 rounded-xl border border-linea bg-superficie text-sm font-bold cursor-pointer hover:bg-caliza focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-terracota"
           >
             <Hand className="w-4 h-4 text-rosa" />
             {t.petCuddle}
           </button>
           {snacksOpen && (
-            <div className="col-span-2 rounded-2xl bg-white border border-linea p-2 space-y-2">
+            <div className="col-span-2 rounded-2xl bg-superficie border border-linea p-2 space-y-2">
               {feedable ? (
                 <div className="flex flex-wrap gap-1.5">
                   {(Object.keys(SNACKS) as SnackId[]).map((id) => (
@@ -227,12 +227,12 @@ export const PetScreen: React.FC<PetScreenProps> = ({ language, onGoExplore }) =
                       }}
                       className="px-3 py-1.5 rounded-full bg-caliza text-xs font-semibold cursor-pointer hover:bg-linea focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-terracota"
                     >
-                      {t[`petSnack_${id}`]} <span className="font-mono text-stone-500">+{SNACKS[id].energy}</span>
+                      {t[`petSnack_${id}`]} <span className="font-mono text-tenue">+{SNACKS[id].energy}</span>
                     </button>
                   ))}
                 </div>
               ) : (
-                <p className="text-xs text-stone-600 px-1">{t.petFedWait.replace('{min}', String(feedWaitMin))}</p>
+                <p className="text-xs text-tenue px-1">{t.petFedWait.replace('{min}', String(feedWaitMin))}</p>
               )}
             </div>
           )}
@@ -259,7 +259,7 @@ export const PetScreen: React.FC<PetScreenProps> = ({ language, onGoExplore }) =
                     <span className={`grid place-items-center w-5 h-5 rounded-full shrink-0 ${done ? 'bg-violet-600 text-white' : 'border border-violet-300 text-violet-400'}`}>
                       {done ? <Check className="w-3 h-3" /> : <MapPin className="w-3 h-3" />}
                     </span>
-                    <span className={`flex-1 ${done ? 'text-stone-400 line-through' : ''}`}>{placeName(id)}</span>
+                    <span className={`flex-1 ${done ? 'text-tenue line-through' : ''}`}>{placeName(id)}</span>
                     {!done && (
                       // PROTO: botón de demo para jugar sin ir al centro; se quita cuando haya misiones presenciales.
                       <button
@@ -278,7 +278,7 @@ export const PetScreen: React.FC<PetScreenProps> = ({ language, onGoExplore }) =
               <button
                 type="button"
                 onClick={onGoExplore}
-                className="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-carbon text-white text-sm font-bold cursor-pointer hover:bg-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-terracota"
+                className="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-carbon text-papel text-sm font-bold cursor-pointer hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-terracota"
               >
                 <Box className="w-4 h-4" />
                 {t.petWalkGo}
@@ -286,7 +286,7 @@ export const PetScreen: React.FC<PetScreenProps> = ({ language, onGoExplore }) =
               <button
                 type="button"
                 onClick={cancelWalk}
-                className="flex items-center gap-1.5 px-3 rounded-xl border border-violet-200 bg-white text-xs font-semibold text-violet-700 cursor-pointer hover:bg-violet-100"
+                className="flex items-center gap-1.5 px-3 rounded-xl border border-violet-200 bg-superficie text-xs font-semibold text-violet-700 cursor-pointer hover:bg-violet-100"
               >
                 <Home className="w-3.5 h-3.5" />
                 {t.petWalkCancel}
@@ -295,19 +295,19 @@ export const PetScreen: React.FC<PetScreenProps> = ({ language, onGoExplore }) =
           </section>
         ) : (
           <section className="space-y-2">
-            <h2 className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-stone-500">
+            <h2 className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-tenue">
               <Footprints className="w-3.5 h-3.5" />
               {t.petWalkTitle}
             </h2>
-            <p className="text-xs text-stone-600">{tired ? t.petWalkTooTired : t.petWalkPick}</p>
+            <p className="text-xs text-tenue">{tired ? t.petWalkTooTired : t.petWalkPick}</p>
             <ul className="space-y-2">
               {tours.map((tour) => {
                 const done = pet.completedWalks.includes(tour.id);
                 return (
-                  <li key={tour.id} className="flex items-center gap-3 rounded-2xl bg-white border border-linea p-3">
+                  <li key={tour.id} className="flex items-center gap-3 rounded-2xl bg-superficie border border-linea p-3">
                     <div className="flex-1 min-w-0">
                       <b className="block text-sm truncate">{tour.title[language]}</b>
-                      <small className="text-[11px] text-stone-500">
+                      <small className="text-[11px] text-tenue">
                         {t.petWalkStops.replace('{count}', String(new Set(tour.stops.map((s) => s.placeId)).size))}
                         {done && ' · ✓'}
                       </small>
@@ -316,7 +316,7 @@ export const PetScreen: React.FC<PetScreenProps> = ({ language, onGoExplore }) =
                       type="button"
                       disabled={tired}
                       onClick={() => startWalk(tour.id, tour.stops.map((s) => s.placeId))}
-                      className="px-4 py-2 rounded-xl bg-cantera text-white text-xs font-bold cursor-pointer hover:bg-cantera-2 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-terracota"
+                      className="px-4 py-2 rounded-xl bg-cantera text-sobre-cantera text-xs font-bold cursor-pointer hover:bg-cantera-2 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-terracota"
                     >
                       {t.petWalkStart}
                     </button>
@@ -328,20 +328,20 @@ export const PetScreen: React.FC<PetScreenProps> = ({ language, onGoExplore }) =
         )}
 
         <section className="rounded-2xl border border-dashed border-linea p-3 space-y-1">
-          <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-stone-500">
+          <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-tenue">
             <Sparkles className="w-3.5 h-3.5" />
             {t.petFutureTitle}
           </span>
-          <p className="text-xs text-stone-600">{t.petFutureBody}</p>
+          <p className="text-xs text-tenue">{t.petFutureBody}</p>
         </section>
 
-        <p className="text-[11px] text-stone-500 text-center">{t.petSaveHint}</p>
+        <p className="text-[11px] text-tenue text-center">{t.petSaveHint}</p>
         <button
           type="button"
           onClick={() => {
             if (window.confirm(t.petReleaseConfirm.replace('{name}', pet.name))) release();
           }}
-          className="mx-auto block text-[11px] text-stone-400 underline underline-offset-2 cursor-pointer hover:text-stone-600"
+          className="mx-auto block text-[11px] text-tenue underline underline-offset-2 cursor-pointer hover:text-carbon"
         >
           {t.petRelease}
         </button>
@@ -350,7 +350,7 @@ export const PetScreen: React.FC<PetScreenProps> = ({ language, onGoExplore }) =
       {toast && (
         <div
           role="status"
-          className="fixed left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full bg-carbon text-white text-sm font-semibold shadow-lg"
+          className="fixed left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full bg-carbon text-papel text-sm font-semibold shadow-lg"
           style={{ bottom: 'calc(var(--tabbar-h) + 1rem)' }}
         >
           {toast}

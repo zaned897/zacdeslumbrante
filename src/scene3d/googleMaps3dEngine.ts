@@ -107,6 +107,7 @@ export class GoogleMaps3dEngine implements SceneEngine {
           background: poi.color,
           borderColor: '#FFFFFF',
           glyphColor: '#FFFFFF',
+          ...(poi.icon ? { glyph: poi.icon } : {}),
         });
         marker.append(pin);
       }

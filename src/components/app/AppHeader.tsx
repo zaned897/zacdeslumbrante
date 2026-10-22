@@ -1,5 +1,5 @@
 import React from 'react';
-import { Globe, Map } from 'lucide-react';
+import { Map } from 'lucide-react';
 import { Language } from '../../types';
 import { TRANSLATIONS } from '../../data/i18n';
 
@@ -8,27 +8,32 @@ interface AppHeaderProps {
   onToggleLanguage: () => void;
   isMapOpen?: boolean;
   onToggleMap?: () => void;
+  /** Hueco a la derecha (p. ej. el avatar de la cuenta). */
+  trailing?: React.ReactNode;
 }
 
-export const AppHeader: React.FC<AppHeaderProps> = ({ language, onToggleLanguage, isMapOpen, onToggleMap }) => {
+const iconBtn =
+  'h-9 min-w-9 px-2.5 grid place-items-center rounded-full text-xs font-bold cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cantera';
+
+export const AppHeader: React.FC<AppHeaderProps> = ({ language, onToggleLanguage, isMapOpen, onToggleMap, trailing }) => {
   const t = TRANSLATIONS[language];
 
   return (
     <header
-      className="shrink-0 flex items-center gap-2.5 px-4 pb-2.5 bg-papel border-b border-linea"
+      className="shrink-0 flex items-center gap-2 px-4 pb-2 bg-papel/85 backdrop-blur-xl"
       style={{ paddingTop: 'max(0.75rem, env(safe-area-inset-top, 0px))' }}
     >
-      <div className="w-9 h-9 rounded-[10px] bg-cantera text-white grid place-items-center shrink-0">
-        <span className="font-serif font-bold text-lg leading-none">Z</span>
+      <div className="w-8 h-8 rounded-[10px] bg-cantera text-sobre-cantera grid place-items-center shrink-0">
+        <span className="font-extrabold text-base leading-none">Z</span>
       </div>
-      <div className="min-w-0 flex-1">
+      <div className="min-w-0 flex-1 leading-tight">
         <div className="flex items-center gap-1.5">
-          <span className="font-serif font-bold text-base leading-tight truncate">{t.appName}</span>
-          <span className="px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white bg-terracota rounded shrink-0">
+          <span className="font-extrabold text-[15px] tracking-tight truncate">{t.appName}</span>
+          <span className="px-1.5 py-px text-[9px] font-bold uppercase tracking-wider text-terracota border border-terracota/50 rounded-full shrink-0">
             {t.demoBadge}
           </span>
         </div>
-        <span className="block text-[11px] text-stone-500 truncate">{t.appTagline}</span>
+        <span className="block text-[11px] text-tenue truncate">{t.appTagline}</span>
       </div>
 
       {onToggleMap && (
@@ -36,12 +41,11 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ language, onToggleLanguage
           type="button"
           onClick={onToggleMap}
           aria-pressed={isMapOpen}
-          className={`h-9 px-2.5 flex items-center gap-1.5 rounded-[10px] text-xs font-bold shadow-xs border cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-terracota ${
-            isMapOpen ? 'bg-cantera text-white border-cantera' : 'bg-white text-cantera border-linea hover:bg-caliza'
-          }`}
+          aria-label={t.openMap2d}
+          title={t.openMap2d}
+          className={`${iconBtn} ${isMapOpen ? 'bg-carbon text-papel' : 'bg-caliza text-carbon hover:brightness-95'}`}
         >
           <Map className="w-4 h-4" />
-          <span className="hidden sm:inline">{t.openMap2d}</span>
         </button>
       )}
 
@@ -49,11 +53,11 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ language, onToggleLanguage
         type="button"
         onClick={onToggleLanguage}
         aria-label={t.toggleLanguage}
-        className="h-9 px-2.5 flex items-center gap-1 rounded-[10px] bg-white border border-linea shadow-xs text-xs font-bold cursor-pointer hover:bg-caliza focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-terracota"
+        className={`${iconBtn} bg-caliza text-carbon hover:brightness-95 uppercase`}
       >
-        <Globe className="w-4 h-4 text-cantera" />
-        <span className="uppercase">{language}</span>
+        {language}
       </button>
+      {trailing}
     </header>
   );
 };
