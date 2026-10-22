@@ -24,7 +24,9 @@ import {
 import { Language, type Place } from '../types';
 import type { SceneEngine, SceneLayerContext, ScenePoi, Tour } from '../types/scene3d';
 import { TRANSLATIONS } from '../data/i18n';
-import { TOURS_3D, ZACATECAS_3D_HOME, loadTours } from '../data/tours3d';
+import { SEASONAL_TOURS_3D, TOURS_3D, ZACATECAS_3D_HOME, loadTours } from '../data/tours3d';
+import { activeSeason, type Season } from '../data/seasons';
+import { SeasonOverlay } from '../scene3d/SeasonOverlay';
 import { ZACATECAS_PLACES } from '../data/places';
 import { SCENE_LAYERS } from '../scene3d/layers';
 import { createEngine, selectedEngineId, type EngineId } from '../scene3d/createEngine';
@@ -36,7 +38,39 @@ import { useCollection } from '../scene3d/useCollection';
 import { useAvatarControls, type AvatarAction } from '../scene3d/useAvatarControls';
 import { loadPlacePhotos, type PlacePhoto } from '../scene3d/placePhotos';
 import { MapAssistantSheet } from './app/MapAssistantSheet';
-import { recordPlaceVisit } from '../pet/visits';
+import * as petVisits from '../pet/visits';
+
+const { recordPlaceVisit } = petVisits;
+
+/** Recorridos que tocan hoy: los de temporada solo en su temporada, y primero. */
+function toursForSeason(all: Tour[], season: Season | null): Tour[] {
+  const seasonal = all.filter((x) => x.season && x.season === season?.id);
+  return [...seasonal, ...all.filter((x) => !x.season)];
+}
+
+const todayKey = () => new Date().toISOString().slice(0, 10);
+const METEOR_STORAGE_KEY = 'zacatecas_meteorito';
+
+function meteorFoundToday(): boolean {
+  try {
+    return localStorage.getItem(METEOR_STORAGE_KEY) === todayKey();
+  } catch {
+    return false;
+  }
+}
+
+/** Avisa a la mascota (#65) que se encontró el meteorito en esa parada. */
+function recordLegendary(placeId: string, seasonId: string): void {
+  try {
+    localStorage.setItem(METEOR_STORAGE_KEY, todayKey());
+  } catch {
+    // Sin almacenamiento: vale solo en esta visita.
+  }
+  // PROTO: recordLegendaryFind llega con el PR de mascotas animales (#65); mientras no exista, un evento.
+  const record = (petVisits as unknown as Record<string, unknown>).recordLegendaryFind;
+  if (typeof record === 'function') (record as (id: string) => void)(placeId);
+  else window.dispatchEvent(new CustomEvent('zd:legendary-found', { detail: { placeId, seasonId, at: new Date().toISOString() } }));
+}
 
 type Status = 'loading' | 'ready' | 'error';
 
@@ -99,7 +133,11 @@ const Map3DScene: React.FC = () => {
   // Parada en curso del recorrido: alimenta la hoja con subtítulo y progreso.
   const [tourStep, setTourStep] = useState<{ tour: Tour; index: number } | null>(null);
   const [isTouring, setIsTouring] = useState(false);
-  const [tours, setTours] = useState<Tour[]>(TOURS_3D);
+  // Temporada o fiesta de hoy (#68); fechas provisionales hasta confirmarlas.
+  const season = useMemo(() => activeSeason(new Date()), []);
+  const [tours, setTours] = useState<Tour[]>(() => toursForSeason([...TOURS_3D, ...SEASONAL_TOURS_3D], season));
+  const [meteorFound, setMeteorFound] = useState(meteorFoundToday);
+  const [meteorCard, setMeteorCard] = useState(false);
   const [tourId, setTourId] = useState<string | null>(null);
   const [photos, setPhotos] = useState<PlacePhoto[]>([]);
   const [photoIndex, setPhotoIndex] = useState(0);
@@ -145,6 +183,29 @@ const Map3DScene: React.FC = () => {
     () => SCENE_LAYERS.filter((l) => enabledLayers.has(l.id)).flatMap((l) => layerPois[l.id] ?? []),
     [enabledLayers, layerPois],
   );
+  // Meteorito legendario (#74): en fechas especiales cae en una parada del primer recorrido, distinta cada día.
+  const meteor = useMemo<ScenePoi | null>(() => {
+    if (!season?.legendaryDrops || meteorFound) return null;
+    const stops = tours[0]?.stops ?? [];
+    if (!stops.length) return null;
+    const day = Math.floor(Date.now() / 86_400_000);
+    const stop = stops[day % stops.length];
+    const place = ZACATECAS_PLACES.find((p) => p.id === stop.placeId);
+    return {
+      id: 'meteorito',
+      kind: 'challenge',
+      title: { es: TRANSLATIONS.es.view3dMeteorTitle, en: TRANSLATIONS.en.view3dMeteorTitle },
+      summary: { es: TRANSLATIONS.es.view3dMeteorSummary, en: TRANSLATIONS.en.view3dMeteorSummary },
+      subtitle: season.name,
+      lat: (place?.lat ?? stop.camera.lat) + 0.00015,
+      lng: (place?.lng ?? stop.camera.lng) + 0.00015,
+      placeId: stop.placeId,
+      color: '#4C1D95',
+      icon: '☄️',
+      isMock: true,
+    };
+  }, [season, meteorFound, tours]);
+  const scenePois = useMemo(() => (meteor ? [...pois, meteor] : pois), [pois, meteor]);
   const placePois = useMemo(() => pois.filter((p) => p.kind === 'place' && p.placeId), [pois]);
   const discoveredCount = placePois.filter((p) => p.placeId && collection[p.placeId]).length;
   const collectedCount = Object.keys(collection).length;
@@ -165,8 +226,8 @@ const Map3DScene: React.FC = () => {
 
   // Recorridos desde la API Python; si no responde, se quedan los de src/data/tours3d.ts.
   useEffect(() => {
-    void loadTours().then(setTours);
-  }, []);
+    void loadTours().then((all) => setTours(toursForSeason(all, season)));
+  }, [season]);
 
   // Montar el motor una sola vez.
   useEffect(() => {
@@ -298,12 +359,18 @@ const Map3DScene: React.FC = () => {
   useEffect(() => {
     if (status !== 'ready') return;
     const shown = isExploring
-      ? pois.map((p) =>
+      ? scenePois.map((p) =>
           p.kind === 'place' && p.placeId && !collection[p.placeId] ? { ...p, color: UNDISCOVERED_COLOR } : p,
         )
-      : pois;
+      : scenePois;
     engineRef.current?.setPois(shown, language);
-  }, [pois, language, status, isExploring, collection]);
+  }, [scenePois, language, status, isExploring, collection]);
+
+  // Noche, pétalos y demás de la temporada. Google y Cesium no tienen noche propia: velo en SeasonOverlay.
+  useEffect(() => {
+    if (status !== 'ready') return;
+    engineRef.current?.setSeason?.(season ? { night: season.night, petals: season.petals } : null);
+  }, [season, status, engineId]);
 
   // Jugador: moverlo, seguirlo con la cámara y descubrir lugares cercanos.
   useEffect(() => {
@@ -339,7 +406,12 @@ const Map3DScene: React.FC = () => {
       announcedRef.current.add(heard.id);
       setNearby(heard);
     }
-  }, [position, status, placePois, pois, collection, discover, t, language]);
+    if (meteor?.placeId && season && distanceMeters(position, meteor) <= DISCOVER_RADIUS_M) {
+      recordLegendary(meteor.placeId, season.id);
+      setMeteorFound(true);
+      setMeteorCard(true);
+    }
+  }, [position, status, placePois, pois, collection, discover, t, language, meteor, season]);
 
   useEffect(() => {
     if (!nearby) return;
@@ -441,6 +513,20 @@ const Map3DScene: React.FC = () => {
     <div className="relative h-dvh w-full overflow-hidden bg-stone-900 text-stone-900">
       {/* isolate: las etiquetas CSS2D de three.js traen z-index propio y no deben tapar la UI. */}
       <div ref={containerRef} className="absolute inset-0 isolate" />
+      {season && status === 'ready' && <SeasonOverlay season={season} tintNight={engineId !== 'three'} />}
+
+      {/* Chip de la temporada (#68): siempre con "fechas por confirmar" hasta tener el calendario oficial. */}
+      {season && status === 'ready' && !isExploring && (
+        <div className="absolute top-[7.5rem] md:top-28 inset-x-0 z-10 flex justify-center px-3 pointer-events-none">
+          <p
+            className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-extrabold text-white rounded-full shadow-lg whitespace-nowrap"
+            style={{ background: season.accent }}
+          >
+            {season.name[language]} · {season.dateLabel[language]}
+            <span className="font-semibold opacity-85">({t.view3dSeasonUnconfirmed})</span>
+          </p>
+        </div>
+      )}
 
       {/* Barra superior */}
       <div className="absolute top-0 inset-x-0 z-10 flex items-center justify-between gap-2 p-3 md:p-4 pointer-events-none">
@@ -621,6 +707,27 @@ const Map3DScene: React.FC = () => {
             className="shrink-0 px-2.5 py-1.5 text-xs font-bold text-white bg-[#E4007C] rounded-lg cursor-pointer hover:bg-[#BE0068]"
           >
             {t.view3dNearbyOpen}
+          </button>
+        </div>
+      )}
+
+      {/* Hallazgo del meteorito legendario (#74) */}
+      {meteorCard && season && (
+        <div className="absolute inset-x-3 bottom-52 md:inset-x-auto md:left-4 md:bottom-24 md:w-80 z-20 bg-[#FBF9F5] border-2 border-[#4C1D95] rounded-xl shadow-lg p-3">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[#4C1D95]">{t.view3dMeteorKicker} · {season.name[language]}</p>
+            <span className="px-1 py-px text-[9px] font-bold uppercase text-white bg-[#D97706] rounded">{t.view3dDemoBadge}</span>
+          </div>
+          <p className="mt-1 flex items-center gap-2 text-sm font-bold text-stone-900">
+            <span className="text-xl motion-safe:animate-bounce" aria-hidden="true">☄️</span>
+            {t.view3dMeteorFound}
+          </p>
+          <p className="mt-1 text-[11px] leading-snug text-stone-600">{t.view3dMeteorFoundBody}</p>
+          <button
+            onClick={() => setMeteorCard(false)}
+            className="mt-2 w-full px-2.5 py-1.5 text-xs font-bold text-white bg-[#4C1D95] rounded-lg cursor-pointer hover:bg-[#3B1673]"
+          >
+            {t.view3dClose}
           </button>
         </div>
       )}
@@ -806,6 +913,11 @@ const Map3DScene: React.FC = () => {
                   }`}
                 >
                   <span className="block text-xs font-bold leading-tight text-stone-900">{x.title[language]}</span>
+                  {x.season && (
+                    <span className="mt-0.5 inline-block px-1 py-px text-[9px] font-bold uppercase text-white bg-[#D97706] rounded">
+                      {t.view3dSeasonalTour} · {t.view3dDemoBadge}
+                    </span>
+                  )}
                   <span className="block text-[10px] text-stone-500">
                     {t.view3dStopsCount.replace('{n}', String(x.stops.length))}
                   </span>

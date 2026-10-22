@@ -3,7 +3,7 @@ import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import type { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import type { CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
 import type { Language } from '../types';
-import type { SceneCamera, SceneEngine, ScenePlayer, ScenePoi } from '../types/scene3d';
+import type { SceneCamera, SceneEngine, ScenePlayer, ScenePoi, SceneSeasonLook } from '../types/scene3d';
 
 type Three = typeof THREE;
 
@@ -83,6 +83,20 @@ const COLORS = {
   building: '#C98B78', // cantera rosa
   route: '#E11D48',
 };
+
+// Noche de temporada (#73, #74): cielo morado oscuro y cantera iluminada desde dentro.
+const NIGHT = {
+  sky: '#1E1B3A',
+  hemiSky: '#6D5BD0',
+  hemiGround: '#3B2A22',
+  hemiIntensity: 1.0,
+  sun: '#C7D2FE',
+  sunIntensity: 0.45,
+  buildingGlow: '#7C2D12',
+};
+const PETAL_COLOR = '#F97316'; // cempasúchil
+const PETAL_COUNT = 2000;
+const PETAL_RADIUS_M = 450;
 
 function toLocal(lat: number, lng: number): { x: number; z: number } {
   return { x: (lng - ORIGIN.lng) * M_PER_DEG_LNG, z: -(lat - ORIGIN.lat) * M_PER_DEG_LAT };
@@ -203,6 +217,12 @@ export class ThreeOsmEngine implements SceneEngine {
   private animation: { step: (now: number) => boolean; resolve: () => void } | null = null;
   private current: SceneCamera | null = null;
   private readyPromise: Promise<void> = Promise.resolve();
+  private hemi: THREE.HemisphereLight | null = null;
+  private sun: THREE.DirectionalLight | null = null;
+  private buildingMaterial: THREE.MeshLambertMaterial | null = null;
+  private streetPoints: Array<{ x: number; z: number }> = [];
+  private petals: THREE.InstancedMesh | null = null;
+  private seasonLook: SceneSeasonLook | null = null;
   private gltfLoaderPromise: Promise<typeof import('three/examples/jsm/loaders/GLTFLoader.js')> | null = null;
 
   async mount(container: HTMLElement, initial: SceneCamera): Promise<void> {
@@ -232,10 +252,13 @@ export class ThreeOsmEngine implements SceneEngine {
     const scene = new T.Scene();
     scene.background = new T.Color(COLORS.sky);
     scene.fog = new T.Fog(COLORS.sky, 1200, 3500);
-    scene.add(new T.HemisphereLight('#FFF7ED', '#B8A48C', 1.6));
+    const hemi = new T.HemisphereLight('#FFF7ED', '#B8A48C', 1.6);
+    scene.add(hemi);
+    this.hemi = hemi;
     const sun = new T.DirectionalLight('#FFFFFF', 1.8);
     sun.position.set(-600, 900, 400);
     scene.add(sun);
+    this.sun = sun;
     this.scene = scene;
 
     const [terrain, response, roads] = await Promise.all([
@@ -308,8 +331,10 @@ export class ThreeOsmEngine implements SceneEngine {
     const merged = mergeGeometries(geometries, false);
     geometries.forEach((g) => g.dispose());
     if (merged) {
-      scene.add(new T.Mesh(merged, new T.MeshLambertMaterial({ color: COLORS.building })));
+      this.buildingMaterial = new T.MeshLambertMaterial({ color: COLORS.building });
+      scene.add(new T.Mesh(merged, this.buildingMaterial));
     }
+    this.applySeason();
 
     const attribution = document.createElement('div');
     attribution.textContent = `© colaboradores de OpenStreetMap · Overture Maps · ${data.license.split(' (')[0]}${terrain ? ' · Relieve: Mapzen/SRTM' : ''}`;
@@ -526,6 +551,7 @@ export class ThreeOsmEngine implements SceneEngine {
         for (let s = 0; s < steps; s++) pts.push({ x: a.x + ((b.x - a.x) * s) / steps, z: a.z + ((b.z - a.z) * s) / steps });
       });
       if (pts.length < 2) continue;
+      for (const p of pts) if (Math.hypot(p.x, p.z) < PETAL_RADIUS_M) this.streetPoints.push(p);
       const start = positions.length / 3;
       pts.forEach((p, i) => {
         const prev = pts[Math.max(i - 1, 0)];
@@ -551,6 +577,55 @@ export class ThreeOsmEngine implements SceneEngine {
     geometry.setIndex(indices);
     geometry.computeVertexNormals();
     return geometry;
+  }
+
+  setSeason(look: SceneSeasonLook | null): void {
+    this.seasonLook = look;
+    this.applySeason();
+  }
+
+  private applySeason(): void {
+    const { T, scene, hemi, sun } = this;
+    if (!T || !scene || !hemi || !sun) return;
+    const night = this.seasonLook?.night ?? false;
+    const sky = night ? NIGHT.sky : COLORS.sky;
+    scene.background = new T.Color(sky);
+    if (scene.fog instanceof T.Fog) scene.fog.color.set(sky);
+    hemi.color.set(night ? NIGHT.hemiSky : '#FFF7ED');
+    hemi.groundColor.set(night ? NIGHT.hemiGround : '#B8A48C');
+    hemi.intensity = night ? NIGHT.hemiIntensity : 1.6;
+    sun.color.set(night ? NIGHT.sun : '#FFFFFF');
+    sun.intensity = night ? NIGHT.sunIntensity : 1.8;
+    if (this.buildingMaterial) {
+      this.buildingMaterial.emissive.set(night ? NIGHT.buildingGlow : '#000000');
+      this.buildingMaterial.emissiveIntensity = night ? 0.12 : 0;
+    }
+    const wantPetals = (this.seasonLook?.petals ?? false) && this.streetPoints.length > 0;
+    if (wantPetals && !this.petals) this.petals = this.makePetals(T, scene);
+    if (this.petals) this.petals.visible = wantPetals;
+  }
+
+  /** PROTO: pétalos de cempasúchil repartidos al azar sobre las calles cercanas a la Catedral. */
+  private makePetals(T: Three, scene: THREE.Scene): THREE.InstancedMesh {
+    const geometry = new T.CircleGeometry(3, 8).rotateX(-Math.PI / 2);
+    const material = new T.MeshLambertMaterial({ color: PETAL_COLOR, emissive: PETAL_COLOR, emissiveIntensity: 0.9 });
+    const mesh = new T.InstancedMesh(geometry, material, PETAL_COUNT);
+    const m = new T.Matrix4();
+    const q = new T.Quaternion();
+    const up = new T.Vector3(0, 1, 0);
+    const pos = new T.Vector3();
+    const scale = new T.Vector3();
+    for (let i = 0; i < PETAL_COUNT; i++) {
+      const p = this.streetPoints[Math.floor(Math.random() * this.streetPoints.length)];
+      const x = p.x + (Math.random() - 0.5) * 5;
+      const z = p.z + (Math.random() - 0.5) * 5;
+      q.setFromAxisAngle(up, Math.random() * Math.PI);
+      const s = 0.6 + Math.random() * 0.9;
+      m.compose(pos.set(x, this.heightAt(x, z) + 0.6, z), q, scale.set(s, 1, s));
+      mesh.setMatrixAt(i, m);
+    }
+    scene.add(mesh);
+    return mesh;
   }
 
   private heightAt(x: number, z: number): number {

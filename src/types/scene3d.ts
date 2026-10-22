@@ -64,6 +64,8 @@ export interface Tour {
   id: string;
   title: Localized;
   stops: TourStop[];
+  /** Solo se ofrece durante esa temporada (id de src/data/seasons.ts). */
+  season?: string;
   _mock: true;
 }
 
@@ -82,6 +84,12 @@ export interface SceneLayer {
   /** Volver a cargar cuando el jugador descubre un lugar (p. ej. recomendaciones). */
   reloadOnDiscover?: boolean;
   load(context?: SceneLayerContext): Promise<ScenePoi[]>;
+}
+
+/** Lo que el motor necesita saber de la temporada activa. */
+export interface SceneSeasonLook {
+  night: boolean;
+  petals: boolean;
 }
 
 /** Lo que sabe la vista al pedir los puntos de una capa. */
@@ -114,5 +122,7 @@ export interface SceneEngine {
   setAvatar(src: string | null): void;
   /** Dibuja una línea sobre el terreno (p. ej. la ruta de un recorrido). */
   setRoute(points: Array<{ lat: number; lng: number }> | null): void;
+  /** Viste la escena según la temporada (#68); null = como siempre. Opcional: Google y Cesium usan un filtro CSS. */
+  setSeason?(look: SceneSeasonLook | null): void;
   destroy(): void;
 }
