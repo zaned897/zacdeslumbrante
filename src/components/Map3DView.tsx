@@ -28,6 +28,7 @@ import { TOURS_3D, ZACATECAS_3D_HOME, loadTours } from '../data/tours3d';
 import { ZACATECAS_PLACES } from '../data/places';
 import { SCENE_LAYERS } from '../scene3d/layers';
 import { createEngine, selectedEngineId, type EngineId } from '../scene3d/createEngine';
+import { guardEngine } from '../scene3d/guardEngine';
 import { SceneStats, isStatsEnabled } from '../scene3d/SceneStats';
 import { distanceMeters } from '../scene3d/geo';
 import { usePlayerPosition, type FallbackReason } from '../scene3d/usePlayerPosition';
@@ -116,6 +117,7 @@ const Map3DScene: React.FC = () => {
   // Si Google rechaza la llave o no hay 3D Tiles, se cae a la ciudad estilizada en vez de quedar en error.
   const [engineFallback, setEngineFallback] = useState<EngineId | null>(null);
   const [keyErrorCode, setKeyErrorCode] = useState<string | null>(null);
+  const [engineFailure, setEngineFailure] = useState<string | null>(null);
   const engineId = useMemo(
     () => engineFallback ?? selectedEngineId(Boolean(apiKey)),
     [apiKey, engineFallback],
@@ -170,9 +172,19 @@ const Map3DScene: React.FC = () => {
     const container = containerRef.current;
     if (!container) return;
 
-    const engine = createEngine(engineId, apiKey);
-    engineRef.current = engine;
     let cancelled = false;
+    const engine = guardEngine(createEngine(engineId, apiKey), (err, method) => {
+      console.error(`[Map3DView] ${engineId}.${method} falló`, err);
+      if (cancelled) return;
+      if (engineId === 'three') {
+        setErrorDetail(err instanceof Error ? err.message : String(err));
+        setStatus('error');
+        return;
+      }
+      setEngineFailure(`${method}: ${err instanceof Error ? err.message : String(err)}`);
+      setEngineFallback('three');
+    });
+    engineRef.current = engine;
     setStatus('loading');
     // Google avisa así de una llave inválida o de un dominio no autorizado (pinta "Oops! Something went wrong").
     const authWindow = window as GoogleAuthWindow;
@@ -467,8 +479,10 @@ const Map3DScene: React.FC = () => {
         <div className="absolute top-16 inset-x-3 md:inset-x-auto md:left-4 md:max-w-xs z-10 text-[11px] text-stone-700 bg-[#FBF9F5]/90 border border-stone-200 rounded-lg px-3 py-2">
           {engineFallback ? (
             <>
-              {t.view3dKeyRejected}
-              {keyErrorCode && <span className="block mt-1 font-mono text-stone-500">{keyErrorCode}</span>}
+              {engineFailure ? t.view3dEngineFailed : t.view3dKeyRejected}
+              {(engineFailure ?? keyErrorCode) && (
+                <span className="block mt-1 font-mono text-stone-500 break-words">{engineFailure ?? keyErrorCode}</span>
+              )}
             </>
           ) : apiKey ? (
             t.view3dStylized
@@ -902,6 +916,12 @@ class Map3DErrorBoundary extends React.Component<{ children: React.ReactNode }, 
         <div className="max-w-sm text-center bg-[#FBF9F5] rounded-xl p-6 shadow-lg">
           <h2 className="font-serif font-bold text-lg mb-2">{t.view3dCrashTitle}</h2>
           <p className="text-xs text-stone-500 font-mono break-words">{error.message}</p>
+          {/* Primeras líneas de la pila: para que una captura baste para diagnosticar. */}
+          {error.stack && (
+            <pre className="mt-2 max-h-24 overflow-auto text-left text-[10px] leading-tight text-stone-400 whitespace-pre-wrap break-all">
+              {error.stack.split('\n').slice(0, 4).join('\n')}
+            </pre>
+          )}
           <div className="mt-4 flex flex-col gap-2">
             <button
               onClick={retryStylized}
