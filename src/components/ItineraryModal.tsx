@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { X, Compass, Clock, MapPin, Sparkles, Send } from 'lucide-react';
 import { Language, SuggestedItinerary } from '../types';
 import { TRANSLATIONS } from '../data/i18n';
@@ -10,6 +10,7 @@ interface ItineraryModalProps {
   language: Language;
   onSelectItineraryPrompt: (prompt: string) => void;
   onHighlightPlacesOnMap: (placeIds: string[]) => void;
+  initialItineraryId?: string;
 }
 
 export const ItineraryModal: React.FC<ItineraryModalProps> = ({
@@ -18,9 +19,18 @@ export const ItineraryModal: React.FC<ItineraryModalProps> = ({
   language,
   onSelectItineraryPrompt,
   onHighlightPlacesOnMap,
+  initialItineraryId,
 }) => {
   const [selectedItineraryId, setSelectedItineraryId] = useState<string>(SUGGESTED_ITINERARIES[0].id);
   const [activeDayIndex, setActiveDayIndex] = useState<number>(0);
+
+  // Al abrir desde Planes, arranca en el itinerario que se tocó.
+  useEffect(() => {
+    if (isOpen && initialItineraryId) {
+      setSelectedItineraryId(initialItineraryId);
+      setActiveDayIndex(0);
+    }
+  }, [isOpen, initialItineraryId]);
 
   if (!isOpen) return null;
 
