@@ -152,6 +152,47 @@ export const TOURS_3D: Tour[] = [
   },
 ];
 
+// PROTO: recorridos de temporada (#73). Solo se ofrecen en su temporada (src/data/seasons.ts)
+// y no vienen de la API. Los textos no dan horarios ni lugares de altares: esos saldrían del
+// programa oficial de cada año.
+export const SEASONAL_TOURS_3D: Tour[] = [
+  {
+    id: 'altares-y-catrinas',
+    title: { es: 'Altares y catrinas', en: 'Altars and catrinas' },
+    season: 'muertos',
+    _mock: true,
+    stops: [
+      {
+        placeId: 'plaza-armas',
+        camera: { lat: 22.7756, lng: -102.5723, altitude: 2440, range: 300, tilt: 70, heading: 180 },
+        holdMillis: 3000,
+        caption: {
+          es: 'Demo: en Día de Muertos el centro se llena de altares y catrinas. Horarios y lugares saldrían del programa oficial del año.',
+          en: 'Demo: on the Day of the Dead the center fills with altars and catrinas. Times and places would come from the official program.',
+        },
+      },
+      {
+        placeId: 'catedral-zacatecas',
+        camera: { lat: 22.77543, lng: -102.57242, altitude: 2440, range: 320, tilt: 70, heading: 90 },
+        holdMillis: 3000,
+        caption: {
+          es: 'Catedral Basílica: la cantera rosa de noche, entre papel picado y cempasúchil.',
+          en: 'Cathedral Basilica: the pink cantera at night, among papel picado and marigolds.',
+        },
+      },
+      {
+        placeId: 'museo-rafael-coronel',
+        camera: { lat: 22.7801, lng: -102.5714, altitude: 2460, range: 320, tilt: 68, heading: 200 },
+        holdMillis: 3000,
+        caption: {
+          es: 'Museo Rafael Coronel: su colección de máscaras mexicanas va bien con la temporada.',
+          en: 'Rafael Coronel Museum: its collection of Mexican masks suits the season.',
+        },
+      },
+    ],
+  },
+];
+
 const isNum = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
 const isLocalized = (v: unknown): boolean =>
   typeof v === 'object' && v !== null && typeof (v as Tour['title']).es === 'string' && typeof (v as Tour['title']).en === 'string';
@@ -183,10 +224,11 @@ function isTour(v: unknown): v is Tour {
 export async function loadTours(): Promise<Tour[]> {
   try {
     const res = await fetch('/api/py/tours', { signal: AbortSignal.timeout(3000) });
-    if (!res.ok) return TOURS_3D;
+    if (!res.ok) return [...TOURS_3D, ...SEASONAL_TOURS_3D];
     const data: unknown = await res.json();
-    return Array.isArray(data) && data.length > 0 && data.every(isTour) ? data : TOURS_3D;
+    const base = Array.isArray(data) && data.length > 0 && data.every(isTour) ? data : TOURS_3D;
+    return [...base, ...SEASONAL_TOURS_3D];
   } catch {
-    return TOURS_3D;
+    return [...TOURS_3D, ...SEASONAL_TOURS_3D];
   }
 }

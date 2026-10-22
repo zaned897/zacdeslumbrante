@@ -93,6 +93,7 @@ Vida de calle para la ciudad 3D: puestos, artesanos y músicos **genéricos** (t
 
 ### GET /api/py/places/{placeId}/photos  · mock · dueño: Claude Code (#23)
 Fotos curadas de Wikimedia Commons (`services/api/app/fixtures/photos.json`, #22). Lugar sin fotos → `photos: []`.
+Opcional `?season=muertos` (id de `src/data/seasons.ts`, #75): las fotos con ese `season` van primero; las demás conservan el orden. Cada foto puede traer `season` (o `null`).
 ```json
 {
   "placeId": "catedral-zacatecas",
