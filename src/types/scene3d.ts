@@ -78,6 +78,8 @@ export interface SceneLayer {
  */
 export interface SceneEngine {
   mount(container: HTMLElement, initial: SceneCamera): Promise<void>;
+  /** Resuelve cuando la primera vista terminó de cargar (para medir tiempo hasta primer render). */
+  ready(): Promise<void>;
   setPois(pois: ScenePoi[], language: Language): void;
   onPoiClick(handler: (poi: ScenePoi) => void): void;
   /** Resuelve cuando la cámara llega. */

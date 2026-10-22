@@ -20,7 +20,8 @@ import { TRANSLATIONS } from '../data/i18n';
 import { TOURS_3D, ZACATECAS_3D_HOME } from '../data/tours3d';
 import { ZACATECAS_PLACES } from '../data/places';
 import { SCENE_LAYERS } from '../scene3d/layers';
-import { GoogleMaps3dEngine } from '../scene3d/googleMaps3dEngine';
+import { createEngine, selectedEngineId } from '../scene3d/createEngine';
+import { SceneStats, isStatsEnabled } from '../scene3d/SceneStats';
 import { distanceMeters } from '../scene3d/geo';
 import { usePlayerPosition, type FallbackReason } from '../scene3d/usePlayerPosition';
 import { useCollection } from '../scene3d/useCollection';
@@ -60,6 +61,12 @@ export const Map3DView: React.FC = () => {
   const [isTouring, setIsTouring] = useState(false);
   const [isExploring, setIsExploring] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const [timings, setTimings] = useState<{ mountMs: number | null; readyMs: number | null }>({
+    mountMs: null,
+    readyMs: null,
+  });
+  const engineId = useMemo(selectedEngineId, []);
+  const showStats = useMemo(isStatsEnabled, []);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const engineRef = useRef<SceneEngine | null>(null);
@@ -95,14 +102,19 @@ export const Map3DView: React.FC = () => {
     const container = containerRef.current;
     if (!container) return;
 
-    const engine = new GoogleMaps3dEngine(apiKey);
+    const engine = createEngine(engineId, apiKey);
     engineRef.current = engine;
     let cancelled = false;
+    const startedAt = performance.now();
 
     engine
       .mount(container, ZACATECAS_3D_HOME)
       .then(async () => {
         if (cancelled) return;
+        setTimings((prev) => ({ ...prev, mountMs: performance.now() - startedAt }));
+        void engine.ready().then(() => {
+          if (!cancelled) setTimings((prev) => ({ ...prev, readyMs: performance.now() - startedAt }));
+        });
         engine.onPoiClick(setSelected);
         engine.setAvatar(AVATAR_SRC);
         engine.onGroundClick((at) => teleportRef.current?.(at));
@@ -125,7 +137,7 @@ export const Map3DView: React.FC = () => {
       engine.destroy();
       engineRef.current = null;
     };
-  }, []);
+  }, [engineId]);
 
   // Repintar marcadores al cambiar puntos, idioma o colección (en exploración, lo no descubierto va en gris).
   useEffect(() => {
@@ -280,6 +292,8 @@ export const Map3DView: React.FC = () => {
           </div>
         </div>
       )}
+
+      {showStats && <SceneStats engine={engineId} mountMs={timings.mountMs} readyMs={timings.readyMs} />}
 
       {/* HUD de exploración */}
       {isExploring && (
