@@ -31,10 +31,7 @@ def test_category_filter() -> None:
 
 def test_spots_are_near_known_places() -> None:
     text = PLACES_TS.read_text(encoding="utf-8")
-    coords = {
-        m[0]: (float(m[1]), float(m[2]))
-        for m in PLACE_COORDS.findall(text)
-    }
+    coords = {m[0]: (float(m[1]), float(m[2])) for m in PLACE_COORDS.findall(text)}
     for s in client.get("/street-life").json()["spots"]:
         assert s["nearPlaceId"] in coords, f"lugar desconocido: {s['nearPlaceId']}"
         lat, lng = coords[s["nearPlaceId"]]
