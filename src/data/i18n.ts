@@ -128,6 +128,10 @@ export const TRANSLATIONS = {
     view3dFallbackForced: 'Modo simulado (?sim=1).',
     view3dTapToMove: 'Toca el mapa para moverte.',
     view3dResume: 'Reanudar',
+    view3dAvatar: 'Avatar',
+    view3dAvatar_minero: 'Minero',
+    view3dAvatar_danzante: 'Danzante',
+    view3dAvatar_visitante: 'Visitante',
   },
   en: {
     // App & Header
@@ -258,5 +262,9 @@ export const TRANSLATIONS = {
     view3dFallbackForced: 'Simulated mode (?sim=1).',
     view3dTapToMove: 'Tap the map to move.',
     view3dResume: 'Resume',
+    view3dAvatar: 'Avatar',
+    view3dAvatar_minero: 'Miner',
+    view3dAvatar_danzante: 'Dancer',
+    view3dAvatar_visitante: 'Visitor',
   },
 };

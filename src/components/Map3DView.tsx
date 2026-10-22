@@ -31,7 +31,18 @@ type Status = 'loading' | 'ready' | 'error';
 
 const FLIGHT_MILLIS = 4500;
 const DISCOVER_RADIUS_M = 40;
-const AVATAR_SRC = '/models/avatars/minero.glb';
+const AVATARS = ['minero', 'danzante', 'visitante'] as const;
+type AvatarId = (typeof AVATARS)[number];
+const AVATAR_STORAGE_KEY = 'zacatecas_avatar';
+
+function readAvatar(): AvatarId {
+  try {
+    const stored = localStorage.getItem(AVATAR_STORAGE_KEY);
+    return AVATARS.find((a) => a === stored) ?? 'minero';
+  } catch {
+    return 'minero';
+  }
+}
 const UNDISCOVERED_COLOR = '#A8A29E';
 // PROTO: altitud fija del centro para la cámara que sigue al jugador; el terreno varía ±100 m.
 const FOLLOW_ALTITUDE = 2450;
@@ -60,6 +71,7 @@ export const Map3DView: React.FC = () => {
   const [caption, setCaption] = useState<string | null>(null);
   const [isTouring, setIsTouring] = useState(false);
   const [isExploring, setIsExploring] = useState(false);
+  const [avatar, setAvatar] = useState<AvatarId>(readAvatar);
   const [toast, setToast] = useState<string | null>(null);
   const [timings, setTimings] = useState<{ mountMs: number | null; readyMs: number | null }>({
     mountMs: null,
@@ -112,7 +124,6 @@ export const Map3DView: React.FC = () => {
           if (!cancelled) setTimings((prev) => ({ ...prev, readyMs: performance.now() - startedAt }));
         });
         engine.onPoiClick(setSelected);
-        engine.setAvatar(AVATAR_SRC);
         engine.onGroundClick((at) => teleportRef.current?.(at));
         const loaded = await Promise.all(
           SCENE_LAYERS.filter((l) => l.enabledByDefault).map((l) => l.load()),
@@ -134,6 +145,16 @@ export const Map3DView: React.FC = () => {
       engineRef.current = null;
     };
   }, [engineId, apiKey]);
+
+  useEffect(() => {
+    if (status !== 'ready') return;
+    engineRef.current?.setAvatar(`/models/avatars/${avatar}.glb`);
+    try {
+      localStorage.setItem(AVATAR_STORAGE_KEY, avatar);
+    } catch {
+      // Sin almacenamiento: el avatar vale solo en esta visita.
+    }
+  }, [avatar, status]);
 
   // Repintar marcadores al cambiar puntos, idioma o colección (en exploración, lo no descubierto va en gris).
   useEffect(() => {
@@ -318,6 +339,24 @@ export const Map3DView: React.FC = () => {
             {sourceText && <span className="font-semibold text-stone-800">{sourceText}. </span>}
             {fallbackReason && !isManual && fallbackText[fallbackReason]} {t.view3dTapToMove}
           </p>
+          <div className="mt-2 flex items-center gap-1.5" role="radiogroup" aria-label={t.view3dAvatar}>
+            <span className="text-stone-500">{t.view3dAvatar}:</span>
+            {AVATARS.map((id) => (
+              <button
+                key={id}
+                role="radio"
+                aria-checked={avatar === id}
+                onClick={() => setAvatar(id)}
+                className={`px-2 py-0.5 rounded-full border cursor-pointer ${
+                  avatar === id
+                    ? 'bg-[#9A3412] border-[#9A3412] text-white'
+                    : 'bg-white border-stone-300 text-stone-700 hover:border-stone-400'
+                }`}
+              >
+                {t[`view3dAvatar_${id}`]}
+              </button>
+            ))}
+          </div>
           {isManual && (
             <button
               onClick={resume}

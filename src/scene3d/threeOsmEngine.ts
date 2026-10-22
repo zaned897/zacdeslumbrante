@@ -277,6 +277,8 @@ export class ThreeOsmEngine implements SceneEngine {
     if (src === this.avatarSrc) return;
     this.avatarSrc = src;
     this.avatarGltf = null;
+    this.mixer = null;
+    this.walkAction = null;
     if (this.player && this.scene) this.scene.remove(this.player);
     this.player = null;
   }
@@ -456,6 +458,9 @@ export class ThreeOsmEngine implements SceneEngine {
         this.walkAction.play();
         this.walkAction.paused = true;
       }
+      // "idle" mueve solo la cabeza, así que puede sonar siempre.
+      const idle = gltf.animations.find((a) => a.name === 'idle');
+      if (idle) this.mixer.clipAction(idle).play();
     });
     return holder;
   }
