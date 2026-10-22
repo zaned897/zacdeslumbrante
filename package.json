@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx server.ts",
+    "dev:py": "cd services/api && uv run uvicorn app.main:app --reload --port 8000",
     "build": "vite build",
     "preview": "vite preview",
     "start": "tsx server.ts",

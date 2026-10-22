@@ -1,0 +1,95 @@
+{
+  "_mock": true,
+  "challenges": [
+    {
+      "id": "corazon-de-cantera",
+      "title": { "es": "Corazón de cantera", "en": "Heart of pink stone" },
+      "placeIds": ["catedral-zacatecas", "plaza-armas", "teatro-calderon"],
+      "badge": {
+        "id": "cantera-rosa",
+        "name": { "es": "Cantera Rosa", "en": "Pink Stone" },
+        "icon": "landmark"
+      }
+    },
+    {
+      "id": "cumbre-de-la-bufa",
+      "title": { "es": "Cumbre de La Bufa", "en": "Summit of La Bufa" },
+      "placeIds": ["cerro-de-la-bufa", "teleferico-zacatecas"],
+      "badge": {
+        "id": "vista-de-aguila",
+        "name": { "es": "Vista de Águila", "en": "Eagle Eye" },
+        "icon": "mountain"
+      }
+    },
+    {
+      "id": "bajo-tierra",
+      "title": { "es": "Bajo tierra", "en": "Underground" },
+      "placeIds": ["mina-el-eden"],
+      "badge": {
+        "id": "minero-de-plata",
+        "name": { "es": "Minero de Plata", "en": "Silver Miner" },
+        "icon": "pickaxe"
+      }
+    },
+    {
+      "id": "ruta-de-museos",
+      "title": { "es": "Ruta de museos", "en": "Museum trail" },
+      "placeIds": [
+        "museo-rafael-coronel",
+        "museo-pedro-coronel",
+        "museo-felguerez",
+        "museo-francisco-goitia"
+      ],
+      "badge": {
+        "id": "curador",
+        "name": { "es": "Curador", "en": "Curator" },
+        "icon": "palette"
+      }
+    },
+    {
+      "id": "agua-y-piedra",
+      "title": { "es": "Agua y piedra", "en": "Water and stone" },
+      "placeIds": ["acueducto-el-cubo"],
+      "badge": {
+        "id": "acueducto",
+        "name": { "es": "Acueducto", "en": "Aqueduct" },
+        "icon": "waves"
+      }
+    },
+    {
+      "id": "huellas-antiguas",
+      "title": { "es": "Huellas antiguas", "en": "Ancient footprints" },
+      "placeIds": ["la-quemada"],
+      "badge": {
+        "id": "arqueologo",
+        "name": { "es": "Arqueólogo", "en": "Archaeologist" },
+        "icon": "pyramid"
+      }
+    },
+    {
+      "id": "pueblos-magicos",
+      "title": { "es": "Pueblos Mágicos", "en": "Magic Towns" },
+      "placeIds": [
+        "jerez-pueblo-magico",
+        "sombrerete-pueblo-magico",
+        "guadalupe-pueblo-magico",
+        "pinos-pueblo-magico"
+      ],
+      "badge": {
+        "id": "viajero-magico",
+        "name": { "es": "Viajero Mágico", "en": "Magic Traveler" },
+        "icon": "sparkles"
+      }
+    },
+    {
+      "id": "guadalupe-virreinal",
+      "title": { "es": "Guadalupe virreinal", "en": "Colonial Guadalupe" },
+      "placeIds": ["guadalupe-pueblo-magico", "catedral-zacatecas"],
+      "badge": {
+        "id": "virreinal",
+        "name": { "es": "Virreinal", "en": "Viceregal" },
+        "icon": "church"
+      }
+    }
+  ]
+}

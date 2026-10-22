@@ -42,6 +42,27 @@ app.get('/api/health', (_req, res) => {
   });
 });
 
+// Proxy hacia la API Python (FastAPI): /api/py/<ruta> → PY_API_URL/<ruta>
+const PY_API_URL = (process.env.PY_API_URL || 'http://localhost:8000').replace(/\/$/, '');
+app.all('/api/py/*', async (req, res) => {
+  const target = PY_API_URL + req.originalUrl.replace(/^\/api\/py/, '');
+  const hasBody = !['GET', 'HEAD'].includes(req.method);
+  try {
+    const upstream = await fetch(target, {
+      method: req.method,
+      headers: hasBody ? { 'content-type': req.get('content-type') || 'application/json' } : undefined,
+      body: hasBody ? JSON.stringify(req.body ?? {}) : undefined,
+      signal: AbortSignal.timeout(15000),
+    });
+    res.status(upstream.status);
+    const type = upstream.headers.get('content-type');
+    if (type) res.type(type);
+    res.send(Buffer.from(await upstream.arrayBuffer()));
+  } catch {
+    res.status(503).json({ error: 'python api offline' });
+  }
+});
+
 // Real-Time Streaming Chat Endpoint via Server-Sent Events (SSE)
 app.post('/api/chat/stream', async (req, res) => {
   const { message, history = [], language = 'es', activeKnowledgeUrls = [] } = req.body;
