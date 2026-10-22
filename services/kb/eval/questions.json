@@ -1,0 +1,17 @@
+{
+  "_note": "PROTO: las fuentes esperadas son hipótesis a partir de la descripción de cada fuente; ajustarlas tras revisar el corpus real.",
+  "questions": [
+    { "q": "¿Qué criterios usó la UNESCO para inscribir el Centro Histórico de Zacatecas?", "lang": "es", "expect": ["unesco-whc-676", "unesco-faq-126"] },
+    { "q": "¿Qué es el Salón de las Columnas en La Quemada?", "lang": "es", "expect": ["inah-la-quemada", "inah-datos-arqueologia"] },
+    { "q": "¿Cuáles son los Pueblos Mágicos de Zacatecas?", "lang": "es", "expect": ["zac-pueblos-magicos", "sectur-fed-pueblos-magicos", "gob-mx-acciones-pueblos-magicos"] },
+    { "q": "Horario y precio del teleférico y la Mina El Edén", "lang": "es", "expect": ["zac-travel-main", "zac-actividades"] },
+    { "q": "¿Qué obras tiene el Museo de Arte Abstracto Manuel Felguérez?", "lang": "es", "expect": ["maamf-oficial", "cultura-zac-museos"] },
+    { "q": "¿Qué hay en el Museo de Guadalupe?", "lang": "es", "expect": ["inah-red-museos-zac", "cultura-zac-museos"] },
+    { "q": "¿Cuándo es el Festival Cultural Zacatecas?", "lang": "es", "expect": ["cultura-zac-gob", "zac-travel-main"] },
+    { "q": "¿Dónde puedo hacer una callejoneada?", "lang": "es", "expect": ["zac-actividades", "zac-travel-main"] },
+    { "q": "What museums can I visit in Zacatecas city?", "lang": "en", "expect": ["zac-museos-travel", "cultura-zac-museos", "sic-museos-estado-32"] },
+    { "q": "What is the altitude of Zacatecas city?", "lang": "en", "expect": ["inegi-portal"] },
+    { "q": "Which monuments are in the historic centre?", "lang": "en", "expect": ["capital-zac-atracciones", "unesco-whc-676"] },
+    { "q": "¿Qué documentos de la fundación minera guarda el Archivo General?", "lang": "es", "expect": ["archivo-general-zac", "capital-coordinacion-archivos"] }
+  ]
+}
