@@ -10,6 +10,7 @@ import {
   Home,
   Layers,
   LocateFixed,
+  MessageCircle,
   Play,
   RotateCcw,
   RotateCw,
@@ -17,7 +18,7 @@ import {
   Trophy,
   X,
 } from 'lucide-react';
-import { Language } from '../types';
+import { Language, type Place } from '../types';
 import type { SceneEngine, SceneLayerContext, ScenePoi, Tour } from '../types/scene3d';
 import { TRANSLATIONS } from '../data/i18n';
 import { TOURS_3D, ZACATECAS_3D_HOME, loadTours } from '../data/tours3d';
@@ -30,6 +31,7 @@ import { usePlayerPosition, type FallbackReason } from '../scene3d/usePlayerPosi
 import { useCollection } from '../scene3d/useCollection';
 import { useAvatarControls, type AvatarAction } from '../scene3d/useAvatarControls';
 import { loadPlacePhotos, type PlacePhoto } from '../scene3d/placePhotos';
+import { MapAssistantSheet } from './app/MapAssistantSheet';
 
 type Status = 'loading' | 'ready' | 'error';
 
@@ -89,6 +91,7 @@ const Map3DScene: React.FC = () => {
   const [tourId, setTourId] = useState<string | null>(null);
   const [photos, setPhotos] = useState<PlacePhoto[]>([]);
   const [photoIndex, setPhotoIndex] = useState(0);
+  const [askPlace, setAskPlace] = useState<Place | null>(null);
   const [isExploring, setIsExploring] = useState(false);
   const [avatar, setAvatar] = useState<AvatarId>(readAvatar);
   const [toast, setToast] = useState<string | null>(null);
@@ -320,6 +323,7 @@ const Map3DScene: React.FC = () => {
       const run = ++tourRunRef.current;
       const isCurrent = () => tourRunRef.current === run;
       setSelected(null);
+      setAskPlace(null);
       setIsTouring(true);
       engine.setRoute(tour.stops.map((s) => ({ lat: s.camera.lat, lng: s.camera.lng })));
 
@@ -345,6 +349,7 @@ const Map3DScene: React.FC = () => {
   const toggleExplore = () => {
     stopTour();
     setSelected(null);
+    setAskPlace(null);
     setIsExploring((v) => !v);
   };
 
@@ -593,11 +598,28 @@ const Map3DScene: React.FC = () => {
             <p className="mt-2 text-xs leading-relaxed text-stone-700">{selected.summary[language]}</p>
           )}
           {selectedPlace && (
-            <p className="mt-2 text-[11px] text-stone-500">
-              <span className="font-semibold">{t.scheduleLabel}</span> {selectedPlace.schedule}
-            </p>
+            <>
+              <p className="mt-2 text-[11px] text-stone-500">
+                <span className="font-semibold">{t.scheduleLabel}</span> {selectedPlace.schedule}
+              </p>
+              <button
+                onClick={() => {
+                  setAskPlace(selectedPlace);
+                  setSelected(null);
+                }}
+                className="mt-3 flex w-full items-center justify-center gap-2 px-3 py-2 text-sm font-semibold text-white bg-[#9A3412] rounded-full hover:bg-[#78350F] cursor-pointer"
+              >
+                <MessageCircle className="w-4 h-4" />
+                {t.view3dAsk}
+              </button>
+            </>
           )}
         </div>
+      )}
+
+      {/* Asistente dentro del mapa (#43), acotado al lugar elegido */}
+      {askPlace && (
+        <MapAssistantSheet language={language} place={askPlace} onClose={() => setAskPlace(null)} />
       )}
 
       {/* Pad táctil del avatar (también WASD / flechas) */}
