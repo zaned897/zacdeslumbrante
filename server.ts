@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import { ZACATECAS_PLACES } from './src/data/places.ts';
 import { synthesizeKnowledgeResponse } from './src/server/groundingSynthesizer.ts';
+import { citation, displayTitle, promptContext, searchKnowledge } from './src/server/knowledgeSearch.ts';
 
 dotenv.config();
 
@@ -81,6 +82,26 @@ app.post('/api/chat/stream', async (req, res) => {
   }
 
   try {
+    // Fragmentos reales de las fuentes activas (corpus de services/kb); vacío si no hay corpus.
+    const hits = searchKnowledge(message, 4, activeKnowledgeUrls);
+    if (hits.length > 0) {
+      sendEvent({
+        sources: hits.map((h, i) => ({
+          n: i + 1,
+          title: displayTitle(h.chunk),
+          url: h.chunk.url,
+          fetchedAt: h.chunk.fetchedAt.slice(0, 10),
+        })),
+      });
+    }
+    const retrievedText = hits.length > 0
+      ? `
+FRAGMENTOS RECUPERADOS DE LAS FUENTES OFICIALES (de la última ingesta):
+${promptContext(hits)}
+
+Basa tu respuesta primero en estos fragmentos y cítalos con su número y URL, p. ej. [1] (https://...). Lo que no esté en ellos y venga de tu conocimiento general, márcalo como tal; si el dato no aparece, aplica el protocolo de brecha de datos.`
+      : '';
+
     const urlsText = activeKnowledgeUrls.length > 0
       ? activeKnowledgeUrls.map((u: string) => `• ${u}`).join('\n')
       : 'https://www.zacatecastravel.com/\nhttps://whc.unesco.org/en/list/676/\nhttps://culturazac.gob.mx/\nhttps://www.inah.gob.mx/';
@@ -102,6 +123,7 @@ Debes clasificar y distinguir de manera explícita en tu respuesta entre:
 BASE DE CONOCIMIENTO (RAG GROUNDING):
 Evalúa y sustenta tus respuestas en los siguientes portales oficiales activos:
 ${urlsText}
+${retrievedText}
 
 CITAS DE FUENTES Y VERIFICACIÓN:
 Al final o de forma intercalada, cita las fuentes oficiales correspondientes e incluye siempre la fecha de verificación:
@@ -163,14 +185,24 @@ ${language === 'en' ? '"Suggested Itinerary (Open Decision)"' : '"Itinerario Sug
       ]);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
-      if (msg.includes('503') || msg.includes('UNAVAILABLE') || msg.includes('high demand') || msg.includes('timed out')) {
-        console.warn('Gemini upstream high demand/timeout: streaming verified contextual grounding response...');
-        const synthesizedText = synthesizeKnowledgeResponse({
-          message,
-          history,
-          language: language === 'en' ? 'en' : 'es',
-          activeKnowledgeUrls,
-        });
+      const isBusy = msg.includes('503') || msg.includes('UNAVAILABLE') || msg.includes('high demand') || msg.includes('timed out');
+      // Con fragmentos reales, cualquier fallo de Gemini (p. ej. llave inválida) cae al respaldo.
+      if (isBusy || hits.length > 0) {
+        console.warn(`Gemini no disponible (${msg.slice(0, 120)}): respondiendo con el respaldo...`);
+        // Con fragmentos reales, el respaldo los muestra tal cual en vez del texto escrito a mano.
+        const synthesizedText = hits.length > 0
+          ? [
+              language === 'en'
+                ? 'The AI model is not available right now. These are the most relevant excerpts from the official sources:'
+                : 'El modelo de IA no está disponible en este momento. Estos son los fragmentos más relevantes de las fuentes oficiales:',
+              ...hits.map((h, i) => `[${i + 1}] ${h.chunk.text}\n[Fuente: ${citation(h.chunk)}]`),
+            ].join('\n\n')
+          : synthesizeKnowledgeResponse({
+              message,
+              history,
+              language: language === 'en' ? 'en' : 'es',
+              activeKnowledgeUrls,
+            });
 
         // Stream synthesized chunks in real-time typewriter effect
         const words = synthesizedText.split(/(\s+)/);
