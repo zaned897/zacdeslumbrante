@@ -11,6 +11,8 @@ class Photo(CamelModel):
     license: str
     source_url: str
     caption: LocalizedText
+    # Temporada en la que se tomó (id de src/data/seasons.ts, p. ej. "muertos"); None = cualquiera.
+    season: str | None = None
 
 
 class PhotoList(CamelModel):

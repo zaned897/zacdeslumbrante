@@ -14,5 +14,9 @@ def _all_photos() -> tuple[Photo, ...]:
     return tuple(Photo.model_validate(item) for item in data["photos"])
 
 
-def photos_for_place(place_id: str) -> list[Photo]:
-    return [p for p in _all_photos() if p.place_id == place_id]
+def photos_for_place(place_id: str, season: str | None = None) -> list[Photo]:
+    photos = [p for p in _all_photos() if p.place_id == place_id]
+    if season:
+        # sorted es estable: dentro de cada grupo se respeta el orden del fixture.
+        photos.sort(key=lambda p: p.season != season)
+    return photos

@@ -340,20 +340,21 @@ const Map3DScene: React.FC = () => {
       return next;
     });
 
-  // Fotos del lugar seleccionado (#23).
+  // Fotos del lugar seleccionado (#23); las de la temporada activa primero (#75).
   const selectedPlaceId = selected?.placeId;
+  const seasonId = season?.id;
   useEffect(() => {
     setPhotos([]);
     setPhotoIndex(0);
     if (!selectedPlaceId) return;
     let cancelled = false;
-    void loadPlacePhotos(selectedPlaceId).then((list) => {
+    void loadPlacePhotos(selectedPlaceId, seasonId).then((list) => {
       if (!cancelled) setPhotos(list);
     });
     return () => {
       cancelled = true;
     };
-  }, [selectedPlaceId]);
+  }, [selectedPlaceId, seasonId]);
 
   // Repintar marcadores al cambiar puntos, idioma o colección (en exploración, lo no descubierto va en gris).
   useEffect(() => {
