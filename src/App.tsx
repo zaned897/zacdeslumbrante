@@ -7,6 +7,7 @@ import { AppHeader } from './components/app/AppHeader';
 import { BottomTabBar } from './components/app/BottomTabBar';
 import { BadgesScreen } from './components/app/BadgesScreen';
 import { PlansScreen } from './components/app/PlansScreen';
+import { PetScreen } from './components/pet/PetScreen';
 import { AppTab, goToTab, tabFromHash } from './components/app/tabs';
 import { Language, ChatMessage, Place, KnowledgeBaseURL } from './types';
 import { getStoredKnowledgeBase, saveStoredKnowledgeBase, resetKnowledgeBase } from './data/knowledgeBase';
@@ -389,6 +390,12 @@ export default function App() {
                 />
               </div>
             </>
+          )}
+
+          {tab === 'pet' && (
+            <div className="flex-1 min-h-0">
+              <PetScreen language={language} onGoExplore={() => goToTab('3d')} />
+            </div>
           )}
 
           {tab === 'badges' && (
