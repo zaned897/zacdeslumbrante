@@ -1,0 +1,146 @@
+{
+  "_mock": true,
+  "_note": "Puestos genéricos de ejemplo (tipos de comercio típicos del centro), no negocios reales. Sin precios, horarios exactos ni contactos.",
+  "spots": [
+    {
+      "id": "gorditas-del-mercado",
+      "category": "food",
+      "icon": "flame",
+      "title": { "es": "Gorditas de comal", "en": "Griddle gorditas" },
+      "cry": {
+        "es": "¡Pásele, güero! De chicharrón, rajas, frijol y deshebrada, recién salidas del comal.",
+        "en": "Come on in! Pork rind, chile strips, beans or shredded beef, fresh off the griddle."
+      },
+      "when": { "es": "Suele verse por la mañana y a mediodía", "en": "Usually mornings and midday" },
+      "nearPlaceId": "teatro-calderon",
+      "lat": 22.77455,
+      "lng": -102.57335
+    },
+    {
+      "id": "elotes-de-la-plaza",
+      "category": "food",
+      "icon": "wheat",
+      "title": { "es": "Elotes y esquites", "en": "Corn on the cob and esquites" },
+      "cry": {
+        "es": "Con mayonesa, queso y chile del que pica. Para el frío de la cantera.",
+        "en": "With mayo, cheese and the spicy chile. For the chill of the pink stone."
+      },
+      "when": { "es": "Suele verse al caer la tarde", "en": "Usually as evening falls" },
+      "nearPlaceId": "plaza-armas",
+      "lat": 22.77585,
+      "lng": -102.57195
+    },
+    {
+      "id": "dulces-tipicos-catedral",
+      "category": "sweets",
+      "icon": "candy",
+      "title": { "es": "Dulces típicos", "en": "Traditional sweets" },
+      "cry": {
+        "es": "Queso de tuna, melcocha, cocadas y charamuscas. Lo dulce de la ciudad minera.",
+        "en": "Prickly-pear cheese, taffy, coconut candy and charamuscas. The sweet side of the mining town."
+      },
+      "when": { "es": "Suele verse todo el día", "en": "Usually all day" },
+      "nearPlaceId": "catedral-zacatecas",
+      "lat": 22.77515,
+      "lng": -102.57215
+    },
+    {
+      "id": "plateria-del-callejon",
+      "category": "crafts",
+      "icon": "gem",
+      "title": { "es": "Platería artesanal", "en": "Handmade silverwork" },
+      "cry": {
+        "es": "Plata de estas sierras, trabajada a mano en el taller de al lado.",
+        "en": "Silver from these hills, worked by hand in the workshop next door."
+      },
+      "when": { "es": "Suele verse por la tarde", "en": "Usually afternoons" },
+      "nearPlaceId": "museo-pedro-coronel",
+      "lat": 22.77625,
+      "lng": -102.57345
+    },
+    {
+      "id": "callejoneada-tamborazo",
+      "category": "music",
+      "icon": "drum",
+      "title": { "es": "Callejoneada con tamborazo", "en": "Callejoneada with tamborazo" },
+      "cry": {
+        "es": "Tambora, trompeta y jarrito de mezcal: la fiesta sube y baja por los callejones. ¡Síganle!",
+        "en": "Drum, trumpet and a clay cup of mezcal: the party winds up and down the alleys. Follow along!"
+      },
+      "when": { "es": "Suele salir de noche, más en fines de semana", "en": "Usually at night, mostly on weekends" },
+      "nearPlaceId": "plaza-armas",
+      "lat": 22.77605,
+      "lng": -102.57265
+    },
+    {
+      "id": "trovador-del-teatro",
+      "category": "music",
+      "icon": "guitar",
+      "title": { "es": "Trovador callejero", "en": "Street troubadour" },
+      "cry": {
+        "es": "Una guitarra, una banca de cantera y alguna canción vieja para quien se detenga.",
+        "en": "A guitar, a pink-stone bench and an old song for whoever stops to listen."
+      },
+      "when": { "es": "Suele verse al anochecer", "en": "Usually at dusk" },
+      "nearPlaceId": "teatro-calderon",
+      "lat": 22.77505,
+      "lng": -102.57255
+    },
+    {
+      "id": "retratista-del-convento",
+      "category": "art",
+      "icon": "palette",
+      "title": { "es": "Retratista y acuarelas", "en": "Portraitist and watercolors" },
+      "cry": {
+        "es": "Diez minutos quieto y te vas con tu retrato frente a las ruinas del convento.",
+        "en": "Sit still ten minutes and leave with your portrait in front of the convent ruins."
+      },
+      "when": { "es": "Suele verse por la tarde", "en": "Usually afternoons" },
+      "nearPlaceId": "museo-rafael-coronel",
+      "lat": 22.77985,
+      "lng": -102.57115
+    },
+    {
+      "id": "tunas-de-la-bufa",
+      "category": "food",
+      "icon": "cherry",
+      "title": { "es": "Tunas peladas y aguas frescas", "en": "Peeled prickly pears and aguas frescas" },
+      "cry": {
+        "es": "Tuna roja y verde, peladita, para después de subir el cerro.",
+        "en": "Red and green prickly pear, peeled, for after the climb."
+      },
+      "when": { "es": "Suele verse en temporada de tuna, de día", "en": "Usually in prickly-pear season, daytime" },
+      "nearPlaceId": "cerro-de-la-bufa",
+      "lat": 22.77355,
+      "lng": -102.56525
+    },
+    {
+      "id": "textiles-del-teleferico",
+      "category": "crafts",
+      "icon": "shirt",
+      "title": { "es": "Sarapes y juguetes de madera", "en": "Sarapes and wooden toys" },
+      "cry": {
+        "es": "Sarapes de colores, baleros y trompos, para llevarse un pedazo del centro.",
+        "en": "Bright sarapes, cup-and-ball toys and spinning tops, to take a piece of downtown home."
+      },
+      "when": { "es": "Suele verse de día", "en": "Usually daytime" },
+      "nearPlaceId": "teleferico-zacatecas",
+      "lat": 22.77795,
+      "lng": -102.57720
+    },
+    {
+      "id": "atole-del-acueducto",
+      "category": "food",
+      "icon": "coffee",
+      "title": { "es": "Atole, café de olla y tamales", "en": "Atole, pot coffee and tamales" },
+      "cry": {
+        "es": "¡Tamales calientitos! Y un atole para la noche fresca bajo los arcos.",
+        "en": "Hot tamales! And an atole for the cool night under the arches."
+      },
+      "when": { "es": "Suele verse temprano y al anochecer", "en": "Usually early morning and at dusk" },
+      "nearPlaceId": "acueducto-el-cubo",
+      "lat": 22.76895,
+      "lng": -102.56975
+    }
+  ]
+}

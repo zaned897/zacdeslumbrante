@@ -246,13 +246,43 @@
         "notificaciones"
       ],
       "cost": "gratis"
+    },
+    {
+      "id": "cesiumjs",
+      "type": "library",
+      "agents": [
+        "claude",
+        "codex",
+        "antigravity"
+      ],
+      "covers": [
+        "motor 3D alternativo (src/scene3d/cesiumEngine.ts)",
+        "Google Photorealistic 3D Tiles vía Map Tiles API",
+        "animaciones glTF del avatar"
+      ],
+      "cost": "~4.9 MB (1.4 MB gzip) en un chunk aparte que solo carga con ?engine=cesium"
+    },
+    {
+      "id": "threejs",
+      "type": "library",
+      "agents": [
+        "claude",
+        "codex",
+        "antigravity"
+      ],
+      "covers": [
+        "escena 3D de respaldo sin llave (issue #14)",
+        "edificios de OpenStreetMap",
+        "glTF animado"
+      ],
+      "cost": "chunk aparte, solo carga en el modo sin llave"
     }
   ],
   "parked": [
     {
       "id": "assets-3d-isometricos",
       "idea": "Visualización isométrica/3D de edificios emblemáticos, iconos y avatares estilo juego de ubicación (tipo Pokémon GO)",
-      "status": "sin decidir",
+      "status": "parcial: motores 3D instalados (cesiumjs, threejs); falta herramienta de generación de assets/avatares",
       "triggers": [
         "3d",
         "isometr",

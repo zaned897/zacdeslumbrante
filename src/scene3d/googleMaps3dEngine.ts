@@ -52,6 +52,7 @@ export class GoogleMaps3dEngine implements SceneEngine {
   private clickHandler: ((poi: ScenePoi) => void) | null = null;
   private groundClickHandler: ((at: { lat: number; lng: number }) => void) | null = null;
   private pendingAnimation: (() => void) | null = null;
+  private readyPromise: Promise<void> | null = null;
 
   constructor(private readonly apiKey: string) {}
 
@@ -73,8 +74,20 @@ export class GoogleMaps3dEngine implements SceneEngine {
       event.preventDefault();
       this.groundClickHandler({ lat: position.lat, lng: position.lng });
     });
+    this.readyPromise = new Promise((resolve) => {
+      const onSteady = (event: Event) => {
+        if (!(event as google.maps.maps3d.SteadyChangeEvent).isSteady) return;
+        map.removeEventListener('gmp-steadychange', onSteady);
+        resolve();
+      };
+      map.addEventListener('gmp-steadychange', onSteady);
+    });
     container.appendChild(map);
     this.map = map;
+  }
+
+  ready(): Promise<void> {
+    return this.readyPromise ?? Promise.resolve();
   }
 
   setPois(pois: ScenePoi[], language: Language): void {
