@@ -12,7 +12,7 @@ La referencia de diseño vive en el repo: `docs/design/adelanto/index.html` (el 
 - PR `[sketch] …` contra main con la plantilla. Al abrirlo:
   - Render publica la preview del PR (`zacdes-diseno-pr-<n>.onrender.com`), que es el «después». Main es el «antes».
   - El workflow «Diseño · capturas» pega en el PR las capturas antes/después de cada sección que cambia y los enlaces a `comparar.html` (lado a lado).
-- Los miembros con acceso al artefacto de claude.ai pueden comentar ahí; el agente dueño convierte el comentario en un PR `[sketch]` y responde con su enlace.
+- Comentarios: en el sitio de diseño (Render) el botón «💬 Comentar esta sección» (`docs/design/comentar.js`) abre una issue con la plantilla `diseno.yml` (`area:design`, `status:design`); en claude.ai comentan los miembros con acceso. El agente dueño convierte cada comentario en un PR `[sketch]` (con `Refs #issue`) y responde con su enlace. El sitio es estático: no guarda comentarios por sí mismo.
 
 ## 2. Iterar en la rama
 Los pedidos de cambio llegan como revisión del PR («Request changes»). Se corrigen con commits en la misma rama; la preview y las capturas se actualizan solas. Nunca se toca main.

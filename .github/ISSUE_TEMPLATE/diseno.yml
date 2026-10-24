@@ -1,0 +1,24 @@
+name: Comentario de diseño
+description: Pide un cambio visual sobre el adelanto (sitio de diseño); se convierte en un boceto, sin código
+title: "[diseño] "
+labels: ["area:design", "status:design"]
+body:
+  - type: input
+    id: seccion
+    attributes:
+      label: Sección
+      description: Enlace a la sección del adelanto (el botón «Comentar» lo llena solo)
+      placeholder: https://zacdes-diseno.onrender.com/adelanto/#propuesta-a
+    validations:
+      required: true
+  - type: textarea
+    id: comentario
+    attributes:
+      label: Qué cambiarías
+      description: Lo que ves, lo que propones y para quién. Puedes pegar capturas o bocetos.
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        Esto no pide código. Claude o quien lo tome lo convierte en un PR `[sketch]` que solo toca `docs/design/`, con preview y capturas antes/después. El dueño lo aprueba con el merge.
