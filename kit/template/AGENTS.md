@@ -12,8 +12,8 @@ Diseño: `DESIGN_URL` = {{URL_DEL_ARTEFACTO_DE_DISEÑO}}. Toda feature con UI pa
 - {{FRONTEND}} · {{BACKEND}} · Datos mock en `{{CARPETA_FIXTURES}}`.
 
 ## Flujo de contribución (visual primero)
-1. **Visual:** los cambios con UI se piden en comentarios del artefacto de diseño (`DESIGN_URL`) o en un PR `[sketch]` que solo toca `docs/design/`. Se muestran como mock; **sin código** (skill `design-first`).
-2. **Aprobación:** solo la del dueño del proyecto.
+1. **Visual en su rama:** el adelanto vive en `docs/design/adelanto/`. Toda propuesta es un PR `[sketch]` que solo toca `docs/design/`; trae su preview y capturas antes/después. **Sin código** (skill `design-first`).
+2. **Aprobación:** el dueño fusiona el `[sketch]` (aprobado) o lo cierra (rechazado). Nadie más aprueba.
 3. **Issues:** con el sí se crean, actualizan o cierran (obsoletas → `not planned`) y las listas llevan `status:ready`.
 4. **Código:** solo sobre issues `status:ready`, PR pequeño contra main con capturas.
 5. **Merge:** lo hace el dueño, a mano, tras revisar y con CI en verde. Ningún agente fusiona ni aprueba PRs.
