@@ -3,7 +3,9 @@
 Fuente de verdad entre backend (Claude Code) y frontend (Antigravity). Tipos en `src/types/index.ts`.
 
 ## GET /api/health
-`{ status: "ok", hasApiKey: boolean, time: string }`
+`{ status: "ok", hasApiKey: boolean, corpusChunks: number, lastGeminiError: { message: string, at: string } | null, time: string }`
+
+`corpusChunks`: fragmentos del corpus cargados (0 = sin corpus, el chat no cita). `lastGeminiError`: último fallo de Gemini desde que arrancó el servidor (modelo y mensaje, sin la llave); `null` si no hubo.
 
 ## GET /api/places
 `Place[]`
