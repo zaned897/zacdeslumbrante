@@ -17,6 +17,7 @@ import {
 import { Place, Language } from '../types';
 import { TRANSLATIONS } from '../data/i18n';
 import { ZACATECAS_PLACES } from '../data/places';
+import { BUILD_MAPS_API_KEY, MAPS_KEY_STORAGE, resolveMapsApiKey } from '../data/mapsApiKey';
 
 interface GoogleMapsPanelProps {
   isOpen: boolean;
@@ -57,15 +58,8 @@ export const GoogleMapsPanel: React.FC<GoogleMapsPanelProps> = ({
 
   const t = TRANSLATIONS[language];
 
-  // API Key priority resolution
-  const [currentApiKey, setCurrentApiKey] = useState<string>(() => {
-    return (
-      localStorage.getItem('zacatecas_maps_api_key') ||
-      import.meta.env.VITE_MAPS_API_KEY ||
-      import.meta.env.VITE_GOOGLE_MAPS_API_KEY ||
-      ''
-    );
-  });
+  // La llave del build manda; la guardada en el navegador solo cuenta sin llave de build.
+  const [currentApiKey, setCurrentApiKey] = useState<string>(resolveMapsApiKey);
 
   // Sin llave: se muestra la cartografía de respaldo y se pide una llave.
   const [showKeyModal, setShowKeyModal] = useState(() => !currentApiKey);
@@ -322,23 +316,26 @@ export const GoogleMapsPanel: React.FC<GoogleMapsPanelProps> = ({
 
         {/* Center shortcuts, API key pill & full-screen toggle */}
         <div className="flex items-center gap-1.5 flex-wrap">
-          <button
-            onClick={() => {
-              setCustomKeyInput(currentApiKey);
-              setShowKeyModal(true);
-            }}
-            className="flex items-center gap-1 px-2 py-1 text-[11px] font-mono text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 rounded-md transition-colors cursor-pointer"
-            title="Google Maps API Key activa. Clic para cambiar"
-          >
-            <Key className="w-3 h-3 text-emerald-600" />
-            <span>
-              {currentApiKey
-                ? `Key: ${currentApiKey.slice(0, 6)}...${currentApiKey.slice(-4)}`
-                : language === 'es'
-                  ? 'Sin llave'
-                  : 'No key'}
-            </span>
-          </button>
+          {/* Con llave de build la píldora no se muestra: nadie debe ver ni cambiar la llave en producción. */}
+          {!BUILD_MAPS_API_KEY && (
+            <button
+              onClick={() => {
+                setCustomKeyInput(currentApiKey);
+                setShowKeyModal(true);
+              }}
+              className="flex items-center gap-1 px-2 py-1 text-[11px] font-mono text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 rounded-md transition-colors cursor-pointer"
+              title="Google Maps API Key activa. Clic para cambiar"
+            >
+              <Key className="w-3 h-3 text-emerald-600" />
+              <span>
+                {currentApiKey
+                  ? `Key: ${currentApiKey.slice(0, 6)}...${currentApiKey.slice(-4)}`
+                  : language === 'es'
+                    ? 'Sin llave'
+                    : 'No key'}
+              </span>
+            </button>
+          )}
           <button
             onClick={handleCenterCapital}
             className="px-2.5 py-1 text-xs font-medium text-tenue bg-caliza hover:bg-linea rounded-md transition-colors cursor-pointer"
@@ -614,7 +611,7 @@ export const GoogleMapsPanel: React.FC<GoogleMapsPanelProps> = ({
                 onClick={() => {
                   const trimmed = customKeyInput.trim();
                   if (trimmed) {
-                    localStorage.setItem('zacatecas_maps_api_key', trimmed);
+                    localStorage.setItem(MAPS_KEY_STORAGE, trimmed);
                     setCurrentApiKey(trimmed);
                     // Remove old script so it reloads with the new key
                     const oldScript = document.getElementById('google-maps-script');
