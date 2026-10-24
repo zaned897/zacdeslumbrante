@@ -134,6 +134,9 @@ ${templates}
 })();
 </script>`;
 
+// El artefacto lleva su propio título.
+html = html.replace(/<title>[\s\S]*?<\/title>/i, `<title>Propuesta: ${esc(title)}</title>`);
+
 // La barra va al inicio del <body> (después del reset que pone el publicador de artefactos).
 html = html.replace(/<body[^>]*>/i, (b) => b + kit);
 writeFileSync(outPath, html);
