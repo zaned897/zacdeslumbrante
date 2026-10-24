@@ -11,6 +11,11 @@ body:
       placeholder: https://zacdes-diseno.onrender.com/adelanto/#propuesta-a
     validations:
       required: true
+  - type: input
+    id: elemento
+    attributes:
+      label: Elemento
+      description: Selector CSS del elemento comentado (lo llena el modo comentario)
   - type: textarea
     id: comentario
     attributes:
