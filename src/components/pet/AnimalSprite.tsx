@@ -3,7 +3,7 @@ import type { Design, PetMood, Species } from '../../pet/petEngine';
 import type { UpgradeId } from '../../pet/resources';
 
 // Dibujos de la propuesta A aprobada (#67): https://claude.ai/artifact/6hZzQuFhqKU9qJmpXsirzp
-// Mismo lienzo 100×100 y misma cara para los cinco; cambia el pelaje según el diseño.
+// Mismo lienzo 100×100 y misma cara para todos; cambia el pelaje según el diseño.
 
 interface Fur {
   fur: string;
@@ -16,7 +16,8 @@ const BASE: Record<Species, Fur> = {
   perrito: { fur: '#E8C9A0', accent: '#8B5A2B', light: '#F7E6CF' },
   burrito: { fur: '#A8A29E', accent: '#57534E', light: '#E7E5E4' },
   coyote: { fur: '#D6A86A', accent: '#C08A4A', light: '#F7EBDD' },
-  tlacuache: { fur: '#D6D3D1', accent: '#57534E', light: '#F5F5F4' },
+  // Ratoncito gris, en lugar del tlacuache (comentario del dueño en la propuesta A).
+  ratoncito: { fur: '#C7C2BE', accent: '#57534E', light: '#E7E5E4' },
   // Ratón de campo (#71): orejas grandes y redondas, pelaje pardo.
   raton: { fur: '#B08968', accent: '#7F5539', light: '#F1E3D3' },
 };
@@ -91,13 +92,13 @@ function Ears({ species, f }: { species: Species; f: Fur }) {
           <circle cx="76" cy="30" r="9" fill="#F9C6CF" />
         </>
       );
-    case 'tlacuache':
+    case 'ratoncito':
       return (
         <>
-          <circle cx="27" cy="32" r="11" fill={f.accent} />
-          <circle cx="73" cy="32" r="11" fill={f.accent} />
-          <circle cx="27" cy="32" r="6" fill="#F9A8D4" />
-          <circle cx="73" cy="32" r="6" fill="#F9A8D4" />
+          <circle cx="24" cy="34" r="17" fill={f.fur} />
+          <circle cx="76" cy="34" r="17" fill={f.fur} />
+          <circle cx="24" cy="34" r="10" fill="#F9A8D4" />
+          <circle cx="76" cy="34" r="10" fill="#F9A8D4" />
         </>
       );
   }
@@ -135,12 +136,11 @@ function Markings({ species, f }: { species: Species; f: Fur }) {
           <path d="M24 62 h11 M25 68 l10 -3 M65 62 h11 M65 65 l10 3" stroke={f.accent} strokeWidth="1.3" strokeLinecap="round" />
         </>
       );
-    case 'tlacuache':
+    case 'ratoncito':
       return (
         <>
-          <path d="M50 28 L38 52 L50 60 L62 52Z" fill={f.light} />
-          <ellipse cx="36" cy="54" rx="8" ry="7" fill="#78716C" opacity=".35" />
-          <ellipse cx="64" cy="54" rx="8" ry="7" fill="#78716C" opacity=".35" />
+          <ellipse cx="50" cy="66" rx="12" ry="8" fill={f.light} />
+          <path d="M24 62 h14 M24 68 l14 -3 M62 62 h14 M62 65 l14 3" stroke={f.accent} strokeWidth="1.3" strokeLinecap="round" />
         </>
       );
   }
@@ -170,7 +170,7 @@ export const AnimalSprite: React.FC<AnimalSpriteProps> = ({
   animate = true,
 }) => {
   const f = furOf(species, design);
-  const ink = species === 'tlacuache' || species === 'raton' ? '#BE185D' : '#3B1D12';
+  const ink = species === 'ratoncito' || species === 'raton' ? '#BE185D' : '#3B1D12';
   const darkFur = DARK.has(f.fur);
   const bounce = animate && !tired && (mood === 'feliz' || mood === 'contento' || walking);
   const bobSpeed = walking ? '0.5s' : mood === 'feliz' ? '0.9s' : '1.6s';
