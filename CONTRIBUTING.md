@@ -33,13 +33,11 @@ Sin llaves, el chat y el mapa muestran avisos; los mocks funcionan igual.
 ## Flujo: visual primero, código después
 Ninguna feature con interfaz se programa antes de que su visual esté aprobado.
 
-1. **Propón el visual en tu rama.** La referencia de diseño vive en `docs/design/adelanto/index.html` y se publica en https://zacdes-diseno.onrender.com.
-   - Rama `sketch/<issue>-<tema>`. Edita el adelanto (agrega o cambia un bloque con su `id`, p. ej. `id="propuesta-e"`) o agrega un boceto en `docs/design/<issue>-<tema>/` (HTML estático o PNG). Nada de código, datos ni configuración.
-   - Abre un PR `[sketch] …`. En unos minutos el PR tiene su propia preview (el «después»), un comentario con capturas antes/después de cada sección que cambia y un enlace para verlas lado a lado.
-   - Si te piden cambios, corrige en la misma rama: la preview y las capturas se actualizan solas.
-   - Desde un fork, Render puede no crear la preview; las capturas del comentario sí llegan.
-   ¿Eres miembro del proyecto y prefieres no tocar HTML? Comenta en la copia del adelanto en claude.ai y un agente abre el PR `[sketch]` por ti.
-2. **Decisión.** El dueño fusiona el PR (aprobado) o lo cierra con un comentario (rechazado). En el mismo PR se te responde con la decisión y, si se aprobó, con las issues que te tocan.
+1. **Comenta sobre el adelanto.** La referencia de diseño es el artefacto https://claude.ai/artifact/6hZzQuFhqKU9qJmpXsirzp. Activa el modo comentario, señala lo que quieres cambiar y escríbelo. No necesitas GitHub ni saber programar.
+   - El dueño envía a Claude los comentarios que van adelante. Claude arma tu propuesta como **un artefacto propio**, con un interruptor **Antes / Después** y las secciones que cambian marcadas, y te responde en tu comentario con el enlace.
+   - Si quieres ajustes, comenta sobre ese artefacto de la propuesta. Se actualiza en el mismo enlace.
+   - ¿Prefieres trabajar en git? Rama `sketch/<issue>-<tema>` que solo toca `docs/design/` y PR `[sketch] …`: Render publica su preview y un comentario trae capturas antes/después.
+2. **Decisión.** El dueño aprueba o rechaza en la propuesta. Se te responde ahí mismo con la decisión y, si se aprobó, con las issues que salen de ella.
 3. **Se liberan las tareas.** Con el visual aprobado se crean o actualizan las issues (con enlace a la pantalla y la etiqueta `status:ready`) y se cierran las que quedaron obsoletas.
 4. **Código.** Toma una issue `status:ready` (empieza por `good first issue`) y comenta que la tomas. Fork → rama `<nivel>/<issue>-<tema>`, commits convencionales (`feat: eventos mock (#12)`), checks (`bun run lint`; si tocas Python: `uv run ruff check . && uv run ruff format --check . && uv run pytest`) y PR con la plantilla: nivel, `Closes #n`, enlace al visual y capturas.
 5. **Revisión y merge.** El dueño revisa cada PR a mano y lo fusiona solo con CI en verde. Ni contribuidores ni agentes de IA aprueban o fusionan.

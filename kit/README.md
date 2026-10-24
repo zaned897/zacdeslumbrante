@@ -28,7 +28,8 @@ Lo que funcionó en este repo, sin nada de Zacatecas, para copiar a otro proyect
 | `docs/` | `API.md` (contrato) y `HANDOFF.md` (pedidos entre zonas) |
 | `CONTRIBUTING.md`, `.github/CODEOWNERS` | Flujo visual primero para contribuidores y cómo proteger `main` (tu aprobación + CI en verde) |
 | `render.yaml.example` | Despliegue gratis con previews por PR, incluido el sitio de diseño |
-| `docs/design/comparar.html`, `scripts/design-shots.mjs`, `.github/workflows/diseno-*.yml` | Antes y después de cada PR `[sketch]`: página lado a lado y capturas pegadas en el PR |
+| `scripts/design-proposal.mjs` | Arma el artefacto de una propuesta con interruptor Antes / Después: contribuidores comentan en claude.ai, sin GitHub ni llaves |
+| `docs/design/comparar.html`, `scripts/design-shots.mjs`, `.github/workflows/diseno-*.yml` | Antes y después de cada PR `[sketch]`: página lado a lado y capturas pegadas en el PR | (para quien trabaja en git) |
 
 ## Instalar en otro repo
 ```bash

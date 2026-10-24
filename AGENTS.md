@@ -13,8 +13,8 @@ Asistente turístico y cultural de Zacatecas (chat con IA, mapa, base de conocim
 - Datos mock en `services/api/app/fixtures/` (Python) o `src/data/` (existente).
 
 ## Flujo de contribución (visual primero)
-1. **Visual en su rama:** el adelanto vive en `docs/design/adelanto/`. Toda propuesta es un PR `[sketch]` que solo toca `docs/design/`; trae su preview en Render y capturas antes/después. **Sin código** (skill `design-first`).
-2. **Aprobación:** el dueño fusiona el `[sketch]` (aprobado) o lo cierra (rechazado). Nadie más aprueba.
+1. **Visual:** se comenta sobre el artefacto del adelanto (fuente en `docs/design/adelanto/`). Cada comentario que el dueño envía a Claude se vuelve un artefacto de propuesta con antes/después, respaldado por una rama `sketch/` que solo toca `docs/design/`. **Sin código** (skill `design-first`).
+2. **Aprobación:** solo del dueño, en la propuesta («aprobado» / «rechazado»).
 3. **Issues:** con el sí se crean, actualizan o cierran (obsoletas → `not planned`) y las listas llevan `status:ready`.
 4. **Código:** solo sobre issues `status:ready`, PR pequeño contra main con capturas.
 5. **Merge:** lo hace el dueño, a mano, tras revisar y con CI en verde. Ningún agente fusiona ni aprueba PRs.
