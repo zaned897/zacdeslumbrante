@@ -198,10 +198,11 @@ ${language === 'en' ? '"Suggested Itinerary (Open Decision)"' : '"Itinerario Sug
       });
     };
 
+    // Margen para el primer fragmento de Gemini: en Render free (0.1 CPU) 4 s es poco.
     let responseStream;
     try {
       const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('503 Stream request timed out')), 4000)
+        setTimeout(() => reject(new Error('503 Stream request timed out')), 15000)
       );
       // Try gemini-3.8-flash first, then gemini-3.1-flash-lite
       responseStream = await Promise.race([
