@@ -49,6 +49,7 @@ import { useAvatarControls, type AvatarAction } from '../scene3d/useAvatarContro
 import { loadPlacePhotos, type PlacePhoto } from '../scene3d/placePhotos';
 import { MapAssistantSheet } from './app/MapAssistantSheet';
 import { recordLegendaryFind, recordPlaceVisit } from '../pet/visits';
+import { resolveMapsApiKey } from '../data/mapsApiKey';
 
 
 /** Recorridos que tocan hoy: los de temporada solo en su temporada, y primero. */
@@ -102,14 +103,6 @@ const TOGGLEABLE_LAYERS = SCENE_LAYERS.filter((l) => l.toggleable);
 const FOLLOW_ALTITUDE = 2450;
 const SIMULATED_PATH = (TOURS_3D[0]?.stops ?? []).map((s) => ({ lat: s.camera.lat, lng: s.camera.lng }));
 
-function resolveApiKey(): string {
-  return (
-    localStorage.getItem('zacatecas_maps_api_key') ||
-    import.meta.env.VITE_MAPS_API_KEY ||
-    import.meta.env.VITE_GOOGLE_MAPS_API_KEY ||
-    ''
-  );
-}
 
 function placeName(placeId: string | undefined, language: Language): string {
   const place = ZACATECAS_PLACES.find((p) => p.id === placeId);
@@ -163,7 +156,7 @@ const Map3DScene: React.FC = () => {
     mountMs: null,
     readyMs: null,
   });
-  const apiKey = useMemo(resolveApiKey, []);
+  const apiKey = useMemo(resolveMapsApiKey, []);
   // Si Google rechaza la llave o no hay 3D Tiles, se cae a la ciudad estilizada en vez de quedar en error.
   const [engineFallback, setEngineFallback] = useState<EngineId | null>(null);
   const [keyErrorCode, setKeyErrorCode] = useState<string | null>(null);
