@@ -1,0 +1,22 @@
+name: CI
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # Quita los setup que no uses. scripts/check.sh decide qué correr según los archivos del repo.
+      - uses: oven-sh/setup-bun@v2
+      - uses: astral-sh/setup-uv@v6
+      - name: Dependencias
+        run: |
+          if [ -f package.json ]; then bun install --frozen-lockfile || bun install; fi
+          for d in . services/*; do [ -f "$d/pyproject.toml" ] && (cd "$d" && uv sync); done; true
+      - run: ./scripts/check.sh

@@ -1,0 +1,43 @@
+# Blueprint de Render (plan gratis): web + API. Renómbralo a render.yaml y ajusta comandos.
+# Las llaves se capturan en el panel de Render (sync: false); nunca van en este archivo.
+# PROTO: plan free; cada servicio se duerme tras 15 min sin tráfico (~1 min en despertar).
+# Render despliega main. Para ver un PR antes de fusionarlo: "[render preview]" en su título.
+services:
+  - type: web
+    name: {{APP}}-web
+    runtime: node
+    plan: free
+    buildCommand: ./scripts/render-build.sh   # build + datos generados; si los datos fallan, el deploy sigue
+    startCommand: {{START_CMD}}
+    healthCheckPath: /api/health
+    previews:
+      generation: manual
+    envVars:
+      - key: API_URL
+        value: https://{{APP}}-api.onrender.com
+      - key: SOME_API_KEY
+        sync: false
+      # Variables del frontend (p. ej. VITE_*) se incrustan al compilar:
+      # tras cambiarlas, Manual Deploy → Clear build cache & deploy.
+
+  # Sitio de diseño: publica docs/design. main = «antes»; cada PR que toca docs/design
+  # recibe su preview {{APP}}-diseno-pr-<n>.onrender.com = «después».
+  - type: web
+    name: {{APP}}-diseno
+    runtime: static
+    buildCommand: echo "sin build"
+    staticPublishPath: ./docs/design
+    buildFilter:
+      paths:
+        - docs/design/**
+    previews:
+      generation: automatic
+
+  - type: web
+    name: {{APP}}-api
+    runtime: python
+    plan: free
+    rootDir: services/api
+    buildCommand: pip install uv && uv sync --frozen --no-dev
+    startCommand: .venv/bin/uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health

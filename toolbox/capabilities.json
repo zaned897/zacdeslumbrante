@@ -1,6 +1,6 @@
 {
   "_doc": "Fuente única de verdad de la suite. 'installed' = lo que existe; 'parked' = ideas a futuro con disparadores. Lo mantiene la skill scout. No instales nada que no pase por aquí.",
-  "updated": "2026-10-21",
+  "updated": "2026-10-22",
   "installed": [
     {
       "id": "context7",
@@ -276,6 +276,37 @@
         "glTF animado"
       ],
       "cost": "chunk aparte, solo carga en el modo sin llave"
+    },
+    {
+      "id": "design-first",
+      "type": "skill",
+      "agents": [
+        "claude",
+        "codex",
+        "antigravity"
+      ],
+      "covers": [
+        "visual primero",
+        "artefacto de diseño",
+        "mocks",
+        "issues al día"
+      ],
+      "cost": "solo se carga al invocarla"
+    },
+    {
+      "id": "parallel-prs",
+      "type": "skill",
+      "agents": [
+        "claude",
+        "codex",
+        "antigravity"
+      ],
+      "covers": [
+        "prs en paralelo",
+        "prs apilados",
+        "conflictos"
+      ],
+      "cost": "solo se carga al invocarla"
     }
   ],
   "parked": [

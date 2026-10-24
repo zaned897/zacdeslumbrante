@@ -29,6 +29,11 @@ body:
         - docs
     validations:
       required: true
+  - type: input
+    id: design
+    attributes:
+      label: Diseño aprobado
+      description: Enlace a la sección del adelanto (con #ancla). Obligatorio si cambia la UI; sin visual aprobado, abre primero un PR [sketch] en docs/design/.
   - type: textarea
     id: context
     attributes:

@@ -1,0 +1,47 @@
+# Capturas antes/después de los visuales de un PR [sketch] (#96).
+# Corre con permisos de solo lectura (sirve también para forks); el comentario lo publica diseno-comentario.yml.
+name: Diseño · capturas
+on:
+  pull_request:
+    paths: ['docs/design/**']
+
+permissions:
+  contents: read
+
+jobs:
+  capturas:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Archivos HTML que cambian y su versión en la rama base
+        id: files
+        run: |
+          BASE="${{ github.event.pull_request.base.sha }}"
+          mkdir -p "$RUNNER_TEMP/antes" "$RUNNER_TEMP/despues"
+          git diff --name-only --diff-filter=ACMRD "$BASE" HEAD -- 'docs/design/*.html' 'docs/design/**/*.html' > "$RUNNER_TEMP/changed.txt" || true
+          : > "$RUNNER_TEMP/rel.txt"
+          while read -r f; do
+            rel="${f#docs/design/}"
+            if git cat-file -e "$BASE:$f" 2>/dev/null; then mkdir -p "$RUNNER_TEMP/antes/$(dirname "$rel")"; git show "$BASE:$f" > "$RUNNER_TEMP/antes/$rel"; fi
+            echo "$rel" >> "$RUNNER_TEMP/rel.txt"
+          done < "$RUNNER_TEMP/changed.txt"
+          cp -r docs/design/. "$RUNNER_TEMP/despues/"
+          echo "count=$(wc -l < "$RUNNER_TEMP/rel.txt" | tr -d ' ')" >> "$GITHUB_OUTPUT"
+      - name: Capturas
+        if: steps.files.outputs.count != '0'
+        run: |
+          mkdir -p "$RUNNER_TEMP/pw" && cp scripts/design-shots.mjs "$RUNNER_TEMP/pw/" && cd "$RUNNER_TEMP/pw"
+          npm init -y >/dev/null && npm i --silent playwright@1.49.1 && npx playwright install --with-deps chromium >/dev/null
+          node design-shots.mjs "$RUNNER_TEMP/antes" "$RUNNER_TEMP/despues" "$RUNNER_TEMP/capturas" $(cat "$RUNNER_TEMP/rel.txt")
+      - name: Datos del PR
+        run: |
+          mkdir -p "$RUNNER_TEMP/capturas"
+          echo '{"pr": ${{ github.event.pull_request.number }}, "sha": "${{ github.event.pull_request.head.sha }}"}' > "$RUNNER_TEMP/capturas/pr.json"
+          [ -f "$RUNNER_TEMP/capturas/manifest.json" ] || echo '[]' > "$RUNNER_TEMP/capturas/manifest.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: capturas-diseno
+          path: ${{ runner.temp }}/capturas
+          retention-days: 7

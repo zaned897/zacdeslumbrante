@@ -1,0 +1,22 @@
+name: Idea
+description: Propón algo para la ciudad o el proyecto; aún no hace falta definir cómo
+title: "[idea] "
+labels: ["type:idea", "status:triage"]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: La idea
+      description: ¿Qué problema resuelve y para quién?
+    validations:
+      required: true
+  - type: textarea
+    id: example
+    attributes:
+      label: Ejemplo de uso
+      placeholder: Una persona abre la app y...
+  - type: textarea
+    id: references
+    attributes:
+      label: Referencias
+      description: Apps similares, fuentes de datos, imágenes

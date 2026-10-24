@@ -26,6 +26,23 @@ services:
       - key: VITE_MAPS_API_KEY
         sync: false
 
+  # Sitio de diseño (#96): publica docs/design. main = «antes»; cada PR que toca docs/design
+  # recibe su preview zacdes-diseno-pr-<n>.onrender.com = «después». Sin llaves.
+  - type: web
+    name: zacdes-diseno
+    runtime: static
+    buildCommand: echo "sin build"
+    staticPublishPath: ./docs/design
+    buildFilter:
+      paths:
+        - docs/design/**
+    previews:
+      generation: automatic
+    headers:
+      - path: /*
+        name: X-Robots-Tag
+        value: noindex
+
   - type: web
     name: zacdes-api
     runtime: python
