@@ -6,7 +6,7 @@ import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import { ZACATECAS_PLACES } from './src/data/places.ts';
 import { synthesizeKnowledgeResponse } from './src/server/groundingSynthesizer.ts';
-import { citation, displayTitle, promptContext, searchKnowledge } from './src/server/knowledgeSearch.ts';
+import { citation, corpusSize, displayTitle, promptContext, searchKnowledge } from './src/server/knowledgeSearch.ts';
 
 dotenv.config();
 
@@ -29,6 +29,18 @@ const ai = new GoogleGenAI({
   },
 });
 
+// Último fallo de Gemini, visible en /api/health sin abrir los logs de Render (#105).
+let lastGeminiError: { message: string; at: string } | null = null;
+function recordGeminiError(model: string, err: unknown) {
+  const raw = err instanceof Error ? err.message : String(err);
+  const safe = apiKey ? raw.split(apiKey).join('***') : raw;
+  // Gemini anida JSON escapado; se aplana para que quepa legible en una línea.
+  const flat = safe.replace(/(\\+n|\s)+/g, ' ').replace(/\\+"/g, '"');
+  const message = `${model}: ${flat}`.slice(0, 300);
+  lastGeminiError = { message, at: new Date().toISOString() };
+  console.warn(`Gemini falló (${message})`);
+}
+
 // API Routes
 app.get('/api/places', (_req, res) => {
   res.json(ZACATECAS_PLACES);
@@ -38,6 +50,8 @@ app.get('/api/health', (_req, res) => {
   res.json({
     status: 'ok',
     hasApiKey: Boolean(apiKey && apiKey.length > 5),
+    corpusChunks: corpusSize(),
+    lastGeminiError,
     time: new Date().toISOString(),
   });
 });
@@ -188,14 +202,19 @@ ${language === 'en' ? '"Suggested Itinerary (Open Decision)"' : '"Itinerario Sug
 
     // Call Gemini streaming API with resilient model fallback
     const callStream = async (model: string) => {
-      return await ai.models.generateContentStream({
-        model,
-        contents,
-        config: {
-          systemInstruction,
-          temperature: 0.7,
-        },
-      });
+      try {
+        return await ai.models.generateContentStream({
+          model,
+          contents,
+          config: {
+            systemInstruction,
+            temperature: 0.7,
+          },
+        });
+      } catch (err) {
+        recordGeminiError(model, err);
+        throw err;
+      }
     };
 
     // Margen para el primer fragmento de Gemini: en Render free (0.1 CPU) 4 s es poco.
@@ -211,6 +230,7 @@ ${language === 'en' ? '"Suggested Itinerary (Open Decision)"' : '"Itinerario Sug
       ]);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
+      if (msg.includes('timed out')) recordGeminiError('timeout', err);
       const isBusy = msg.includes('503') || msg.includes('UNAVAILABLE') || msg.includes('high demand') || msg.includes('timed out');
       // Con fragmentos reales, cualquier fallo de Gemini (p. ej. llave inválida) cae al respaldo.
       if (isBusy || hits.length > 0) {
