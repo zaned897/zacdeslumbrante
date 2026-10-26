@@ -15,8 +15,9 @@ for c in git node gh claude codex; do command -v "$c" >/dev/null && ok "$c" || w
 
 echo "Skills compartidas (.agents/skills):"
 mkdir -p .claude
-[ -L .claude/skills ] || link ../.agents/skills .claude/skills
-ok "Claude Code → .claude/skills"; ok "Codex → .agents/skills (lo lee directo)"
+[ -L .claude/skills ] && rm .claude/skills   # antes era enlace; ahora es copia versionada
+"$(command -v python || command -v python3)" tools/agentes/sincronizar-skills.py >/dev/null
+ok "Claude Code → .claude/skills (copia; CI la compara con sincronizar-skills.py --check)"; ok "Codex → .agents/skills (lo lee directo)"
 if [ "${1:-}" = "--antigravity" ]; then
   AG="$HOME/.gemini/antigravity-cli/skills"; mkdir -p "$AG"   # PROTO: ruta de la versión probada; radar la re-verifica
   for s in .agents/skills/*/; do n="$(basename "$s")"; dst="$AG/$(basename "$ROOT")-$n"
@@ -31,7 +32,7 @@ for f in scripts/*.sh .githooks/* toolbox/hooks/*.mjs; do git ls-files --error-u
 ok "pre-commit (secretos + scripts/check.sh) y commit-msg (convencional)"
 
 node toolbox/hooks/scout-hint.mjs "prueba" >/dev/null && ok "scout-hint.mjs ejecuta"
-for l in ".claude/.scout-state.json" ".claude/settings.local.json" ".claude/skills" ".env" ".env.*" "!.env.example"; do
+for l in ".claude/.scout-state.json" ".claude/settings.local.json" ".claude/worktrees/" ".claude/delegaciones/" ".env" ".env.*" "!.env.example"; do
   grep -qxF -- "$l" .gitignore 2>/dev/null || echo "$l" >> .gitignore; done
 ok ".gitignore al día"
 echo "Listo. Abre 'claude' y revisa /hooks y /mcp. Luego: ./scripts/gh-labels.sh"

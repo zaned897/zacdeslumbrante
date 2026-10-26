@@ -2,6 +2,7 @@
 name: relay
 description: Pasa una tarea en curso de un agente a otro (Claude Code, Codex, Antigravity) sin perder contexto. Úsala cuando un agente se quede sin cuota, cuando cambie el rol (implementar → revisar) o al cerrar la sesión con trabajo a medias. También al recibir una tarea de otro agente.
 ---
+
 # Relevo entre agentes
 
 Los tres agentes comparten `AGENTS.md`, las skills y el repo; lo único que no comparten es la memoria de la conversación. Este relevo la pone por escrito.
@@ -30,3 +31,6 @@ Los tres agentes comparten `AGENTS.md`, las skills y el repo; lo único que no c
 - Claude se queda sin cuota → Codex continúa el backend con este relevo; la revisión de ese tramo la hace Claude cuando vuelva (otro proveedor revisa siempre).
 - El agente de frontend se queda sin cuota → el frontend pasa a Codex o espera; no lo tome Claude si está en backend al mismo tiempo.
 - Nunca dos agentes en la misma rama a la vez.
+
+## Relacionadas
+`delegar`, `parallel-prs`

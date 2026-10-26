@@ -2,6 +2,7 @@
 name: radar
 description: Revisa novedades de modelos, de Claude Code, Codex y Antigravity, y de las herramientas instaladas, y actualiza toolbox/models.md. Úsala cuando el hook diga que models.md está vencido, al empezar una fase nueva del proyecto, o cuando el usuario pregunte qué hay de nuevo.
 ---
+
 # Radar: mantener la suite al día
 
 1. Lee `toolbox/models.md` (fecha de verificación) y `toolbox/capabilities.json`.
@@ -13,3 +14,6 @@ description: Revisa novedades de modelos, de Claude Code, Codex y Antigravity, y
 4. Con el sí del usuario, actualiza la tabla y la fecha `verificado:` de `toolbox/models.md` y agrega una línea a `toolbox/decisions.md`.
 
 No cambies el routing por un solo benchmark; pide al menos dos señales o una prueba propia en este repo.
+
+## Relacionadas
+`scout`

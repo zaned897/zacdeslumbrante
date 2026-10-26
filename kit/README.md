@@ -13,13 +13,15 @@ Lo que funcionó en este repo, sin nada de Zacatecas, para copiar a otro proyect
 | `mcp/` | `.mcp.json` base y cómo dar los mismos MCP a Codex y al agente de frontend |
 | `LECCIONES.md` | Lo que salió mal y qué regla lo evita |
 | `INTEGRAR.md` | Pasos para sumarlo a un proyecto que ya trabaja, sin romper sus flujos |
+| `COMPARTIR.md` | Guía de una página para un colaborador que adopta el flujo |
 | `install.sh` | Copia `template/` a otro repo sin pisar archivos (`--dry-run` para ver antes) |
 
 ### `template/`
 | Pieza | Para qué |
 |---|---|
 | `AGENTS.md`, `CLAUDE.md` | Reglas cortas comunes a Claude Code, Codex y el agente de frontend: zonas, niveles, convenciones |
-| `.agents/skills/` | 9 skills compartidas: `design-first`, `orchestrate`, `prototype-scope`, `gh-issues`, `pr-intake`, `parallel-prs`, `relay`, `scout`, `radar` |
+| `.agents/skills/` | 12 skills compartidas (fuente; `.claude/skills/` es su copia): coordinación `orchestrate`, `parallel-prs`, `relay`, `delegar`; proceso `design-first`, `prototype-scope`, `gh-issues`, `pr-intake`; programación `anti-vibe-coding`, `desatorar`; herramientas `scout`, `radar` |
+| `tools/agentes/` | `delegar.py` (pasa tareas a Codex o Antigravity en un worktree y pide revisión), `sincronizar-skills.py`, `exportar.py` |
 | `.claude/` | Permisos (bloquea `.env`), hook `scout-hint` y dos subagentes de ejemplo |
 | `toolbox/` | `capabilities.json` (instalado y aparcado con disparadores), `models.md` (routing), `decisions.md`, hook |
 | `.githooks/` | pre-commit (llaves, `.env`, `scripts/check.sh`) y commit-msg (commits convencionales) |

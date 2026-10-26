@@ -2,6 +2,7 @@
 name: parallel-prs
 description: Reglas para trabajar varios hilos, agentes o PRs en paralelo sin perder commits ni pelear conflictos. Úsala antes de abrir un PR, al apilar un PR sobre otro, al empujar a una rama existente y cuando un merge deja a otro PR con conflictos.
 ---
+
 # PRs en paralelo
 
 Un hilo (o agente) por tema, un PR por issue, siempre contra `main`. Estas reglas salen de errores reales.
@@ -27,3 +28,6 @@ Un hilo (o agente) por tema, un PR por issue, siempre contra `main`. Estas regla
 ## Merge
 - Solo el dueño del proyecto fusiona, a mano y con CI en verde. Propón el orden en una línea («fusiona #A antes que #B»).
 - Nunca reescribas historia en ramas ajenas ni cierres y reabras PRs para relanzar CI.
+
+## Relacionadas
+`orchestrate`, `pr-intake`
