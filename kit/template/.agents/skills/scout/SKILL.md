@@ -2,6 +2,7 @@
 name: scout
 description: Analiza la tarea o situación actual y decide si hace falta una herramienta nueva (MCP, skill, plugin, modelo, librería). Úsala al planear una feature, cuando el hook avise de una capacidad "parked", cuando una tarea se atore por falta de herramienta, o cuando el usuario pregunte qué instalar.
 ---
+
 # Scout: herramientas justo a tiempo
 
 Objetivo: tener la herramienta correcta en el momento en que hace falta, sin instalar de más ni duplicar.
@@ -38,3 +39,6 @@ Tras instalar (o descartar):
 
 ## Poda (cada vez que corras scout)
 Si algo en `installed` no se ha usado en un mes o quedó cubierto por otra cosa, propón quitarlo.
+
+## Relacionadas
+`radar`

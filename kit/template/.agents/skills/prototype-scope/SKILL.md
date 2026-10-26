@@ -1,10 +1,11 @@
 ---
 name: prototype-scope
-description: Define y vigila el nivel de madurez de cada tarea (boceto, mock, demo, PoC). Úsala al empezar cualquier issue o feature, al estimar, y cuando una tarea empiece a crecer más de lo pedido.
+description: Define y vigila el nivel de madurez de cada tarea (sketch, mock, demo, PoC). Úsala al empezar cualquier issue o feature, al estimar, y cuando una tarea empiece a crecer más de lo pedido.
 ---
+
 # Alcance de prototipo
 
-Este repo produce **prototipos**, no producto. Cada issue, rama y PR declara un nivel. El trabajo termina cuando cumple su nivel, no antes ni después.
+Cada issue, rama y PR declara un nivel de madurez. El trabajo termina cuando cumple su nivel, no antes ni después.
 
 ## Niveles
 | Nivel | Etiqueta | Qué es | Hecho cuando | Prohibido |
@@ -24,3 +25,6 @@ Este repo produce **prototipos**, no producto. Cada issue, rama y PR declara un 
 
 ## Al cerrar
 En el PR: nivel, cómo verlo/correrlo (comando o URL), evidencia (captura, gif o números), lista de `PROTO:` añadidos, y qué issue sería el siguiente nivel (propónla, no la implementes).
+
+## Relacionadas
+`orchestrate`, `desatorar`

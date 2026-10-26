@@ -1,8 +1,9 @@
 ---
 name: orchestrate
-description: Metodología para llevar una idea de issue a PR mergeado con varios agentes (Claude Code, Antigravity, Codex) en un repo de prototipos abierto. Úsala al empezar cualquier feature que toque más de una zona o tome más de una sesión.
+description: Lleva una idea de issue a PR fusionado con varios agentes (Claude Code, Codex, Antigravity), cada uno en su zona. Úsala al empezar cualquier feature que toque más de una zona o tome más de una sesión.
 ---
-# Orchestrate: de la idea al merge
+
+# Orquestar: de la idea al merge
 
 Principios: todo nace de una issue, cada entrega tiene un nivel (`prototype-scope`), especificación antes que código, cada agente en su zona y worktree, revisión por un modelo de otro proveedor, evidencia en vez de opiniones.
 
@@ -17,7 +18,7 @@ Principios: todo nace de una issue, cada entrega tiene un nivel (`prototype-scop
 En la propia issue o en `docs/specs/<issue>-<tema>.md`: objetivo de usuario, criterios de aceptación verificables, contrato (endpoints en `docs/API.md` → Propuestas), zonas, fuera de alcance. Media página para mock/sketch; una página para demo/PoC.
 
 ## 2. Revisión del plan (otro proveedor)
-Solo para demo y PoC: `/codex:adversarial-review` sobre la spec. Una ronda, máximo dos.
+Solo para demo y PoC: pide a otro proveedor que ataque la spec (`/codex:adversarial-review` o `python tools/agentes/delegar.py codex --modo plan "revisa docs/specs/<archivo>"`). Una ronda, máximo dos.
 
 ## 3. Tareas
 ≤ ~300 líneas de diff cada una, con dueño y criterio de hecho. Dos tareas que tocan el mismo archivo no van en paralelo. Lo que un externo podría hacer solo → issue `good first issue` en lugar de hacerlo tú.
@@ -33,10 +34,13 @@ Solo para demo y PoC: `/codex:adversarial-review` sobre la spec. Una ronda, máx
 Checks del nivel (`prototype-scope`): lint siempre; smoke test en demo; evidencia en PoC. Captura o gif para cualquier cambio visual.
 
 ## 6. PR y merge
-PR con la plantilla (nivel, `Closes #n`, cómo correrlo, evidencia, `PROTO:`). `/codex:review --base main`. Corrige altos/medios. Avisa al dueño que está listo; él revisa y fusiona con CI en verde. Después actualiza los PRs hermanos contra main (`parallel-prs`).
+PR con la plantilla (nivel, `Closes #n`, cómo correrlo, evidencia, `PROTO:`). `python tools/agentes/delegar.py review` (o `/codex:review --base main` con el plugin de Codex). Corrige altos y medios. Avisa al dueño que está listo; él revisa y fusiona con CI en verde. Después actualiza los PRs hermanos contra main (`parallel-prs`).
 
 ## 7. Cierre
 - `docs/API.md`: de Propuesta a vigente.
 - En el artefacto de diseño, la captura real reemplaza a la ilustración.
 - Comenta en la issue y **propón** la issue del siguiente nivel (`gh-issues`, con el sí del usuario).
 - Ideas nuevas que no tocan ahora → `parked` en `toolbox/capabilities.json`.
+
+## Relacionadas
+`design-first`, `prototype-scope`, `gh-issues`, `parallel-prs`, `delegar`, `relay`
