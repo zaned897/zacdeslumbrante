@@ -140,6 +140,11 @@ export function searchKnowledge(query: string, k = 4, activeUrls: string[] = [])
   return index.search(query, k, activeUrls.length ? new Set(activeUrls) : undefined);
 }
 
+// Fragmentos cargados ahora mismo (0 sin corpus); lo expone /api/health para diagnosticar Render.
+export function corpusSize(): number {
+  return loadIndex()?.chunks.length ?? 0;
+}
+
 export function citation(c: KnowledgeChunk): string {
   return `${displayTitle(c)} · ${c.url} · consultado ${c.fetchedAt.slice(0, 10)}`;
 }

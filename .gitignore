@@ -10,3 +10,7 @@ coverage/
 .claude/settings.local.json
 .claude/skills
 __pycache__/
+
+# Delegaciones a Codex/agy (tools/agentes/delegar.py)
+.claude/worktrees/
+.claude/delegaciones/
