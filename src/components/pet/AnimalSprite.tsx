@@ -16,10 +16,10 @@ const BASE: Record<Species, Fur> = {
   perrito: { fur: '#E8C9A0', accent: '#8B5A2B', light: '#F7E6CF' },
   burrito: { fur: '#A8A29E', accent: '#57534E', light: '#E7E5E4' },
   coyote: { fur: '#D6A86A', accent: '#C08A4A', light: '#F7EBDD' },
-  // Ratoncito gris, en lugar del tlacuache (comentario del dueño en la propuesta A).
-  ratoncito: { fur: '#C7C2BE', accent: '#57534E', light: '#E7E5E4' },
-  // Ratón de campo (#71): orejas grandes y redondas, pelaje pardo.
-  raton: { fur: '#B08968', accent: '#7F5539', light: '#F1E3D3' },
+  // Ratón de campo (#118): quinto animal, orejas grandes y redondas, pelaje café y panza crema.
+  raton: { fur: '#A47148', accent: '#8B5E3C', light: '#F5E6D3' },
+  // Liebre del semidesierto (#71): sexto animal, se gana en un Pueblo Mágico.
+  liebre: { fur: '#B8977A', accent: '#8A6A4F', light: '#F3E9DC' },
 };
 
 // Diseños 1–3, iguales para todos: carbón, caliza y cantera.
@@ -86,19 +86,22 @@ function Ears({ species, f }: { species: Species; f: Fur }) {
     case 'raton':
       return (
         <>
-          <circle cx="24" cy="30" r="15" fill={f.fur} />
-          <circle cx="76" cy="30" r="15" fill={f.fur} />
-          <circle cx="24" cy="30" r="9" fill="#F9C6CF" />
-          <circle cx="76" cy="30" r="9" fill="#F9C6CF" />
+          <circle cx="24" cy="31" r="17" fill={f.accent} />
+          <circle cx="76" cy="31" r="17" fill={f.accent} />
+          <circle cx="24" cy="31" r="10" fill="#F9A8D4" />
+          <circle cx="76" cy="31" r="10" fill="#F9A8D4" />
         </>
       );
-    case 'ratoncito':
+    case 'liebre':
       return (
         <>
-          <circle cx="24" cy="34" r="17" fill={f.fur} />
-          <circle cx="76" cy="34" r="17" fill={f.fur} />
-          <circle cx="24" cy="34" r="10" fill="#F9A8D4" />
-          <circle cx="76" cy="34" r="10" fill="#F9A8D4" />
+          <ellipse cx="38" cy="22" rx="6" ry="20" fill={f.fur} transform="rotate(-8 38 22)" />
+          <ellipse cx="62" cy="22" rx="6" ry="20" fill={f.fur} transform="rotate(8 62 22)" />
+          <ellipse cx="38" cy="25" rx="3" ry="13" fill="#F5D0C5" transform="rotate(-8 38 25)" />
+          <ellipse cx="62" cy="25" rx="3" ry="13" fill="#F5D0C5" transform="rotate(8 62 25)" />
+          {/* punta negra de las orejas, como la liebre de cola negra del semidesierto */}
+          <path d="M33.2 8 Q38 -2 42.8 8 Q38 6 33.2 8Z" fill="#1C1917" transform="rotate(-8 38 22)" />
+          <path d="M57.2 8 Q62 -2 66.8 8 Q62 6 57.2 8Z" fill="#1C1917" transform="rotate(8 62 22)" />
         </>
       );
   }
@@ -132,15 +135,17 @@ function Markings({ species, f }: { species: Species; f: Fur }) {
     case 'raton':
       return (
         <>
-          <ellipse cx="50" cy="68" rx="12" ry="9" fill={f.light} />
-          <path d="M24 62 h11 M25 68 l10 -3 M65 62 h11 M65 65 l10 3" stroke={f.accent} strokeWidth="1.3" strokeLinecap="round" />
+          <path d="M50 32 Q46 40 50 48 Q54 40 50 32Z" fill={f.accent} opacity=".55" />
+          <ellipse cx="50" cy="71" rx="17" ry="12" fill={f.light} />
+          <path d="M39 67 L23 64 M39 70 L24 72.5 M61 67 L77 64 M61 70 L76 72.5" stroke="#57534E" strokeWidth="1.2" strokeLinecap="round" />
         </>
       );
-    case 'ratoncito':
+    case 'liebre':
       return (
         <>
-          <ellipse cx="50" cy="66" rx="12" ry="8" fill={f.light} />
-          <path d="M24 62 h14 M24 68 l14 -3 M62 62 h14 M62 65 l14 3" stroke={f.accent} strokeWidth="1.3" strokeLinecap="round" />
+          <ellipse cx="50" cy="69" rx="14" ry="10" fill={f.light} />
+          <path d="M37 47 q2 -3 5 -1 M63 47 q-2 -3 -5 -1" stroke={f.light} strokeWidth="2.5" strokeLinecap="round" fill="none" />
+          <path d="M40 66 L26 63 M40 69 L27 71 M60 66 L74 63 M60 69 L73 71" stroke={f.accent} strokeWidth="1.2" strokeLinecap="round" />
         </>
       );
   }
@@ -170,7 +175,7 @@ export const AnimalSprite: React.FC<AnimalSpriteProps> = ({
   animate = true,
 }) => {
   const f = furOf(species, design);
-  const ink = species === 'ratoncito' || species === 'raton' ? '#BE185D' : '#3B1D12';
+  const ink = species === 'raton' || species === 'liebre' ? '#BE185D' : '#3B1D12';
   const darkFur = DARK.has(f.fur);
   const bounce = animate && !tired && (mood === 'feliz' || mood === 'contento' || walking);
   const bobSpeed = walking ? '0.5s' : mood === 'feliz' ? '0.9s' : '1.6s';

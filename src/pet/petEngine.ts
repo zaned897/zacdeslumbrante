@@ -8,11 +8,11 @@
 import type { PlaceVisit } from './visits';
 import { EMPTY_INVENTORY, dropsFor, rankOf, type Inventory, type ResourceId } from './resources';
 
-export type Species = 'gatito' | 'perrito' | 'burrito' | 'coyote' | 'ratoncito' | 'raton';
+export type Species = 'gatito' | 'perrito' | 'burrito' | 'coyote' | 'raton' | 'liebre';
 /** Los cinco que se eligen desde el principio. */
-export const SPECIES: Species[] = ['gatito', 'perrito', 'burrito', 'coyote', 'ratoncito'];
+export const SPECIES: Species[] = ['gatito', 'perrito', 'burrito', 'coyote', 'raton'];
 /** El sexto (#71): el ratón de campo, que se gana al llegar a un Pueblo Mágico. */
-export const EARNED_SPECIES: Species = 'raton';
+export const EARNED_SPECIES: Species = 'liebre';
 const ALL_SPECIES: Species[] = [...SPECIES, EARNED_SPECIES];
 
 // PROTO: mientras no haya misiones presenciales (#62), basta una visita en la Ciudad 3D.
@@ -280,13 +280,16 @@ function isV1(v: unknown): v is PetStateV1 {
   return p.version === 1 && typeof p.name === 'string' && typeof p.lastTick === 'string' && Array.isArray(p.completedWalks);
 }
 
+// Animales que cambiaron en la propuesta A (#92, #118): quien ya tenía uno se queda con el ratón de campo.
+const RENAMED: Record<string, Species> = { tlacuache: 'raton', ratoncito: 'raton' };
+
 function isV2(v: unknown): v is PetState {
   if (typeof v !== 'object' || v === null) return false;
   const p = v as PetState;
   return (
     p.version === 2 &&
     typeof p.name === 'string' &&
-    (ALL_SPECIES.includes(p.species) || (p.species as string) === 'tlacuache') &&
+    (ALL_SPECIES.includes(p.species) || RENAMED[p.species as string] !== undefined) &&
     typeof p.mood === 'number' &&
     typeof p.energy === 'number' &&
     typeof p.inventory === 'object' && p.inventory !== null &&
@@ -300,8 +303,7 @@ function isV2(v: unknown): v is PetState {
 /** Valida y, si hace falta, migra lo leído del almacén (puede venir de otra versión o de la cuenta). */
 export function toPetState(v: unknown): PetState | null {
   if (isV2(v)) {
-    // El tlacuache se cambió por el ratoncito en la propuesta A: quien ya lo tenía, se queda con el ratoncito.
-    const species = (v.species as string) === 'tlacuache' ? 'ratoncito' : v.species;
+    const species = RENAMED[v.species as string] ?? v.species;
     return { ...v, species, inventory: { ...EMPTY_INVENTORY, ...v.inventory } };
   }
   if (isV1(v)) {
