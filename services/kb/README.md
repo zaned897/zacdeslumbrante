@@ -13,7 +13,9 @@ uv run python -m kb.search "¿Qué es el Salón de las Columnas?"
 uv run python -m kb.evaluate    # acierto@3 sobre eval/questions.json
 uv run pytest                   # tests sin red
 ```
-`data/` no se versiona: es contenido de terceros y se regenera con `kb.ingest`.
+`data/` no se versiona: se regenera con `kb.ingest`.
+
+`snapshot/` sí se versiona (#109): es la última ingesta buena hecha desde una PC (843 fragmentos de 24/27 fuentes, 22 oct 2026). En Render, si la ingesta no deja fragmentos porque los portales bloquean la nube, `scripts/render-build.sh` copia este snapshot a `data/`. Cada fragmento conserva su URL y su fecha de consulta, y el chat los cita así. Para refrescarlo: correr `kb.ingest` en una PC y copiar `data/corpus.jsonl` y `data/ingest-report.json` a `snapshot/`.
 
 ## Qué hace
 - `kb/sources.py` lee las fuentes directo del TS (una sola lista).
