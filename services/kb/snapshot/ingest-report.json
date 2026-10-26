@@ -1,0 +1,245 @@
+[
+  {
+    "sourceId": "zac-travel-main",
+    "url": "https://www.zacatecastravel.com/",
+    "status": "ok",
+    "httpStatus": 200,
+    "words": 6061,
+    "chunks": 45,
+    "pages": 7
+  },
+  {
+    "sourceId": "zac-pueblos-magicos",
+    "url": "https://zacatecastravel.com/pueblosmagicos",
+    "status": "ok",
+    "httpStatus": 200,
+    "words": 6072,
+    "chunks": 45,
+    "pages": 7
+  },
+  {
+    "sourceId": "zac-museos-travel",
+    "url": "https://www.zacatecastravel.com/museos",
+    "status": "ok",
+    "httpStatus": 200,
+    "words": 2311,
+    "chunks": 18,
+    "pages": 7
+  },
+  {
+    "sourceId": "zac-actividades",
+    "url": "https://www.zacatecastravel.com/actividades",
+    "status": "ok",
+    "httpStatus": 200,
+    "words": 2445,
+    "chunks": 18,
+    "pages": 7
+  },
+  {
+    "sourceId": "sectur-zac-gob",
+    "url": "https://turismo.zacatecas.gob.mx/",
+    "status": "ok",
+    "httpStatus": 200,
+    "words": 2318,
+    "chunks": 20,
+    "pages": 8
+  },
+  {
+    "sourceId": "gob-zac-portal",
+    "url": "https://www.zacatecas.gob.mx/",
+    "status": "ok",
+    "httpStatus": 200,
+    "words": 1190,
+    "chunks": 13,
+    "pages": 8
+  },
+  {
+    "sourceId": "capital-zac-atracciones",
+    "url": "https://capitaldezacatecas.gob.mx/municipio/servicios-turisticos/atracciones/",
+    "status": "ok",
+    "httpStatus": 200,
+    "words": 4804,
+    "chunks": 36,
+    "pages": 4
+  },
+  {
+    "sourceId": "archivo-general-zac",
+    "url": "https://archivogeneral.zacatecas.gob.mx/",
+    "status": "ok",
+    "httpStatus": 200,
+    "words": 437,
+    "chunks": 8,
+    "pages": 8
+  },
+  {
+    "sourceId": "capital-coordinacion-archivos",
+    "url": "https://portal.capitaldezacatecas.gob.mx/coordinacion-de-archivos",
+    "status": "ok",
+    "httpStatus": 200,
+    "words": 5579,
+    "chunks": 43,
+    "pages": 8
+  },
+  {
+    "sourceId": "cultura-zac-gob",
+    "url": "https://culturazac.gob.mx/",
+    "status": "ok",
+    "httpStatus": 200,
+    "words": 389,
+    "chunks": 3,
+    "pages": 8
+  },
+  {
+    "sourceId": "cultura-zac-museos",
+    "url": "https://culturazac.gob.mx/museos/",
+    "status": "ok",
+    "httpStatus": 200,
+    "words": 615,
+    "chunks": 6,
+    "pages": 8
+  },
+  {
+    "sourceId": "maamf-oficial",
+    "url": "https://maamf.com.mx/",
+    "status": "ok",
+    "httpStatus": 200,
+    "words": 3970,
+    "chunks": 29,
+    "pages": 8
+  },
+  {
+    "sourceId": "sic-museos-csv",
+    "url": "https://sic.cultura.gob.mx/opendata/d/32_museo_directorio.csv",
+    "status": "ok",
+    "httpStatus": 200,
+    "words": 4104,
+    "chunks": 30,
+    "pages": 1
+  },
+  {
+    "sourceId": "sic-museos-estado-32",
+    "url": "https://sic.cultura.gob.mx/lista.php?table=museo&estado_id=32&municipio_id=-1",
+    "status": "ok",
+    "httpStatus": 200,
+    "words": 1044,
+    "chunks": 12,
+    "pages": 8
+  },
+  {
+    "sourceId": "sic-portal-general",
+    "url": "https://sic.cultura.gob.mx/",
+    "status": "ok",
+    "httpStatus": 200,
+    "words": 360,
+    "chunks": 8,
+    "pages": 8
+  },
+  {
+    "sourceId": "inah-datos-arqueologia",
+    "url": "https://datos.inah.gob.mx/datos-abiertos/zonas-arqueologicas",
+    "status": "ok",
+    "httpStatus": 200,
+    "words": 5126,
+    "chunks": 37,
+    "pages": 4
+  },
+  {
+    "sourceId": "inah-la-quemada",
+    "url": "https://www.inah.gob.mx/zonas/112-zona-arqueologica-la-quemada",
+    "status": "ok",
+    "httpStatus": 200,
+    "words": 23447,
+    "chunks": 169,
+    "pages": 8
+  },
+  {
+    "sourceId": "inah-red-museos-zac",
+    "url": "https://www.inah.gob.mx/red-de-museos?modal=Zacatecas",
+    "status": "ok",
+    "httpStatus": 200,
+    "words": 26378,
+    "chunks": 190,
+    "pages": 6
+  },
+  {
+    "sourceId": "inah-datos-patrimonio-zac",
+    "url": "https://datos.inah.gob.mx/taxonomy/term/2479",
+    "status": "error: ReadTimeout",
+    "httpStatus": null,
+    "words": 0,
+    "chunks": 0,
+    "pages": 0
+  },
+  {
+    "sourceId": "inah-portal-nacional",
+    "url": "https://www.inah.gob.mx/",
+    "status": "ok",
+    "httpStatus": 200,
+    "words": 5166,
+    "chunks": 38,
+    "pages": 6
+  },
+  {
+    "sourceId": "unesco-whc-676",
+    "url": "https://whc.unesco.org/en/list/676/",
+    "status": "http-error",
+    "httpStatus": 403,
+    "words": 0,
+    "chunks": 0,
+    "pages": 0
+  },
+  {
+    "sourceId": "sectur-fed-pueblos-magicos",
+    "url": "https://www.sectur.gob.mx/gobmx/pueblos-magicos/",
+    "status": "ok",
+    "httpStatus": 200,
+    "words": 2464,
+    "chunks": 21,
+    "pages": 8
+  },
+  {
+    "sourceId": "gob-mx-acciones-pueblos-magicos",
+    "url": "https://www.gob.mx/sectur/acciones-y-programas/pueblos-magicos-267851",
+    "status": "ok",
+    "httpStatus": 200,
+    "words": 781,
+    "chunks": 8,
+    "pages": 5
+  },
+  {
+    "sourceId": "inegi-portal",
+    "url": "https://www.inegi.org.mx/",
+    "status": "ok",
+    "httpStatus": 200,
+    "words": 204,
+    "chunks": 3,
+    "pages": 3
+  },
+  {
+    "sourceId": "inba-portal",
+    "url": "https://inba.gob.mx/",
+    "status": "ok",
+    "httpStatus": 200,
+    "words": 5147,
+    "chunks": 40,
+    "pages": 8
+  },
+  {
+    "sourceId": "unesco-disclaimer",
+    "url": "https://whc.unesco.org/en/disclaimer/",
+    "status": "http-error",
+    "httpStatus": 403,
+    "words": 0,
+    "chunks": 0,
+    "pages": 0
+  },
+  {
+    "sourceId": "unesco-faq-126",
+    "url": "https://whc.unesco.org/en/faq/126",
+    "status": "ok",
+    "httpStatus": 200,
+    "words": 406,
+    "chunks": 3,
+    "pages": 1
+  }
+]
