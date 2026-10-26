@@ -1,6 +1,6 @@
 {
   "_doc": "Fuente única de verdad de la suite. 'installed' = lo que existe; 'parked' = ideas a futuro con disparadores. Lo mantiene la skill scout. No instales nada que no pase por aquí.",
-  "updated": "2026-10-22",
+  "updated": "2026-10-26",
   "installed": [
     {
       "id": "context7",
@@ -307,6 +307,20 @@
         "conflictos"
       ],
       "cost": "solo se carga al invocarla"
+    },
+    {
+      "id": "delegar",
+      "type": "script",
+      "agents": [
+        "claude",
+        "codex",
+        "antigravity"
+      ],
+      "covers": [
+        "delegar tareas a codex o agy en worktree aparte",
+        "revisión de Codex con hook Stop (CODEX_REVIEW=1)"
+      ],
+      "cost": "usa cuota de ChatGPT o de Google, no de Claude; el hook está apagado por defecto"
     }
   ],
   "parked": [
