@@ -12,7 +12,7 @@ description: Barandales contra el vibe coding. Busca en el código antes de escr
 - Antes de proponer una regla o convención: seguramente ya está escrita en `AGENTS.md` o en una skill.
 
 ## 1. Busca antes de escribir
-Si el repo está indexado en `codebase-memory` (MCP; ver `kit/mcp/README.md`), consultarlo no es opcional:
+Si el repo está indexado en `codebase-memory` (MCP; se instala una vez por máquina, ver `mcp/README.md` en zaned897/skills), consultarlo no es opcional:
 
 | Pregunta | Herramienta |
 |---|---|

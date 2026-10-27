@@ -36,6 +36,7 @@ Cambio en zona ajena → `docs/HANDOFF.md`. Contribuidores externos: cualquier z
 - Agentes sin hooks (Codex, Antigravity): al empezar corre `node toolbox/hooks/scout-hint.mjs "<tarea>"`.
 - Cambio de agente o sesión con trabajo a medias: `relay`. Un agente por rama a la vez.
 - Claude pasa tareas acotadas a Codex o Antigravity con `tools/agentes/delegar.py` (skill `delegar`): worktree y rama `delegar/*` aparte. Tarea delegada recibida: sin commit ni push, resume qué hiciste.
+- Antes de escribir código nuevo: `anti-vibe-coding`. Mismo error 3 veces o falta algo: `desatorar`. Kit común: [zaned897/skills](https://github.com/zaned897/skills).
 
 ## Convenciones
 - TS estricto sin `any` nuevos; Python con type hints, Pydantic, ruff.

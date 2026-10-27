@@ -1,9 +1,0 @@
-#!/usr/bin/env bash
-# Commits convencionales: tipo(ámbito opcional): descripción   ej. feat(api): eventos mock (#12)
-MSG=$(head -n1 "$1")
-case "$MSG" in Merge*|Revert*|fixup!*|squash!*) exit 0;; esac
-if ! echo "$MSG" | grep -qE '^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|proto)(\([a-z0-9._/-]+\))?!?: .{3,}'; then
-  echo "✗ Mensaje no convencional: \"$MSG\""
-  echo "  Usa: feat|fix|docs|refactor|test|chore|proto(ámbito): descripción (#issue)"
-  exit 1
-fi
