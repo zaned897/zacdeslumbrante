@@ -3,7 +3,14 @@ import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import type { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import type { CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
 import type { Language } from '../types';
-import type { SceneCamera, SceneEngine, ScenePlayer, ScenePoi, SceneSeasonLook } from '../types/scene3d';
+import type {
+  SceneCamera,
+  SceneEngine,
+  ScenePlayer,
+  ScenePoi,
+  SceneSeasonLook,
+  SceneTimeOfDay,
+} from '../types/scene3d';
 
 type Three = typeof THREE;
 
@@ -84,16 +91,48 @@ const COLORS = {
   route: '#E11D48',
 };
 
-// Noche de temporada (#73, #74): cielo morado oscuro y cantera iluminada desde dentro.
+// Noche del centro histórico (#129): cielo azul profundo y cantera bañada en ámbar desde la calle,
+// más encendida junto a la Catedral y apagándose hacia las orillas. Las temporadas nocturnas van encima.
 const NIGHT = {
-  sky: '#1E1B3A',
+  sky: '#0E1428',
   hemiSky: '#6D5BD0',
   hemiGround: '#3B2A22',
-  hemiIntensity: 1.0,
+  hemiIntensity: 0.35,
   sun: '#C7D2FE',
   sunIntensity: 0.45,
-  buildingGlow: '#7C2D12',
+  road: '#8A5220', // lámparas de sodio
 };
+// PROTO: interpretación del centro iluminado, no medición; afinar con fotos de referencia.
+const NIGHT_GLOW = {
+  center: { lat: 22.77543, lng: -102.57242 }, // Catedral Basílica
+  radiusM: 950,
+  heroRadiusM: 70, // la Catedral y su manzana, más brillantes
+  amber: [1.0, 0.66, 0.3] as const, // por unidad de brillo, sobre la base oscura
+  base: [0.1, 0.09, 0.16] as const,
+};
+
+/** Color nocturno (lineal) de cada vértice: ámbar a nivel de calle, más tenue hacia el techo y lejos del centro. */
+function nightColors(
+  positions: ArrayLike<number>,
+  base: number,
+  top: number,
+  distanceM: number,
+  i: number,
+): Float32Array {
+  const centro = Math.max(0, 1 - distanceM / NIGHT_GLOW.radiusM);
+  const hero = distanceM < NIGHT_GLOW.heroRadiusM ? 0.5 : 0;
+  const flicker = 0.85 + 0.3 * (((i * 9301 + 49297) % 233280) / 233280);
+  const toLinear = (v: number) => Math.min(1, v) ** 2.2;
+  const out = new Float32Array(positions.length);
+  for (let k = 0; k < positions.length; k += 3) {
+    const y = positions[k + 1];
+    const t = (y - base) / Math.max(1, top - base);
+    const roof = Math.abs(y - top) < 0.01 ? 0.35 : 1;
+    const glow = ((0.1 + centro ** 1.1) * (1 - 0.55 * t) * roof + hero) * flicker;
+    for (let c = 0; c < 3; c++) out[k + c] = toLinear(NIGHT_GLOW.base[c] + NIGHT_GLOW.amber[c] * glow);
+  }
+  return out;
+}
 const PETAL_COLOR = '#F97316'; // cempasúchil
 const PETAL_COUNT = 2000;
 const PETAL_RADIUS_M = 450;
@@ -223,7 +262,14 @@ export class ThreeOsmEngine implements SceneEngine {
   private readyPromise: Promise<void> = Promise.resolve();
   private hemi: THREE.HemisphereLight | null = null;
   private sun: THREE.DirectionalLight | null = null;
-  private buildingMaterial: THREE.MeshLambertMaterial | null = null;
+  private buildings: THREE.Mesh | null = null;
+  private roads: THREE.Mesh | null = null;
+  // Día y noche se crean una vez y solo se intercambian (#129).
+  private looks: {
+    day: { building: THREE.Material; road: THREE.Material };
+    night: { building: THREE.Material; road: THREE.Material };
+  } | null = null;
+  private timeOfDay: SceneTimeOfDay = 'day';
   private streetPoints: Array<{ x: number; z: number }> = [];
   private petals: THREE.InstancedMesh | null = null;
   private seasonLook: SceneSeasonLook | null = null;
@@ -311,6 +357,7 @@ export class ThreeOsmEngine implements SceneEngine {
 
     if (!response.ok) throw new Error(`${BUILDINGS_URL}: HTTP ${response.status}`);
     const data = (await response.json()) as BuildingsFile;
+    const glowCenter = toLocal(NIGHT_GLOW.center.lat, NIGHT_GLOW.center.lng);
     const geometries = data.buildings.map((b, i) => {
       const corners = b.p.map(([lng, lat]) => toLocal(lat, lng));
       // La forma se dibuja en XY y luego se acuesta: y del plano = -z del mundo.
@@ -320,27 +367,44 @@ export class ThreeOsmEngine implements SceneEngine {
       const ys = corners.map(({ x, z }) => this.heightAt(x, z));
       const base = Math.min(...ys);
       const slope = Math.max(...ys) - base;
-      return new T.ExtrudeGeometry(shape, { depth: height + slope, bevelEnabled: false })
+      const geometry = new T.ExtrudeGeometry(shape, { depth: height + slope, bevelEnabled: false })
         .rotateX(-Math.PI / 2)
         .translate(0, base, 0);
+      const cx = corners.reduce((sum, c) => sum + c.x, 0) / corners.length;
+      const cz = corners.reduce((sum, c) => sum + c.z, 0) / corners.length;
+      const distance = Math.hypot(cx - glowCenter.x, cz - glowCenter.z);
+      const positions = geometry.getAttribute('position').array;
+      geometry.setAttribute(
+        'color',
+        new T.BufferAttribute(nightColors(positions, base, base + height + slope, distance, i), 3),
+      );
+      return geometry;
     });
+    // polygonOffset: la calle va pegada al suelo sin parpadear contra él.
+    const roadOffset = { polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 };
+    this.looks = {
+      day: {
+        building: new T.MeshLambertMaterial({ color: COLORS.building }),
+        road: new T.MeshLambertMaterial({ color: COLORS.road, ...roadOffset }),
+      },
+      night: {
+        // Sin luz de escena: el color por vértice ya es la luz de la calle.
+        building: new T.MeshBasicMaterial({ vertexColors: true }),
+        road: new T.MeshBasicMaterial({ color: NIGHT.road, ...roadOffset }),
+      },
+    };
     if (roads) {
       const streets = this.roadsGeometry(T, roads);
       if (streets) {
-        scene.add(
-          new T.Mesh(
-            streets,
-            // polygonOffset: la calle va pegada al suelo sin parpadear contra él.
-            new T.MeshLambertMaterial({ color: COLORS.road, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }),
-          ),
-        );
+        this.roads = new T.Mesh(streets, this.looks.day.road);
+        scene.add(this.roads);
       }
     }
     const merged = mergeGeometries(geometries, false);
     geometries.forEach((g) => g.dispose());
     if (merged) {
-      this.buildingMaterial = new T.MeshLambertMaterial({ color: COLORS.building });
-      scene.add(new T.Mesh(merged, this.buildingMaterial));
+      this.buildings = new T.Mesh(merged, this.looks.day.building);
+      scene.add(this.buildings);
     }
     this.applySeason();
 
@@ -514,6 +578,8 @@ export class ThreeOsmEngine implements SceneEngine {
     this.renderer?.domElement.removeEventListener('click', this.onClick);
     this.resizeObserver?.disconnect();
     this.controls?.dispose();
+    if (this.looks) Object.values(this.looks).forEach((l) => [l.building, l.road].forEach((m) => m.dispose()));
+    this.looks = null;
     this.renderer?.dispose();
     this.renderer?.domElement.remove();
     this.labels?.domElement.remove();
@@ -592,10 +658,15 @@ export class ThreeOsmEngine implements SceneEngine {
     this.applySeason();
   }
 
+  setTimeOfDay(time: SceneTimeOfDay): void {
+    this.timeOfDay = time;
+    this.applySeason();
+  }
+
   private applySeason(): void {
     const { T, scene, hemi, sun } = this;
     if (!T || !scene || !hemi || !sun) return;
-    const night = this.seasonLook?.night ?? false;
+    const night = this.timeOfDay === 'night' || (this.seasonLook?.night ?? false);
     const sky = night ? NIGHT.sky : COLORS.sky;
     scene.background = new T.Color(sky);
     if (scene.fog instanceof T.Fog) scene.fog.color.set(sky);
@@ -604,9 +675,10 @@ export class ThreeOsmEngine implements SceneEngine {
     hemi.intensity = night ? NIGHT.hemiIntensity : 1.6;
     sun.color.set(night ? NIGHT.sun : '#FFFFFF');
     sun.intensity = night ? NIGHT.sunIntensity : 1.8;
-    if (this.buildingMaterial) {
-      this.buildingMaterial.emissive.set(night ? NIGHT.buildingGlow : '#000000');
-      this.buildingMaterial.emissiveIntensity = night ? 0.12 : 0;
+    if (this.looks) {
+      const look = night ? this.looks.night : this.looks.day;
+      if (this.buildings) this.buildings.material = look.building;
+      if (this.roads) this.roads.material = look.road;
     }
     this.setRace(T, scene, this.seasonLook?.raceRoute ?? null);
     const wantPetals = (this.seasonLook?.petals ?? false) && this.streetPoints.length > 0;

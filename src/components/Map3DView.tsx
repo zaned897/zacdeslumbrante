@@ -411,6 +411,12 @@ const Map3DScene: React.FC = () => {
     );
   }, [season, status, engineId]);
 
+  // PROTO: hasta que llegue el interruptor Día / Noche (#128), ?noche=1 enciende la noche del centro (#129).
+  useEffect(() => {
+    if (status !== 'ready') return;
+    engineRef.current?.setTimeOfDay?.(new URLSearchParams(window.location.search).has('noche') ? 'night' : 'day');
+  }, [status, engineId]);
+
   // Jugador: moverlo, seguirlo con la cámara y descubrir lugares cercanos.
   useEffect(() => {
     const engine = engineRef.current;
