@@ -14,9 +14,9 @@ interface BottomTabBarProps {
 export const BottomTabBar: React.FC<BottomTabBarProps> = ({ language, active, onSelect }) => {
   const t = TRANSLATIONS[language];
   const tabs: { id: AppTab; label: string; icon: React.ReactNode }[] = [
-    { id: 'chat', label: t.tabChat, icon: <MessageCircle className="w-5 h-5" /> },
     { id: '3d', label: t.tab3d, icon: <Box className="w-5 h-5" /> },
     { id: 'pet', label: t.tabPet, icon: <PawPrint className="w-5 h-5" /> },
+    { id: 'chat', label: t.tabChat, icon: <MessageCircle className="w-5 h-5" /> },
     { id: 'badges', label: t.tabBadges, icon: <Trophy className="w-5 h-5" /> },
     { id: 'plans', label: t.tabPlans, icon: <CalendarDays className="w-5 h-5" /> },
   ];

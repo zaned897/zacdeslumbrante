@@ -42,9 +42,8 @@ export default function App() {
   const [showOnboarding, setShowOnboarding] = useState<boolean>(shouldShowOnboarding);
 
   // UI Panels state
-  const [isMapOpen, setIsMapOpen] = useState<boolean>(() => {
-    return window.innerWidth >= 1280;
-  });
+  // El mapa del chat queda oculto por defecto; se abre con su botón en el encabezado.
+  const [isMapOpen, setIsMapOpen] = useState<boolean>(false);
   const [mapSplitRatio, setMapSplitRatio] = useState<'50-50' | 'full'>('50-50');
 
   // Modals state

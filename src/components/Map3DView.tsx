@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowDown,
-  ArrowLeft,
   ArrowUp,
   Check,
   ChevronLeft,
@@ -113,7 +112,7 @@ const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 type GoogleAuthWindow = Window & { gm_authFailure?: () => void };
 
-/** Vista 3D de la ciudad (nivel mock). Se abre en /#3d. */
+/** Vista 3D de la ciudad (nivel mock). Es la pantalla de inicio (/ o /#3d). */
 export const Map3DView: React.FC = () => (
   <Map3DErrorBoundary>
     <Map3DScene />
@@ -598,13 +597,6 @@ const Map3DScene: React.FC = () => {
 
       {/* Barra superior */}
       <div className="absolute top-0 inset-x-0 z-10 flex items-center justify-between gap-2 p-3 md:p-4 pointer-events-none">
-        <a
-          href="#"
-          className="pointer-events-auto flex items-center gap-2 px-3 py-2 text-xs font-semibold bg-[#FBF9F5]/95 border border-stone-200 rounded-lg shadow-sm hover:bg-white"
-        >
-          <ArrowLeft className="w-4 h-4 text-[#9A3412]" />
-          <span className="hidden sm:inline">{t.view3dBack}</span>
-        </a>
         <div className="pointer-events-auto flex items-center gap-2 px-3 py-2 bg-[#FBF9F5]/95 border border-stone-200 rounded-lg shadow-sm">
           <span className="font-serif font-bold text-sm md:text-base">{t.view3d}</span>
           <span className="px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white bg-[#D97706] rounded">
@@ -1149,7 +1141,7 @@ class Map3DErrorBoundary extends React.Component<{ children: React.ReactNode }, 
             >
               {t.view3dCrashRetry}
             </button>
-            <a href="#" className="text-sm text-stone-600 underline">
+            <a href="#chat" className="text-sm text-stone-600 underline">
               {t.view3dBack}
             </a>
           </div>
