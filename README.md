@@ -145,6 +145,7 @@ Las reglas comunes viven en [AGENTS.md](AGENTS.md) (Claude Code las lee desde [C
 **Adelanto visual:** <https://claude.ai/artifact/6hZzQuFhqKU9qJmpXsirzp> (referencia tipo Figma del proyecto; fuente en `docs/design/adelanto/`).
 
 - Los colaboradores solo comentan sobre el adelanto, entrando a claude.ai con una cuenta que tenga acceso.
+- Para que vean el ícono de comentarios, el dueño los invita por correo con acceso **Commenter** (Share → invitar → «Their access»). Con la liga sola («Anyone with the link») solo pueden ver, y un invitado externo no puede comentar si el adelanto también está compartido con «Anyone with the link»: deja «Who has access» en «Only you». Cada invitado entra a claude.ai con el mismo correo y acepta la invitación («View invitation» → «Accept and open»). Detalles: [Share artifacts](https://support.claude.com/en/articles/9547008-share-artifacts).
 - El dueño envía cada comentario a Claude con «Send to Claude»; de ahí sale una propuesta de diseño, sin código.
 - El orden siempre es: primero el visual, luego la issue y al final el código.
 
