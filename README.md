@@ -142,4 +142,10 @@ Las reglas comunes viven en [AGENTS.md](AGENTS.md) (Claude Code las lee desde [C
 
 ## Contribuir
 
+**Adelanto visual:** <https://claude.ai/artifact/6hZzQuFhqKU9qJmpXsirzp> (referencia tipo Figma del proyecto; fuente en `docs/design/adelanto/`).
+
+- Los colaboradores solo comentan sobre el adelanto, entrando a claude.ai con una cuenta que tenga acceso.
+- El dueño envía cada comentario a Claude con «Send to Claude»; de ahí sale una propuesta de diseño, sin código.
+- El orden siempre es: primero el visual, luego la issue y al final el código.
+
 Ramas `<nivel>/<issue>-<tema>` (p. ej. `mock/12-eventos`), commits convencionales con `#issue` y PR con la plantilla. Mocks siempre marcados; nada de datos inventados presentados como reales. Guía completa en [CONTRIBUTING.md](CONTRIBUTING.md).
