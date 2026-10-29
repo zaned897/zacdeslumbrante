@@ -31,9 +31,23 @@ interface RoadsFile {
   roads: Array<{ c: string; p: Array<[number, number]> }>;
 }
 
+interface LitStreetsFile {
+  license: string;
+  streets: Array<{ name: string; c: string; p: Array<[number, number]> }>;
+}
+
+/** Línea ya en coordenadas locales, con la mitad de su ancho. */
+interface RibbonLine {
+  half: number;
+  pts: Array<{ x: number; z: number }>;
+}
+
 const BUILDINGS_URL = '/data/centro-edificios.json';
 // Calles de OpenStreetMap vía Overture: dan la traza real del centro.
 const ROADS_URL = '/data/centro-calles.json';
+// Calles con alumbrado público de noche (#136): las principales del centro, sacadas de OSM por nombre
+// con scripts/gen-alumbrado.py.
+const LIT_STREETS_URL = '/data/centro-alumbrado.json';
 // PROTO: ancho por clase de vía a ojo (OSM casi no trae anchos en Zacatecas).
 const ROAD_WIDTH_M: Record<string, number> = {
   primary: 12,
@@ -91,47 +105,101 @@ const COLORS = {
   route: '#E11D48',
 };
 
-// Noche del centro histórico (#129): cielo azul profundo y cantera bañada en ámbar desde la calle,
-// más encendida junto a la Catedral y apagándose hacia las orillas. Las temporadas nocturnas van encima.
+// Noche (#136, cambia la de #129): la ciudad queda oscura y solo las calles principales del centro
+// tienen su alumbrado público. Las temporadas nocturnas van encima.
 const NIGHT = {
-  sky: '#0E1428',
-  hemiSky: '#6D5BD0',
-  hemiGround: '#3B2A22',
-  hemiIntensity: 0.35,
-  sun: '#C7D2FE',
-  sunIntensity: 0.45,
-  road: '#8A5220', // lámparas de sodio
+  sky: '#0B1022',
+  hemiSky: '#4C4F8A',
+  hemiGround: '#1E1A1C',
+  hemiIntensity: 0.3,
+  sun: '#AFC0F0', // luna
+  sunIntensity: 0.3,
+  road: '#1B1D29', // calles sin alumbrado
 };
-// PROTO: interpretación del centro iluminado, no medición; afinar con fotos de referencia.
-const NIGHT_GLOW = {
-  center: { lat: 22.77543, lng: -102.57242 }, // Catedral Basílica
-  radiusM: 950,
-  heroRadiusM: 70, // la Catedral y su manzana, más brillantes
-  amber: [1.0, 0.66, 0.3] as const, // por unidad de brillo, sobre la base oscura
-  base: [0.1, 0.09, 0.16] as const,
+// PROTO: valores a ojo, no medición; afinar con fotos de referencia.
+const STREET_LIGHT = {
+  warm: [1.0, 0.7, 0.38] as const, // lámpara de calle, por unidad de brillo
+  dark: [0.045, 0.05, 0.085] as const, // fachada sin luz, apenas azulada
+  roof: [0.075, 0.08, 0.125] as const, // techos con luz de luna
+  reachM: 14, // hasta dónde llega la luz pasando el borde de la calle: las fachadas inmediatas
+  lampHeightM: 7, // arriba de esto la fachada se va apagando
+  lampSpacingM: 24,
+  stepM: 4, // un punto de la cinta cada tanto, para que se noten los charcos de luz
+  window: '#E9B56A',
+  windowEvery: 6, // uno de cada tantos edificios a oscuras tiene una ventana encendida
 };
 
-/** Color nocturno (lineal) de cada vértice: ámbar a nivel de calle, más tenue hacia el techo y lejos del centro. */
+/** Color nocturno (lineal) de cada vértice: luz de la calle cercana en la planta baja, oscuro lo demás. */
 function nightColors(
   positions: ArrayLike<number>,
   base: number,
   top: number,
-  distanceM: number,
-  i: number,
+  lit: (x: number, z: number) => number,
 ): Float32Array {
-  const centro = Math.max(0, 1 - distanceM / NIGHT_GLOW.radiusM);
-  const hero = distanceM < NIGHT_GLOW.heroRadiusM ? 0.5 : 0;
-  const flicker = 0.85 + 0.3 * (((i * 9301 + 49297) % 233280) / 233280);
   const toLinear = (v: number) => Math.min(1, v) ** 2.2;
   const out = new Float32Array(positions.length);
   for (let k = 0; k < positions.length; k += 3) {
     const y = positions[k + 1];
-    const t = (y - base) / Math.max(1, top - base);
-    const roof = Math.abs(y - top) < 0.01 ? 0.35 : 1;
-    const glow = ((0.1 + centro ** 1.1) * (1 - 0.55 * t) * roof + hero) * flicker;
-    for (let c = 0; c < 3; c++) out[k + c] = toLinear(NIGHT_GLOW.base[c] + NIGHT_GLOW.amber[c] * glow);
+    const atTop = Math.abs(y - top) < 0.01;
+    const above = y - base;
+    const height =
+      above <= STREET_LIGHT.lampHeightM ? 1 : Math.max(0.15, 1 - (above - STREET_LIGHT.lampHeightM) / 14);
+    const glow = lit(positions[k], positions[k + 2]) * height * (atTop ? 0.25 : 1);
+    const dark = atTop ? STREET_LIGHT.roof : STREET_LIGHT.dark;
+    for (let c = 0; c < 3; c++) out[k + c] = toLinear(dark[c] + STREET_LIGHT.warm[c] * glow);
   }
   return out;
+}
+
+/** Calles con alumbrado en coordenadas locales, con una cuadrícula para saber rápido qué tan cerca queda un punto. */
+class StreetLights {
+  private static readonly CELL_M = 24;
+  private readonly segments: Array<{ ax: number; az: number; bx: number; bz: number; half: number }> = [];
+  private readonly cells = new Map<number, number[]>();
+
+  constructor(readonly lines: RibbonLine[]) {
+    const reach = STREET_LIGHT.reachM;
+    for (const { half, pts } of lines) {
+      for (let i = 1; i < pts.length; i++) {
+        const a = pts[i - 1];
+        const b = pts[i];
+        const id = this.segments.push({ ax: a.x, az: a.z, bx: b.x, bz: b.z, half }) - 1;
+        const pad = half + reach;
+        for (let cx = this.cell(Math.min(a.x, b.x) - pad); cx <= this.cell(Math.max(a.x, b.x) + pad); cx++) {
+          for (let cz = this.cell(Math.min(a.z, b.z) - pad); cz <= this.cell(Math.max(a.z, b.z) + pad); cz++) {
+            const key = this.key(cx, cz);
+            const list = this.cells.get(key);
+            if (list) list.push(id);
+            else this.cells.set(key, [id]);
+          }
+        }
+      }
+    }
+  }
+
+  /** 1 sobre la calle; baja a 0 a STREET_LIGHT.reachM del borde. */
+  at(x: number, z: number): number {
+    const ids = this.cells.get(this.key(this.cell(x), this.cell(z)));
+    if (!ids) return 0;
+    let best = 0;
+    for (const id of ids) {
+      const s = this.segments[id];
+      const dx = s.bx - s.ax;
+      const dz = s.bz - s.az;
+      const t = Math.min(1, Math.max(0, ((x - s.ax) * dx + (z - s.az) * dz) / (dx * dx + dz * dz || 1)));
+      const d = Math.hypot(x - (s.ax + t * dx), z - (s.az + t * dz));
+      best = Math.max(best, 1 - Math.max(0, d - s.half) / STREET_LIGHT.reachM);
+    }
+    return best ** 1.5;
+  }
+
+  private cell(v: number): number {
+    return Math.floor(v / StreetLights.CELL_M);
+  }
+
+  private key(cx: number, cz: number): number {
+    return (cx + 5000) * 10000 + (cz + 5000);
+  }
 }
 const PETAL_COLOR = '#F97316'; // cempasúchil
 const PETAL_COUNT = 2000;
@@ -147,6 +215,23 @@ function toLocal(lat: number, lng: number): { x: number; z: number } {
 
 function toLatLng(x: number, z: number): { lat: number; lng: number } {
   return { lat: ORIGIN.lat - z / M_PER_DEG_LAT, lng: ORIGIN.lng + x / M_PER_DEG_LNG };
+}
+
+/** Puntos locales de una vía, a no más de `stepM` metros entre sí. */
+function densify(p: Array<[number, number]>, stepM: number): Array<{ x: number; z: number }> {
+  const pts: Array<{ x: number; z: number }> = [];
+  p.forEach(([lng, lat], i) => {
+    const a = toLocal(lat, lng);
+    const next = p[i + 1];
+    if (!next) {
+      pts.push(a);
+      return;
+    }
+    const b = toLocal(next[1], next[0]);
+    const steps = Math.max(1, Math.ceil(Math.hypot(b.x - a.x, b.z - a.z) / stepM));
+    for (let s = 0; s < steps; s++) pts.push({ x: a.x + ((b.x - a.x) * s) / steps, z: a.z + ((b.z - a.z) * s) / steps });
+  });
+  return pts;
 }
 
 const easeInOut = (t: number) => (t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2);
@@ -270,6 +355,8 @@ export class ThreeOsmEngine implements SceneEngine {
     night: { building: THREE.Material; road: THREE.Material };
   } | null = null;
   private timeOfDay: SceneTimeOfDay = 'day';
+  // Calles con alumbrado, sus lámparas y algunas ventanas: solo se ven de noche (#136).
+  private nightLights: THREE.Group | null = null;
   private streetPoints: Array<{ x: number; z: number }> = [];
   private petals: THREE.InstancedMesh | null = null;
   private seasonLook: SceneSeasonLook | null = null;
@@ -315,11 +402,15 @@ export class ThreeOsmEngine implements SceneEngine {
     this.sun = sun;
     this.scene = scene;
 
-    const [terrain, response, roads] = await Promise.all([
+    const [terrain, response, roads, litStreets] = await Promise.all([
       Terrain.load(),
       fetch(BUILDINGS_URL),
       fetch(ROADS_URL)
         .then((r) => (r.ok ? (r.json() as Promise<RoadsFile>) : null))
+        .catch(() => null),
+      // Sin este archivo la noche queda oscura por completo.
+      fetch(LIT_STREETS_URL)
+        .then((r) => (r.ok ? (r.json() as Promise<LitStreetsFile>) : null))
         .catch(() => null),
     ]);
     this.terrain = terrain;
@@ -357,7 +448,15 @@ export class ThreeOsmEngine implements SceneEngine {
 
     if (!response.ok) throw new Error(`${BUILDINGS_URL}: HTTP ${response.status}`);
     const data = (await response.json()) as BuildingsFile;
-    const glowCenter = toLocal(NIGHT_GLOW.center.lat, NIGHT_GLOW.center.lng);
+    // La banqueta también se alumbra: un metro más por lado.
+    const lights = new StreetLights(
+      (litStreets?.streets ?? []).map((s) => ({
+        half: (ROAD_WIDTH_M[s.c] ?? 6) / 2 + 1,
+        pts: densify(s.p, STREET_LIGHT.stepM),
+      })),
+    );
+    const lit = (x: number, z: number) => lights.at(x, z);
+    const windows: Array<{ x: number; y: number; z: number; angle: number }> = [];
     const geometries = data.buildings.map((b, i) => {
       const corners = b.p.map(([lng, lat]) => toLocal(lat, lng));
       // La forma se dibuja en XY y luego se acuesta: y del plano = -z del mundo.
@@ -370,14 +469,14 @@ export class ThreeOsmEngine implements SceneEngine {
       const geometry = new T.ExtrudeGeometry(shape, { depth: height + slope, bevelEnabled: false })
         .rotateX(-Math.PI / 2)
         .translate(0, base, 0);
-      const cx = corners.reduce((sum, c) => sum + c.x, 0) / corners.length;
-      const cz = corners.reduce((sum, c) => sum + c.z, 0) / corners.length;
-      const distance = Math.hypot(cx - glowCenter.x, cz - glowCenter.z);
+      const top = base + height + slope;
       const positions = geometry.getAttribute('position').array;
-      geometry.setAttribute(
-        'color',
-        new T.BufferAttribute(nightColors(positions, base, base + height + slope, distance, i), 3),
-      );
+      geometry.setAttribute('color', new T.BufferAttribute(nightColors(positions, base, top, lit), 3));
+      if (i % STREET_LIGHT.windowEvery === 0) {
+        const cx = corners.reduce((sum, c) => sum + c.x, 0) / corners.length;
+        const cz = corners.reduce((sum, c) => sum + c.z, 0) / corners.length;
+        if (lit(cx, cz) === 0) windows.push(...this.windowSpots(corners, top));
+      }
       return geometry;
     });
     // polygonOffset: la calle va pegada al suelo sin parpadear contra él.
@@ -406,6 +505,8 @@ export class ThreeOsmEngine implements SceneEngine {
       this.buildings = new T.Mesh(merged, this.looks.day.building);
       scene.add(this.buildings);
     }
+    this.nightLights = this.makeNightLights(T, lights.lines, windows);
+    scene.add(this.nightLights);
     this.applySeason();
 
     const attribution = document.createElement('div');
@@ -580,6 +681,14 @@ export class ThreeOsmEngine implements SceneEngine {
     this.controls?.dispose();
     if (this.looks) Object.values(this.looks).forEach((l) => [l.building, l.road].forEach((m) => m.dispose()));
     this.looks = null;
+    const T = this.T;
+    this.nightLights?.traverse((o) => {
+      if (T && o instanceof T.Mesh) {
+        o.geometry.dispose();
+        (o.material as THREE.Material).dispose();
+      }
+    });
+    this.nightLights = null;
     this.renderer?.dispose();
     this.renderer?.domElement.remove();
     this.labels?.domElement.remove();
@@ -608,36 +717,44 @@ export class ThreeOsmEngine implements SceneEngine {
 
   /** Cintas de calle sobre el relieve: un punto cada ~8 m, ancho según la clase de vía. */
   private roadsGeometry(T: Three, data: RoadsFile): THREE.BufferGeometry | null {
-    const positions: number[] = [];
-    const indices: number[] = [];
-    for (const road of data.roads) {
-      const half = (ROAD_WIDTH_M[road.c] ?? 4) / 2;
-      const pts: Array<{ x: number; z: number }> = [];
-      road.p.forEach(([lng, lat], i) => {
-        const a = toLocal(lat, lng);
-        const next = road.p[i + 1];
-        if (!next) {
-          pts.push(a);
-          return;
-        }
-        const b = toLocal(next[1], next[0]);
-        const steps = Math.max(1, Math.ceil(Math.hypot(b.x - a.x, b.z - a.z) / 8));
-        for (let s = 0; s < steps; s++) pts.push({ x: a.x + ((b.x - a.x) * s) / steps, z: a.z + ((b.z - a.z) * s) / steps });
-      });
+    const lines = data.roads.map((road) => ({ half: (ROAD_WIDTH_M[road.c] ?? 4) / 2, pts: densify(road.p, 8) }));
+    for (const { pts } of lines) {
       if (pts.length < 2) continue;
       for (const p of pts) if (Math.hypot(p.x, p.z) < PETAL_RADIUS_M) this.streetPoints.push(p);
+    }
+    return this.ribbon(T, lines, 0.4);
+  }
+
+  /** Cintas sobre el relieve, del ancho de cada línea. `shade` da el color según los metros recorridos. */
+  private ribbon(
+    T: Three,
+    lines: RibbonLine[],
+    lift: number,
+    shade?: (meters: number) => [number, number, number],
+  ): THREE.BufferGeometry | null {
+    const positions: number[] = [];
+    const colors: number[] = [];
+    const indices: number[] = [];
+    for (const { half, pts } of lines) {
+      if (pts.length < 2) continue;
       const start = positions.length / 3;
+      let meters = 0;
       pts.forEach((p, i) => {
         const prev = pts[Math.max(i - 1, 0)];
         const next = pts[Math.min(i + 1, pts.length - 1)];
+        if (i > 0) meters += Math.hypot(p.x - prev.x, p.z - prev.z);
         const dx = next.x - prev.x;
         const dz = next.z - prev.z;
         const len = Math.hypot(dx, dz) || 1;
         // Normal a la izquierda del sentido de la vía.
         const nx = -dz / len;
         const nz = dx / len;
-        const y = this.heightAt(p.x, p.z) + 0.4;
+        const y = this.heightAt(p.x, p.z) + lift;
         positions.push(p.x + nx * half, y, p.z + nz * half, p.x - nx * half, y, p.z - nz * half);
+        if (shade) {
+          const c = shade(meters);
+          colors.push(...c, ...c);
+        }
         if (i > 0) {
           const k = start + (i - 1) * 2;
           // Sentido antihorario visto desde arriba: la normal apunta al cielo.
@@ -648,9 +765,104 @@ export class ThreeOsmEngine implements SceneEngine {
     if (!indices.length) return null;
     const geometry = new T.BufferGeometry();
     geometry.setAttribute('position', new T.Float32BufferAttribute(positions, 3));
+    if (shade) geometry.setAttribute('color', new T.Float32BufferAttribute(colors, 3));
     geometry.setIndex(indices);
     geometry.computeVertexNormals();
     return geometry;
+  }
+
+  /** Calles con alumbrado (charcos de luz bajo cada lámpara), sus lámparas y las ventanas encendidas. */
+  private makeNightLights(
+    T: Three,
+    lines: RibbonLine[],
+    windows: Array<{ x: number; y: number; z: number; angle: number }>,
+  ): THREE.Group {
+    const group = new T.Group();
+    group.visible = false;
+    const toLinear = (v: number) => Math.min(1, v) ** 2.2;
+    const [r, g, b] = STREET_LIGHT.warm;
+    const streets = this.ribbon(T, lines, 0.6, (meters) => {
+      const pool = 0.5 + 0.5 * Math.cos((2 * Math.PI * meters) / STREET_LIGHT.lampSpacingM);
+      const k = 0.45 + 0.55 * pool;
+      return [toLinear(r * k), toLinear(g * k), toLinear(b * k)];
+    });
+    if (streets) {
+      // Encima de las calles normales, sin parpadear contra ellas.
+      const material = new T.MeshBasicMaterial({
+        vertexColors: true,
+        polygonOffset: true,
+        polygonOffsetFactor: -4,
+        polygonOffsetUnits: -4,
+      });
+      group.add(new T.Mesh(streets, material));
+    }
+    // Una lámpara cada lampSpacingM, alternando banqueta.
+    const lamps: Array<{ x: number; y: number; z: number; angle: number }> = [];
+    for (const { half, pts } of lines) {
+      let meters = 0;
+      let nextLamp = 0;
+      let side = 1;
+      pts.forEach((p, i) => {
+        if (i > 0) meters += Math.hypot(p.x - pts[i - 1].x, p.z - pts[i - 1].z);
+        if (meters < nextLamp) return;
+        nextLamp += STREET_LIGHT.lampSpacingM;
+        const ahead = pts[Math.min(i + 1, pts.length - 1)];
+        const behind = pts[Math.max(i - 1, 0)];
+        const len = Math.hypot(ahead.x - behind.x, ahead.z - behind.z) || 1;
+        const x = p.x - ((ahead.z - behind.z) / len) * (half + 0.5) * side;
+        const z = p.z + ((ahead.x - behind.x) / len) * (half + 0.5) * side;
+        lamps.push({ x, y: this.heightAt(x, z) + 5.5, z, angle: 0 });
+        side = -side;
+      });
+    }
+    const instanced = (geometry: THREE.BufferGeometry, color: string, spots: typeof lamps) => {
+      const mesh = new T.InstancedMesh(geometry, new T.MeshBasicMaterial({ color }), Math.max(1, spots.length));
+      mesh.count = spots.length;
+      const m = new T.Matrix4();
+      const q = new T.Quaternion();
+      const up = new T.Vector3(0, 1, 0);
+      const one = new T.Vector3(1, 1, 1);
+      const pos = new T.Vector3();
+      spots.forEach((s, i) => mesh.setMatrixAt(i, m.compose(pos.set(s.x, s.y, s.z), q.setFromAxisAngle(up, s.angle), one)));
+      group.add(mesh);
+    };
+    // Octaedro: 8 triángulos por lámpara; de lejos se ve igual que una esfera.
+    instanced(new T.OctahedronGeometry(0.9), '#FFE3B3', lamps);
+    instanced(new T.PlaneGeometry(1.3, 1.6), STREET_LIGHT.window, windows);
+    return group;
+  }
+
+  /** Una o dos ventanas encendidas en la pared más larga, mirando hacia la calle. */
+  private windowSpots(
+    corners: Array<{ x: number; z: number }>,
+    top: number,
+  ): Array<{ x: number; y: number; z: number; angle: number }> {
+    let signed = 0;
+    let longest = 0;
+    let len = 0;
+    corners.forEach((a, i) => {
+      const b = corners[(i + 1) % corners.length];
+      signed += a.x * b.z - b.x * a.z;
+      const l = Math.hypot(b.x - a.x, b.z - a.z);
+      if (l > len) {
+        len = l;
+        longest = i;
+      }
+    });
+    if (len < 4) return [];
+    const a = corners[longest];
+    const b = corners[(longest + 1) % corners.length];
+    // Hacia afuera de la huella: a la derecha de la pared si la huella va en sentido antihorario.
+    const nx = ((signed > 0 ? 1 : -1) * (b.z - a.z)) / len;
+    const nz = ((signed > 0 ? -1 : 1) * (b.x - a.x)) / len;
+    const spots: Array<{ x: number; y: number; z: number; angle: number }> = [];
+    for (const f of len > 12 ? [0.3, 0.7] : [0.5]) {
+      const x = a.x + (b.x - a.x) * f + nx * 0.15;
+      const z = a.z + (b.z - a.z) * f + nz * 0.15;
+      const y = this.heightAt(x, z) + 2.6;
+      if (y + 1 < top) spots.push({ x, y, z, angle: Math.atan2(nx, nz) });
+    }
+    return spots;
   }
 
   setSeason(look: SceneSeasonLook | null): void {
@@ -680,6 +892,7 @@ export class ThreeOsmEngine implements SceneEngine {
       if (this.buildings) this.buildings.material = look.building;
       if (this.roads) this.roads.material = look.road;
     }
+    if (this.nightLights) this.nightLights.visible = night;
     this.setRace(T, scene, this.seasonLook?.raceRoute ?? null);
     const wantPetals = (this.seasonLook?.petals ?? false) && this.streetPoints.length > 0;
     if (wantPetals && !this.petals) this.petals = this.makePetals(T, scene);
