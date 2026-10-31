@@ -10,7 +10,7 @@ interface JoinWorkshopProps {
   language: Language;
 }
 
-/** Tarjeta «Súmate al taller» que cierra la pestaña Equipo (#117, propuesta E). La monta la pestaña de #116. */
+/** Tarjeta «Súmate al taller» que cierra la lista de la pestaña Equipo (#117, propuesta E). */
 export const JoinWorkshop: React.FC<JoinWorkshopProps> = ({ language }) => {
   const t = TRANSLATIONS[language];
   const steps = [t.joinStep1, t.joinStep2, t.joinStep3, t.joinStep4];
