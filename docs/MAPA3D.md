@@ -25,6 +25,8 @@ Objetivo: un recorrido 3D animado sobre la arquitectura real de Zacatecas, con m
 
 **Google Maps 3D** (`Map3DElement` de Maps JavaScript API, librería `maps3d`): muestra los Photorealistic 3D Tiles de la ciudad real, usa la misma llave que el mapa 2D y ya trae marcadores 3D, polilíneas, vuelos de cámara y modelos `.glb` (`Model3DElement`).
 
+Desde #127 la vista abre por defecto en la ciudad estilizada de three.js, haya o no llave: es la vista normal, no un respaldo. Google Maps 3D se elige a mano con `?engine=google#3d` y Cesium con `?engine=cesium#3d`; las dos necesitan llave.
+
 Límites conocidos, que abren issues:
 - `Model3DElement` no reproduce animaciones glTF. Para el avatar que camina está **CesiumJS** (`src/scene3d/cesiumEngine.ts`, mismos 3D Tiles vía Map Tiles API): `?engine=cesium#3d`. Comparativa en `docs/poc/motor-3d.md`; `?stats=1` muestra tiempos y fps.
 - Si Google rechaza la llave (dominio no autorizado, API sin habilitar) o no hay 3D Tiles, la vista cae sola a three.js y muestra el código de error de Google.

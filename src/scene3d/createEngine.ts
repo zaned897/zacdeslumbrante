@@ -6,13 +6,13 @@ import { ThreeOsmEngine } from './threeOsmEngine';
 export type EngineId = 'google' | 'cesium' | 'three';
 
 /**
- * `?engine=cesium` o `?engine=three` eligen motor; por defecto Google Maps 3D.
- * Sin llave de Google siempre se usa three.js (ciudad estilizada).
+ * Por defecto la ciudad estilizada de three.js, haya o no llave de Google (#127).
+ * `?engine=google` o `?engine=cesium` eligen a mano la vista fotorrealista; las dos necesitan llave.
  */
 export function selectedEngineId(hasApiKey: boolean): EngineId {
   const requested = new URLSearchParams(window.location.search).get('engine');
-  if (!hasApiKey || requested === 'three') return 'three';
-  return requested === 'cesium' ? 'cesium' : 'google';
+  if (hasApiKey && (requested === 'google' || requested === 'cesium')) return requested;
+  return 'three';
 }
 
 export function createEngine(id: EngineId, apiKey: string): SceneEngine {

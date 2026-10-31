@@ -628,7 +628,8 @@ const Map3DScene: React.FC = () => {
         </div>
       )}
 
-      {engineId === 'three' && status === 'ready' && !isExploring && (
+      {/* La ciudad estilizada es la vista normal (#127): el aviso solo sale si cayó desde Google o no hay llave. */}
+      {engineId === 'three' && status === 'ready' && !isExploring && (engineFallback || !apiKey) && (
         <div className="absolute top-16 inset-x-3 md:inset-x-auto md:left-4 md:max-w-xs z-10 text-[11px] text-stone-700 bg-[#FBF9F5]/90 border border-stone-200 rounded-lg px-3 py-2">
           {engineFallback ? (
             <>
@@ -641,8 +642,6 @@ const Map3DScene: React.FC = () => {
                 </span>
               )}
             </>
-          ) : apiKey ? (
-            t.view3dStylized
           ) : (
             t.view3dNoKeyBody
           )}
