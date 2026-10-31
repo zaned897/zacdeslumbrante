@@ -13,6 +13,7 @@ import { Onboarding, shouldShowOnboarding } from './components/app/Onboarding';
 import { Language, ChatMessage, Place, KnowledgeBaseURL } from './types';
 import { getStoredKnowledgeBase, saveStoredKnowledgeBase, resetKnowledgeBase } from './data/knowledgeBase';
 import { ZACATECAS_PLACES } from './data/places';
+import { TRANSLATIONS } from './data/i18n';
 import { activeSeason } from './data/seasons';
 import { AccountAvatarButton } from './components/account/AccountAvatarButton';
 import { AccountSheet } from './components/account/AccountSheet';
@@ -380,6 +381,9 @@ export default function App() {
             <>
               <AppHeader
                 language={language}
+                title={TRANSLATIONS[language].chatHeaderTitle}
+                subtitle={TRANSLATIONS[language].chatHeaderSubtitle}
+                demoBadge={false}
                 season={season ? { name: season.name[language], accent: season.accent } : undefined}
                 onToggleLanguage={toggleLanguage}
                 isMapOpen={isMapOpen}
@@ -397,7 +401,6 @@ export default function App() {
                   onSelectPrompt={(prompt) => handleSendMessage(prompt)}
                   knowledgeBase={knowledgeBase}
                   onOpen3d={() => goToTab('3d')}
-                  onOpenPlans={() => goToTab('plans')}
                 />
                 <GoogleMapsPanel
                   isOpen={isMapOpen}
