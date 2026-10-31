@@ -152,5 +152,31 @@ Errores: `{ "detail": "mensaje en español" }` con `400` (datos), `401` (sin ses
 - Bearer = header `Authorization: Bearer <accessToken>`; Express lo reenvía tal cual.
 - Los valores de progreso son opacos para el backend (los define `ProgressStore` del frontend). Si el valor guardado y el que llega traen `updatedAt` (ISO con zona) y el que llega es más viejo, se conserva el guardado y es el que se responde: gana el más reciente.
 
+### GET /api/py/colaboradores?rol=  · mock · dueño: Claude Code (#115)
+Personas del taller SES–COZCyT para la pestaña Equipo (#116). `rol` opcional: `diseno | codigo | contenido | datos` (otro valor → 422). Datos en `services/api/app/fixtures/collaborators.json`: **personas de ejemplo**, ninguna real.
+```json
+{
+  "_mock": true,
+  "collaborators": [
+    {
+      "id": "ana-ejemplo",
+      "name": "Ana Ejemplo",
+      "initials": "AE",
+      "color": "#9A3412",
+      "role": { "es": "Ciudad 3D", "en": "3D City" },
+      "area": "diseno",
+      "bio": { "es": "Diseña la ciudad 3D…", "en": "Designs the 3D city…" },
+      "contributions": [{ "es": "3 propuestas", "en": "3 proposals" }],
+      "socials": [{ "network": "instagram", "handle": "@ana.ejemplo", "url": "https://example.com/instagram/ana.ejemplo" }],
+      "consent": true
+    }
+  ]
+}
+```
+- Solo se devuelven personas con `consent: true`; quien no dio permiso nunca sale, con o sin filtro.
+- `socials`: solo las redes que la persona eligió mostrar (puede ir vacía). `network`: `github | instagram | linkedin | x | web`.
+- `color`: fondo del avatar de iniciales (hex). `contributions`: textos cortos para los chips del perfil.
+- PROTO: las `url` de ejemplo van a `example.com`, porque un usuario inventado podría ser la cuenta de alguien real. Con la lista real serán las URLs de cada red.
+
 ## Propuestas pendientes
 (Agrega aquí endpoints nuevos antes de implementarlos: método, ruta, body, respuesta, dueño.)
