@@ -334,6 +334,16 @@ export const TRANSLATIONS = {
     petRankUpToast: '¡{name} subió a {rank}!',
     petGoldToast: '+ Oro por completar el recorrido',
     petFutureBody: 'Llévala a Jerez, Sombrerete, Guadalupe y Pinos, y luego a pueblos de otros estados. Esas misiones se cumplen estando ahí.',
+
+    // Equipo: Súmate al taller (#117)
+    joinTitle: 'Súmate al taller',
+    joinSubtitle: 'Taller SES–COZCyT · 2026',
+    joinStep1: 'Comenta en el adelanto: señala una pantalla y escribe tu idea. No necesitas cuenta de GitHub.',
+    joinStep2: 'El dueño la aprueba y se vuelve una issue con sus pantallas.',
+    joinStep3: 'Toma una issue lista y abre un PR pequeño con capturas.',
+    joinStep4: 'Tu nombre y tus redes aparecen aquí.',
+    joinGuide: 'Leer la guía de colaboración',
+    joinConsent: 'Solo apareces si dices que sí. Tú eliges tu foto y qué redes mostrar, y puedes salirte cuando quieras.',
   },
   en: {
     // App & Header
@@ -670,5 +680,15 @@ export const TRANSLATIONS = {
     petRankUpToast: '{name} reached {rank}!',
     petGoldToast: '+ Gold for finishing the tour',
     petFutureBody: 'Take it to Jerez, Sombrerete, Guadalupe and Pinos, then to towns in other states. Those missions are completed on site.',
+
+    // Team: Join the workshop (#117)
+    joinTitle: 'Join the workshop',
+    joinSubtitle: 'SES–COZCyT workshop · 2026',
+    joinStep1: 'Comment on the preview: point at a screen and write your idea. No GitHub account needed.',
+    joinStep2: 'The owner approves it and it becomes an issue with its screens.',
+    joinStep3: 'Pick a ready issue and open a small PR with screenshots.',
+    joinStep4: 'Your name and networks show up here.',
+    joinGuide: 'Read the collaboration guide',
+    joinConsent: 'You only appear if you say yes. You choose your photo and which networks to show, and you can leave whenever you want.',
   },
 };
