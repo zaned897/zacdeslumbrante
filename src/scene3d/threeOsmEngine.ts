@@ -979,7 +979,8 @@ export class ThreeOsmEngine implements SceneEngine {
       const z = p.z + (Math.random() - 0.5) * 5;
       q.setFromAxisAngle(up, Math.random() * Math.PI);
       const s = 0.6 + Math.random() * 0.9;
-      m.compose(pos.set(x, this.heightAt(x, z) + 0.6, z), q, scale.set(s, 1, s));
+      // Por encima de las calles (0.4) y de la cinta del alumbrado (0.6), que si no los tapa (#136).
+      m.compose(pos.set(x, this.heightAt(x, z) + 1, z), q, scale.set(s, 1, s));
       mesh.setMatrixAt(i, m);
     }
     scene.add(mesh);
