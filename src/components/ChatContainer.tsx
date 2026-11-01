@@ -33,12 +33,21 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
 }) => {
   const [input, setInput] = useState('');
   const [showAllTopics, setShowAllTopics] = useState(false);
-  // La mascota adoptada saluda en el chat; sin mascota, el logo (#113). Basta leerla al abrir el chat.
-  const [pet] = useState(() => toPetState(progress.read<unknown>('pet')));
+  // La mascota adoptada saluda en el chat; sin mascota, el logo (#113).
+  const [pet, setPet] = useState(() => toPetState(progress.read<unknown>('pet')));
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const t = TRANSLATIONS[language];
+
+  // Al iniciar sesión la cuenta puede traer la mascota después de abrir el chat (#113).
+  useEffect(
+    () =>
+      progress.subscribe((key) => {
+        if (key === 'pet') setPet(toPetState(progress.read<unknown>('pet')));
+      }),
+    [],
+  );
 
   // Auto-scroll when new messages or stream chunks arrive
   useEffect(() => {
