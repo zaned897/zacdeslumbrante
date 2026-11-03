@@ -477,7 +477,7 @@ figure.wide .tag { margin: 0; }
 .pmh-top b { font: 800 18px var(--f-display); display: flex; gap: 6px; align-items: center; }
 .pmh-sub { font-size: 10px; color: #78716C; margin-top: -4px; }
 .pmh-seg { display: inline-flex; background: #F2ECE1; border-radius: 999px; padding: 2px; font-size: 10.5px; font-weight: 700; color: #57534E; }
-.pmh-seg span { padding: 3px 11px; border-radius: 999px; }
+.pmh-seg span { padding: 3px 11px; border-radius: 999px; white-space: nowrap; }
 .pmh-seg span.on { background: #fff; color: #9A3412; box-shadow: 0 1px 2px rgba(0,0,0,.1); }
 .pmh-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
 .pmh-card { background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.1); min-width: 0; display: flex; flex-direction: column; }
@@ -545,6 +545,21 @@ figure.wide .tag { margin: 0; }
 #propuesta-h .fine { margin-top: 16px; }
 #propuesta-h td small { display: block; color: var(--carbon-2); font-size: 12.5px; white-space: nowrap; }
 #propuesta-h .st { white-space: normal; }
+.pmh-3d { position: absolute; inset: 0; background: #EEE5D8; }
+.pmh-3d canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+.pmh-3d.drag canvas { cursor: grab; }
+.pmh-3d.drag canvas:active { cursor: grabbing; }
+.pmh-3d .off-msg { display: none; position: absolute; left: 24px; right: 24px; top: 42%; text-align: center; font-size: 11px; color: #57534E; }
+.pmh-3d.off .off-msg { display: block; }
+.pmh-3dlbl { position: absolute; z-index: 7; left: -999px; top: 0; transform: translate(-50%, -100%); display: flex; align-items: center; gap: 4px; background: rgba(28,25,23,.84); color: #fff; font-size: 9.5px; font-weight: 700; padding: 2px 7px 2px 2px; border-radius: 999px; white-space: nowrap; pointer-events: none; }
+.pmh-3dlbl i { font-style: normal; width: 15px; height: 15px; border-radius: 50%; background: #9A3412; display: grid; place-items: center; font-size: 8.5px; }
+.pmh-3dlbl.min { padding: 2px; }
+.pmh-3dlbl.min span { display: none; }
+.pmh-3dlbl.road { background: rgba(255,255,255,.9); color: #57534E; padding: 1px 6px; transform: translate(-50%, -50%); }
+.pmh-seg3 { position: absolute; top: 84px; left: 50%; transform: translateX(-50%); z-index: 11; box-shadow: 0 1px 3px rgba(0,0,0,.15); background: #fff; }
+.pmh-seg3 span.dis { color: #A8A29E; text-decoration: line-through dotted; }
+.pmh-hint { position: absolute; top: 120px; left: 50%; transform: translateX(-50%); z-index: 11; font-size: 9.5px; font-weight: 700; color: #57534E; background: rgba(255,255,255,.85); border-radius: 999px; padding: 3px 9px; display: flex; gap: 4px; align-items: center; white-space: nowrap; }
+.pmh-sheet .pmh-note { font-size: 9.5px; color: #78716C; border-top: 1px dashed #E7DCCB; padding-top: 5px; }
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -899,7 +914,7 @@ figure.wide .tag { margin: 0; }
     <div class="section-head">
       <span class="eyebrow" data-en="Proposal, waiting for the owner's approval">Propuesta, espera la aprobación del dueño</span>
       <h2 data-en="Proposal H · Magic Towns: a photo for each town and a page with its center">Propuesta H · Pueblos Mágicos: una foto por pueblo y una página con su centro</h2>
-      <p class="lede" data-en="The 7 Magic Towns of Zacatecas in one catalog, each with the image that represents it. Tapping one opens its page: what to see, flavors, festivals, how to get there, and a map of the center like the 3D City, with the main streets and the must-see places numbered as a walking route. It opens from Plans («Route of the 7 Magic Towns») and from the map pins; it is not a new tab. The pet stays out of this proposal.">Los 7 Pueblos Mágicos de Zacatecas en un catálogo, cada uno con la imagen que lo representa. Al tocar uno se abre su página: qué ver, sabores, fiestas, cómo llegar y un mapa del centro como la Ciudad 3D, con las calles principales y los imprescindibles numerados en un recorrido a pie. Se abre desde Planes («Ruta de los 7 Pueblos Mágicos») y desde los pines del mapa; no es pestaña nueva. La mascota queda fuera de esta propuesta.</p>
+      <p class="lede" data-en="The 7 Magic Towns of Zacatecas in one catalog, each with the image that represents it. Tapping one opens its page: what to see, flavors, festivals, how to get there, and a map of the center like the 3D City, with the main streets and the must-see places numbered as a walking route. The main buildings can be seen in 3D: as models in the map and in a viewer you turn with your finger, which shows a real scan where one exists with permission. It opens from Plans («Route of the 7 Magic Towns») and from the map pins; it is not a new tab. The pet stays out of this proposal.">Los 7 Pueblos Mágicos de Zacatecas en un catálogo, cada uno con la imagen que lo representa. Al tocar uno se abre su página: qué ver, sabores, fiestas, cómo llegar y un mapa del centro como la Ciudad 3D, con las calles principales y los imprescindibles numerados en un recorrido a pie. Los edificios principales se ven en 3D: como maquetas en el mapa y en un visor que se gira con el dedo, que muestra un escaneo real donde exista uno con permiso. Se abre desde Planes («Ruta de los 7 Pueblos Mágicos») y desde los pines del mapa; no es pestaña nueva. La mascota queda fuera de esta propuesta.</p>
       <div class="chips"><span class="tag prop" data-en="Proposal · pending">Propuesta · por aprobar</span><span class="chip falta">#57</span><span class="chip falta">#58</span></div>
     </div>
 
@@ -1090,6 +1105,43 @@ figure.wide .tag { margin: 0; }
           </div>
         </div>
       </div></div><span class="tag ill" data-en="Proposal · illustration">Propuesta · ilustración</span><figcaption data-en="Towns whose best is outside the center, like Teúl: the hill and the dam get their own section, with hours.">Pueblos con lo mejor fuera del centro, como el Teúl: el cerro y la presa van en su propia sección, con horario.</figcaption></figure>
+
+      <!-- 5. Opción 1: maquetas 3D de los templos en el mapa del centro (Sombrerete) -->
+      <figure class="shot"><div class="phone"><div class="screen">
+        <div class="pmh-3d" data-scene="sombrerete"><canvas aria-label="Maqueta 3D del centro de Sombrerete"></canvas><p class="off-msg" data-en="The 3D model loads three.js from the internet; open the page with a connection.">El 3D carga three.js desde internet; abre la página con conexión.</p></div>
+        <div class="notch"></div><div class="status"><span>10:24</span><span>5G ▮▮▮</span></div>
+        <div class="hdr"><span class="btn-sq"><svg class="ico"><use href="#i-back"/></svg></span><span class="title-pill"><span>Sombrerete</span><span class="demo">DEMO</span></span><span class="lang-pill"><svg class="ico sm"><use href="#i-globe"/></svg><span class="lang-code">ES</span></span></div>
+        <div class="pmh-chips"><span class="on"><svg class="ico sm"><use href="#i-church"/></svg><span data-en="See">Qué ver</span></span><span><svg class="ico sm"><use href="#i-corn"/></svg><span data-en="Eat">Comer</span></span><span><svg class="ico sm"><use href="#i-home"/></svg><span data-en="Sleep">Dormir</span></span><span><svg class="ico sm"><use href="#i-pin"/></svg><span data-en="Services">Servicios</span></span></div>
+        <span class="pmh-3dlbl" data-scene="sombrerete" data-pos="-28,30,27"><i>1</i><span>San Francisco</span></span>
+        <span class="pmh-3dlbl" data-scene="sombrerete" data-pos="-12,17,-5"><i>2</i><span data-en="Third Order">Tercera Orden</span></span>
+        <span class="pmh-3dlbl" data-scene="sombrerete" data-pos="-40,34,-55"><i>3</i><span>Santo Domingo</span></span>
+        <span class="pmh-3dlbl road" data-scene="sombrerete" data-pos="0,1,62">Av. Hidalgo</span>
+        <div class="pmh-sheet card">
+          <span class="k" data-en="Churches in 3D · model">Templos en 3D · maqueta</span>
+          <h4 data-en="Church of San Francisco">Templo de San Francisco</h4>
+          <p data-en="18th century. Its tower has twelve Solomonic columns.">Siglo XVIII. Su torre tiene doce columnas salomónicas.</p>
+          <div class="actions"><span class="act sec"><svg class="ico sm"><use href="#i-route"/></svg><span data-en="Directions">Cómo llegar</span></span><span class="act pri"><svg class="ico sm"><use href="#i-cube"/></svg><span data-en="View in 3D">Ver en 3D</span></span></div>
+        </div>
+        <span class="osm">© OpenStreetMap</span>
+      </div></div><span class="tag ill" data-en="Proposal · 3D model">Propuesta · maqueta 3D</span><figcaption data-en="Option 1: the main churches as models in the center map, in the app's cantera style. Live in three.js; the layout is approximate.">Opción 1: los templos principales como maquetas en el mapa del centro, con el estilo cantera de la app. Es 3D en vivo (three.js); la ubicación es aproximada.</figcaption></figure>
+
+      <!-- 6. Opción 2: visor «Ver en 3D» (La Quemada), listo para un escaneo real -->
+      <figure class="shot"><div class="phone"><div class="screen">
+        <div class="pmh-3d drag" data-scene="quemada"><canvas aria-label="Maqueta 3D de La Quemada; arrastra para girarla"></canvas><p class="off-msg" data-en="The 3D model loads three.js from the internet; open the page with a connection.">El 3D carga three.js desde internet; abre la página con conexión.</p></div>
+        <div class="notch"></div><div class="status"><span>10:27</span><span>5G ▮▮▮</span></div>
+        <div class="hdr"><span class="btn-sq"><svg class="ico"><use href="#i-back"/></svg></span><span class="title-pill"><span>La Quemada</span><span class="demo">DEMO</span></span><span class="lang-pill"><svg class="ico sm"><use href="#i-globe"/></svg><span class="lang-code">ES</span></span></div>
+        <span class="pmh-seg pmh-seg3"><span class="on" data-en="Model">Maqueta</span><span class="dis" data-en="Real scan">Escaneo real</span></span>
+        <span class="pmh-hint"><svg class="ico sm"><use href="#i-route"/></svg><span data-en="Drag to rotate">Arrastra para girar</span></span>
+        <span class="pmh-3dlbl" data-scene="quemada" data-pos="0,8,0"><i>1</i><span data-en="Hall of Columns">Salón de las Columnas</span></span>
+        <span class="pmh-3dlbl min" data-scene="quemada" data-pos="40,14,-2"><i>2</i><span data-en="Votive Pyramid">Pirámide Votiva</span></span>
+        <span class="pmh-3dlbl min" data-scene="quemada" data-pos="-52,7,-5"><i>3</i><span data-en="Ball court">Juego de pelota</span></span>
+        <div class="pmh-sheet card">
+          <span class="k" data-en="View in 3D · approximate model">Ver en 3D · maqueta aproximada</span>
+          <h4 data-en="Hall of Columns">Salón de las Columnas</h4>
+          <p data-en="A 41 × 32 m enclosure with 11 columns that held up the roof. Turn the model to see the Votive Pyramid (2) and the ball court (3).">Recinto de 41 × 32 m con 11 columnas que sostenían el techo. Gira el modelo para ver la Pirámide Votiva (2) y el juego de pelota (3).</p>
+          <p class="pmh-note" data-en="The real scan replaces the model when INAH or its author gives permission.">El escaneo real reemplaza la maqueta cuando haya permiso del INAH o de su autor.</p>
+        </div>
+      </div></div><span class="tag ill" data-en="Proposal · 3D model">Propuesta · maqueta 3D</span><figcaption data-en="Option 2: a viewer to turn each place with your finger. Today it shows the model; with a real scan (photogrammetry) it shows the actual building.">Opción 2: un visor para girar cada lugar con el dedo. Hoy muestra la maqueta; con un escaneo real (fotogrametría) muestra el edificio tal cual es.</figcaption></figure>
     </div>
 
     <div class="table-wrap"><table>
@@ -1109,9 +1161,10 @@ figure.wide .tag { margin: 0; }
       <div><b data-en="Thumbnail with a real photo">Miniatura con foto real</b><span data-en="One Wikimedia Commons photo per town, with author and license, like the city photos (photos.json). Without a free-license photo, an illustration goes in its place.">Una foto de Wikimedia Commons por pueblo, con autor y licencia, como las fotos de la ciudad (photos.json). Si no hay foto con licencia libre, va una ilustración.</span></div>
       <div><b data-en="Town page">Página del pueblo</b><span data-en="What to see, flavors, festivals and how to get there, from the official Zacatecas Travel mini-guides and INAH, with the source on each entry. No invented businesses or prices.">Qué ver, sabores, fiestas y cómo llegar, de las miniguías oficiales de Zacatecas Travel y del INAH, con la fuente en cada ficha. Nada de comercios ni precios inventados.</span></div>
       <div><b data-en="Map of the center">Mapa del centro</b><span data-en="The same engine as the 3D City with each town's data: buildings (Overture/OSM), named streets (OSM) and terrain (AWS), as with the street lighting in #136. The main streets are highlighted and the places are numbered on a walking route.">El mismo motor de la Ciudad 3D con los datos de cada pueblo: edificios (Overture/OSM), calles con nombre (OSM) y relieve (AWS), como el alumbrado de #136. Las calles principales se resaltan y los lugares van numerados en un recorrido a pie.</span></div>
+      <div><b data-en="Buildings in 3D">Edificios en 3D</b><span data-en="Option 1: a light model of each main building (churches, La Quemada, the aqueduct) in the app's cantera style, placed on the map. Option 2: a «View in 3D» viewer that shows a real scan (photogrammetry) when there is one with a free license or permission; if not, the model.">Opción 1: una maqueta ligera de cada edificio principal (templos, La Quemada, el acueducto) con el estilo cantera de la app, en su lugar del mapa. Opción 2: un visor «Ver en 3D» que muestra un escaneo real (fotogrametría) cuando haya uno con licencia libre o permiso; si no, la maqueta.</span></div>
       <div class="rec"><b data-en="Suggested order">Orden sugerido</b><span data-en="Guadalupe and Jerez first (close by and already in places.ts), then Villanueva, Pinos and Sombrerete; Teúl and Nochistlán last because their data has to be captured from scratch.">Guadalupe y Jerez primero (cerca y ya en places.ts), después Villanueva, Pinos y Sombrerete; Teúl y Nochistlán al final porque hay que capturar sus datos desde cero.</span></div>
     </div>
-    <p class="fine" data-en="Out of this proposal: the pet, the passport and the on-site missions (#56, #59, #60, #62, #63) stay as they are; these pages can be their base later. Changes #57: the catalog first covers the 7 Magic Towns of Zacatecas, and the neighboring state comes later. The drawings are illustrations; places come from the official mini-guides (zacatecastravel.com) and INAH. Data model and sources: docs/design/pueblos-magicos-datos.md.">Fuera de esta propuesta: la mascota, el pasaporte y las misiones presenciales (#56, #59, #60, #62, #63) siguen como están; estas páginas pueden ser su base después. Cambia #57: el catálogo cubre primero los 7 Pueblos Mágicos de Zacatecas y el estado vecino queda para después. Los dibujos son ilustraciones; los lugares salen de las miniguías oficiales (zacatecastravel.com) y del INAH. Modelo de datos y fuentes: docs/design/pueblos-magicos-datos.md.</p>
+    <p class="fine" data-en="Out of this proposal: the pet, the passport and the on-site missions (#56, #59, #60, #62, #63) stay as they are; these pages can be their base later. Changes #57: the catalog first covers the 7 Magic Towns of Zacatecas, and the neighboring state comes later. The drawings are illustrations; places come from the official mini-guides (zacatecastravel.com) and INAH. Data model and sources: docs/design/pueblos-magicos-datos.md. The 3D models are approximate (no plans or real measurements) and load three.js from cdnjs.">Fuera de esta propuesta: la mascota, el pasaporte y las misiones presenciales (#56, #59, #60, #62, #63) siguen como están; estas páginas pueden ser su base después. Cambia #57: el catálogo cubre primero los 7 Pueblos Mágicos de Zacatecas y el estado vecino queda para después. Los dibujos son ilustraciones; los lugares salen de las miniguías oficiales (zacatecastravel.com) y del INAH. Modelo de datos y fuentes: docs/design/pueblos-magicos-datos.md. Las maquetas 3D son aproximadas (sin planos ni medidas reales) y cargan three.js desde cdnjs.</p>
   </section>
 
   <section id="que-falta">
@@ -1256,6 +1309,189 @@ figure.wide .tag { margin: 0; }
   // Selector de recorrido (solo visual)
   document.querySelectorAll('.tour-list').forEach(function (g) {
     g.addEventListener('click', function (e) { var b = e.target.closest('.tour-opt'); if (!b) return; g.querySelectorAll('.tour-opt').forEach(function (x) { x.classList.toggle('on', x === b); }); });
+  });
+})();
+</script>
+
+<!-- Propuesta H: maquetas 3D (opción 1) y visor «Ver en 3D» (opción 2), con three.js r128 -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function () {
+  var boxes = Array.prototype.slice.call(document.querySelectorAll('.pmh-3d'));
+  if (!boxes.length) return;
+  if (!window.THREE) { boxes.forEach(function (b) { b.classList.add('off'); }); return; }
+  var T = window.THREE;
+  // Paleta de cantera, la misma de la ciudad 3D de la app.
+  var C = { cant: '#C9826B', cant2: '#BE7259', cant3: '#D69479', cantL: '#E2A98F', dome: '#B5654D', hole: '#5B2412', dark: '#3F2A1E',
+    ground: '#E9DCC6', street: '#F3EADB', main: '#F6D7B6', atrio: '#EADBC3', tree: '#5E8A55', tree2: '#4E7748',
+    desert: '#D9C49C', stone: '#B49A72', stoneD: '#A8896A', stoneL: '#C8AE88', plaza: '#E3D0AC', nopal: '#5F7F4A' };
+  var mats = {};
+  function m(c) { return mats[c] || (mats[c] = new T.MeshLambertMaterial({ color: c })); }
+  function add(g, geo, c, x, y, z) { var o = new T.Mesh(geo, m(c)); o.position.set(x, y, z); o.castShadow = true; o.receiveShadow = true; g.add(o); return o; }
+  function box(g, w, h, d, c, x, y, z) { return add(g, new T.BoxGeometry(w, h, d), c, x, y + h / 2, z); }
+  function cyl(g, r, h, c, x, y, z, seg) { return add(g, new T.CylinderGeometry(r, r, h, seg || 12), c, x, y + h / 2, z); }
+  function dome(g, r, c, x, y, z) { return add(g, new T.SphereGeometry(r, 18, 9, 0, Math.PI * 2, 0, Math.PI / 2), c, x, y, z); }
+  function cross(g, x, y, z) { box(g, 0.3, 2, 0.3, C.dark, x, y, z); box(g, 1.1, 0.3, 0.3, C.dark, x, y + 1.2, z); }
+  function rng(seed) { return function () { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }; }
+
+  // Campanario: cuerpo de campanas con vanos, segundo cuerpo, cupulín y cruz.
+  function belfry(g, x, z, w, y, salomonicas) {
+    var b1 = w * 0.86, h1 = w * 0.95, b2 = b1 * 0.74, h2 = h1 * 0.8;
+    box(g, b1, h1, b1, C.cant3, x, y, z);
+    [[0, 1], [0, -1], [1, 0], [-1, 0]].forEach(function (d) {
+      box(g, d[0] ? 0.2 : b1 * 0.36, h1 * 0.56, d[0] ? b1 * 0.36 : 0.2, C.hole, x + d[0] * b1 / 2, y + h1 * 0.16, z + d[1] * b1 / 2);
+      if (salomonicas) for (var k = -1; k <= 1; k++) { // doce columnas: tres por cara
+        var off = k * b1 * 0.36;
+        cyl(g, 0.28, h1 * 0.9, C.cantL, x + d[0] * (b1 / 2 + 0.35) + (d[0] ? 0 : off), y, z + d[1] * (b1 / 2 + 0.35) + (d[1] ? 0 : off), 8);
+      }
+    });
+    box(g, b1 + 0.6, 0.5, b1 + 0.6, C.cant2, x, y + h1, z);
+    y += h1 + 0.5;
+    box(g, b2, h2, b2, C.cant3, x, y, z);
+    [[0, 1], [0, -1], [1, 0], [-1, 0]].forEach(function (d) { box(g, d[0] ? 0.2 : b2 * 0.34, h2 * 0.5, d[0] ? b2 * 0.34 : 0.2, C.hole, x + d[0] * b2 / 2, y + h2 * 0.2, z + d[1] * b2 / 2); });
+    y += h2;
+    dome(g, b2 * 0.5, C.dome, x, y, z);
+    cyl(g, 0.5, 1.2, C.cant3, x, y + b2 * 0.45, z, 8);
+    cross(g, x, y + b2 * 0.45 + 1.2, z);
+  }
+  // Templo colonial: nave, fachada con remate, portada, torre(s), cúpula con linternilla. La fachada mira a +z.
+  function church(o) {
+    var g = new T.Group(), w = o.w, L = o.len, h = o.h;
+    box(g, w, h, L, C.cant, 0, 0, 0);
+    box(g, w + 0.6, 0.6, L + 0.2, C.cant2, 0, h, 0);
+    for (var k = -2; k <= 2; k++) { box(g, 1.4, h * 0.8, 2, C.cant2, -w / 2 - 0.6, 0, k * L / 5.5); box(g, 1.4, h * 0.8, 2, C.cant2, w / 2 + 0.6, 0, k * L / 5.5); }
+    var fz = L / 2 + 0.6, fh = h + 3;
+    box(g, w + 1, fh, 1.2, C.cant3, 0, 0, fz);
+    var rem = new T.Mesh(new T.CylinderGeometry(w * 0.32, w * 0.32, 1.2, 18, 1, false, Math.PI / 2, Math.PI), m(C.cant3));
+    rem.rotation.x = Math.PI / 2; rem.position.set(0, fh, fz); rem.castShadow = true; g.add(rem);
+    box(g, w * 0.46, fh * 0.78, 0.4, C.cantL, 0, 0, fz + 0.7);           // portada labrada
+    box(g, w * 0.2, h * 0.38, 0.3, C.hole, 0, 0, fz + 0.95);              // puerta
+    box(g, w * 0.12, w * 0.12, 0.3, C.hole, 0, h * 0.62, fz + 0.95);       // ventana del coro
+    if (o.espadana) { box(g, w * 0.5, 3.4, 0.8, C.cant3, 0, fh, fz); box(g, 1.1, 1.6, 0.9, C.hole, -w * 0.12, fh + 0.9, fz); box(g, 1.1, 1.6, 0.9, C.hole, w * 0.12, fh + 0.9, fz); cross(g, 0, fh + 3.4, fz); }
+    var tw = o.towerW || w * 0.42;
+    (o.towers || []).forEach(function (side) {
+      var tx = side * (w / 2 + tw / 2 - 0.4), tz = L / 2 - tw / 2 + 1.2, th = h + 2.5;
+      box(g, tw, th, tw, C.cant2, tx, 0, tz);
+      box(g, tw + 0.5, 0.5, tw + 0.5, C.cant, tx, th, tz);
+      belfry(g, tx, tz, tw, th + 0.5, o.salomonicas);
+    });
+    if (o.dome) {
+      var dz = -L / 2 + w * 0.65, r = w * 0.38;
+      box(g, w + 2, 2, w + 2, C.cant2, 0, h, dz);
+      cyl(g, r, 3, C.cant3, 0, h + 2, dz, 8);
+      dome(g, r, C.dome, 0, h + 5, dz);
+      cyl(g, 0.9, 2, C.cant3, 0, h + 5 + r * 0.95, dz, 8);
+      dome(g, 1, C.dome, 0, h + 7 + r * 0.95, dz);
+      cross(g, 0, h + 7.8 + r * 0.95, dz);
+    }
+    g.position.set(o.x, 0, o.z); g.rotation.y = o.rot || 0;
+    return g;
+  }
+  function tree(g, x, z, s, c) { cyl(g, 0.35 * s, 2 * s, '#6B4F32', x, 0, z, 6); add(g, new T.SphereGeometry(2.2 * s, 10, 8), c || C.tree, x, 3.2 * s, z); }
+
+  function sombrerete(scene) {
+    var g = new T.Group(); scene.add(g);
+    box(g, 700, 0.1, 700, C.ground, 0, -0.1, 0).castShadow = false;
+    box(g, 12, 0.12, 600, C.main, 0, 0, 0).castShadow = false;                     // Av. Hidalgo
+    [-80, -28, 50, 100].forEach(function (z) { box(g, 600, 0.11, 8, C.street, 0, 0, z).castShadow = false; });
+    [-70, 62].forEach(function (x) { box(g, 8, 0.11, 600, C.street, x, 0, 0).castShadow = false; });
+    var keep = [[-56, -6, 6, 46], [-40, -6, -16, -24], [-58, -6, -78, -32]];         // templos y atrios
+    var R = rng(11), lots = { a: [], b: [], c: [] };
+    for (var x = -200; x < 200; x += 10) for (var z = -200; z < 200; z += 10) {
+      var cx = x + 5, cz = z + 5;
+      if (Math.abs(cx) < 9) continue;
+      if ([-80, -28, 50, 100].some(function (s) { return Math.abs(cz - s) < 8; })) continue;
+      if ([-70, 62].some(function (s) { return Math.abs(cx - s) < 8; })) continue;
+      if (keep.some(function (k) { return cx > k[0] && cx < k[1] && cz < k[2] && cz > k[3]; })) continue;
+      var r = R(); if (r < 0.06) continue;
+      lots[r < 0.5 ? 'a' : r < 0.85 ? 'b' : 'c'].push([cx, cz, 4 + R() * 4.5]);
+    }
+    var cols = { a: C.cant, b: '#C78C74', c: '#B8735D' }, geo = new T.BoxGeometry(1, 1, 1), mtx = new T.Matrix4();
+    Object.keys(lots).forEach(function (k) {
+      var im = new T.InstancedMesh(geo, m(cols[k]), lots[k].length);
+      lots[k].forEach(function (l, i) { mtx.makeScale(9.3, l[2], 9.3); mtx.setPosition(l[0], l[2] / 2, l[1]); im.setMatrixAt(i, mtx); });
+      im.castShadow = true; im.receiveShadow = true; g.add(im);
+    });
+    box(g, 6, 0.14, 40, C.atrio, -9, 0, 25).castShadow = false;
+    box(g, 6, 0.14, 46, C.atrio, -8, 0, -55).castShadow = false;
+    [[-8, 12], [-8, 38], [-8, -36], [-8, -74]].forEach(function (t, i) { tree(g, t[0], t[1], 0.8, i % 2 ? C.tree2 : C.tree); });
+    g.add(church({ x: -32, z: 25, rot: Math.PI / 2, len: 40, w: 13, h: 12, towers: [-1], salomonicas: true, dome: true }));
+    g.add(church({ x: -26, z: -5, rot: Math.PI / 2, len: 26, w: 9, h: 9, espadana: true }));
+    g.add(church({ x: -32, z: -55, rot: Math.PI / 2, len: 42, w: 13, h: 12.5, towers: [1], dome: true }));
+    return { target: new T.Vector3(-30, 4, -12), dist: 300, az: 0.95, el: 0.62, fov: 42 };
+  }
+
+  function quemada(scene) {
+    var g = new T.Group(); scene.add(g);
+    box(g, 800, 0.1, 800, C.desert, 0, -0.1, 0).castShadow = false;
+    box(g, 9, 0.2, 160, C.plaza, 0, 0, 95).castShadow = false;                      // calzada principal
+    box(g, 70, 0.2, 40, C.plaza, 0, 0, 30).castShadow = false;                      // plaza frente al salón
+    // Cerro con terrazas y muralla
+    [[160, 6, 70, 8, -60, C.stoneD], [125, 6, 56, 14, -68, C.stone], [95, 7, 42, 20, -76, C.stoneD], [64, 7, 30, 26, -82, C.stone], [36, 6, 18, 30, -86, C.stoneL]]
+      .reduce(function (y, t) { box(g, t[0], t[1], t[2], t[5], t[3], y, t[4]); return y + t[1]; }, 0);
+    box(g, 66, 4, 2, C.stoneL, 26, 26, -67); box(g, 2, 4, 30, C.stoneL, -6, 26, -82); box(g, 2, 4, 30, C.stoneL, 58, 26, -82);
+    box(g, 8, 4, 6, C.stoneL, 24, 32, -88); box(g, 6, 3, 6, C.stoneL, 36, 32, -84);
+    // 1. Salón de las Columnas: recinto de 41 × 32 m, muros de ~5 m y 11 columnas (orden aproximado)
+    box(g, 41, 5, 2.5, C.stoneD, 0, 0, -16); box(g, 2.5, 5, 32, C.stoneD, -20.5, 0, 0); box(g, 2.5, 5, 32, C.stoneD, 20.5, 0, 0);
+    box(g, 16.5, 5, 2.5, C.stoneD, -12.25, 0, 16); box(g, 16.5, 5, 2.5, C.stoneD, 12.25, 0, 16);
+    box(g, 38, 0.3, 29, C.plaza, 0, 0, 0).castShadow = false;
+    [[-15, -8], [-5, -8], [5, -8], [15, -8], [-10, 0], [0, 0], [10, 0], [-15, 8], [-5, 8], [5, 8], [15, 8]].forEach(function (p) { cyl(g, 1.5, 5.4, C.stone, p[0], 0, p[1], 14); });
+    // 2. Pirámide Votiva: más de 10 m, muy empinada, escalinata al sur
+    [[14, 3], [11.5, 3], [9, 3], [6.5, 2.5]].reduce(function (y, l) { box(g, l[0], l[1], l[0], C.stone, 40, y, -2); return y + l[1]; }, 0);
+    for (var k = 0; k < 8; k++) box(g, 3, 1.44 * (k + 1), 0.8, C.stoneL, 40, 0, 6.2 - k * 0.66);
+    // 3. Juego de pelota en «I»: 70 × 15 m, muros laterales de 2.7 m de ancho
+    box(g, 40, 1, 84, C.stoneD, -52, 0, -5);
+    box(g, 2.7, 4, 70, C.stone, -52 - 8.85, 1, -5); box(g, 2.7, 4, 70, C.stone, -52 + 8.85, 1, -5);
+    box(g, 32, 2.5, 3, C.stone, -52, 1, -41.5); box(g, 32, 2.5, 3, C.stone, -52, 1, 31.5);
+    var R = rng(7);
+    for (var n = 0; n < 40; n++) {
+      var x = -150 + R() * 300, z = 10 + R() * 140; if (Math.abs(x) < 60 && z < 60) continue;
+      var s = add(g, new T.SphereGeometry(1.4, 8, 6), C.nopal, x, 1.4, z); s.scale.set(1, 1.5, 0.6); s.rotation.y = R() * 3;
+    }
+    return { target: new T.Vector3(-8, 6, -14), dist: 345, az: 0.42, el: 0.52, fov: 42, drag: true };
+  }
+
+  var SCENES = { sombrerete: sombrerete, quemada: quemada };
+  boxes.forEach(function (wrap) {
+    var name = wrap.dataset.scene, build = SCENES[name], canvas = wrap.querySelector('canvas');
+    if (!build || !canvas) return;
+    var screen = wrap.parentNode, labels = Array.prototype.slice.call(screen.querySelectorAll('.pmh-3dlbl[data-scene="' + name + '"]'));
+    var renderer;
+    try { renderer = new T.WebGLRenderer({ canvas: canvas, antialias: true }); } catch (e) { wrap.classList.add('off'); return; }
+    renderer.shadowMap.enabled = true; renderer.shadowMap.type = T.PCFSoftShadowMap;
+    var scene = new T.Scene(); scene.background = new T.Color('#EEE5D8');
+    scene.add(new T.HemisphereLight('#FFF7EC', '#9C8A72', 0.58));
+    var sun = new T.DirectionalLight('#FFFFFF', 0.6); sun.position.set(90, 160, 70); sun.castShadow = true;
+    sun.shadow.mapSize.set(2048, 2048); var sc = sun.shadow.camera; sc.left = -170; sc.right = 170; sc.top = 170; sc.bottom = -170; sc.far = 500;
+    scene.add(sun);
+    var cfg = build(scene), cam = new T.PerspectiveCamera(cfg.fov, 1, 1, 2000), az = cfg.az, el = cfg.el;
+    scene.fog = new T.Fog('#EEE5D8', cfg.dist * 0.95, cfg.dist * 2.3);
+    var v = new T.Vector3();
+    function render() {
+      var w = canvas.clientWidth, h = canvas.clientHeight; if (!w || !h) return;
+      renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1)); renderer.setSize(w, h, false);
+      cam.aspect = w / h; cam.updateProjectionMatrix();
+      cam.position.set(cfg.target.x + cfg.dist * Math.cos(el) * Math.sin(az), cfg.target.y + cfg.dist * Math.sin(el), cfg.target.z + cfg.dist * Math.cos(el) * Math.cos(az));
+      cam.lookAt(cfg.target); renderer.render(scene, cam);
+      labels.forEach(function (lb) {
+        var p = lb.dataset.pos.split(',').map(Number); v.set(p[0], p[1], p[2]).project(cam);
+        var ok = v.z < 1 && Math.abs(v.x) < 0.98 && v.y < 0.75 && v.y > -0.42;
+        var half = lb.offsetWidth / 2, x = Math.max(half + 6, Math.min(w - half - 6, (v.x + 1) / 2 * w));
+        lb.style.left = ok ? x + 'px' : '-999px'; lb.style.top = ((1 - v.y) / 2 * h) + 'px';
+      });
+    }
+    render();
+    var t; window.addEventListener('resize', function () { clearTimeout(t); t = setTimeout(render, 150); });
+    if (cfg.drag) { // girar con el dedo o el mouse
+      var last = null;
+      canvas.addEventListener('pointerdown', function (e) { last = [e.clientX, e.clientY]; canvas.setPointerCapture(e.pointerId); });
+      canvas.addEventListener('pointermove', function (e) {
+        if (!last) return;
+        az -= (e.clientX - last[0]) * 0.008; el = Math.max(0.18, Math.min(1.2, el + (e.clientY - last[1]) * 0.005));
+        last = [e.clientX, e.clientY]; render();
+      });
+      ['pointerup', 'pointercancel'].forEach(function (ev) { canvas.addEventListener(ev, function () { last = null; }); });
+    }
   });
 })();
 </script>

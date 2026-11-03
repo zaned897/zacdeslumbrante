@@ -54,6 +54,22 @@ Usa el motor de la Ciudad 3D (`src/scene3d/threeOsmEngine.ts`) con los datos de 
 
 Hoy el motor tiene fijos `ORIGIN` y las rutas `/data/centro-*`. Para los pueblos hay que pasarle el origen y un prefijo de datos, por ejemplo `/data/pueblos/<id>/`. Eso va en una issue de código aparte. Desde la nube, Overpass y Overture están bloqueados: los datos se bajan desde la PC, como en #136.
 
+## Edificios en 3D
+
+Se combinan dos opciones, las dos en la Propuesta H:
+
+1. **Maqueta:** un `.glb` ligero (< 2 MB, como el avatar de `public/models/avatars/`) por edificio principal, con el estilo cantera de la app. Va en su coordenada, encima de los edificios de OSM/Overture. Primero los templos principales de cada pueblo, el Salón de las Columnas de La Quemada y el acueducto de Nochistlán.
+2. **Escaneo real:** en el visor «Ver en 3D», un modelo de fotogrametría reducido para el celular, con autor y licencia visibles. Solo entra con licencia libre o con permiso escrito; si no hay, el visor muestra la maqueta.
+   - Hay escaneos de Zacatecas publicados por un arqueólogo zacatecano en [Sketchfab](https://sketchfab.com/jorgecu): la torre y las fachadas de la Catedral, la Iglesia de San José de Tayahua (Villanueva) y el Templo del Calvario de Vetagrande. No muestran licencia: hay que pedir permiso.
+   - Capturas propias: con fotos o dron. En templos, con permiso de la parroquia. En zonas arqueológicas (La Quemada, Cerro del Teúl), volar dron requiere permiso del INAH.
+
+Campo opcional por lugar: `model3d: { kind: "maqueta" | "escaneo", url, author?, license?, sourceUrl? }`.
+
+Datos de La Quemada usados en la maqueta (de [Wikipedia](https://en.wikipedia.org/wiki/La_Quemada)):
+- Salón de las Columnas: recinto de 41 × 32 m con 11 columnas. La posición de las columnas en la maqueta es aproximada.
+- Pirámide Votiva: más de 10 m, muy empinada, con escalinata al sur.
+- Juego de pelota: en «I», de 70 × 15 m.
+
 ## Ejemplo completo: Guadalupe
 
 ```json
