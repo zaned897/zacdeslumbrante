@@ -470,6 +470,81 @@ figure.wide .tag { margin: 0; }
 .join-cta { background: #9A3412; color: #fff; border-radius: 999px; padding: 8px; text-align: center; font-weight: 700; font-size: 11px; }
 .consent { font-size: 9.5px; color: #57534E; background: #F5EFE6; border-radius: 8px; padding: 6px 8px; display: flex; gap: 6px; align-items: flex-start; }
 .tabs.six .tab { font-size: 8.5px; }
+/* Propuesta H: Pueblos Mágicos, catálogo con miniaturas y página por pueblo */
+.pmh-art { position: absolute; width: 0; height: 0; overflow: hidden; }
+.pmh-cat { position: absolute; inset: 0; background: #FBF9F5; padding: 40px 12px 0; display: flex; flex-direction: column; gap: 7px; }
+.pmh-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.pmh-top b { font: 800 18px var(--f-display); display: flex; gap: 6px; align-items: center; }
+.pmh-sub { font-size: 10px; color: #78716C; margin-top: -4px; }
+.pmh-seg { display: inline-flex; background: #F2ECE1; border-radius: 999px; padding: 2px; font-size: 10.5px; font-weight: 700; color: #57534E; }
+.pmh-seg span { padding: 3px 11px; border-radius: 999px; }
+.pmh-seg span.on { background: #fff; color: #9A3412; box-shadow: 0 1px 2px rgba(0,0,0,.1); }
+.pmh-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+.pmh-card { background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.1); min-width: 0; display: flex; flex-direction: column; }
+.pmh-card.feat { grid-column: 1 / -1; }
+.pmh-card svg { display: block; width: 100%; height: 64px; }
+.pmh-card.feat svg { height: 92px; }
+.pmh-card .t { padding: 4px 8px 6px; display: flex; flex-direction: column; min-width: 0; }
+.pmh-card .t b { font-size: 11.5px; line-height: 1.2; }
+.pmh-card .t small { font-size: 9px; color: #78716C; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pmh-card .km { font: 600 8.5px var(--f-mono); color: #9A3412; }
+.pmh-card.feat .t { flex-direction: row; justify-content: space-between; align-items: flex-end; gap: 8px; }
+.pmh-card.feat .t > div { display: flex; flex-direction: column; min-width: 0; }
+.pmh-near { font-size: 8.5px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: #fff; background: #9A3412; border-radius: 6px; padding: 2px 6px; white-space: nowrap; }
+.pmh-town { position: absolute; inset: 0; background: #FBF9F5; display: flex; flex-direction: column; }
+.pmh-hero { position: relative; height: 192px; flex: none; color: #fff; }
+.pmh-hero.short { height: 172px; }
+.pmh-hero > svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.pmh-hero::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,.22) 0, rgba(0,0,0,0) 32%, rgba(0,0,0,0) 48%, rgba(28,25,23,.78) 100%); }
+.pmh-name { position: absolute; left: 14px; right: 14px; bottom: 9px; z-index: 2; display: flex; flex-direction: column; }
+.pmh-name b { font: 800 20px/1.1 var(--f-display); }
+.pmh-name small { font-size: 10px; opacity: .92; }
+.pmh-name i { font-style: normal; font-size: 7.5px; opacity: .75; margin-top: 2px; }
+.pmh-tabs { display: flex; gap: 5px; padding: 9px 12px 2px; overflow: hidden; flex: none; }
+.pmh-tabs span { font-size: 10px; font-weight: 700; padding: 4px 9px; border-radius: 999px; background: #F2ECE1; color: #57534E; white-space: nowrap; }
+.pmh-tabs span.on { background: #1C1917; color: #fff; }
+.pmh-body { padding: 6px 12px 12px; display: flex; flex-direction: column; gap: 6px; overflow: hidden; min-height: 0; }
+.pmh-h { font-size: 9.5px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: #9A3412; margin-top: 2px; }
+.pmh-mapcard { position: relative; height: 118px; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.14); flex: none; background: #EFE3D3; }
+.pmh-mapcard canvas.city { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.pmh-go { position: absolute; left: 7px; right: 7px; bottom: 7px; display: flex; justify-content: space-between; align-items: center; gap: 6px; background: rgba(255,255,255,.96); border-radius: 10px; padding: 5px 6px 5px 9px; font-size: 10px; color: #57534E; }
+.pmh-go b { font-size: 11px; color: #1C1917; display: block; }
+.pmh-go .btn { background: #9A3412; color: #fff; font-weight: 700; border-radius: 8px; padding: 5px 8px; white-space: nowrap; }
+.pmh-list { display: flex; flex-direction: column; gap: 5px; }
+.pmh-it { display: flex; gap: 8px; align-items: center; background: #fff; border-radius: 10px; padding: 6px 9px; box-shadow: 0 1px 2px rgba(0,0,0,.08); min-width: 0; }
+.pmh-it > div { min-width: 0; }
+.pmh-n { width: 19px; height: 19px; border-radius: 50%; background: #9A3412; color: #fff; display: grid; place-items: center; font: 800 10px var(--f-body); flex: none; }
+.pmh-it b { font-size: 11px; display: block; line-height: 1.2; }
+.pmh-it small { font-size: 9px; color: #78716C; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pmh-chips { position: absolute; top: 84px; left: 12px; right: 0; z-index: 11; display: flex; gap: 5px; overflow: hidden; -webkit-mask-image: linear-gradient(90deg, #000 82%, transparent); mask-image: linear-gradient(90deg, #000 82%, transparent); padding-bottom: 4px; }
+.pmh-chips > span { background: #fff; border-radius: 999px; padding: 4px 8px; font-size: 9.5px; font-weight: 700; color: #57534E; box-shadow: 0 1px 3px rgba(0,0,0,.15); display: flex; gap: 3px; align-items: center; white-space: nowrap; }
+.pmh-chips > span.on { background: #9A3412; color: #fff; }
+.pmh-street { position: absolute; z-index: 6; font: 700 8.5px var(--f-body); color: #57534E; background: rgba(255,255,255,.88); padding: 1px 5px; border-radius: 4px; white-space: nowrap; transform: translate(-50%, -50%) rotate(26.57deg); }
+.pmh-street.b { transform: translate(-50%, -50%) rotate(-26.57deg); }
+.pmh-street.plaza { transform: translate(-50%, -50%); color: #3F6212; }
+.pmh-amen-pin { position: absolute; z-index: 7; width: 20px; height: 20px; border-radius: 50%; background: #fff; color: #57534E; display: grid; place-items: center; box-shadow: 0 1px 3px rgba(0,0,0,.3); transform: translate(-50%, -50%); }
+.pmh-sheet { position: absolute; left: 10px; right: 10px; bottom: 12px; z-index: 12; padding: 11px 12px; display: flex; flex-direction: column; gap: 6px; }
+.pmh-sheet .k { font-size: 9.5px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: #9A3412; }
+.pmh-sheet h4 { margin: 0; font: 700 15px/1.2 var(--f-display); }
+.pmh-sheet p { font-size: 10.5px; color: #57534E; }
+.pmh-steps { display: flex; gap: 4px; }
+.pmh-steps i { flex: 1; height: 4px; border-radius: 999px; background: #F2ECE1; }
+.pmh-steps i.on { background: #9A3412; }
+.pmh-out { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.pmh-o { min-width: 0; background: #fff; border-radius: 10px; padding: 7px 8px; box-shadow: 0 1px 2px rgba(0,0,0,.08); display: flex; flex-direction: column; gap: 2px; }
+.pmh-o .ico { color: #9A3412; }
+.pmh-o b { font-size: 10.5px; line-height: 1.2; }
+.pmh-o small { font-size: 8.5px; color: #78716C; line-height: 1.3; }
+.pmh-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+.pmh-tags span { font-size: 9px; background: #FFF4EC; color: #9A3412; border-radius: 999px; padding: 2px 7px; font-weight: 700; }
+.pmh-amen { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
+.pmh-amen > span { display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 8.5px; font-weight: 700; color: #57534E; background: #fff; border-radius: 10px; padding: 6px 2px; box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+.pmh-amen .ico { color: #9A3412; }
+#propuesta-h .table-wrap { margin-top: 36px; }
+#propuesta-h .why { margin-top: 20px; max-width: none; }
+#propuesta-h .fine { margin-top: 16px; }
+#propuesta-h td small { display: block; color: var(--carbon-2); font-size: 12.5px; white-space: nowrap; }
+#propuesta-h .st { white-space: normal; }
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -820,6 +895,225 @@ figure.wide .tag { margin: 0; }
     </div>
   </section>
 
+  <section class="nuevo" id="propuesta-h">
+    <div class="section-head">
+      <span class="eyebrow" data-en="Proposal, waiting for the owner's approval">Propuesta, espera la aprobación del dueño</span>
+      <h2 data-en="Proposal H · Magic Towns: a photo for each town and a page with its center">Propuesta H · Pueblos Mágicos: una foto por pueblo y una página con su centro</h2>
+      <p class="lede" data-en="The 7 Magic Towns of Zacatecas in one catalog, each with the image that represents it. Tapping one opens its page: what to see, flavors, festivals, how to get there, and a map of the center like the 3D City, with the main streets and the must-see places numbered as a walking route. It opens from Plans («Route of the 7 Magic Towns») and from the map pins; it is not a new tab. The pet stays out of this proposal.">Los 7 Pueblos Mágicos de Zacatecas en un catálogo, cada uno con la imagen que lo representa. Al tocar uno se abre su página: qué ver, sabores, fiestas, cómo llegar y un mapa del centro como la Ciudad 3D, con las calles principales y los imprescindibles numerados en un recorrido a pie. Se abre desde Planes («Ruta de los 7 Pueblos Mágicos») y desde los pines del mapa; no es pestaña nueva. La mascota queda fuera de esta propuesta.</p>
+      <div class="chips"><span class="tag prop" data-en="Proposal · pending">Propuesta · por aprobar</span><span class="chip falta">#57</span><span class="chip falta">#58</span></div>
+    </div>
+
+    <svg class="pmh-art" aria-hidden="true" focusable="false">
+      <defs>
+        <linearGradient id="pmh-sky-a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9FC6EA"/><stop offset="1" stop-color="#F4E7D7"/></linearGradient>
+        <linearGradient id="pmh-sky-b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F3B98A"/><stop offset="1" stop-color="#FBEBD8"/></linearGradient>
+        <linearGradient id="pmh-sky-c" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7FB4E2"/><stop offset="1" stop-color="#E6F0F7"/></linearGradient>
+        <linearGradient id="pmh-sky-d" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E9A27C"/><stop offset=".55" stop-color="#F6CDA6"/><stop offset="1" stop-color="#FBEBD8"/></linearGradient>
+      </defs>
+      <!-- Guadalupe: el convento con sus dos torres, la cúpula de la Capilla de Nápoles y el Jardín Juárez -->
+      <symbol id="pmh-a-guadalupe" viewBox="0 0 160 100">
+        <rect width="160" height="100" fill="url(#pmh-sky-a)"/>
+        <path d="M0 72 Q40 60 80 67 T160 63 V100 H0z" fill="#DCC7A6"/>
+        <rect x="118" y="54" width="34" height="34" fill="#BE7259"/>
+        <path d="M121 56 a14 14 0 0 1 28 0z" fill="#B5654D"/><rect x="132" y="34" width="6" height="8" fill="#C27A60"/><path d="M131 34 h8 l-4 -5z" fill="#9A3412"/>
+        <rect x="40" y="50" width="78" height="38" fill="#C9826B"/>
+        <path d="M60 50 V40 Q79 30 98 40 V50z" fill="#D69479"/><rect x="60" y="50" width="38" height="38" fill="#D69479"/>
+        <rect x="72" y="52" width="14" height="12" rx="2" fill="#B5654D"/><circle cx="79" cy="45" r="3" fill="#9A3412"/>
+        <path d="M71 88 V74 a8 8 0 0 1 16 0 V88z" fill="#6E2A14"/>
+        <rect x="28" y="46" width="18" height="42" fill="#BE7259"/><rect x="30" y="30" width="14" height="16" fill="#D69479"/><path d="M34 46 V38 a3 3 0 0 1 6 0 V46z" fill="#6E2A14"/><path d="M30 30 Q37 17 44 30z" fill="#B5654D"/><path d="M37 13 v6 M35 15.5 h4" stroke="#6E2A14" stroke-width="1.2"/>
+        <rect x="104" y="46" width="18" height="42" fill="#BE7259"/><rect x="106" y="30" width="14" height="16" fill="#D69479"/><path d="M110 46 V38 a3 3 0 0 1 6 0 V46z" fill="#6E2A14"/><path d="M106 30 Q113 17 120 30z" fill="#B5654D"/><path d="M113 13 v6 M111 15.5 h4" stroke="#6E2A14" stroke-width="1.2"/>
+        <rect y="86" width="160" height="14" fill="#E7D8BF"/><path d="M68 100 L74 86 H84 L90 100z" fill="#F2E8D6"/>
+        <rect x="12" y="84" width="2" height="8" fill="#6B4F32"/><circle cx="13" cy="80" r="9" fill="#5E8A55"/><circle cx="26" cy="87" r="7" fill="#4E7748"/>
+        <rect x="145" y="85" width="2" height="8" fill="#6B4F32"/><circle cx="146" cy="81" r="9" fill="#5E8A55"/><circle cx="133" cy="89" r="6" fill="#4E7748"/>
+      </symbol>
+      <!-- Jerez: el quiosco del Jardín Rafael Páez -->
+      <symbol id="pmh-a-jerez" viewBox="0 0 160 100">
+        <rect width="160" height="100" fill="url(#pmh-sky-b)"/>
+        <circle cx="16" cy="64" r="20" fill="#5E8A55"/><circle cx="36" cy="72" r="16" fill="#4E7748"/><circle cx="146" cy="62" r="20" fill="#5E8A55"/><circle cx="126" cy="72" r="15" fill="#4E7748"/>
+        <rect y="84" width="160" height="16" fill="#E7D8BF"/>
+        <ellipse cx="80" cy="88" rx="44" ry="5" fill="#CDB8A0"/><rect x="42" y="78" width="76" height="9" fill="#D8C3A5"/><rect x="42" y="78" width="76" height="2" fill="#C9826B"/>
+        <g fill="#F2ECE1"><rect x="46" y="56" width="3" height="22"/><rect x="59" y="56" width="3" height="22"/><rect x="72" y="56" width="3" height="22"/><rect x="85" y="56" width="3" height="22"/><rect x="98" y="56" width="3" height="22"/><rect x="111" y="56" width="3" height="22"/></g>
+        <path d="M49 62 a5 5 0 0 1 10 0 M62 62 a5 5 0 0 1 10 0 M75 62 a5 5 0 0 1 10 0 M88 62 a5 5 0 0 1 10 0 M101 62 a5 5 0 0 1 10 0" fill="none" stroke="#C2410C" stroke-width="1.6"/>
+        <rect x="44" y="53" width="72" height="3" fill="#F2B04C"/>
+        <path d="M40 54 H120 L113 47 H47z" fill="#9A3412"/>
+        <path d="M64 47 Q58 34 80 23 Q102 34 96 47z" fill="#B5654D"/><path d="M80 23 V14" stroke="#9A3412" stroke-width="1.5"/><circle cx="80" cy="13" r="2" fill="#F2B04C"/>
+      </symbol>
+      <!-- Sombrerete: las rocas de la Sierra de Órganos -->
+      <symbol id="pmh-a-sombrerete" viewBox="0 0 160 100">
+        <rect width="160" height="100" fill="url(#pmh-sky-c)"/>
+        <path d="M0 70 L30 56 L52 64 L84 50 L112 62 L140 52 L160 58 V100 H0z" fill="#B7A9C6"/>
+        <g fill="#A8907A"><path d="M14 92 V54 Q14 46 21 46 Q28 46 28 54 V92z"/><path d="M32 92 V40 Q32 32 39 32 Q46 32 46 40 V92z"/><path d="M50 92 V50 Q50 43 56 43 Q62 43 62 50 V92z"/><path d="M68 92 V34 Q68 24 77 24 Q86 24 86 34 V44 Q86 38 92 38 Q98 38 98 46 V92z"/><path d="M104 92 V46 Q104 39 110 39 Q116 39 116 46 V92z"/><path d="M120 92 V36 Q120 28 127 28 Q134 28 134 36 V92z"/><path d="M138 92 V52 Q138 45 144 45 Q150 45 150 52 V92z"/></g>
+        <g fill="#8F7A66"><rect x="23" y="50" width="5" height="42"/><rect x="41" y="36" width="5" height="56"/><rect x="58" y="47" width="4" height="45"/><rect x="81" y="30" width="5" height="62"/><rect x="93" y="42" width="5" height="50"/><rect x="112" y="43" width="4" height="49"/><rect x="129" y="32" width="5" height="60"/><rect x="146" y="49" width="4" height="43"/></g>
+        <rect y="88" width="160" height="12" fill="#D7C29A"/>
+        <path d="M8 90 l3 -8 l1 8 l2 -9 l1 9 l3 -7 l-1 7z M100 92 l2 -7 l1 7 l2 -8 l1 8 l2 -6 l-1 6z M152 91 l2 -6 l1 6 l2 -7 l1 7z" fill="#5B6E4A"/>
+      </symbol>
+      <!-- Pinos: la Parroquia de San Matías y el quiosco de la plaza -->
+      <symbol id="pmh-a-pinos" viewBox="0 0 160 100">
+        <rect width="160" height="100" fill="url(#pmh-sky-a)"/>
+        <path d="M0 66 Q36 46 74 58 T160 50 V100 H0z" fill="#9DB08A"/>
+        <g fill="#4E6E45"><path d="M10 64 l5 -12 l5 12z"/><path d="M22 60 l5 -13 l5 13z"/><path d="M128 56 l5 -12 l5 12z"/><path d="M140 54 l5 -13 l5 13z"/><path d="M150 57 l4 -10 l4 10z"/></g>
+        <rect x="52" y="52" width="64" height="36" fill="#C9826B"/>
+        <path d="M62 52 V44 Q80 34 98 44 V52z" fill="#D69479"/><rect x="62" y="52" width="36" height="36" fill="#D69479"/>
+        <path d="M73 88 V75 a7 7 0 0 1 14 0 V88z" fill="#6E2A14"/><circle cx="80" cy="60" r="4" fill="#B5654D"/>
+        <rect x="100" y="38" width="16" height="50" fill="#BE7259"/><rect x="102" y="26" width="12" height="12" fill="#D69479"/><path d="M105 38 V32 a3 3 0 0 1 6 0 V38z" fill="#6E2A14"/><path d="M102 26 Q108 15 114 26z" fill="#B5654D"/><path d="M108 11 v5 M106 13 h4" stroke="#6E2A14" stroke-width="1.2"/>
+        <rect y="86" width="160" height="14" fill="#E9DCC6"/>
+        <rect x="18" y="80" width="28" height="4" fill="#D8C3A5"/><g fill="#F2ECE1"><rect x="20" y="70" width="2" height="10"/><rect x="31" y="70" width="2" height="10"/><rect x="42" y="70" width="2" height="10"/></g><path d="M16 71 H48 L41 64 H23z" fill="#9A3412"/>
+        <circle cx="140" cy="82" r="8" fill="#5E8A55"/><rect x="139" y="86" width="2" height="6" fill="#6B4F32"/>
+      </symbol>
+      <!-- Teúl: el Cerro del Teúl con su zona arqueológica sobre el pueblo -->
+      <symbol id="pmh-a-teul" viewBox="0 0 160 100">
+        <rect width="160" height="100" fill="url(#pmh-sky-d)"/>
+        <path d="M4 100 L34 58 Q56 38 80 36 Q104 36 122 54 L156 100z" fill="#9C8A5E"/>
+        <path d="M80 36 Q104 36 122 54 L156 100 H96z" fill="#86754D"/>
+        <rect x="62" y="31" width="34" height="6" fill="#B8A07E"/><rect x="67" y="26" width="24" height="5" fill="#C4AD8A"/><rect x="72" y="22" width="14" height="4" fill="#CFB996"/>
+        <path d="M44 62 l6 2 M52 54 l7 1 M110 60 l7 4" stroke="#7A6A44" stroke-width="1.2"/>
+        <g fill="#F2ECE1"><rect x="20" y="82" width="16" height="12"/><rect x="40" y="84" width="14" height="10"/><rect x="92" y="83" width="16" height="11"/><rect x="138" y="84" width="16" height="10"/></g>
+        <g fill="#B5654D"><path d="M18 82 h20 l-3 -4 h-14z"/><path d="M38 84 h18 l-3 -4 h-12z"/><path d="M90 83 h20 l-3 -4 h-14z"/><path d="M136 84 h20 l-3 -4 h-14z"/></g>
+        <rect x="116" y="60" width="12" height="34" fill="#C9826B"/><path d="M115 61 L122 40 L129 61z" fill="#B5654D"/><rect x="119" y="66" width="6" height="8" rx="3" fill="#6E2A14"/>
+        <rect y="92" width="160" height="8" fill="#D9C7A4"/>
+        <circle cx="66" cy="88" r="7" fill="#4E7A3E"/><circle cx="64" cy="86" r="1.2" fill="#F59E0B"/><circle cx="69" cy="89" r="1.2" fill="#F59E0B"/><circle cx="80" cy="90" r="6" fill="#4E7A3E"/><circle cx="82" cy="88" r="1.2" fill="#F59E0B"/>
+      </symbol>
+      <!-- Nochistlán: los arcos del acueducto -->
+      <symbol id="pmh-a-nochistlan" viewBox="0 0 160 100">
+        <rect width="160" height="100" fill="url(#pmh-sky-a)"/>
+        <path d="M0 62 Q30 40 62 50 Q90 30 120 46 T160 48 V100 H0z" fill="#A9B58C"/>
+        <path fill-rule="evenodd" fill="#C9826B" d="M0 48 H160 V90 H0z M4 90 V68 a7 7 0 0 1 14 0 V90z M26 90 V68 a7 7 0 0 1 14 0 V90z M48 90 V68 a7 7 0 0 1 14 0 V90z M70 90 V68 a7 7 0 0 1 14 0 V90z M92 90 V68 a7 7 0 0 1 14 0 V90z M114 90 V68 a7 7 0 0 1 14 0 V90z M136 90 V68 a7 7 0 0 1 14 0 V90z"/>
+        <rect y="46" width="160" height="5" fill="#B5654D"/><rect y="56" width="160" height="2" fill="#B5654D"/>
+        <rect y="88" width="160" height="12" fill="#DCC9A6"/>
+        <circle cx="10" cy="86" r="7" fill="#5E8A55"/><circle cx="152" cy="85" r="8" fill="#4E7748"/><circle cx="98" cy="90" r="5" fill="#5E8A55"/>
+      </symbol>
+      <!-- Villanueva: el Salón de las Columnas de La Quemada -->
+      <symbol id="pmh-a-villanueva" viewBox="0 0 160 100">
+        <rect width="160" height="100" fill="url(#pmh-sky-c)"/>
+        <path d="M0 64 Q40 26 92 30 Q130 32 160 52 V100 H0z" fill="#B49A72"/>
+        <path d="M30 50 H130 M40 42 H118 M56 35 H100" stroke="#9B815C" stroke-width="2"/>
+        <rect x="24" y="72" width="112" height="10" fill="#A8896A"/><rect x="24" y="72" width="112" height="2" fill="#C2A584"/>
+        <g fill="#9B7E60"><rect x="32" y="48" width="9" height="24" rx="2"/><rect x="48" y="48" width="9" height="24" rx="2"/><rect x="64" y="48" width="9" height="24" rx="2"/><rect x="80" y="48" width="9" height="24" rx="2"/><rect x="96" y="48" width="9" height="24" rx="2"/><rect x="112" y="48" width="9" height="24" rx="2"/></g>
+        <g fill="#B39474"><rect x="32" y="48" width="4" height="24"/><rect x="48" y="48" width="4" height="24"/><rect x="64" y="48" width="4" height="24"/><rect x="80" y="48" width="4" height="24"/><rect x="96" y="48" width="4" height="24"/><rect x="112" y="48" width="4" height="24"/></g>
+        <path d="M20 82 H140 V88 H20z" fill="#9B7E60"/>
+        <rect y="86" width="160" height="14" fill="#D8C29A"/>
+        <g fill="#5F7F4A"><ellipse cx="12" cy="88" rx="4" ry="6"/><ellipse cx="18" cy="84" rx="3" ry="5"/><ellipse cx="148" cy="88" rx="4" ry="6"/><ellipse cx="142" cy="85" rx="3" ry="4"/></g>
+      </symbol>
+    </svg>
+
+    <div class="gallery">
+      <!-- 1. Catálogo -->
+      <figure class="shot"><div class="phone"><div class="screen">
+        <div class="notch"></div><div class="status"><span>10:12</span><span>5G ▮▮▮</span></div>
+        <div class="pmh-cat">
+          <div class="pmh-top"><b><span class="btn-sq"><svg class="ico"><use href="#i-back"/></svg></span><span data-en="Magic Towns">Pueblos Mágicos</span><span class="demo">DEMO</span></b></div>
+          <div class="pmh-top"><span class="pmh-sub" data-en="7 in Zacatecas · by distance from the capital">7 en Zacatecas · por distancia a la capital</span><span class="pmh-seg"><span class="on" data-en="List">Lista</span><span data-en="Map">Mapa</span></span></div>
+          <div class="pmh-grid">
+            <div class="pmh-card feat"><svg viewBox="0 0 160 100" preserveAspectRatio="xMidYMid slice"><use href="#pmh-a-guadalupe"/></svg><div class="t"><div><b>Guadalupe</b><small data-en="Convent and viceregal art">Convento y arte virreinal</small></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px"><span class="pmh-near" data-en="Closest">Más cerca</span><span class="km">7 km</span></div></div></div>
+            <div class="pmh-card"><svg viewBox="0 0 160 100" preserveAspectRatio="xMidYMid slice"><use href="#pmh-a-jerez"/></svg><div class="t"><b>Jerez</b><small data-en="Theater, poetry and tambora">Teatro, poesía y tambora</small><span class="km">60 km · 35 min</span></div></div>
+            <div class="pmh-card"><svg viewBox="0 0 160 100" preserveAspectRatio="xMidYMid slice"><use href="#pmh-a-villanueva"/></svg><div class="t"><b>Villanueva</b><small data-en="La Quemada and haciendas">La Quemada y haciendas</small><span class="km">61 km</span></div></div>
+            <div class="pmh-card"><svg viewBox="0 0 160 100" preserveAspectRatio="xMidYMid slice"><use href="#pmh-a-pinos"/></svg><div class="t"><b>Pinos</b><small data-en="San Matías and mezcal">San Matías y mezcal</small><span class="km" data-en="≈125 km">≈125 km</span></div></div>
+            <div class="pmh-card"><svg viewBox="0 0 160 100" preserveAspectRatio="xMidYMid slice"><use href="#pmh-a-sombrerete"/></svg><div class="t"><b>Sombrerete</b><small data-en="Sierra de Órganos">Sierra de Órganos</small><span class="km">166 km · 2 h</span></div></div>
+            <div class="pmh-card"><svg viewBox="0 0 160 100" preserveAspectRatio="xMidYMid slice"><use href="#pmh-a-teul"/></svg><div class="t"><b>Teúl</b><small data-en="Cerro del Teúl and mezcal">Cerro del Teúl y mezcal</small><span class="km">216 km · 3 h</span></div></div>
+            <div class="pmh-card"><svg viewBox="0 0 160 100" preserveAspectRatio="xMidYMid slice"><use href="#pmh-a-nochistlan"/></svg><div class="t"><b>Nochistlán</b><small data-en="Aqueduct and Papaquis">Acueducto y Papaquis</small><span class="km">226 km · 3 h</span></div></div>
+          </div>
+        </div>
+      </div></div><span class="tag ill" data-en="Proposal · illustration">Propuesta · ilustración</span><figcaption data-en="Catalog: the 7 towns by distance, each with the image that represents it. In the app it is a real photo with author and license.">Catálogo: los 7 pueblos por distancia, cada uno con la imagen que lo representa. En la app es una foto real con autor y licencia.</figcaption></figure>
+
+      <!-- 2. Página del pueblo: Guadalupe -->
+      <figure class="shot"><div class="phone"><div class="screen">
+        <div class="pmh-town">
+          <div class="pmh-hero">
+            <svg viewBox="0 0 160 100" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><use href="#pmh-a-guadalupe"/></svg>
+            <div class="notch"></div><div class="status light"><span>10:14</span><span>5G ▮▮▮</span></div>
+            <div class="hdr"><span class="btn-sq"><svg class="ico"><use href="#i-back"/></svg></span><span class="demo">DEMO</span></div>
+            <div class="pmh-name"><b>Guadalupe</b><small data-en="Magic Town · 7 km from the capital">Pueblo Mágico · a 7 km de la capital</small><i data-en="Photo: author · license · Wikimedia Commons">Foto: autor · licencia · Wikimedia Commons</i></div>
+          </div>
+          <div class="pmh-tabs"><span class="on" data-en="What to see">Qué ver</span><span data-en="Flavors">Sabores</span><span data-en="Festivals">Fiestas</span><span data-en="Getting there">Cómo llegar</span></div>
+          <div class="pmh-body">
+            <div class="pmh-mapcard"><canvas class="city" data-route="pueblo" data-seed="21" data-zoom="0.7" data-shift="66" data-fog="0"></canvas>
+              <div class="pmh-go"><div><b data-en="Map of the center">Mapa del centro</b><span data-en="5 stops on foot">5 paradas a pie</span></div><span class="btn" data-en="Open map">Abrir mapa</span></div></div>
+            <span class="pmh-h" data-en="Must-see">Imprescindibles</span>
+            <div class="pmh-list">
+              <div class="pmh-it"><span class="pmh-n">1</span><div><b data-en="Convent and Museum of Guadalupe">Convento y Museo de Guadalupe</b><small data-en="Viceregal art · INAH">Arte virreinal · INAH</small></div></div>
+              <div class="pmh-it"><span class="pmh-n">2</span><div><b data-en="Capilla de Nápoles">Capilla de Nápoles</b><small data-en="Inside the convent">Dentro del convento</small></div></div>
+              <div class="pmh-it"><span class="pmh-n">3</span><div><b>Jardín Juárez</b><small data-en="In front of the convent">Frente al convento</small></div></div>
+              <div class="pmh-it"><span class="pmh-n">4</span><div><b data-en="Calle Colegio Militar">Calle Colegio Militar</b><small data-en="Shopping street of the center">Calle comercial del centro</small></div></div>
+              <div class="pmh-it"><span class="pmh-n">5</span><div><b data-en="Guadalupe market">Mercado de Guadalupe</b><small data-en="Gorditas, birria and menudo">Gorditas, birria y menudo</small></div></div>
+            </div>
+          </div>
+        </div>
+      </div></div><span class="tag ill" data-en="Proposal · illustration">Propuesta · ilustración</span><figcaption data-en="Town page: photo, what to see, flavors, festivals and how to get there, with the map of the center and the must-see places numbered.">Página del pueblo: foto, qué ver, sabores, fiestas y cómo llegar, con el mapa del centro y los imprescindibles numerados.</figcaption></figure>
+
+      <!-- 3. Mapa del centro -->
+      <figure class="shot"><div class="phone"><div class="screen">
+        <canvas class="city" data-route="pueblo" data-seed="21" data-zoom="1.25"></canvas>
+        <div class="notch"></div><div class="status"><span>10:16</span><span>5G ▮▮▮</span></div>
+        <div class="hdr"><span class="btn-sq"><svg class="ico"><use href="#i-back"/></svg></span><span class="title-pill"><span>Guadalupe</span><span class="demo">DEMO</span></span><span class="lang-pill"><svg class="ico sm"><use href="#i-globe"/></svg><span class="lang-code">ES</span></span></div>
+        <div class="pmh-chips"><span class="on"><svg class="ico sm"><use href="#i-landmark"/></svg><span data-en="See">Qué ver</span></span><span class="on"><svg class="ico sm"><use href="#i-corn"/></svg><span data-en="Eat">Comer</span></span><span><svg class="ico sm"><use href="#i-home"/></svg><span data-en="Sleep">Dormir</span></span><span><svg class="ico sm"><use href="#i-pin"/></svg><span data-en="Services">Servicios</span></span></div>
+        <span class="pmh-street plaza" style="left:28.7%;top:25.7%">Jardín Juárez</span>
+        <span class="pmh-street" style="left:58%;top:25.2%">C. Colegio Militar</span>
+        <span class="pmh-street b" style="left:57.4%;top:48.6%" data-en="Calle 1910">Calle 1910</span>
+        <span class="pmh-amen-pin" style="left:40%;top:38%"><svg class="ico sm"><use href="#i-corn"/></svg></span>
+        <span class="pmh-amen-pin" style="left:86%;top:52%"><svg class="ico sm"><use href="#i-corn"/></svg></span>
+        <div class="pmh-sheet card">
+          <span class="k" data-en="Walking route · stop 1 of 5">Recorrido a pie · parada 1 de 5</span>
+          <h4 data-en="Convent and Museum of Guadalupe">Convento y Museo de Guadalupe</h4>
+          <p data-en="Viceregal art in the old Franciscan college. Hours and price from the INAH page.">Arte virreinal en el antiguo colegio franciscano. Horario y precio de la ficha del INAH.</p>
+          <div class="pmh-steps"><i class="on"></i><i></i><i></i><i></i><i></i></div>
+          <div class="actions"><span class="act sec"><svg class="ico sm"><use href="#i-route"/></svg><span data-en="Directions">Cómo llegar</span></span><span class="act pri"><span data-en="Next">Siguiente</span><svg class="ico sm"><use href="#i-send"/></svg></span></div>
+        </div>
+        <span class="osm">© OpenStreetMap</span>
+      </div></div><span class="tag ill" data-en="Proposal · illustration">Propuesta · ilustración</span><figcaption data-en="Map of the center: the town's 3D city with its main streets, a walking route and layers to eat, sleep and services. The street layout here is illustrative.">Mapa del centro: la ciudad 3D del pueblo con sus calles principales, un recorrido a pie y capas de comer, dormir y servicios. El trazo de las calles aquí es ilustrativo.</figcaption></figure>
+
+      <!-- 4. Página del pueblo: Teúl -->
+      <figure class="shot"><div class="phone"><div class="screen">
+        <div class="pmh-town">
+          <div class="pmh-hero short">
+            <svg viewBox="0 0 160 100" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><use href="#pmh-a-teul"/></svg>
+            <div class="notch"></div><div class="status light"><span>10:20</span><span>5G ▮▮▮</span></div>
+            <div class="hdr"><span class="btn-sq"><svg class="ico"><use href="#i-back"/></svg></span><span class="demo">DEMO</span></div>
+            <div class="pmh-name"><b>Teúl de González Ortega</b><small data-en="Magic Town · 216 km · 3 h">Pueblo Mágico · 216 km · 3 h</small><i data-en="Photo: author · license · Wikimedia Commons">Foto: autor · licencia · Wikimedia Commons</i></div>
+          </div>
+          <div class="pmh-tabs"><span class="on" data-en="What to see">Qué ver</span><span data-en="Flavors">Sabores</span><span data-en="Festivals">Fiestas</span><span data-en="Getting there">Cómo llegar</span></div>
+          <div class="pmh-body">
+            <span class="pmh-h" data-en="In the center">En el centro</span>
+            <div class="pmh-list">
+              <div class="pmh-it"><span class="pmh-n">1</span><div><b data-en="Plaza de Armas and Portales">Plaza de Armas y Portales</b><small data-en="Old mansions and dragon lanterns">Casonas y faroles de dragón</small></div></div>
+              <div class="pmh-it"><span class="pmh-n">2</span><div><b data-en="Parish of San Juan Bautista">Parroquia de San Juan Bautista</b><small data-en="Gothic tower, 1772–1824">Torre gótica, 1772–1824</small></div></div>
+              <div class="pmh-it"><span class="pmh-n">3</span><div><b data-en="Mezcal Museum">Museo del Mezcal</b><small data-en="At Mezcalería Don Aurelio">En la Mezcalería Don Aurelio</small></div></div>
+            </div>
+            <span class="pmh-h" data-en="Outside the center">Fuera del centro</span>
+            <div class="pmh-out">
+              <div class="pmh-o"><svg class="ico"><use href="#i-pyramid"/></svg><b>Cerro del Teúl</b><small data-en="Archaeological site · 1 km trail · Tue–Sun 9:00–17:00">Zona arqueológica · sendero de 1 km · ma–do 9:00–17:00</small></div>
+              <div class="pmh-o"><svg class="ico"><use href="#i-waves"/></svg><b>Presa La Aticuata</b><small data-en="Kayak and trajinera · swimming April–September">Kayak y trajinera · nado de abril a septiembre</small></div>
+            </div>
+            <span class="pmh-h" data-en="Flavors">Sabores</span>
+            <div class="pmh-tags"><span data-en="Oven gorditas">Gorditas de horno</span><span data-en="Pork shank">Chamorro</span><span>Mezcal</span><span data-en="Ranch cheese">Queso de rancho</span></div>
+            <span class="pmh-h" data-en="Amenities">Amenidades</span>
+            <div class="pmh-amen"><span><svg class="ico"><use href="#i-corn"/></svg><span data-en="Eat">Comer</span></span><span><svg class="ico"><use href="#i-home"/></svg><span data-en="Sleep">Dormir</span></span><span><svg class="ico"><use href="#i-users"/></svg><span data-en="Tours">Recorridos</span></span><span><svg class="ico"><use href="#i-pin"/></svg><span data-en="Tourism">Turismo</span></span></div>
+          </div>
+        </div>
+      </div></div><span class="tag ill" data-en="Proposal · illustration">Propuesta · ilustración</span><figcaption data-en="Towns whose best is outside the center, like Teúl: the hill and the dam get their own section, with hours.">Pueblos con lo mejor fuera del centro, como el Teúl: el cerro y la presa van en su propia sección, con horario.</figcaption></figure>
+    </div>
+
+    <div class="table-wrap"><table>
+      <thead><tr><th data-en="Town">Pueblo</th><th data-en="Thumbnail">Miniatura</th><th data-en="In the center: streets and places">En el centro: calles y lugares</th><th data-en="Outside the center">Fuera del centro</th><th data-en="Flavors">Sabores</th><th data-en="Data today">Datos hoy</th></tr></thead>
+      <tbody>
+        <tr><td><b>Guadalupe</b><small>7 km</small></td><td data-en="The convent with Jardín Juárez">El convento con el Jardín Juárez</td><td data-en="Convent and Museum of Guadalupe, Capilla de Nápoles, Jardín Juárez, Plaza de las Garantías; Colegio Militar and 1910 streets">Convento y Museo de Guadalupe, Capilla de Nápoles, Jardín Juárez, Plaza de las Garantías; calles Colegio Militar y 1910</td><td data-en="Silver Center (former Bernárdez hacienda), Tacoaleche, Conos de Santa Mónica">Centro Platero (ex hacienda de Bernárdez), Tacoaleche, Conos de Santa Mónica</td><td data-en="Asado de boda, tacos envenenados">Asado de boda, tacos envenenados</td><td class="st ok" data-en="In places.ts">En places.ts</td></tr>
+        <tr><td><b>Jerez</b><small>60 km · 35 min</small></td><td data-en="The kiosk of Jardín Rafael Páez">El quiosco del Jardín Rafael Páez</td><td data-en="Jardín Rafael Páez, Teatro Hinojosa, Santuario de la Soledad, Ramón López Velarde House, Edificio de la Torre, Portal de las Palomas; San Luis and La Aurora streets">Jardín Rafael Páez, Teatro Hinojosa, Santuario de la Soledad, Casa Ramón López Velarde, Edificio de la Torre, Portal de las Palomas; calles San Luis y de la Aurora</td><td data-en="Panteón de Dolores, Sierra de Cardos, Valle de Amaya">Panteón de Dolores, Sierra de Cardos, Valle de Amaya</td><td data-en="Tostadas de cuerito, raspanieve">Tostadas de cuerito, raspanieve</td><td class="st ok" data-en="In places.ts">En places.ts</td></tr>
+        <tr><td><b>Villanueva</b><small>61 km</small></td><td data-en="La Quemada, Hall of Columns">La Quemada, Salón de las Columnas</td><td data-en="Jardín Benito Juárez, Templo de San Judas Tadeo, Town Hall and its clock, Templo de la Merced, market">Jardín Benito Juárez, Templo de San Judas Tadeo, Palacio Municipal y su reloj, Templo de la Merced, mercado</td><td data-en="La Quemada and site museum, Hacienda La Encarnación, Hacienda de Tayahua">La Quemada y museo de sitio, Hacienda La Encarnación, Hacienda de Tayahua</td><td data-en="Chorizo tortas, huicholas, condoches">Tortas de chorizo, huicholas, condoches</td><td class="st wip" data-en="La Quemada yes; the town is missing">La Quemada sí; falta el pueblo</td></tr>
+        <tr><td><b>Pinos</b><small>≈125 km</small></td><td data-en="Parish of San Matías">Parroquia de San Matías</td><td data-en="Main square, Parish of San Matías and Sacred Art Museum, Templo de San Francisco, Tlaxcala street and quarter">Plaza Principal, Parroquia de San Matías y Museo de Arte Sacro, Templo de San Francisco, calle y barrio de Tlaxcala</td><td data-en="La Pendencia mezcal distillery, route of the giant biznagas">Mezcalera La Pendencia, ruta de las biznagas gigantes</td><td data-en="Asado, tatemado, oven gorditas, tuna cheese">Asado, tatemado, gorditas de horno, queso de tuna</td><td class="st ok" data-en="In places.ts">En places.ts</td></tr>
+        <tr><td><b>Sombrerete</b><small>166 km · 2 h</small></td><td data-en="Sierra de Órganos">Sierra de Órganos</td><td data-en="Avenida Hidalgo, San Francisco, Santo Domingo and Tercera Orden churches, Capilla de la Santa Veracruz, Villa de Llerena Museum">Avenida Hidalgo, templos de San Francisco, Santo Domingo y la Tercera Orden, Capilla de la Santa Veracruz, Museo Villa de Llerena</td><td data-en="Sierra de Órganos (25 km), Noria de San Pantaleón">Sierra de Órganos (25 km), Noria de San Pantaleón</td><td data-en="Brujitas, the Poor Clares' rompope, quince liqueur">Brujitas, rompope de las clarisas, licor de membrillo</td><td class="st ok" data-en="In places.ts">En places.ts</td></tr>
+        <tr><td><b>Teúl</b><small>216 km · 3 h</small></td><td data-en="Cerro del Teúl above the town (the «big Christ»: to be confirmed)">Cerro del Teúl sobre el pueblo (el «Cristo grande»: por confirmar)</td><td data-en="Plaza de Armas and Portales Trinidad Cervantes, Parish of San Juan Bautista, Santuario de Guadalupe, Mezcal Museum">Plaza de Armas y Portales Trinidad Cervantes, Parroquia de San Juan Bautista, Santuario de Guadalupe, Museo del Mezcal</td><td data-en="Cerro del Teúl (1 km trail), Presa La Aticuata">Cerro del Teúl (sendero de 1 km), Presa La Aticuata</td><td data-en="Oven gorditas, pork shank, mezcal">Gorditas de horno, chamorro, mezcal</td><td class="st falta" data-en="Missing">Falta</td></tr>
+        <tr><td><b>Nochistlán</b><small>226 km · 3 h</small></td><td data-en="The aqueduct">El acueducto</td><td data-en="Jardín Morelos, Plaza Héroes del 64, Parish of San Francisco de Asís, Templo de San Sebastián, Parián">Jardín Morelos, Plaza Héroes del 64, Parroquia de San Francisco de Asís, Templo de San Sebastián, Parián</td><td data-en="El Tuiche, Presa Las Tuzas, Sierra de Nochistlán">El Tuiche, Presa Las Tuzas, Sierra de Nochistlán</td><td data-en="Birria, pollo a la Valentina, jericallas, tejuino">Birria, pollo a la Valentina, jericallas, tejuino</td><td class="st falta" data-en="Missing">Falta</td></tr>
+      </tbody>
+    </table></div>
+
+    <div class="why">
+      <div><b data-en="Thumbnail with a real photo">Miniatura con foto real</b><span data-en="One Wikimedia Commons photo per town, with author and license, like the city photos (photos.json). Without a free-license photo, an illustration goes in its place.">Una foto de Wikimedia Commons por pueblo, con autor y licencia, como las fotos de la ciudad (photos.json). Si no hay foto con licencia libre, va una ilustración.</span></div>
+      <div><b data-en="Town page">Página del pueblo</b><span data-en="What to see, flavors, festivals and how to get there, from the official Zacatecas Travel mini-guides and INAH, with the source on each entry. No invented businesses or prices.">Qué ver, sabores, fiestas y cómo llegar, de las miniguías oficiales de Zacatecas Travel y del INAH, con la fuente en cada ficha. Nada de comercios ni precios inventados.</span></div>
+      <div><b data-en="Map of the center">Mapa del centro</b><span data-en="The same engine as the 3D City with each town's data: buildings (Overture/OSM), named streets (OSM) and terrain (AWS), as with the street lighting in #136. The main streets are highlighted and the places are numbered on a walking route.">El mismo motor de la Ciudad 3D con los datos de cada pueblo: edificios (Overture/OSM), calles con nombre (OSM) y relieve (AWS), como el alumbrado de #136. Las calles principales se resaltan y los lugares van numerados en un recorrido a pie.</span></div>
+      <div class="rec"><b data-en="Suggested order">Orden sugerido</b><span data-en="Guadalupe and Jerez first (close by and already in places.ts), then Villanueva, Pinos and Sombrerete; Teúl and Nochistlán last because their data has to be captured from scratch.">Guadalupe y Jerez primero (cerca y ya en places.ts), después Villanueva, Pinos y Sombrerete; Teúl y Nochistlán al final porque hay que capturar sus datos desde cero.</span></div>
+    </div>
+    <p class="fine" data-en="Out of this proposal: the pet, the passport and the on-site missions (#56, #59, #60, #62, #63) stay as they are; these pages can be their base later. Changes #57: the catalog first covers the 7 Magic Towns of Zacatecas, and the neighboring state comes later. The drawings are illustrations; places come from the official mini-guides (zacatecastravel.com) and INAH. Data model and sources: docs/design/pueblos-magicos-datos.md.">Fuera de esta propuesta: la mascota, el pasaporte y las misiones presenciales (#56, #59, #60, #62, #63) siguen como están; estas páginas pueden ser su base después. Cambia #57: el catálogo cubre primero los 7 Pueblos Mágicos de Zacatecas y el estado vecino queda para después. Los dibujos son ilustraciones; los lugares salen de las miniguías oficiales (zacatecastravel.com) y del INAH. Modelo de datos y fuentes: docs/design/pueblos-magicos-datos.md.</p>
+  </section>
+
   <section id="que-falta">
     <div class="section-head">
       <span class="eyebrow" data-en="What is missing">Qué falta</span>
@@ -841,7 +1135,8 @@ figure.wide .tag { margin: 0; }
   // Ciudad isométrica en cantera rosa, al estilo del motor three.js del repo.
   function rng(seed) { return function () { seed |= 0; seed = seed + 0x6D2B79F5 | 0; var t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
   function shade(hex, f) { var n = parseInt(hex.slice(1), 16), r = n >> 16, g = n >> 8 & 255, b = n & 255; r = Math.min(255, Math.round(r * f)); g = Math.min(255, Math.round(g * f)); b = Math.min(255, Math.round(b * f)); return 'rgb(' + r + ',' + g + ',' + b + ')'; }
-  var ROUTES = { plata: [[6, 4], [10, 9], [9, 15], [16, 15], [18, 20], [13, 23]], callejoneada: [[14, 20], [17, 21], [20, 24]] };
+  var ROUTES = { plata: [[6, 4], [10, 9], [9, 15], [16, 15], [18, 20], [13, 23]], callejoneada: [[14, 20], [17, 21], [20, 24]], pueblo: [[15, 16], [20, 16], [25, 16], [25, 20], [25, 28], [30, 28]] };
+  var STOPS = { pueblo: [0, 1, 3, 4, 5] }; // puntos del recorrido que son paradas numeradas (Propuesta H)
   function draw(cv) {
     var mode = cv.dataset.mode, R = rng(+cv.dataset.seed || 1), zoom = +cv.dataset.zoom || 1;
     var w = cv.clientWidth, h = cv.clientHeight; if (!w || !h) return;
@@ -852,7 +1147,7 @@ figure.wide .tag { margin: 0; }
     var sat = mode === 'sat', blocks = cv.dataset.blocks !== '0';
     var hora = mode === 'hora' ? cv.dataset.hora : '', noche = hora === 'noche';
     var tw = 24 * zoom, th = 12 * zoom, N = sat ? 90 : hora ? 60 : 36;
-    var ox = w / 2, oy = photo ? h * 0.24 : sat ? -th * 40 : hora ? h * 0.55 - th * 20 : -th * 6;
+    var ox = w / 2, oy = photo ? h * 0.24 : sat ? -th * 40 : hora ? h * 0.55 - th * 20 : -th * 6 - (+cv.dataset.shift || 0);
     if (photo) {
       var sky = c.createLinearGradient(0, 0, 0, h * 0.45);
       sky.addColorStop(0, '#1e1b3a'); sky.addColorStop(0.6, '#6b3a5a'); sky.addColorStop(1, '#e08a5a');
@@ -923,7 +1218,7 @@ figure.wide .tag { margin: 0; }
     if (photo) { fog.addColorStop(0, 'rgba(30,27,58,0)'); fog.addColorStop(1, 'rgba(30,27,58,0)'); }
     else if (sat) { fog.addColorStop(0, '#B9C7D6'); fog.addColorStop(1, 'rgba(185,199,214,0)'); }
     else { fog.addColorStop(0, 'rgba(245,239,230,.95)'); fog.addColorStop(1, 'rgba(245,239,230,0)'); }
-    c.fillStyle = fog; c.fillRect(0, 0, w, h * 0.3);
+    if (cv.dataset.fog !== '0') { c.fillStyle = fog; c.fillRect(0, 0, w, h * 0.3); }
     var route = ROUTES[cv.dataset.route];
     if (route) {
       var pts = route.map(function (q) { var p = P(q[0], q[1]); return [p[0], p[1] + th / 2]; });
@@ -931,7 +1226,12 @@ figure.wide .tag { margin: 0; }
       c.strokeStyle = photo ? 'rgba(252,211,77,.35)' : 'rgba(217,119,6,.3)'; c.lineWidth = 9;
       c.beginPath(); pts.forEach(function (p, k) { k ? c.lineTo(p[0], p[1]) : c.moveTo(p[0], p[1]); }); c.stroke();
       c.strokeStyle = photo ? '#FCD34D' : '#D97706'; c.lineWidth = 3; c.setLineDash([6, 5]); c.stroke(); c.setLineDash([]);
-      pts.forEach(function (p, k) { c.beginPath(); c.arc(p[0], p[1], k === 0 ? 6 : 4, 0, 7); c.fillStyle = k === 0 ? '#9A3412' : '#fff'; c.fill(); c.lineWidth = 2; c.strokeStyle = '#9A3412'; c.stroke(); });
+      var stops = STOPS[cv.dataset.route];
+      if (stops) { // paradas numeradas
+        var rr = Math.max(6, 9 * Math.min(1, zoom));
+        stops.forEach(function (idx, n) { var p = pts[idx]; c.beginPath(); c.arc(p[0], p[1], rr, 0, 7); c.fillStyle = '#9A3412'; c.fill(); c.lineWidth = 2; c.strokeStyle = '#fff'; c.stroke();
+          c.fillStyle = '#fff'; c.font = '800 ' + Math.round(rr * 1.15) + 'px Manrope, system-ui, sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(String(n + 1), p[0], p[1] + 0.5); });
+      } else pts.forEach(function (p, k) { c.beginPath(); c.arc(p[0], p[1], k === 0 ? 6 : 4, 0, 7); c.fillStyle = k === 0 ? '#9A3412' : '#fff'; c.fill(); c.lineWidth = 2; c.strokeStyle = '#9A3412'; c.stroke(); });
     }
   }
   function drawAll() { document.querySelectorAll('canvas.city').forEach(draw); }

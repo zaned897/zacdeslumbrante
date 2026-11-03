@@ -1,6 +1,8 @@
 # Pueblos Mágicos con misiones presenciales
 
 > Nivel: **boceto**. Idea a futuro para acordar antes de programar. Nada aquí es código ni promesa de producto.
+>
+> El catálogo con miniaturas y la página de cada pueblo, sin la mascota, van aparte: Propuesta H del adelanto y [`pueblos-magicos-datos.md`](pueblos-magicos-datos.md) (#57).
 
 ## La idea en un minuto
 
