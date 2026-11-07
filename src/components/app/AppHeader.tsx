@@ -12,12 +12,27 @@ interface AppHeaderProps {
   season?: { name: string; accent: string };
   /** Hueco a la derecha (p. ej. el avatar de la cuenta). */
   trailing?: React.ReactNode;
+  /** Título y subtítulo propios de la pantalla; por defecto el nombre de la app y su lema. */
+  title?: string;
+  subtitle?: string;
+  /** Etiqueta Demo junto al título. El chat no la lleva, como en la propuesta F (#113). */
+  demoBadge?: boolean;
 }
 
 const iconBtn =
   'h-9 min-w-9 px-2.5 grid place-items-center rounded-full text-xs font-bold cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cantera';
 
-export const AppHeader: React.FC<AppHeaderProps> = ({ language, onToggleLanguage, isMapOpen, onToggleMap, season, trailing }) => {
+export const AppHeader: React.FC<AppHeaderProps> = ({
+  language,
+  onToggleLanguage,
+  isMapOpen,
+  onToggleMap,
+  season,
+  trailing,
+  title,
+  subtitle,
+  demoBadge = true,
+}) => {
   const t = TRANSLATIONS[language];
 
   return (
@@ -30,10 +45,12 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ language, onToggleLanguage
       </div>
       <div className="min-w-0 flex-1 leading-tight">
         <div className="flex items-center gap-1.5">
-          <span className="font-extrabold text-[15px] tracking-tight truncate">{t.appName}</span>
-          <span className="px-1.5 py-px text-[9px] font-bold uppercase tracking-wider text-terracota border border-terracota/50 rounded-full shrink-0">
-            {t.demoBadge}
-          </span>
+          <span className="font-extrabold text-[15px] tracking-tight truncate">{title ?? t.appName}</span>
+          {demoBadge && (
+            <span className="px-1.5 py-px text-[9px] font-bold uppercase tracking-wider text-terracota border border-terracota/50 rounded-full shrink-0">
+              {t.demoBadge}
+            </span>
+          )}
         </div>
         {season ? (
           <span className="flex items-center gap-1 text-[11px] font-semibold truncate" style={{ color: season.accent }}>
@@ -41,7 +58,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ language, onToggleLanguage
             {season.name}
           </span>
         ) : (
-          <span className="block text-[11px] text-tenue truncate">{t.appTagline}</span>
+          <span className="block text-[11px] text-tenue truncate">{subtitle ?? t.appTagline}</span>
         )}
       </div>
 
