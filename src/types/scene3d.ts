@@ -94,8 +94,8 @@ export interface SceneSeasonLook {
   raceRoute?: Array<{ lat: number; lng: number }>;
 }
 
-/** Hora de la escena (#128, #129). */
-export type SceneTimeOfDay = 'day' | 'night';
+/** Hora de la escena (#128, #129): día, tarde o noche. */
+export type SceneTimeOfDay = 'day' | 'dusk' | 'night';
 
 /** Lo que sabe la vista al pedir los puntos de una capa. */
 export interface SceneLayerContext {
@@ -129,7 +129,7 @@ export interface SceneEngine {
   setRoute(points: Array<{ lat: number; lng: number }> | null): void;
   /** Viste la escena según la temporada (#68); null = como siempre. Opcional: Google y Cesium usan un filtro CSS. */
   setSeason?(look: SceneSeasonLook | null): void;
-  /** Día o noche con luz propia (#129). Opcional: Google y Cesium no dejan cambiar su luz. */
+  /** Día, tarde o noche con luz propia (#128, #129). Opcional: Google y Cesium no dejan cambiar su luz. */
   setTimeOfDay?(time: SceneTimeOfDay): void;
   destroy(): void;
 }

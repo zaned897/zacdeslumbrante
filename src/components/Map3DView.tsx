@@ -49,6 +49,7 @@ import { loadPlacePhotos, type PlacePhoto } from '../scene3d/placePhotos';
 import { MapAssistantSheet } from './app/MapAssistantSheet';
 import { recordLegendaryFind, recordPlaceVisit } from '../pet/visits';
 import { resolveMapsApiKey } from '../data/mapsApiKey';
+import { forcedTimeOfDay, zacatecasTimeOfDay } from '../scene3d/timeOfDay';
 
 
 /** Recorridos que tocan hoy: los de temporada solo en su temporada, y primero. */
@@ -410,10 +411,16 @@ const Map3DScene: React.FC = () => {
     );
   }, [season, status, engineId]);
 
-  // PROTO: hasta que llegue el interruptor Día / Noche (#128), ?noche=1 enciende la noche del centro (#129).
+  // Día, tarde o noche según la hora de Zacatecas, sin interruptor (#128). Se revisa cada minuto
+  // para cambiar sola al cruzar un corte. PROTO: ?hora=dia|tarde|noche (o ?noche=1) la fija para probar.
   useEffect(() => {
     if (status !== 'ready') return;
-    engineRef.current?.setTimeOfDay?.(new URLSearchParams(window.location.search).has('noche') ? 'night' : 'day');
+    const forced = forcedTimeOfDay(window.location.search);
+    const apply = () => engineRef.current?.setTimeOfDay?.(forced ?? zacatecasTimeOfDay(new Date()));
+    apply();
+    if (forced) return;
+    const timer = window.setInterval(apply, 60_000);
+    return () => window.clearInterval(timer);
   }, [status, engineId]);
 
   // Jugador: moverlo, seguirlo con la cámara y descubrir lugares cercanos.
