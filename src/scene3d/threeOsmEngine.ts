@@ -105,6 +105,22 @@ const COLORS = {
   route: '#E11D48',
 };
 
+// Cielo de cada hora (#128), con los colores de la propuesta G del adelanto: de arriba hacia el horizonte.
+// La niebla toma el último color para que el horizonte no corte.
+const SKIES: Record<SceneTimeOfDay, string[]> = {
+  day: ['#BFD8F2', '#E9F1F8', COLORS.sky],
+  dusk: ['#6C7DB5', '#F6A35C', '#FCD9A0'],
+  night: ['#0B1026', '#1B2347', '#0B1022'],
+};
+// Tarde (#128): la misma ciudad de día con luz baja y dorada. PROTO: valores a ojo.
+const DUSK = {
+  hemiSky: '#FFD2A0',
+  hemiGround: '#8A6A5A',
+  hemiIntensity: 1.25,
+  sun: '#FFB066',
+  sunIntensity: 1.6,
+};
+
 // Noche (#136, cambia la de #129): la ciudad queda oscura y solo las calles principales del centro
 // tienen su alumbrado público. Las temporadas nocturnas van encima.
 const NIGHT = {
@@ -355,6 +371,8 @@ export class ThreeOsmEngine implements SceneEngine {
     night: { building: THREE.Material; road: THREE.Material };
   } | null = null;
   private timeOfDay: SceneTimeOfDay = 'day';
+  private timeApplied = false;
+  private skies: Partial<Record<SceneTimeOfDay, THREE.Texture>> = {};
   // Calles con alumbrado, sus lámparas y algunas ventanas: solo se ven de noche (#136).
   private nightLights: THREE.Group | null = null;
   private streetPoints: Array<{ x: number; z: number }> = [];
@@ -681,6 +699,8 @@ export class ThreeOsmEngine implements SceneEngine {
     this.controls?.dispose();
     if (this.looks) Object.values(this.looks).forEach((l) => [l.building, l.road].forEach((m) => m.dispose()));
     this.looks = null;
+    Object.values(this.skies).forEach((t) => t?.dispose());
+    this.skies = {};
     const T = this.T;
     this.nightLights?.traverse((o) => {
       if (T && o instanceof T.Mesh) {
@@ -871,22 +891,60 @@ export class ThreeOsmEngine implements SceneEngine {
   }
 
   setTimeOfDay(time: SceneTimeOfDay): void {
+    // La vista pregunta cada minuto: solo se repinta al cruzar un corte.
+    if (time === this.timeOfDay && this.timeApplied) return;
     this.timeOfDay = time;
+    this.timeApplied = this.scene !== null;
     this.applySeason();
+  }
+
+  /** Degradado vertical del cielo; se crea una vez por hora y se reutiliza. */
+  private skyTexture(T: Three, time: SceneTimeOfDay): THREE.Texture | THREE.Color {
+    const cached = this.skies[time];
+    if (cached) return cached;
+    const colors = SKIES[time];
+    const canvas = document.createElement('canvas');
+    canvas.width = 2;
+    canvas.height = 256;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return new T.Color(colors[colors.length - 1]);
+    const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    colors.forEach((c, i) => gradient.addColorStop(i / (colors.length - 1), c));
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    const texture = new T.CanvasTexture(canvas);
+    texture.colorSpace = T.SRGBColorSpace;
+    this.skies[time] = texture;
+    return texture;
   }
 
   private applySeason(): void {
     const { T, scene, hemi, sun } = this;
     if (!T || !scene || !hemi || !sun) return;
-    const night = this.timeOfDay === 'night' || (this.seasonLook?.night ?? false);
-    const sky = night ? NIGHT.sky : COLORS.sky;
-    scene.background = new T.Color(sky);
-    if (scene.fog instanceof T.Fog) scene.fog.color.set(sky);
-    hemi.color.set(night ? NIGHT.hemiSky : '#FFF7ED');
-    hemi.groundColor.set(night ? NIGHT.hemiGround : '#B8A48C');
-    hemi.intensity = night ? NIGHT.hemiIntensity : 1.6;
-    sun.color.set(night ? NIGHT.sun : '#FFFFFF');
-    sun.intensity = night ? NIGHT.sunIntensity : 1.8;
+    const time: SceneTimeOfDay = this.seasonLook?.night ? 'night' : this.timeOfDay;
+    const night = time === 'night';
+    const sky = SKIES[time];
+    scene.background = this.skyTexture(T, time);
+    if (scene.fog instanceof T.Fog) scene.fog.color.set(sky[sky.length - 1]);
+    if (night) {
+      hemi.color.set(NIGHT.hemiSky);
+      hemi.groundColor.set(NIGHT.hemiGround);
+      hemi.intensity = NIGHT.hemiIntensity;
+      sun.color.set(NIGHT.sun);
+      sun.intensity = NIGHT.sunIntensity;
+    } else if (time === 'dusk') {
+      hemi.color.set(DUSK.hemiSky);
+      hemi.groundColor.set(DUSK.hemiGround);
+      hemi.intensity = DUSK.hemiIntensity;
+      sun.color.set(DUSK.sun);
+      sun.intensity = DUSK.sunIntensity;
+    } else {
+      hemi.color.set('#FFF7ED');
+      hemi.groundColor.set('#B8A48C');
+      hemi.intensity = 1.6;
+      sun.color.set('#FFFFFF');
+      sun.intensity = 1.8;
+    }
     if (this.looks) {
       const look = night ? this.looks.night : this.looks.day;
       if (this.buildings) this.buildings.material = look.building;
