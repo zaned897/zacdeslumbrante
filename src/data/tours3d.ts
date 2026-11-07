@@ -167,8 +167,8 @@ export const SEASONAL_TOURS_3D: Tour[] = [
         camera: { lat: 22.7756, lng: -102.5723, altitude: 2440, range: 300, tilt: 70, heading: 180 },
         holdMillis: 3000,
         caption: {
-          es: 'Demo: en Día de Muertos el centro se llena de altares y catrinas. Horarios y lugares saldrían del programa oficial del año.',
-          en: 'Demo: on the Day of the Dead the center fills with altars and catrinas. Times and places would come from the official program.',
+          es: 'En Día de Muertos el centro se llena de altares y catrinas. Horarios y lugares saldrían del programa oficial del año.',
+          en: 'On the Day of the Dead the center fills with altars and catrinas. Times and places would come from the official program.',
         },
       },
       {

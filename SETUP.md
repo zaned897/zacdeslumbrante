@@ -63,5 +63,5 @@ Manual: *New issue* muestra 3 plantillas.
 Manual: `./scripts/dev.sh` y `curl localhost:3000/api/py/health` → `{"status":"ok"}`; sin Python → 503.
 
 ## 8 · Ensayo general
-Issue [mock] de eventos (API + tarjeta con badge «Demo») → `./scripts/worktrees.sh mock/N-eventos-api mock/N-eventos-ui` → Claude en `-back`, Antigravity en `-front` → relevo a propósito a Codex con `relay` → reviews cruzadas, 2 PRs, CI, merge → `git worktree remove …`.
+Issue [mock] de eventos (API + tarjeta) → `./scripts/worktrees.sh mock/N-eventos-api mock/N-eventos-ui` → Claude en `-back`, Antigravity en `-front` → relevo a propósito a Codex con `relay` → reviews cruzadas, 2 PRs, CI, merge → `git worktree remove …`.
 Prueba final: `./scripts/verify.sh` con **0 ✗**.

@@ -15,8 +15,6 @@ interface AppHeaderProps {
   /** Título y subtítulo propios de la pantalla; por defecto el nombre de la app y su lema. */
   title?: string;
   subtitle?: string;
-  /** Etiqueta Demo junto al título. El chat no la lleva, como en la propuesta F (#113). */
-  demoBadge?: boolean;
 }
 
 const iconBtn =
@@ -31,7 +29,6 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   trailing,
   title,
   subtitle,
-  demoBadge = true,
 }) => {
   const t = TRANSLATIONS[language];
 
@@ -46,11 +43,6 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
       <div className="min-w-0 flex-1 leading-tight">
         <div className="flex items-center gap-1.5">
           <span className="font-extrabold text-[15px] tracking-tight truncate">{title ?? t.appName}</span>
-          {demoBadge && (
-            <span className="px-1.5 py-px text-[9px] font-bold uppercase tracking-wider text-terracota border border-terracota/50 rounded-full shrink-0">
-              {t.demoBadge}
-            </span>
-          )}
         </div>
         {season ? (
           <span className="flex items-center gap-1 text-[11px] font-semibold truncate" style={{ color: season.accent }}>

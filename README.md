@@ -2,7 +2,7 @@
 
 Asistente turístico y cultural para el estado de Zacatecas, pensado para turismo externo (visitantes) e interno (zacatecanos que redescubren su estado). Combina un chat con IA (Gemini), un mapa interactivo, una base de conocimientos curada e itinerarios sugeridos, en español e inglés.
 
-> **Esto es un repo de prototipos.** Aquí se exploran ideas rápido; nada es producto final. Cada pieza avanza por niveles y los datos de ejemplo van marcados como mock ("Demo").
+> **Esto es un repo de prototipos.** Aquí se exploran ideas rápido; nada es producto final. Cada pieza avanza por niveles y los datos de ejemplo van marcados como mock (`"_mock": true`).
 
 ## Qué incluye hoy
 

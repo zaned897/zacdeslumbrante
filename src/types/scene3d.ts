@@ -41,7 +41,7 @@ export interface ScenePoi {
   icon?: string;
   /** Si existe, Explorar lo muestra como aviso cuando el jugador se acerca (sin coleccionarlo). */
   nearbyNotice?: Localized;
-  /** true si el dato es de ejemplo; la UI muestra el badge "Demo". */
+  /** true si el dato es de ejemplo. */
   isMock?: boolean;
 }
 

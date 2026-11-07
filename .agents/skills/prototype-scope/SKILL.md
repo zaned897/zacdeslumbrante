@@ -16,7 +16,7 @@ Este repo produce **prototipos**, no producto. Cada issue, rama y PR declara un 
 
 ## Reglas
 - **Sube de nivel solo con una issue nueva.** Si al hacer un mock te dan ganas de conectar la API real, eso es otra issue.
-- **Los mocks se ven como mocks:** datos en `fixtures/` (JSON), con `"_mock": true` en la respuesta o un badge "Demo" en la UI. Nunca datos inventados presentados como reales (precios, horarios, reseñas, contactos de comercios).
+- **Los mocks se ven como mocks:** datos en `fixtures/` (JSON), con `"_mock": true` en la respuesta (la UI no lleva etiqueta «Demo»). Nunca datos inventados presentados como reales (precios, horarios, reseñas, contactos de comercios).
 - **Costuras para después:** aunque sea mock, respeta el contrato de `docs/API.md` y los tipos; así el reemplazo por lo real no rompe el frontend.
 - **Sin deuda oculta:** atajos permitidos, pero marcados con `# PROTO:` / `// PROTO:` y una línea de por qué.
 - **Nada de secretos ni datos personales**, en ningún nivel.

@@ -57,7 +57,6 @@ body:
       description: Verificables con un comando, una URL o una captura
       placeholder: |
         - [ ] `curl localhost:3000/api/py/events` devuelve 5 eventos con "_mock": true
-        - [ ] La UI muestra el badge "Demo"
     validations:
       required: true
   - type: textarea

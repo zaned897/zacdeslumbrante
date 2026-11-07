@@ -25,9 +25,6 @@ export const JoinWorkshop: React.FC<JoinWorkshopProps> = ({ language }) => {
           <h2 id="join-workshop-title" className="text-lg font-extrabold">
             {t.joinTitle}
           </h2>
-          <span className="px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider bg-terracota rounded">
-            {t.demoBadge}
-          </span>
         </div>
         <small className="text-xs opacity-85">{t.joinSubtitle}</small>
       </header>

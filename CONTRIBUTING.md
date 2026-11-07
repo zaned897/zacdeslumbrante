@@ -45,7 +45,7 @@ Ninguna feature con interfaz se programa antes de que su visual esté aprobado.
 Cambios sin interfaz (backend, datos, docs) saltan los pasos 1 a 3 pero igual nacen de una issue.
 
 ## Reglas
-- **Mocks honestos:** marca los datos de ejemplo (`"_mock": true` o badge "Demo"). No publiques precios, horarios, reseñas ni contactos de negocios inventados como si fueran reales.
+- **Mocks honestos:** marca los datos de ejemplo con `"_mock": true` (la UI no lleva etiqueta «Demo»). No publiques precios, horarios, reseñas ni contactos de negocios inventados como si fueran reales.
 - **Fuentes:** para contenido histórico o cultural, cita la fuente y distingue historia documentada, leyenda y recomendación local.
 - **Atajos marcados:** comentarios `PROTO:` con una línea de por qué.
 - **Sin secretos ni datos personales** en el código, issues o capturas.
