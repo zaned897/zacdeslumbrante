@@ -11,6 +11,65 @@
 .why b { color: var(--carbon); font-size: 14.5px; }
 .why .rec { border-color: var(--terracota); box-shadow: 0 0 0 1px var(--terracota) inset; }
 /* Propuesta G: la hora decide la luz */
+/* Propuestas H e I: maqueta ilustrada y gremios */
+.maq-screen { background: #EFE4D2; }
+[data-at] { position: absolute; z-index: 6; }
+.rib { transform: translate(-50%, -100%); filter: drop-shadow(0 1px 0 rgba(74,42,28,.55)) drop-shadow(0 2px 3px rgba(60,30,20,.25)); pointer-events: none; }
+.rib span { display: block; background: #FBF1DC; color: #4A2A1C; font: italic 600 10px/1.2 Georgia, 'Times New Roman', serif; padding: 3px 13px; white-space: nowrap; clip-path: polygon(0 0, 100% 0, 92% 50%, 100% 100%, 0 100%, 8% 50%); }
+.rib.big span { font-size: 11.5px; padding: 4px 15px; }
+.rib.g span { background: var(--gc, #9A3412); color: #FFF8EC; font-style: normal; font-weight: 700; font-family: var(--f-body); font-size: 9px; letter-spacing: .04em; }
+.co { transform: translate(-50%, -50%); width: 18px; height: 18px; border-radius: 50%; background: #1C1917; color: #FCD34D; font: 800 10px/18px var(--f-body); text-align: center; box-shadow: 0 0 0 2px #FCD34D; z-index: 7; }
+.rosa { position: absolute; right: 12px; top: 88px; width: 38px; height: 38px; z-index: 8; }
+.pawn { transform: translate(-50%, -100%); display: flex; flex-direction: column; align-items: center; z-index: 7; }
+.pawn svg { width: 34px; height: 34px; filter: drop-shadow(0 2px 1px rgba(60,30,20,.4)); }
+.pawn i { width: 22px; height: 7px; margin-top: -4px; border-radius: 50%; background: #3B2418; box-shadow: 0 1px 0 #8B5A3C inset; }
+.pawn .bubble { position: absolute; bottom: 100%; margin-bottom: 4px; font-size: 10px; }
+.maq-key { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px 22px; max-width: 1000px; margin: 0; padding: 0; list-style: none; counter-reset: k; }
+.maq-key li { display: grid; grid-template-columns: 22px 1fr; gap: 10px; font-size: 13.5px; color: var(--carbon-2); }
+.maq-key li::before { counter-increment: k; content: counter(k); width: 22px; height: 22px; border-radius: 50%; background: var(--carbon); color: #FCD34D; font: 800 11px/22px var(--f-body); text-align: center; }
+.maq-key b { color: var(--carbon); display: block; }
+.cost { font: 600 10.5px var(--f-mono); padding: 1px 6px; border-radius: 999px; border: 1px solid currentColor; margin-left: 4px; white-space: nowrap; }
+.cost.lo { color: var(--ok); } .cost.mid { color: var(--wip); } .cost.hi { color: var(--cantera); }
+/* Gremios */
+.gr { position: absolute; inset: 0; background: #F6EEDF; display: flex; flex-direction: column; padding: 40px 0 0; }
+.gr-body { flex: 1; overflow: hidden; padding: 10px 14px; display: flex; flex-direction: column; gap: 9px; }
+.gr-ask { display: flex; gap: 8px; align-items: flex-end; }
+.gr-ask svg { width: 44px; height: 44px; flex: none; }
+.gr-ask p { background: #fff; border-radius: 12px 12px 12px 3px; padding: 7px 10px; font-size: 11px; box-shadow: 0 1px 3px rgba(0,0,0,.1); }
+.gr-list { display: flex; flex-direction: column; gap: 6px; }
+.gr-item { display: grid; grid-template-columns: 34px 1fr auto; gap: 9px; align-items: center; background: #fff; border-radius: 12px; padding: 7px 9px; border: 1px solid #EDE2CF; }
+.gr-item.on { border-color: var(--gc); box-shadow: 0 0 0 1.5px var(--gc) inset; }
+.gr-item b { font-size: 11.5px; display: block; }
+.gr-item small { font-size: 9.5px; color: #78716C; display: block; line-height: 1.3; }
+.gr-item .av { font-size: 8.5px; font-weight: 700; color: var(--gc); white-space: nowrap; }
+.escudo { width: 34px; height: 38px; background: var(--gc); clip-path: polygon(0 0, 100% 0, 100% 58%, 50% 100%, 0 58%); display: grid; place-items: start center; padding-top: 8px; color: #FFF8EC; box-shadow: inset 0 0 0 2px rgba(0,0,0,.15); }
+.escudo.xl { width: 58px; height: 66px; padding-top: 14px; }
+.escudo.xl .ico { width: 24px; height: 24px; }
+.gr-cta { margin-top: auto; background: #9A3412; color: #fff; text-align: center; font-weight: 700; border-radius: 12px; padding: 10px; font-size: 12px; }
+.gr-fine { font-size: 9px; color: #78716C; text-align: center; }
+.gchip { position: absolute; top: 84px; left: 10px; z-index: 10; display: flex; gap: 7px; align-items: center; background: rgba(255,255,255,.95); border-radius: 12px; padding: 6px 10px 6px 6px; box-shadow: 0 2px 6px rgba(0,0,0,.15); }
+.gchip .escudo { width: 22px; height: 25px; padding-top: 4px; }
+.gchip .escudo .ico { width: 12px; height: 12px; }
+.gchip b { font-size: 11px; display: block; } .gchip small { font-size: 9.5px; color: #78716C; }
+.codice { position: absolute; inset: 0; background: #E9DCC3; padding: 40px 0 0; display: flex; flex-direction: column; }
+.cod-hdr { display: flex; align-items: center; gap: 10px; padding: 6px 14px 10px; }
+.cod-hdr b { font: 700 15px var(--f-display); display: block; } .cod-hdr small { font-size: 10px; color: #78716C; }
+.cod-page { margin: 0 12px; background: #FBF4E4; border-radius: 6px 14px 14px 6px; box-shadow: -4px 0 0 #D8C6A4, 0 6px 16px -6px rgba(60,30,10,.35); padding: 12px 13px; display: flex; flex-direction: column; gap: 7px; font-family: Georgia, 'Times New Roman', serif; color: #3B2418; }
+.cod-page .k { font: 700 9px var(--f-body); letter-spacing: .08em; text-transform: uppercase; color: #B91C1C; display: flex; justify-content: space-between; }
+.cod-page h5 { margin: 0; font-size: 17px; line-height: 1.15; }
+.cod-page p { font-size: 11px; line-height: 1.45; }
+.cod-page .src { font: 500 8.5px var(--f-mono); color: #78716C; }
+.cod-art { height: 74px; border-radius: 6px; background: linear-gradient(180deg, #F2C48D, #E8A15F 60%, #C9826B); position: relative; overflow: hidden; }
+.cod-art svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.cod-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; padding: 10px 12px 0; }
+.cod-grid span { aspect-ratio: 3 / 4; border-radius: 4px; background: #FBF4E4; border: 1px solid #D8C6A4; display: grid; place-items: center; font-size: 8.5px; text-align: center; padding: 3px; color: #57534E; line-height: 1.2; }
+.cod-grid span.lock { background: repeating-linear-gradient(45deg, #E2D2B4 0 4px, #EADCC2 4px 8px); color: #A8A29E; }
+.reward { display: flex; gap: 8px; align-items: center; background: #1C1917; color: #FCD34D; border-radius: 10px; padding: 7px 9px; font: 700 10.5px var(--f-body); }
+.reward small { display: block; font-weight: 500; color: #D6D3D1; font-size: 9px; }
+.acts { display: flex; gap: 6px; }
+.acts span { flex: 1; text-align: center; border-radius: 10px; padding: 8px 4px; font-weight: 700; font-size: 10.5px; background: #F2ECE1; color: #1C1917; }
+.acts span.p { background: #9A3412; color: #fff; }
+.tabs.abs { position: absolute; left: 0; right: 0; bottom: 0; z-index: 12; }
 </style></head><body>
 <title>Zacatecas Deslumbrante: la app al cerrar los tickets</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -820,6 +879,105 @@ figure.wide .tag { margin: 0; }
     </div>
   </section>
 
+  <section class="nuevo" id="por-aprobar-maqueta">
+    <div class="section-head">
+      <span class="eyebrow" data-en="Proposal · awaiting the owner's approval">Propuesta · espera la aprobación del dueño</span>
+      <h2 data-en="The city as an illustrated scale model, and a Zacatecas of guilds and traditions">La ciudad como maqueta ilustrada, y un Zacatecas de gremios y tradiciones</h2>
+      <p class="lede" data-en="Two ideas that can be approved separately. H gives the 3D city the look of a handmade scale model on a table. I adds a cultural layer: guilds tied to the trades and traditions of Zacatecas, with their own places, routes and a codex that fills up as you explore. Both serve the tour agent: your companion walks on the model and speaks for your guild.">Dos ideas que se pueden aprobar por separado. H le da a la ciudad 3D el aspecto de una maqueta hecha a mano sobre una mesa. I agrega una capa cultural: gremios ligados a los oficios y tradiciones de Zacatecas, con sus lugares, rutas y un códice que se llena al explorar. Las dos sirven al agente turístico: tu compañero camina sobre la maqueta y habla por tu gremio.</p>
+    </div>
+
+    <div class="block" id="propuesta-h">
+      <div class="block-head">
+        <h3 data-en="Proposal H · The 3D city as an illustrated scale model">Propuesta H · La ciudad 3D como maqueta ilustrada</h3>
+        <p data-en="Today the city is an endless field of pink blocks that fades into fog. The proposal places the historic center on a board with a visible cut of the terrain, the hills as stacked cardboard layers, ink outlines, the landmarks as handmade pieces at an exaggerated scale, miniature life in the squares and a soft focus at the edges, like a photo of a real scale model. Labels become ribbons that only show the important ones at each zoom level.">Hoy la ciudad es un campo de bloques rosas que se pierde en la niebla. La propuesta pone el centro histórico sobre una base con el corte del terreno a la vista, los cerros como capas de cartón, contorno de tinta, los monumentos como piezas hechas a mano a escala exagerada, vida en miniatura en las plazas y un desenfoque suave en los bordes, como la foto de una maqueta real. Los rótulos se vuelven banderolas y en cada nivel de zoom solo se ven los importantes.</p>
+        <div class="chips"><span class="tag prop" data-en="Proposal · awaiting approval">Propuesta · por aprobar</span><span class="chip">#126</span><span class="chip">#127</span><span class="chip">#136</span></div>
+      </div>
+      <div class="gallery">
+        <figure class="shot"><div class="phone"><div class="screen"><canvas class="city" data-mode="hora" data-hora="dia" data-seed="9" data-zoom="1.15"></canvas><div class="notch"></div><div class="status"><span>12:10</span><span>5G ▮▮▮</span></div><div class="hdr"><span class="btn-sq"><svg class="ico"><use href="#i-back"/></svg></span><span class="title-pill"><span data-en="3D City">Ciudad 3D</span></span><span class="lang-pill"><svg class="ico sm"><use href="#i-globe"/></svg>ES</span></div></div></div><span class="tag ill" data-en="Today · approved illustration (G)">Hoy · ilustración aprobada (G)</span><figcaption data-en="Today: cantera blocks with no edge or scale; every landmark looks like any other block.">Hoy: bloques de cantera sin borde ni escala; cada monumento se ve como cualquier otro bloque.</figcaption></figure>
+
+        <figure class="shot"><div class="phone"><div class="screen maq-screen"><canvas class="city" data-mode="maqueta" data-seed="7" data-zoom="1.6" data-fy="0.47"></canvas><div class="notch"></div><div class="status"><span>12:10</span><span>5G ▮▮▮</span></div><div class="hdr"><span class="btn-sq"><svg class="ico"><use href="#i-back"/></svg></span><span class="title-pill"><span data-en="3D City">Ciudad 3D</span></span><span class="lang-pill"><svg class="ico sm"><use href="#i-globe"/></svg>ES</span></div><svg class="rosa" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="17" fill="#FBF1DC" stroke="#4A2A1C" stroke-width="1"/><polygon points="20,4 23,20 20,36 17,20" fill="#4A2A1C"/><polygon points="4,20 20,17 36,20 20,23" fill="#B9A587"/><polygon points="20,4 23,20 17,20" fill="#9A3412"/><text x="20" y="11.5" font-size="6" font-weight="800" text-anchor="middle" fill="#FBF1DC" font-family="Manrope,sans-serif">N</text></svg>
+          <span class="rib big" data-at="4.5,5.5,3.4"><span data-en="Cerro de la Bufa">Cerro de la Bufa</span></span>
+          <span class="rib" data-at="12,11.4,2.9"><span data-en="Cathedral">Catedral</span></span>
+          <span class="rib" data-at="17,20.5,1.3"><span data-en="El Cubo Aqueduct">Acueducto El Cubo</span></span>
+          <span class="rib" data-at="3.2,16.4,2.2"><span data-en="Cable car">Teleférico</span></span>
+          <span class="co" data-at="24,16,-0.9">1</span><span class="co" data-at="6.6,3.4,1.6">2</span><span class="co" data-at="7.5,13.5,1.4">3</span><span class="co" data-at="13.3,10,1.6">4</span><span class="co" data-at="16.6,11.2,1.4">5</span><span class="co" style="position:absolute;left:34px;top:160px">6</span><span class="co" data-at="20,21,1.3">7</span>
+          <span class="pawn" data-at="12.8,14.4"><svg viewBox="0 0 100 100" aria-hidden="true"><polygon points="24,44 30,14 46,32" fill="#F6B26B"/><polygon points="76,44 70,14 54,32" fill="#F6B26B"/><polygon points="29,36 32,22 40,31" fill="#FBD3B0"/><polygon points="71,36 68,22 60,31" fill="#FBD3B0"/><circle cx="50" cy="56" r="30" fill="#F6B26B"/><path d="M38 30 l4 8 M50 27 v9 M62 30 l-4 8" stroke="#D9822B" stroke-width="3" stroke-linecap="round"/><circle cx="39" cy="54" r="4.2" fill="#2A1A12"/><circle cx="61" cy="54" r="4.2" fill="#2A1A12"/><circle cx="40.4" cy="52.6" r="1.4" fill="#fff"/><circle cx="62.4" cy="52.6" r="1.4" fill="#fff"/><ellipse cx="31" cy="64" rx="5" ry="3" fill="#F472B6" opacity=".45"/><ellipse cx="69" cy="64" rx="5" ry="3" fill="#F472B6" opacity=".45"/><path d="M50 62 l-3.5 -3 h7z" fill="#3B1D12"/><path d="M44 66 Q47 70 50 66 Q53 70 56 66" fill="none" stroke="#3B1D12" stroke-width="2" stroke-linecap="round"/></svg><i></i></span>
+          <div class="tabs abs"><span class="tab on"><svg class="ico"><use href="#i-cube"/></svg><span data-en="3D City">Ciudad 3D</span></span><span class="tab"><svg class="ico"><use href="#i-paw"/></svg><span data-en="Pet">Mascota</span></span><span class="tab"><svg class="ico"><use href="#i-trophy"/></svg><span data-en="Badges">Insignias</span></span><span class="tab"><svg class="ico"><use href="#i-cal"/></svg><span data-en="Plans">Planes</span></span><span class="tab"><svg class="ico"><use href="#i-chat"/></svg><span data-en="Chat">Chat</span></span></div></div></div><span class="tag prop" data-en="Proposal · illustration">Propuesta · ilustración</span><figcaption data-en="The center on its board. The numbers match the list below.">El centro sobre su base. Los números corresponden a la lista de abajo.</figcaption></figure>
+
+        <figure class="shot"><div class="phone"><div class="screen maq-screen"><canvas class="city" data-mode="maqueta" data-seed="7" data-zoom="2.6" data-focus="13.2,14.6" data-fy="0.36" data-fiesta="1" data-t0="0.18" data-t1="0.55"></canvas><div class="notch"></div><div class="status"><span>13:05</span><span>5G ▮▮▮</span></div><div class="hdr"><span class="btn-sq"><svg class="ico"><use href="#i-back"/></svg></span><span class="title-pill"><span data-en="3D City">Ciudad 3D</span></span><span class="lang-pill"><svg class="ico sm"><use href="#i-globe"/></svg>ES</span></div>
+          <span class="rib" data-at="12,11.4,2.9"><span data-en="Cathedral">Catedral</span></span>
+          <span class="rib" data-at="13,13.3,0.9"><span data-en="Plaza de Armas">Plaza de Armas</span></span>
+          <span class="pawn" data-at="12.7,16.6"><svg viewBox="0 0 100 100" aria-hidden="true"><polygon points="24,44 30,14 46,32" fill="#F6B26B"/><polygon points="76,44 70,14 54,32" fill="#F6B26B"/><polygon points="29,36 32,22 40,31" fill="#FBD3B0"/><polygon points="71,36 68,22 60,31" fill="#FBD3B0"/><circle cx="50" cy="56" r="30" fill="#F6B26B"/><path d="M38 30 l4 8 M50 27 v9 M62 30 l-4 8" stroke="#D9822B" stroke-width="3" stroke-linecap="round"/><circle cx="39" cy="54" r="4.2" fill="#2A1A12"/><circle cx="61" cy="54" r="4.2" fill="#2A1A12"/><circle cx="40.4" cy="52.6" r="1.4" fill="#fff"/><circle cx="62.4" cy="52.6" r="1.4" fill="#fff"/><ellipse cx="31" cy="64" rx="5" ry="3" fill="#F472B6" opacity=".45"/><ellipse cx="69" cy="64" rx="5" ry="3" fill="#F472B6" opacity=".45"/><path d="M50 62 l-3.5 -3 h7z" fill="#3B1D12"/><path d="M44 66 Q47 70 50 66 Q53 70 56 66" fill="none" stroke="#3B1D12" stroke-width="2" stroke-linecap="round"/></svg><i></i><span class="bubble" data-en="Gorditas here! Busy, though.">¡Gorditas aquí! Pero hay fila.</span></span>
+          <div class="sheet card" style="bottom:70px"><div class="sub-stop"><span data-en="Stall nearby · sample data">Puesto cerca · datos de ejemplo</span><span>40 m</span></div><h4 data-en="Griddle gorditas">Gorditas de comal</h4><p data-en="High foot traffic: there may be a wait. Two visitors recommended it today (sample).">Afluencia alta: podría haber espera. Dos visitantes lo recomendaron hoy (ejemplo).</p><div class="acts"><span class="p" data-en="Add to walk">Agregar al paseo</span><span data-en="Shorter wait">Otro con menos espera</span></div></div>
+          <div class="tabs abs"><span class="tab on"><svg class="ico"><use href="#i-cube"/></svg><span data-en="3D City">Ciudad 3D</span></span><span class="tab"><svg class="ico"><use href="#i-paw"/></svg><span data-en="Pet">Mascota</span></span><span class="tab"><svg class="ico"><use href="#i-trophy"/></svg><span data-en="Badges">Insignias</span></span><span class="tab"><svg class="ico"><use href="#i-cal"/></svg><span data-en="Plans">Planes</span></span><span class="tab"><svg class="ico"><use href="#i-chat"/></svg><span data-en="Chat">Chat</span></span></div></div></div><span class="tag prop" data-en="Proposal · illustration · sample data">Propuesta · ilustración · datos de ejemplo</span><figcaption data-en="Up close: the stall from the synthetic data is a physical piece with its awning and its line; your companion is a game piece on the board.">De cerca: el puesto de los datos sintéticos es una pieza con su toldo y su fila; tu compañero es una ficha sobre el tablero.</figcaption></figure>
+      </div>
+      <ol class="maq-key">
+        <li><span><b data-en="Board with a cut of the terrain">Base con corte del terreno</b><span data-en="The city ends at a wooden edge that shows soil, pink cantera, rock and a silver vein. It tells the story of the city before you read anything.">La ciudad termina en un borde de madera que muestra tierra, cantera rosa, roca y una veta de plata. Cuenta la historia de la ciudad antes de leer nada.</span> <span class="cost lo" data-en="low">bajo</span></span></li>
+        <li><span><b data-en="Hills as cardboard layers">Cerros en capas de cartón</b><span data-en="The relief already loaded (Mapzen/SRTM) is cut into terraces, like contour lines in a model.">El relieve que ya se carga (Mapzen/SRTM) se corta en terrazas, como curvas de nivel de maqueta.</span> <span class="cost mid" data-en="medium">medio</span></span></li>
+        <li><span><b data-en="Ink outline and flat shading">Contorno de tinta y sombreado plano</b><span data-en="Three tones per building and a thin brown line: it reads like an illustration, and it also reads better on small screens.">Tres tonos por edificio y una línea café delgada: se lee como ilustración y también mejor en pantallas chicas.</span> <span class="cost mid" data-en="medium">medio</span></span></li>
+        <li><span><b data-en="Landmarks as handmade pieces">Monumentos como piezas a mano</b><span data-en="Cathedral, Bufa chapel, aqueduct and cable car as simple models, bigger than real scale so you recognize them from afar. The rest of the blocks stay low.">Catedral, capilla de la Bufa, acueducto y teleférico como modelos sencillos, más grandes que su escala real para reconocerlos de lejos. El resto de los bloques se queda bajo.</span> <span class="cost hi" data-en="high">alto</span></span></li>
+        <li><span><b data-en="Miniature life">Vida en miniatura</b><span data-en="Round trees, little figures, stalls with striped awnings and papel picado by season. Stalls and crowds come from the synthetic data, not from decoration.">Árboles de bola, figuritas, puestos con toldo de rayas y papel picado según la temporada. Puestos y gente salen de los datos sintéticos, no son adorno.</span> <span class="cost mid" data-en="medium">medio</span></span></li>
+        <li><span><b data-en="Tilt-shift focus">Desenfoque de maqueta (tilt-shift)</b><span data-en="Top and bottom slightly blurred, like a close-up photo of a model. It turns off on slow phones.">Arriba y abajo un poco borrosos, como la foto de cerca de una maqueta. Se apaga en teléfonos lentos.</span> <span class="cost lo" data-en="low">bajo</span></span></li>
+        <li><span><b data-en="Ribbon labels with priority">Banderolas con prioridad</b><span data-en="Fewer labels, by zoom level: far away only the landmarks, up close the stalls. This also fixes the overlapping labels found in the review.">Menos rótulos, según el zoom: de lejos solo los monumentos, de cerca los puestos. También corrige las etiquetas encimadas que salieron en la revisión.</span> <span class="cost lo" data-en="low">bajo</span></span></li>
+      </ol>
+      <p class="fine" data-en="Keeps what was approved in G: the background still follows the time of day, and at night only the main streets are lit. Satellite stays out (#127). The cost is an estimate for the code issue; points 1, 6 and 7 could go first because they change the look the most for the least work.">Conserva lo aprobado en G: el fondo sigue la hora y de noche solo se iluminan las calles principales. Satélite sigue fuera (#127). El costo es una estimación para la issue de código; los puntos 1, 6 y 7 podrían ir primero porque cambian más el aspecto con menos trabajo.</p>
+    </div>
+
+    <div class="block" id="propuesta-i">
+      <div class="block-head">
+        <h3 data-en="Proposal I · Guilds, traditions and a codex: the cultural world of Zacatecas">Propuesta I · Gremios, tradiciones y un códice: el mundo cultural de Zacatecas</h3>
+        <p data-en="Like a fantasy world with houses, creeds and customs, but built from what is real in Zacatecas. You join one of five guilds tied to the state's trades and traditions. Each guild has a coat of arms, a motto, its places on the model, its own route and pages of a codex: traditions, legends, trades and festivals, each with its source. Guilds don't compete: festivals bring them together.">Como un mundo de fantasía con casas, credos y costumbres, pero hecho con lo que es real en Zacatecas. Te unes a uno de cinco gremios ligados a los oficios y tradiciones del estado. Cada gremio tiene escudo, lema, sus lugares en la maqueta, su ruta y páginas de un códice: tradiciones, leyendas, oficios y fiestas, cada una con su fuente. Los gremios no compiten: las fiestas los juntan.</p>
+        <div class="chips"><span class="tag prop" data-en="Proposal · awaiting approval">Propuesta · por aprobar</span><span class="chip">#16</span><span class="chip">#65</span><span class="chip">#68</span></div>
+      </div>
+      <div class="gallery">
+        <figure class="shot"><div class="phone"><div class="screen"><div class="gr"><div class="notch"></div><div class="status"><span>10:02</span><span>5G ▮▮▮</span></div>
+          <div class="gr-body">
+            <div class="gr-ask"><svg viewBox="0 0 100 100" aria-hidden="true"><polygon points="24,44 30,14 46,32" fill="#F6B26B"/><polygon points="76,44 70,14 54,32" fill="#F6B26B"/><polygon points="29,36 32,22 40,31" fill="#FBD3B0"/><polygon points="71,36 68,22 60,31" fill="#FBD3B0"/><circle cx="50" cy="56" r="30" fill="#F6B26B"/><path d="M38 30 l4 8 M50 27 v9 M62 30 l-4 8" stroke="#D9822B" stroke-width="3" stroke-linecap="round"/><circle cx="39" cy="54" r="4.2" fill="#2A1A12"/><circle cx="61" cy="54" r="4.2" fill="#2A1A12"/><circle cx="40.4" cy="52.6" r="1.4" fill="#fff"/><circle cx="62.4" cy="52.6" r="1.4" fill="#fff"/><ellipse cx="31" cy="64" rx="5" ry="3" fill="#F472B6" opacity=".45"/><ellipse cx="69" cy="64" rx="5" ry="3" fill="#F472B6" opacity=".45"/><path d="M50 62 l-3.5 -3 h7z" fill="#3B1D12"/><path d="M44 66 Q47 70 50 66 Q53 70 56 66" fill="none" stroke="#3B1D12" stroke-width="2" stroke-linecap="round"/></svg><p data-en="What draws you more: mines, stone, music, food or dance? Pick a guild; you can visit the others too.">¿Qué te late más: minas, piedra, música, comida o danza? Elige un gremio; también puedes visitar los otros.</p></div>
+            <div class="gr-list"><div class="gr-item on" style="--gc:#64748B"><span class="escudo"><svg class="ico"><use href="#i-pickaxe"/></svg></span><div><b data-en="Silver Guild">Gremio de la Plata</b><small data-en="“What the hill keeps.” Mines, cable car and La Bufa.">“Lo que guarda el cerro.” Minas, teleférico y la Bufa.</small></div><span class="av" data-en="Avatar: Miner">Avatar: Minero</span></div><div class="gr-item" style="--gc:#C2410C"><span class="escudo"><svg class="ico"><use href="#i-church"/></svg></span><div><b data-en="Stone Guild">Gremio de la Cantera</b><small data-en="“Stone that blooms.” Cathedral, theater and aqueduct.">“Piedra que florece.” Catedral, teatro y acueducto.</small></div><span></span></div><div class="gr-item" style="--gc:#CA8A04"><span class="escudo"><svg class="ico"><use href="#i-drum"/></svg></span><div><b data-en="Tamborazo Guild">Gremio del Tamborazo</b><small data-en="“Where it plays, people gather.” Squares, callejoneadas and Jerez.">“Donde suena, se junta la gente.” Plazas, callejoneadas y Jerez.</small></div><span></span></div><div class="gr-item" style="--gc:#15803D"><span class="escudo"><svg class="ico"><use href="#i-flame"/></svg></span><div><b data-en="Griddle Guild">Gremio del Comal</b><small data-en="“No one leaves hungry.” Markets, stalls and traditional sweets.">“Nadie se va con hambre.” Mercados, puestos y dulces típicos.</small></div><span></span></div><div class="gr-item" style="--gc:#B91C1C"><span class="escudo"><svg class="ico" viewBox="0 0 24 24"><path d="M5 5l11 11M19 5L8 16M14 18l4 4M18 14l4 4M6 18l-4 4M10 14l-6 6"/></svg></span><div><b data-en="Dance Guild">Gremio de la Danza</b><small data-en="“The step that tells the story.” Morismas and festival dances.">“El paso que cuenta la historia.” Morismas y danzas de las fiestas.</small></div><span class="av" data-en="Avatar: Dancer">Avatar: Danzante</span></div></div>
+            <div class="gr-cta" data-en="Join the Silver Guild">Unirme al Gremio de la Plata</div>
+            <p class="gr-fine" data-en="The guilds are part of the game. The places, trades and traditions are real and cite their source.">Los gremios son parte del juego. Los lugares, oficios y tradiciones son reales y citan su fuente.</p>
+          </div></div></div></div><span class="tag prop" data-en="Proposal · illustration">Propuesta · ilustración</span><figcaption data-en="Choosing a guild. The Miner and Dancer avatars that already exist find their place here.">Elegir gremio. Los avatares Minero y Danzante que ya existen encuentran aquí su lugar.</figcaption></figure>
+
+        <figure class="shot"><div class="phone"><div class="screen maq-screen"><canvas class="city" data-mode="maqueta" data-seed="7" data-zoom="1.35" data-fy="0.5" data-gremios="1" data-route="plata" data-done="2"></canvas><div class="notch"></div><div class="status"><span>10:40</span><span>5G ▮▮▮</span></div><div class="hdr"><span class="btn-sq"><svg class="ico"><use href="#i-back"/></svg></span><span class="title-pill"><span data-en="3D City">Ciudad 3D</span></span><span class="lang-pill"><svg class="ico sm"><use href="#i-globe"/></svg>ES</span></div>
+          <div class="gchip" style="--gc:#64748B"><span class="escudo"><svg class="ico"><use href="#i-pickaxe"/></svg></span><div><b data-en="Silver Guild">Gremio de la Plata</b><small data-en="Silver route · stop 3 of 6">Ruta de la plata · parada 3 de 6</small></div></div>
+          <span class="rib g" style="--gc:#64748B" data-at="2.4,11.6,0.8"><span data-en="SILVER">PLATA</span></span>
+          <span class="rib g" style="--gc:#C2410C" data-at="13.4,8.6,1.2"><span data-en="STONE">CANTERA</span></span>
+          <span class="rib g" style="--gc:#CA8A04" data-at="8,19.5,0.5"><span data-en="TAMBORAZO">TAMBORAZO</span></span>
+          <span class="rib g" style="--gc:#15803D" data-at="18.5,12.4,0.6"><span data-en="GRIDDLE">COMAL</span></span>
+          <span class="rib g" style="--gc:#B91C1C" data-at="17.5,4.4,0.6"><span data-en="DANCE">DANZA</span></span>
+          <span class="pawn" data-at="9.8,12.8"><svg viewBox="0 0 100 100" aria-hidden="true"><polygon points="24,44 30,14 46,32" fill="#F6B26B"/><polygon points="76,44 70,14 54,32" fill="#F6B26B"/><polygon points="29,36 32,22 40,31" fill="#FBD3B0"/><polygon points="71,36 68,22 60,31" fill="#FBD3B0"/><circle cx="50" cy="56" r="30" fill="#F6B26B"/><path d="M38 30 l4 8 M50 27 v9 M62 30 l-4 8" stroke="#D9822B" stroke-width="3" stroke-linecap="round"/><circle cx="39" cy="54" r="4.2" fill="#2A1A12"/><circle cx="61" cy="54" r="4.2" fill="#2A1A12"/><circle cx="40.4" cy="52.6" r="1.4" fill="#fff"/><circle cx="62.4" cy="52.6" r="1.4" fill="#fff"/><ellipse cx="31" cy="64" rx="5" ry="3" fill="#F472B6" opacity=".45"/><ellipse cx="69" cy="64" rx="5" ry="3" fill="#F472B6" opacity=".45"/><path d="M50 62 l-3.5 -3 h7z" fill="#3B1D12"/><path d="M44 66 Q47 70 50 66 Q53 70 56 66" fill="none" stroke="#3B1D12" stroke-width="2" stroke-linecap="round"/><path d="M22 34 Q50 4 78 34 z" fill="#64748B" stroke="#334155" stroke-width="2"/><rect x="18" y="32" width="64" height="6" rx="3" fill="#475569"/><circle cx="50" cy="22" r="6" fill="#FDE68A" stroke="#334155" stroke-width="1.5"/></svg><i></i></span>
+          <div class="tabs abs"><span class="tab on"><svg class="ico"><use href="#i-cube"/></svg><span data-en="3D City">Ciudad 3D</span></span><span class="tab"><svg class="ico"><use href="#i-paw"/></svg><span data-en="Pet">Mascota</span></span><span class="tab"><svg class="ico"><use href="#i-trophy"/></svg><span data-en="Badges">Insignias</span></span><span class="tab"><svg class="ico"><use href="#i-cal"/></svg><span data-en="Plans">Planes</span></span><span class="tab"><svg class="ico"><use href="#i-chat"/></svg><span data-en="Chat">Chat</span></span></div></div></div><span class="tag prop" data-en="Proposal · illustration">Propuesta · ilustración</span><figcaption data-en="Each guild has its quarter on the model, marked with its pennant. Your companion wears the guild's gear and follows its route.">Cada gremio tiene su barrio en la maqueta, marcado con su banderín. Tu compañero lleva el equipo del gremio y sigue su ruta.</figcaption></figure>
+
+        <figure class="shot"><div class="phone"><div class="screen"><div class="codice"><div class="notch"></div><div class="status"><span>19:20</span><span>5G ▮▮▮</span></div>
+          <div class="cod-hdr"><span class="escudo xl" style="--gc:#B91C1C;width:30px;height:34px;padding-top:6px"><svg class="ico" viewBox="0 0 24 24"><path d="M5 5l11 11M19 5L8 16M14 18l4 4M18 14l4 4M6 18l-4 4M10 14l-6 6"/></svg></span><div><b data-en="Codex · Dance Guild">Códice · Gremio de la Danza</b><small data-en="4 of 12 pages">4 de 12 páginas</small></div></div>
+          <div class="cod-page">
+            <div class="k"><span data-en="Tradition">Tradición</span><span data-en="August">Agosto</span></div>
+            <div class="cod-art"><svg viewBox="0 0 260 74" preserveAspectRatio="xMidYMax slice" aria-hidden="true"><path d="M0 60 Q60 34 130 46 T260 40 V74 H0z" fill="#B9735E"/><g fill="#3B2418"><rect x="60" y="38" width="5" height="16"/><circle cx="62.5" cy="35" r="3"/><rect x="82" y="40" width="5" height="16"/><circle cx="84.5" cy="37" r="3"/><rect x="160" y="36" width="5" height="16"/><circle cx="162.5" cy="33" r="3"/><rect x="182" y="38" width="5" height="16"/><circle cx="184.5" cy="35" r="3"/></g><path d="M66 40 L80 30 M88 42 L100 30 M158 38 L146 28 M180 40 L168 28" stroke="#3B2418" stroke-width="1.6"/><rect x="118" y="20" width="2" height="30" fill="#3B2418"/><path d="M120 20 h18 l-4 6 l4 6 h-18z" fill="#B91C1C"/></svg></div>
+            <h5 data-en="Morismas de Bracho">Morismas de Bracho</h5>
+            <p data-en="Every late August, in Bracho, the Cofradía de San Juan Bautista stages the battle between Moors and Christians.">Cada fin de agosto, en Bracho, la Cofradía de San Juan Bautista representa la batalla entre moros y cristianos.</p>
+            <span class="src" data-en="Source: Zacatecas Tourism Secretariat · exact date confirmed each year">Fuente: Secretaría de Turismo de Zacatecas · fecha exacta confirmada cada año</span>
+          </div>
+          <div class="cod-grid"><span data-en="Festival: La Bufa · Sep 15">Fiesta: La Bufa · 15 sep</span><span data-en="Place: Bracho">Lugar: Bracho</span><span class="lock" data-en="Legend · locked">Leyenda · bloqueada</span><span class="lock" data-en="Route · locked">Ruta · bloqueada</span></div>
+          <div style="padding:10px 12px"><div class="reward"><svg class="ico"><use href="#i-spark"/></svg><span><span data-en="Unlocked: dancer's sash for your companion">Desbloqueado: banda de danzante para tu compañero</span><small data-en="Earned by finishing the Dance route">Por completar la ruta de la Danza</small></span></div></div>
+        <div class="tabs abs"><span class="tab"><svg class="ico"><use href="#i-cube"/></svg><span data-en="3D City">Ciudad 3D</span></span><span class="tab"><svg class="ico"><use href="#i-paw"/></svg><span data-en="Pet">Mascota</span></span><span class="tab on"><svg class="ico"><use href="#i-trophy"/></svg><span data-en="Badges">Insignias</span></span><span class="tab"><svg class="ico"><use href="#i-cal"/></svg><span data-en="Plans">Planes</span></span><span class="tab"><svg class="ico"><use href="#i-chat"/></svg><span data-en="Chat">Chat</span></span></div></div></div></div><span class="tag prop" data-en="Proposal · illustration">Propuesta · ilustración</span><figcaption data-en="The codex is the reward: each place, route or festival adds a page, and some pages give your companion an accessory.">El códice es la recompensa: cada lugar, ruta o fiesta agrega una página, y algunas páginas le dan un accesorio a tu compañero.</figcaption></figure>
+
+        <figure class="shot"><div class="phone"><div class="screen maq-screen"><canvas class="city" data-mode="maqueta" data-seed="7" data-zoom="2.4" data-focus="12.6,15.4" data-fy="0.36" data-fiesta="1" data-route="tamborazo" data-t0="0.16" data-t1="0.5"></canvas><div class="notch"></div><div class="status"><span>20:30</span><span>5G ▮▮▮</span></div><div class="hdr"><span class="btn-sq"><svg class="ico"><use href="#i-back"/></svg></span><span class="title-pill"><span data-en="3D City">Ciudad 3D</span></span><span class="lang-pill"><svg class="ico sm"><use href="#i-globe"/></svg>ES</span></div>
+          <span class="pawn" data-at="11.6,14.4"><svg viewBox="0 0 100 100" aria-hidden="true"><polygon points="24,44 30,14 46,32" fill="#F6B26B"/><polygon points="76,44 70,14 54,32" fill="#F6B26B"/><polygon points="29,36 32,22 40,31" fill="#FBD3B0"/><polygon points="71,36 68,22 60,31" fill="#FBD3B0"/><circle cx="50" cy="56" r="30" fill="#F6B26B"/><path d="M38 30 l4 8 M50 27 v9 M62 30 l-4 8" stroke="#D9822B" stroke-width="3" stroke-linecap="round"/><circle cx="39" cy="54" r="4.2" fill="#2A1A12"/><circle cx="61" cy="54" r="4.2" fill="#2A1A12"/><circle cx="40.4" cy="52.6" r="1.4" fill="#fff"/><circle cx="62.4" cy="52.6" r="1.4" fill="#fff"/><ellipse cx="31" cy="64" rx="5" ry="3" fill="#F472B6" opacity=".45"/><ellipse cx="69" cy="64" rx="5" ry="3" fill="#F472B6" opacity=".45"/><path d="M50 62 l-3.5 -3 h7z" fill="#3B1D12"/><path d="M44 66 Q47 70 50 66 Q53 70 56 66" fill="none" stroke="#3B1D12" stroke-width="2" stroke-linecap="round"/></svg><i></i></span>
+          <div class="sheet card" style="bottom:70px"><div class="sub-stop" style="color:#CA8A04"><span data-en="Your companion · Tamborazo Guild">Tu compañero · Gremio del Tamborazo</span></div><p style="font-size:11.5px;color:#1C1917" data-en="“Callejoneadas go through squares and alleys with tamborazo and a donkey carrying barrels of mezcal. Tamborazo was born in El Cargadero, Jerez.”">«Las callejoneadas recorren plazas y callejones con tamborazo y un burro que carga barricas de mezcal. El tamborazo nació en El Cargadero, Jerez.»</p><span class="src" style="font:500 8.5px var(--f-mono);color:#78716C" data-en="Source: Zacatecas tourism guide">Fuente: guía turística de Zacatecas</span><div class="acts"><span class="p" data-en="Follow the route">Seguir la ruta</span><span data-en="Save Jerez page">Guardar página de Jerez</span></div></div>
+          <div class="tabs abs"><span class="tab on"><svg class="ico"><use href="#i-cube"/></svg><span data-en="3D City">Ciudad 3D</span></span><span class="tab"><svg class="ico"><use href="#i-paw"/></svg><span data-en="Pet">Mascota</span></span><span class="tab"><svg class="ico"><use href="#i-trophy"/></svg><span data-en="Badges">Insignias</span></span><span class="tab"><svg class="ico"><use href="#i-cal"/></svg><span data-en="Plans">Planes</span></span><span class="tab"><svg class="ico"><use href="#i-chat"/></svg><span data-en="Chat">Chat</span></span></div></div></div><span class="tag prop" data-en="Proposal · illustration">Propuesta · ilustración</span><figcaption data-en="The agent speaks with the voice of your guild: it explains what happens here, cites the source and offers the next step.">El agente habla con la voz de tu gremio: explica qué pasa aquí, cita la fuente y propone el siguiente paso.</figcaption></figure>
+      </div>
+      <div class="why">
+        <div><b data-en="Tour agent">Agente turístico</b><span data-en="Your companion speaks for your guild and proposes its route, but still adapts to your time, hunger and budget.">Tu compañero habla por tu gremio y propone su ruta, pero sigue ajustándose a tu tiempo, hambre y presupuesto.</span></div>
+        <div><b data-en="Simulator">Simulador</b><span data-en="Each guild route can be played from the computer, stop by stop, with the companion as a piece on the model.">Cada ruta de gremio se puede recorrer desde la computadora, parada por parada, con el compañero como ficha en la maqueta.</span></div>
+        <div><b data-en="Synthetic data">Datos sintéticos</b><span data-en="Sample stalls belong to the Griddle Guild; registering a test stall asks which guild it joins and puts it on the model.">Los puestos de ejemplo son del Gremio del Comal; dar de alta un puesto de prueba pregunta a qué gremio pertenece y lo pone en la maqueta.</span></div>
+        <div><b data-en="Pet and rewards">Mascota y recompensas</b><span data-en="Clear purpose: codex pages for learning and exploring; guild gear for the companion (miner's helmet, sash, drum).">Función clara: páginas del códice por aprender y explorar; equipo del gremio para el compañero (casco minero, banda, tambora).</span></div>
+        <div class="rec"><b data-en="Magic Towns">Pueblos Mágicos</b><span data-en="Each town adds its chapter: Jerez to Tamborazo, Sombrerete to Silver, Guadalupe to Stone and silverwork, Pinos to its own festivals.">Cada pueblo suma su capítulo: Jerez al Tamborazo, Sombrerete a la Plata, Guadalupe a la Cantera y la platería, Pinos con sus propias fiestas.</span></div>
+      </div>
+      <p class="fine" data-en="Rules: guilds, mottos and coats of arms are game fiction and say so; places, dates, trades and traditions cite a public source, and legends are marked as legends. Religious festivals and brotherhoods appear as culture, told from their sources and communities: no points for rites, and no guild bears the name of a real brotherhood. Before the code issue, the texts would be reviewed with someone from culture or the city chronicler.">Reglas: los gremios, lemas y escudos son ficción del juego y lo dicen; los lugares, fechas, oficios y tradiciones citan una fuente pública, y las leyendas se marcan como leyendas. Las fiestas religiosas y las cofradías aparecen como cultura, contadas desde sus fuentes y comunidades: no se dan puntos por ritos y ningún gremio lleva el nombre de una cofradía real. Antes de la issue de código, los textos se revisarían con alguien de cultura o con la crónica de la ciudad.</p>
+      <p class="fine" data-en="Sources: zacatecastravel.com tourism guide (callejoneada, tamborazo from El Cargadero, Morismas in August, cantera and silverwork); src/data/seasons.ts (Morismas de Bracho, Cofradía de San Juan Bautista).">Fuentes: guía turística de zacatecastravel.com (callejoneada, tamborazo de El Cargadero, Morismas en agosto, cantera y platería); src/data/seasons.ts (Morismas de Bracho, Cofradía de San Juan Bautista).</p>
+    </div>
+  </section>
+
   <section id="que-falta">
     <div class="section-head">
       <span class="eyebrow" data-en="What is missing">Qué falta</span>
@@ -848,6 +1006,7 @@ figure.wide .tag { margin: 0; }
     var dpr = Math.min(2, window.devicePixelRatio || 1);
     cv.width = w * dpr; cv.height = h * dpr;
     var c = cv.getContext('2d'); c.setTransform(dpr, 0, 0, dpr, 0, 0);
+    if (mode === 'maqueta') { maqueta(cv, c, w, h, zoom); return; }
     var photo = mode === 'photo';
     var sat = mode === 'sat', blocks = cv.dataset.blocks !== '0';
     var hora = mode === 'hora' ? cv.dataset.hora : '', noche = hora === 'noche';
@@ -933,6 +1092,216 @@ figure.wide .tag { margin: 0; }
       c.strokeStyle = photo ? '#FCD34D' : '#D97706'; c.lineWidth = 3; c.setLineDash([6, 5]); c.stroke(); c.setLineDash([]);
       pts.forEach(function (p, k) { c.beginPath(); c.arc(p[0], p[1], k === 0 ? 6 : 4, 0, 7); c.fillStyle = k === 0 ? '#9A3412' : '#fff'; c.fill(); c.lineWidth = 2; c.strokeStyle = '#9A3412'; c.stroke(); });
     }
+  }
+  // Propuestas H e I: la ciudad como maqueta ilustrada sobre una base con corte de terreno.
+  var MAQ_ROUTES = { plata: [[3.4, 15], [6.5, 12.4], [10, 12.6], [12.5, 13.6], [12.5, 16.5], [16, 19.3]], tamborazo: [[13, 14.2], [14.6, 16.4], [10, 17.6], [6, 17.6]] };
+  var GREMIOS = [
+    { c: '#64748B', r: [1, 9, 9, 15], flag: [7.4, 11.6] },  // Plata: Grillo, mina y ladera
+    { c: '#C2410C', r: [9, 14, 8, 13], flag: [10.6, 8.8] },  // Cantera: Catedral
+    { c: '#CA8A04', r: [9, 16, 13, 19], flag: [15.2, 17.6] }, // Tamborazo: plaza y alameda
+    { c: '#15803D', r: [14, 21, 8, 13], flag: [19.6, 9.4] },  // Comal: mercado
+    { c: '#B91C1C', r: [15, 23, 1, 7], flag: [19.4, 3.6] }    // Morisma: camino a Bracho
+  ];
+  function mix(a, b, t) {
+    var x = parseInt(a.slice(1), 16), y = parseInt(b.slice(1), 16), o = '#';
+    [16, 8, 0].forEach(function (s) { var v = Math.round((x >> s & 255) * (1 - t) + (y >> s & 255) * t); o += (v < 16 ? '0' : '') + v.toString(16); });
+    return o;
+  }
+  function maqueta(cv, c, w, h, zoom) {
+    var N = 24, ds = cv.dataset, R = rng(+ds.seed || 1);
+    var tw = w * 0.9 / N * zoom, th = tw / 2;
+    var fc = (ds.focus || '12,12').split(',').map(Number);
+    var ox = w / 2 - (fc[0] - fc[1]) * tw / 2, oy = h * (+ds.fy || 0.5) - (fc[0] + fc[1]) * th / 2;
+    function Q(u, v, z) { return [ox + (u - v) * tw / 2, oy + (u + v) * th / 2 - (z || 0)]; }
+    var ink = 'rgba(74,42,28,.72)', lw = Math.max(0.6, tw * 0.045);
+    function poly(pts, fill, stroke) {
+      c.beginPath(); pts.forEach(function (p, k) { k ? c.lineTo(p[0], p[1]) : c.moveTo(p[0], p[1]); }); c.closePath();
+      if (fill) { c.fillStyle = fill; c.fill(); }
+      if (stroke !== false) { c.strokeStyle = stroke || ink; c.lineWidth = lw; c.lineJoin = 'round'; c.stroke(); }
+    }
+    function down(p, d) { return [p[0], p[1] + d]; }
+    // 1. Papel de fondo, con grano y viñeta
+    c.fillStyle = '#F1E6D3'; c.fillRect(0, 0, w, h);
+    var pr = rng(3); c.fillStyle = 'rgba(120,90,60,.07)'; for (var z = 0; z < 1400; z++) c.fillRect(pr() * w, pr() * h, 1, 1);
+    var vg = c.createRadialGradient(w / 2, h / 2, w * 0.35, w / 2, h / 2, h * 0.8); vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(90,60,30,.22)'); c.fillStyle = vg; c.fillRect(0, 0, w, h);
+    // 2. Base: sombra, zócalo de madera y corte del terreno (tierra, cantera, roca y una veta de plata)
+    var A = Q(0, 0), B = Q(N, 0), C = Q(N, N), E = Q(0, N), D = tw * 1.5, W = tw * 0.55;
+    c.save(); try { c.filter = 'blur(' + Math.round(tw * 0.8) + 'px)'; } catch (e) {}
+    poly([down(E, D + W + tw * 0.6), down(C, D + W + tw * 1.4), down(B, D + W + tw * 0.6), down(A, D + W)], 'rgba(60,35,20,.35)', false); c.restore();
+    poly([down(E, D), down(C, D), down(C, D + W), down(E, D + W)], '#6B4630');
+    poly([down(C, D), down(B, D), down(B, D + W), down(C, D + W)], '#553624');
+    c.strokeStyle = 'rgba(255,220,180,.35)'; c.lineWidth = 1; c.beginPath(); c.moveTo(E[0], E[1] + D + 1.5); c.lineTo(C[0], C[1] + D + 1.5); c.lineTo(B[0], B[1] + D + 1.5); c.stroke();
+    var BANDS = [[0, 0.2, '#9C7A55'], [0.2, 0.62, '#D49A80'], [0.62, 1, '#958A7E']];
+    [[E, C, 1], [C, B, 0.82]].forEach(function (f) {
+      BANDS.forEach(function (b) { poly([down(f[0], D * b[0]), down(f[1], D * b[0]), down(f[1], D * b[1]), down(f[0], D * b[1])], shade(b[2], f[2]), false); });
+      // veta de plata
+      c.beginPath(); var n = 18;
+      for (var k = 0; k <= n; k++) { var t = k / n, x = f[0][0] + (f[1][0] - f[0][0]) * t, y = f[0][1] + (f[1][1] - f[0][1]) * t + D * (0.74 + 0.08 * Math.sin(t * 9 + f[2] * 4)); k ? c.lineTo(x, y) : c.moveTo(x, y); }
+      c.strokeStyle = '#D9DEE5'; c.lineWidth = Math.max(1.2, tw * 0.12); c.stroke(); c.strokeStyle = 'rgba(107,114,128,.8)'; c.lineWidth = 0.6; c.stroke();
+      poly([f[0], f[1], down(f[1], D), down(f[0], D)], null);
+    });
+    // 3. Tablero: suelo, calles, territorios
+    poly([A, B, C, E], '#E8D8BD');
+    c.fillStyle = '#F6EEDF';
+    for (var s = 4; s < N; s += 4) {
+      poly([Q(s - 0.16, 0), Q(s + 0.16, 0), Q(s + 0.16, N), Q(s - 0.16, N)], '#F6EEDF', false);
+      poly([Q(0, s - 0.16), Q(N, s - 0.16), Q(N, s + 0.16), Q(0, s + 0.16)], '#F6EEDF', false);
+    }
+    if (ds.gremios) GREMIOS.forEach(function (g) {
+      var r = g.r; c.globalAlpha = 0.24; poly([Q(r[0], r[2]), Q(r[1], r[2]), Q(r[1], r[3]), Q(r[0], r[3])], g.c, false); c.globalAlpha = 1;
+      c.setLineDash([3, 3]); poly([Q(r[0], r[2]), Q(r[1], r[2]), Q(r[1], r[3]), Q(r[0], r[3])], null, g.c); c.setLineDash([]);
+    });
+    // plaza empedrada
+    poly([Q(11, 13), Q(15, 13), Q(15, 16), Q(11, 16)], '#EFE0C6');
+    c.strokeStyle = 'rgba(120,90,60,.18)'; c.lineWidth = 0.5;
+    for (var q = 11.5; q < 15; q += 0.5) { c.beginPath(); var a1 = Q(q, 13), a2 = Q(q, 16); c.moveTo(a1[0], a1[1]); c.lineTo(a2[0], a2[1]); c.stroke(); }
+    // 4. Relieve en capas de cartón: Bufa y Grillo
+    function mound(cu, cvv, r, layers, top) {
+      var step = tw * 0.36;
+      for (var k = 0; k < layers; k++) {
+        var rr = r * (1 - k / layers * 0.82), pts = [], pb = [];
+        for (var a = 0; a < 32; a++) {
+          var t = a / 32 * Math.PI * 2, f = rr * (1 + 0.09 * Math.sin(3 * t + k * 1.7) + 0.05 * Math.cos(5 * t + k));
+          pts.push(Q(cu + f * Math.cos(t), cvv + f * Math.sin(t), (k + 1) * step)); pb.push(Q(cu + f * Math.cos(t), cvv + f * Math.sin(t), k * step));
+        }
+        poly(pb, shade(top, 0.72 + k * 0.02), false);
+        // costado: une el contorno inferior y el superior
+        for (var a2 = 0; a2 < 32; a2++) { var n2 = (a2 + 1) % 32; poly([pb[a2], pb[n2], pts[n2], pts[a2]], shade(top, 0.8 + k * 0.02), false); }
+        poly(pts, shade(top, 0.98 + k * 0.035));
+      }
+      return Q(cu, cvv, layers * step);
+    }
+    var bufa, grillo;
+    // 5. Piezas: edificios, monumentos, árboles, puestos y gente, de atrás hacia adelante
+    var items = [], PAL = ['#D9A089', '#CF8D74', '#E4B69E', '#C98068', '#E8C9A8', '#D7A47A', '#DDB08C'];
+    function box(u0, u1, v0, v1, H, col, lift) {
+      lift = lift || 0;
+      poly([Q(u0, v1, lift), Q(u1, v1, lift), Q(u1, v1, lift + H), Q(u0, v1, lift + H)], shade(col, 0.88));
+      poly([Q(u1, v0, lift), Q(u1, v1, lift), Q(u1, v1, lift + H), Q(u1, v0, lift + H)], shade(col, 0.74));
+      poly([Q(u0, v0, lift + H), Q(u1, v0, lift + H), Q(u1, v1, lift + H), Q(u0, v1, lift + H)], shade(col, 1.07));
+    }
+    function cap(u0, u1, v0, v1, H, ph, col) {
+      var ap = Q((u0 + u1) / 2, (v0 + v1) / 2, H + ph);
+      poly([Q(u0, v1, H), Q(u1, v1, H), ap], shade(col, 0.9)); poly([Q(u1, v1, H), Q(u1, v0, H), ap], shade(col, 0.75));
+    }
+    function dome(u, v, H, r, col) {
+      var p = Q(u, v, H); c.beginPath(); c.ellipse(p[0], p[1], r * tw * 0.7, r * tw * 0.7, 0, Math.PI, 0); c.closePath();
+      c.fillStyle = col; c.fill(); c.strokeStyle = ink; c.lineWidth = lw; c.stroke();
+      c.fillStyle = 'rgba(255,255,255,.35)'; c.beginPath(); c.ellipse(p[0] - r * tw * 0.25, p[1] - r * tw * 0.35, r * tw * 0.12, r * tw * 0.2, -0.4, 0, 7); c.fill();
+    }
+    function tree(u, v, s) {
+      var p = Q(u, v), r = tw * 0.26 * (s || 1);
+      c.strokeStyle = '#6B4630'; c.lineWidth = Math.max(1, tw * 0.06); c.beginPath(); c.moveTo(p[0], p[1]); c.lineTo(p[0], p[1] - r * 1.3); c.stroke();
+      c.beginPath(); c.arc(p[0], p[1] - r * 1.6, r, 0, 7); c.fillStyle = '#8DA562'; c.fill(); c.strokeStyle = ink; c.lineWidth = lw; c.stroke();
+      c.beginPath(); c.arc(p[0] - r * 0.3, p[1] - r * 1.9, r * 0.38, 0, 7); c.fillStyle = '#AFC383'; c.fill();
+    }
+    function stall(u, v, col) {
+      box(u, u + 0.55, v, v + 0.45, tw * 0.22, '#E9DCC4');
+      var H = tw * 0.42, k, n = 4;
+      for (k = 0; k < n; k++) poly([Q(u - 0.08 + 0.71 * k / n, v - 0.08, H), Q(u - 0.08 + 0.71 * (k + 1) / n, v - 0.08, H), Q(u - 0.08 + 0.71 * (k + 1) / n, v + 0.6, H - tw * 0.08), Q(u - 0.08 + 0.71 * k / n, v + 0.6, H - tw * 0.08)], k % 2 ? '#FFF8EC' : col, k === n - 1 ? ink : false);
+      c.strokeStyle = ink; c.lineWidth = lw; var e1 = Q(u - 0.08, v + 0.6, H - tw * 0.08), e2 = Q(u + 0.63, v + 0.6, H - tw * 0.08); c.beginPath(); c.moveTo(e1[0], e1[1]); c.lineTo(e2[0], e2[1]); c.stroke();
+    }
+    var COLS = ['#9A3412', '#2563EB', '#CA8A04', '#15803D', '#7C3AED', '#E4007C', '#1C1917'];
+    function people(u, v, n, spread, seed) {
+      var G = rng(seed), sc = tw / 16;
+      for (var k = 0; k < n; k++) {
+        var p = Q(u + (G() - 0.5) * spread, v + (G() - 0.5) * spread);
+        c.fillStyle = COLS[Math.floor(G() * COLS.length)]; c.fillRect(p[0] - 1.1 * sc, p[1] - 4.2 * sc, 2.2 * sc, 3.4 * sc);
+        c.fillStyle = '#5B3A29'; c.beginPath(); c.arc(p[0], p[1] - 5.2 * sc, 1.1 * sc, 0, 7); c.fill();
+      }
+    }
+    function flag(u, v, col) {
+      var p = Q(u, v), H = tw * 1.5;
+      c.strokeStyle = '#3B2418'; c.lineWidth = Math.max(1, tw * 0.06); c.beginPath(); c.moveTo(p[0], p[1]); c.lineTo(p[0], p[1] - H); c.stroke();
+      poly([[p[0], p[1] - H], [p[0] + tw * 0.75, p[1] - H + tw * 0.22], [p[0], p[1] - H + tw * 0.5]], col);
+    }
+    function near(i, j, cu, cvv, r) { var du = i + 0.5 - cu, dv = j + 0.5 - cvv; return du * du + dv * dv < r * r; }
+    for (var i = 0; i < N; i++) for (var j = 0; j < N; j++) (function (i, j) {
+      var r = R(), r2 = R(), r3 = R();
+      if (near(i, j, 4.5, 5.5, 4.9) || near(i, j, 3.2, 16.4, 3)) return;
+      if (i >= 11 && i <= 12 && j >= 10 && j <= 12) return;           // Catedral
+      if (i >= 11 && i <= 14 && j >= 13 && j <= 15) return;           // plaza
+      if (j >= 17 && j <= 18 && i >= 4 && i <= 10) return;            // alameda
+      if (j === 20 && i >= 12 && i <= 21) return;                     // acueducto
+      if (i >= 16 && i <= 18 && j === 10) return;                     // mercado
+      if (r < 0.1) { items.push([i + j + 1, function () { tree(i + 0.5, j + 0.5, 0.9); }]); return; }
+      var H = tw * (0.26 + r2 * 0.32), col = PAL[Math.floor(r3 * PAL.length)];
+      if (ds.gremios) GREMIOS.forEach(function (g) { var q = g.r; if (i >= q[0] && i < q[1] && j >= q[2] && j < q[3]) col = mix(col, g.c, 0.42); });
+      items.push([i + j + 1, function () {
+        box(i + 0.14, i + 0.86, j + 0.14, j + 0.86, H, col);
+        if (r > 0.97) dome(i + 0.5, j + 0.5, H, 0.24, '#E2B86B');
+        else if (r < 0.2 && tw > 10) { c.fillStyle = 'rgba(74,42,28,.45)'; var d = Q(i + 0.5, j + 0.86, H * 0.45); c.fillRect(d[0] - tw * 0.05, d[1] - tw * 0.08, tw * 0.1, tw * 0.16); }
+      }]);
+    })(i, j);
+    items.push([4.5 + 5.5 + 3, function () { bufa = mound(4.5, 5.5, 4.2, 7, '#C29A72'); }]);
+    items.push([3.2 + 16.4 + 1.6, function () { grillo = mound(3.2, 16.4, 2.3, 4, '#BE9670'); }]);
+    // Catedral: pieza hecha a mano, a escala exagerada
+    items.push([24, function () {
+      var col = '#C77B62';
+      box(11.1, 12.9, 10.1, 12.7, tw * 0.95, col);
+      dome(12.1, 10.9, tw * 0.95, 0.42, '#E2B86B');
+      [[11.1, 11.7], [12.3, 12.9]].forEach(function (t) { box(t[0], t[1], 12.15, 12.75, tw * 2, col); cap(t[0], t[1], 12.15, 12.75, tw * 2, tw * 0.3, '#B86A52'); dome((t[0] + t[1]) / 2, 12.45, tw * 2.3, 0.16, '#E2B86B'); });
+      var dr = Q(12, 12.75, tw * 0.5); c.fillStyle = 'rgba(74,42,28,.55)'; c.beginPath(); c.ellipse(dr[0], dr[1], tw * 0.16, tw * 0.28, 0, 0, 7); c.fill();
+    }]);
+    // Alameda
+    for (var at = 4.5; at <= 10.5; at += 1) (function (u) { items.push([u + 17.5, function () { tree(u, 17.4, 1); tree(u + 0.4, 18.4, 0.85); }]); })(at);
+    // Plaza: árboles, puestos y gente
+    items.push([26, function () { tree(11.4, 13.4, 0.9); tree(14.6, 13.4, 0.9); }]);
+    items.push([28.4, function () { stall(13.2, 15.1, '#E4007C'); people(13.6, 14.4, 9, 1.4, 4); }]);
+    items.push([29.5, function () { tree(11.4, 15.6, 0.9); tree(14.6, 15.6, 0.9); people(12, 14.8, 4, 1.2, 8); }]);
+    // Mercado
+    items.push([27, function () { stall(16.2, 10.2, '#15803D'); stall(17.2, 10.2, '#CA8A04'); stall(18.2, 10.2, '#E4007C'); people(17.5, 10.9, 10, 1.6, 11); }]);
+    // Acueducto El Cubo: arcos
+    for (var au = 12; au < 22; au++) (function (u) {
+      items.push([u + 20.8, function () {
+        box(u, u + 1, 20.32, 20.68, tw * 0.85, '#C98A6E');
+        var pts = [], hA = tw * 0.42, a = u + 0.22, b = u + 0.78;
+        pts.push(Q(a, 20.68, 0)); for (var k = 0; k <= 10; k++) { var t = Math.PI - k / 10 * Math.PI; pts.push(Q((a + b) / 2 + Math.cos(t) * (b - a) / 2, 20.68, hA + Math.sin(t) * tw * 0.2)); } pts.push(Q(b, 20.68, 0));
+        poly(pts, '#B9A587');
+      }]);
+    })(au);
+    // Banderines de los gremios
+    if (ds.gremios) GREMIOS.forEach(function (g) { items.push([g.flag[0] + g.flag[1] + 0.2, function () { flag(g.flag[0], g.flag[1], g.c); }]); });
+    items.sort(function (a, b) { return a[0] - b[0]; }).forEach(function (it) { it[1](); });
+    // Capilla en la cima de la Bufa y teleférico
+    c.save(); var bx = bufa[0], by = bufa[1];
+    poly([[bx - tw * 0.3, by], [bx + tw * 0.3, by], [bx + tw * 0.3, by - tw * 0.4], [bx - tw * 0.3, by - tw * 0.4]], '#F2E8D8');
+    c.beginPath(); c.arc(bx, by - tw * 0.4, tw * 0.2, Math.PI, 0); c.fillStyle = '#E2B86B'; c.fill(); c.strokeStyle = ink; c.stroke(); c.restore();
+    c.strokeStyle = 'rgba(40,30,25,.8)'; c.lineWidth = 0.8; c.beginPath(); c.moveTo(grillo[0], grillo[1] - tw * 0.3); c.quadraticCurveTo((grillo[0] + bx) / 2, (grillo[1] + by) / 2 + tw * 0.6, bx, by - tw * 0.2); c.stroke();
+    var gx = grillo[0] + (bx - grillo[0]) * 0.42, gy = grillo[1] + (by - grillo[1]) * 0.42 + tw * 0.25;
+    c.fillStyle = '#B91C1C'; c.fillRect(gx - tw * 0.18, gy, tw * 0.36, tw * 0.3); c.strokeStyle = ink; c.lineWidth = lw; c.strokeRect(gx - tw * 0.18, gy, tw * 0.36, tw * 0.3);
+    // Papel picado sobre la plaza
+    if (ds.fiesta) {
+      var p1 = Q(11, 13, tw * 1.25), p2 = Q(15, 16, tw * 1.25), FC = ['#E4007C', '#FACC15', '#22C55E', '#F97316', '#38BDF8'];
+      for (var line = 0; line < 2; line++) {
+        var o = line * tw * 0.9, sag = tw * 0.5; c.strokeStyle = 'rgba(60,40,30,.6)'; c.lineWidth = 0.6; c.beginPath();
+        var L0 = [p1[0] + o, p1[1] - o * 0.5], L1 = [p2[0] + o, p2[1] - o * 0.5]; c.moveTo(L0[0], L0[1]); c.quadraticCurveTo((L0[0] + L1[0]) / 2, (L0[1] + L1[1]) / 2 + sag, L1[0], L1[1]); c.stroke();
+        for (var f = 1; f < 14; f++) { var t = f / 14, x = (1 - t) * (1 - t) * L0[0] + 2 * (1 - t) * t * (L0[0] + L1[0]) / 2 + t * t * L1[0], y = (1 - t) * (1 - t) * L0[1] + 2 * (1 - t) * t * ((L0[1] + L1[1]) / 2 + sag) + t * t * L1[1]; c.fillStyle = FC[f % 5]; c.fillRect(x - tw * 0.11, y, tw * 0.22, tw * 0.26); }
+      }
+    }
+    // Ruta del paseo
+    var route = MAQ_ROUTES[ds.route];
+    if (route) {
+      var pts = route.map(function (q) { return Q(q[0], q[1]); });
+      c.lineCap = 'round'; c.lineJoin = 'round';
+      c.strokeStyle = 'rgba(255,248,236,.9)'; c.lineWidth = 6; c.beginPath(); pts.forEach(function (p, k) { k ? c.lineTo(p[0], p[1]) : c.moveTo(p[0], p[1]); }); c.stroke();
+      c.strokeStyle = '#9A3412'; c.lineWidth = 2.4; c.setLineDash([5, 4]); c.stroke(); c.setLineDash([]);
+      pts.forEach(function (p, k) { c.beginPath(); c.arc(p[0], p[1], 7, 0, 7); c.fillStyle = k < (+ds.done || 0) ? '#9A3412' : '#FFF8EC'; c.fill(); c.lineWidth = 1.6; c.strokeStyle = '#9A3412'; c.stroke(); c.fillStyle = k < (+ds.done || 0) ? '#fff' : '#9A3412'; c.font = '800 8.5px Manrope, sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(String(k + 1), p[0], p[1] + 0.5); });
+    }
+    // 6. Desenfoque de inclinación (tilt-shift): arriba y abajo, como foto de una maqueta
+    if (ds.tilt !== '0') try {
+      var W2 = cv.width, H2 = cv.height, b = document.createElement('canvas'); b.width = W2; b.height = H2;
+      var bc = b.getContext('2d'); bc.filter = 'blur(' + (2.2 * Math.min(2, window.devicePixelRatio || 1)) + 'px)'; bc.drawImage(cv, 0, 0); bc.filter = 'none';
+      bc.globalCompositeOperation = 'destination-in'; var g = bc.createLinearGradient(0, 0, 0, H2);
+      g.addColorStop(0, 'rgba(0,0,0,1)'); g.addColorStop(+ds.t0 || 0.28, 'rgba(0,0,0,0)'); g.addColorStop(+ds.t1 || 0.74, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,1)');
+      bc.fillStyle = g; bc.fillRect(0, 0, W2, H2);
+      c.save(); c.setTransform(1, 0, 0, 1, 0, 0); c.drawImage(b, 0, 0); c.restore();
+    } catch (e) {}
+    // Rótulos y piezas en HTML, colocados sobre el tablero
+    cv.parentNode.querySelectorAll('[data-at]').forEach(function (el) {
+      var a = el.dataset.at.split(',').map(Number), p = Q(a[0], a[1], (a[2] || 0) * tw);
+      el.style.left = p[0] + 'px'; el.style.top = p[1] + 'px';
+    });
   }
   function drawAll() { document.querySelectorAll('canvas.city').forEach(draw); }
   drawAll();
