@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { MessageCircle, Box, PawPrint, Trophy, CalendarDays } from 'lucide-react';
+import { MessageCircle, Box, PawPrint, Trophy, CalendarDays, Users } from 'lucide-react';
 import { Language } from '../../types';
 import { TRANSLATIONS } from '../../data/i18n';
 import { AppTab } from './tabs';
@@ -19,6 +19,7 @@ export const BottomTabBar: React.FC<BottomTabBarProps> = ({ language, active, on
     { id: 'chat', label: t.tabChat, icon: <MessageCircle className="w-5 h-5" /> },
     { id: 'badges', label: t.tabBadges, icon: <Trophy className="w-5 h-5" /> },
     { id: 'plans', label: t.tabPlans, icon: <CalendarDays className="w-5 h-5" /> },
+    { id: 'team', label: t.tabTeam, icon: <Users className="w-5 h-5" /> },
   ];
 
   return (

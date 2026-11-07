@@ -1,5 +1,5 @@
 // PROTO: enrutado por hash para no meter un router todavía. La ciudad 3D es el inicio (#111); /#3d sigue abriéndola.
-export type AppTab = 'chat' | '3d' | 'pet' | 'badges' | 'plans';
+export type AppTab = 'chat' | '3d' | 'pet' | 'badges' | 'plans' | 'team';
 
 const HASH_BY_TAB: Record<AppTab, string> = {
   '3d': '',
@@ -7,6 +7,7 @@ const HASH_BY_TAB: Record<AppTab, string> = {
   chat: '#chat',
   badges: '#insignias',
   plans: '#planes',
+  team: '#equipo',
 };
 
 // Enlaces viejos que siguen funcionando.

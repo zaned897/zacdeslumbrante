@@ -1,0 +1,136 @@
+import { Language } from '../types';
+
+// Contrato: GET /api/py/colaboradores (docs/API.md, #115). Se tipa aquí para no tocar src/types (zona compartida).
+export type CollaboratorArea = 'diseno' | 'codigo' | 'contenido' | 'datos';
+export type SocialNetwork = 'github' | 'instagram' | 'linkedin' | 'x' | 'web';
+
+export interface Collaborator {
+  id: string;
+  name: string;
+  initials: string;
+  color: string;
+  role: Record<Language, string>;
+  area: CollaboratorArea;
+  bio: Record<Language, string>;
+  contributions: Array<Record<Language, string>>;
+  socials: Array<{ network: SocialNetwork; handle: string; url: string }>;
+  consent: boolean;
+}
+
+export const COLLABORATOR_AREAS: CollaboratorArea[] = ['diseno', 'codigo', 'contenido', 'datos'];
+
+/**
+ * PROTO: copia local del fixture de #115 (services/api/app/fixtures/collaborators.json), para cuando Python
+ * no responde. Personas de ejemplo, ninguna real; las URLs van a example.com por si un usuario inventado existe.
+ */
+export const SAMPLE_COLLABORATORS: Collaborator[] = [
+  {
+    id: 'ana-ejemplo',
+    name: 'Ana Ejemplo',
+    initials: 'AE',
+    color: '#9A3412',
+    role: { es: 'Ciudad 3D', en: '3D City' },
+    area: 'diseno',
+    bio: {
+      es: 'Diseña la ciudad 3D y los looks de temporada. Estudia arquitectura en Zacatecas.',
+      en: 'Designs the 3D city and the seasonal looks. Studies architecture in Zacatecas.',
+    },
+    contributions: [
+      { es: '3 propuestas', en: '3 proposals' },
+      { es: '12 comentarios', en: '12 comments' },
+      { es: 'Insignia Día de Muertos', en: 'Day of the Dead badge' },
+    ],
+    socials: [
+      { network: 'instagram', handle: '@ana.ejemplo', url: 'https://example.com/instagram/ana.ejemplo' },
+      { network: 'linkedin', handle: '/in/ana-ejemplo', url: 'https://example.com/linkedin/ana-ejemplo' },
+    ],
+    consent: true,
+  },
+  {
+    id: 'luis-muestra',
+    name: 'Luis Muestra',
+    initials: 'LM',
+    color: '#D97706',
+    role: { es: 'Backend Python', en: 'Python backend' },
+    area: 'codigo',
+    bio: {
+      es: 'Arma los endpoints de prueba del backend en Python.',
+      en: 'Builds the mock endpoints of the Python backend.',
+    },
+    contributions: [
+      { es: '2 PRs', en: '2 PRs' },
+      { es: 'Endpoint de recorridos', en: 'Tours endpoint' },
+    ],
+    socials: [
+      { network: 'github', handle: 'luis-muestra', url: 'https://example.com/github/luis-muestra' },
+      { network: 'linkedin', handle: '/in/luis-muestra', url: 'https://example.com/linkedin/luis-muestra' },
+    ],
+    consent: true,
+  },
+  {
+    id: 'sofia-demo',
+    name: 'Sofía Demo',
+    initials: 'SD',
+    color: '#15803D',
+    role: { es: 'Base de conocimientos', en: 'Knowledge base' },
+    area: 'contenido',
+    bio: {
+      es: 'Revisa fuentes de historia y leyendas para la base de conocimientos.',
+      en: 'Checks history and legend sources for the knowledge base.',
+    },
+    contributions: [
+      { es: '8 fuentes revisadas', en: '8 sources checked' },
+      { es: '4 comentarios', en: '4 comments' },
+    ],
+    socials: [
+      { network: 'instagram', handle: '@sofia.demo', url: 'https://example.com/instagram/sofia.demo' },
+      { network: 'x', handle: '@sofiademo', url: 'https://example.com/x/sofiademo' },
+      { network: 'web', handle: 'sofia.example', url: 'https://example.com/sofia' },
+    ],
+    consent: true,
+  },
+  {
+    id: 'raul-prueba',
+    name: 'Raúl Prueba',
+    initials: 'RP',
+    color: '#7C3AED',
+    role: { es: 'Pueblos Mágicos', en: 'Magic Towns' },
+    area: 'datos',
+    bio: {
+      es: 'Junta los datos de los Pueblos Mágicos del estado.',
+      en: "Gathers the data for the state's Magic Towns.",
+    },
+    contributions: [{ es: '1 PR de datos', en: '1 data PR' }],
+    socials: [{ network: 'github', handle: 'raul-prueba', url: 'https://example.com/github/raul-prueba' }],
+    consent: true,
+  },
+  {
+    id: 'mariana-ficticia',
+    name: 'Mariana Ficticia',
+    initials: 'MF',
+    color: '#0E7490',
+    role: { es: 'Mascotas', en: 'Pets' },
+    area: 'diseno',
+    bio: { es: 'Dibuja las mascotas y sus accesorios.', en: 'Draws the pets and their accessories.' },
+    contributions: [
+      { es: '2 propuestas', en: '2 proposals' },
+      { es: '6 comentarios', en: '6 comments' },
+    ],
+    socials: [
+      { network: 'instagram', handle: '@mariana.ficticia', url: 'https://example.com/instagram/mariana.ficticia' },
+    ],
+    consent: true,
+  },
+  {
+    id: 'jorge-boceto',
+    name: 'Jorge Boceto',
+    initials: 'JB',
+    color: '#BE185D',
+    role: { es: 'Gastronomía', en: 'Food' },
+    area: 'contenido',
+    bio: { es: 'Escribe las fichas de comida típica para el chat.', en: 'Writes the local food cards for the chat.' },
+    contributions: [{ es: '5 fichas', en: '5 cards' }],
+    socials: [],
+    consent: true,
+  },
+];

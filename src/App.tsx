@@ -7,6 +7,7 @@ import { AppHeader } from './components/app/AppHeader';
 import { BottomTabBar } from './components/app/BottomTabBar';
 import { BadgesScreen } from './components/app/BadgesScreen';
 import { PlansScreen } from './components/app/PlansScreen';
+import { TeamScreen } from './components/team/TeamScreen';
 import { PetScreen } from './components/pet/PetScreen';
 import { AppTab, goToTab, tabFromHash } from './components/app/tabs';
 import { Onboarding, shouldShowOnboarding } from './components/app/Onboarding';
@@ -443,6 +444,12 @@ export default function App() {
                 onExportChat={handleExportChat}
                 hasMessages={messages.length > 0}
               />
+            </div>
+          )}
+
+          {tab === 'team' && (
+            <div className="flex-1 min-h-0">
+              <TeamScreen language={language} />
             </div>
           )}
         </div>
