@@ -9,6 +9,7 @@ import {
   SAMPLE_COLLABORATORS,
   SocialNetwork,
 } from '../../data/collaborators';
+import { JoinWorkshop } from './JoinWorkshop';
 
 const NETWORK_ICONS: Record<SocialNetwork, LucideIcon> = {
   github: Github,
@@ -230,6 +231,11 @@ export const TeamScreen: React.FC<TeamScreenProps> = ({ language }) => {
                 ))}
               </ul>
             )}
+
+            {/* Al final de la lista: cómo sumarse (#117). */}
+            <div className="mt-3">
+              <JoinWorkshop language={language} />
+            </div>
           </div>
         )}
       </div>
