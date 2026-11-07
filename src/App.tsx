@@ -384,7 +384,6 @@ export default function App() {
                 language={language}
                 title={TRANSLATIONS[language].chatHeaderTitle}
                 subtitle={TRANSLATIONS[language].chatHeaderSubtitle}
-                demoBadge={false}
                 season={season ? { name: season.name[language], accent: season.accent } : undefined}
                 onToggleLanguage={toggleLanguage}
                 isMapOpen={isMapOpen}

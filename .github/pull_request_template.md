@@ -21,7 +21,7 @@ bun run dev      # y si toca Python: bun run dev:py
 
 ## Checklist
 - [ ] Entrega exactamente el nivel de la issue (ni más ni menos)
-- [ ] Mocks marcados (`"_mock": true` / badge "Demo"); sin datos inventados presentados como reales
+- [ ] Mocks marcados en los datos (`"_mock": true`); sin datos inventados presentados como reales
 - [ ] Contrato `docs/API.md` actualizado si cambió la API
 - [ ] `bun run lint` en verde · Python: `uv run ruff check . && uv run pytest`
 - [ ] Si cambia la UI: la issue tiene `status:ready` y el visual aprobado está enlazado arriba

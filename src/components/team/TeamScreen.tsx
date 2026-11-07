@@ -27,7 +27,6 @@ interface TeamScreenProps {
 export const TeamScreen: React.FC<TeamScreenProps> = ({ language }) => {
   const t = TRANSLATIONS[language];
   const [people, setPeople] = useState<Collaborator[] | null>(null);
-  const [isMock, setIsMock] = useState(true);
   const [area, setArea] = useState<CollaboratorArea | null>(null);
   const [openId, setOpenId] = useState<string | null>(null);
   const scroller = useRef<HTMLDivElement>(null);
@@ -38,13 +37,11 @@ export const TeamScreen: React.FC<TeamScreenProps> = ({ language }) => {
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
       .then((data: { collaborators: Collaborator[]; _mock?: boolean }) => {
         setPeople(data.collaborators);
-        setIsMock(data._mock ?? false);
       })
       .catch((err: unknown) => {
         if ((err as Error)?.name === 'AbortError') return;
         // PROTO: sin la API (Python apagado o #115 sin fusionar) se usan las mismas personas de ejemplo.
         setPeople(SAMPLE_COLLABORATORS);
-        setIsMock(true);
       });
     return () => controller.abort();
   }, []);
@@ -59,10 +56,6 @@ export const TeamScreen: React.FC<TeamScreenProps> = ({ language }) => {
   const areaName = (a: CollaboratorArea) => t[`teamArea_${a}`];
   const visible = (people ?? []).filter((p) => area === null || p.area === area);
   const open = people?.find((p) => p.id === openId);
-
-  const demoBadge = isMock && (
-    <span className="px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider bg-terracota rounded">{t.demoBadge}</span>
-  );
 
   const socialLink = (s: Collaborator['socials'][number], name: string) => {
     const Icon = NETWORK_ICONS[s.network];
@@ -97,13 +90,11 @@ export const TeamScreen: React.FC<TeamScreenProps> = ({ language }) => {
               >
                 <ArrowLeft className="w-4 h-4" />
               </button>
-              {demoBadge}
             </div>
           ) : (
             <>
               <div className="flex items-center justify-between">
                 <h1 className="text-xl font-extrabold">{t.teamTitle}</h1>
-                {demoBadge}
               </div>
               <small className="text-xs opacity-85">{t.teamSubtitle}</small>
             </>

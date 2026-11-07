@@ -586,7 +586,6 @@ const Map3DScene: React.FC = () => {
         >
           <div className="flex items-center justify-between gap-2">
             <p className="text-[10px] font-bold uppercase tracking-wider text-[#DC2626]">🏁 {t.view3dMissionToday}</p>
-            <span className="px-1 py-px text-[9px] font-bold uppercase text-white bg-[#D97706] rounded">{t.view3dDemoBadge}</span>
           </div>
           <p className="mt-1 text-[11px] leading-snug text-stone-700">{PANAMERICANA_TEXT.mission[language]}</p>
           <a href={PANAMERICANA_SOURCE_URL} target="_blank" rel="noreferrer" className="mt-1 inline-block text-[10px] text-stone-500 underline">
@@ -599,9 +598,6 @@ const Map3DScene: React.FC = () => {
       <div className="absolute top-0 inset-x-0 z-10 flex items-center justify-between gap-2 p-3 md:p-4 pointer-events-none">
         <div className="pointer-events-auto flex items-center gap-2 px-3 py-2 bg-[#FBF9F5]/95 border border-stone-200 rounded-lg shadow-sm">
           <span className="font-serif font-bold text-sm md:text-base">{t.view3d}</span>
-          <span className="px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white bg-[#D97706] rounded">
-            {t.view3dDemoBadge}
-          </span>
         </div>
         <button
           onClick={() => setLanguage((l) => (l === 'es' ? 'en' : 'es'))}
@@ -752,11 +748,6 @@ const Map3DScene: React.FC = () => {
           <div className="min-w-0 flex-1">
             <p className="text-xs font-bold text-stone-900">
               {t.view3dNearby.replace('{name}', nearby.title[language])}
-              {nearby.isMock && (
-                <span className="ml-1.5 align-middle px-1 py-px text-[9px] font-bold uppercase text-white bg-[#D97706] rounded">
-                  {t.view3dDemoBadge}
-                </span>
-              )}
             </p>
             <p className="mt-0.5 text-[11px] italic leading-snug text-stone-600 line-clamp-2">
               «{nearby.nearbyNotice[language]}»
@@ -779,7 +770,6 @@ const Map3DScene: React.FC = () => {
         <div className="absolute inset-x-3 bottom-52 md:inset-x-auto md:left-4 md:bottom-24 md:w-80 z-20 bg-[#FBF9F5] border-2 border-[#4C1D95] rounded-xl shadow-lg p-3">
           <div className="flex items-center justify-between gap-2">
             <p className="text-[10px] font-bold uppercase tracking-wider text-[#4C1D95]">{t.view3dMeteorKicker} · {season.name[language]}</p>
-            <span className="px-1 py-px text-[9px] font-bold uppercase text-white bg-[#D97706] rounded">{t.view3dDemoBadge}</span>
           </div>
           <p className="mt-1 flex items-center gap-2 text-sm font-bold text-stone-900">
             <span className="text-xl motion-safe:animate-bounce" aria-hidden="true">☄️</span>
@@ -801,7 +791,6 @@ const Map3DScene: React.FC = () => {
           <div className="w-full max-w-xs bg-[#FBF9F5] rounded-2xl shadow-xl p-5 text-center">
             <div className="flex items-center justify-between">
               <p className="text-[10px] font-bold uppercase tracking-wider text-[#DC2626]">{t.view3dNewBadge}</p>
-              <span className="px-1 py-px text-[9px] font-bold uppercase text-white bg-[#D97706] rounded">{t.view3dDemoBadge}</span>
             </div>
             <span
               className="mx-auto mt-4 block w-24 h-24 rounded-full -rotate-6 shadow-[0_0_0_5px_#DC2626,0_0_0_9px_#FECACA]"
@@ -891,11 +880,6 @@ const Map3DScene: React.FC = () => {
             <h3 className="font-serif font-bold text-base leading-snug text-stone-900">
               {selected.icon && <span className="mr-1">{selected.icon}</span>}
               {selected.title[language]}
-              {selected.isMock && (
-                <span className="ml-2 align-middle px-1.5 py-0.5 text-[10px] font-sans font-bold uppercase tracking-wider text-white bg-[#D97706] rounded">
-                  {t.view3dDemoBadge}
-                </span>
-              )}
             </h3>
             <div className="flex items-center gap-1 shrink-0">
               {selected.placeId && collection[selected.placeId] && (
@@ -1007,7 +991,7 @@ const Map3DScene: React.FC = () => {
                   <span className="block text-xs font-bold leading-tight text-stone-900">{x.title[language]}</span>
                   {x.season && (
                     <span className="mt-0.5 inline-block px-1 py-px text-[9px] font-bold uppercase text-white bg-[#D97706] rounded">
-                      {t.view3dSeasonalTour} · {t.view3dDemoBadge}
+                      {t.view3dSeasonalTour}
                     </span>
                   )}
                   <span className="block text-[10px] text-stone-500">

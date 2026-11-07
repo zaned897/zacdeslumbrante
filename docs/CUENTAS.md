@@ -10,7 +10,7 @@ Navegador ──/api/py/auth/*, /api/py/me*──▶ Express ──(reenvía Aut
 ```
 
 - La API nunca usa la service key: manda el token del usuario a Supabase y RLS hace el resto.
-- Sin `SUPABASE_URL` / `SUPABASE_ANON_KEY` corre en **modo demo**: cuentas en memoria (se borran al reiniciar), sin Google, badge "Demo".
+- Sin `SUPABASE_URL` / `SUPABASE_ANON_KEY` corre en **modo demo**: cuentas en memoria (se borran al reiniciar), sin Google.
 - Contrato: `docs/API.md` → "Cuentas y progreso". Cliente: `src/components/account/`.
 
 ## Configurar (una vez, ~15 min)

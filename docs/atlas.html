@@ -805,7 +805,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
       <text class="m s" x="704" y="184">App.tsx</text>
       <text class="m s" x="704" y="204">index.css</text>
       <rect class="box" x="816" y="90" width="144" height="160" rx="6"/>
-      <text class="m s" x="824" y="110">export function</text><text class="m s" x="824" y="126">  EventCard(…) {</text><text class="m s" x="824" y="142">  …badge "Demo"</text>
+      <text class="m s" x="824" y="110">export function</text><text class="m s" x="824" y="126">  EventCard(…) {</text><text class="m s" x="824" y="142">  …</text>
       <rect class="box anti f-anti" x="968" y="90" width="104" height="160" rx="6"/>
       <text class="h" x="976" y="110" style="font-size:12px">Agente</text>
       <text class="s" x="976" y="130">«tu parte de</text><text class="s" x="976" y="144">la #12»</text>
@@ -1242,7 +1242,7 @@ curl -i localhost:3000/api/py/health
     <p>Una feature pequeña con backend y frontend en paralelo, para probar worktrees, Antigravity, relevo y revisión cruzada antes de trabajar en serio.</p>
     <h4>Pasos</h4>
     <ol class="steps">
-      <li><div class="code"><span class="where">dentro de claude</span>Con gh-issues, crea una issue [mock] de eventos culturales: GET /api/py/events con 5 eventos de ejemplo y una tarjeta de evento con badge "Demo" en el panel lateral.</div></li>
+      <li><div class="code"><span class="where">dentro de claude</span>Con gh-issues, crea una issue [mock] de eventos culturales: GET /api/py/events con 5 eventos de ejemplo y una tarjeta de evento en el panel lateral.</div></li>
       <li><div class="code"><span class="where">pestaña 4</span>./scripts/worktrees.sh mock/N-eventos-api mock/N-eventos-ui</div></li>
       <li><p>Pestaña 1: <code>cd ../zacdeslumbrante-back && claude</code> → «usa orchestrate, tu parte de la issue #N».</p></li>
       <li><p>Antigravity: abre <code>C:\dev\zacdeslumbrante-front</code> → «usa orchestrate, tu parte de la issue #N». Servidor del front con <code>PORT=3001 ./scripts/dev.sh</code>.</p></li>

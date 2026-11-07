@@ -83,11 +83,6 @@ export const AccountSheet: React.FC<AccountSheetProps> = ({ open, onClose, langu
         <span className="block mx-auto mb-2 w-9 h-1 rounded-full bg-stone-300 md:hidden" aria-hidden="true" />
         <header className="flex items-center gap-2 mb-4">
           <h2 className="text-base font-semibold text-carbon">{t.accountTitle}</h2>
-          {account.mode === 'demo' && (
-            <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide rounded-full bg-caliza text-terracota">
-              {t.demoBadge}
-            </span>
-          )}
           <button
             type="button"
             onClick={onClose}

@@ -192,9 +192,6 @@ export const BadgesScreen: React.FC<BadgesScreenProps> = ({ language, onGoExplor
         <div className="mx-auto max-w-lg">
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-extrabold">{t.badgesTitle}</h1>
-            <span className="px-1.5 py-px text-[9px] font-bold uppercase tracking-wider text-terracota border border-terracota/50 rounded-full">
-              {t.demoBadge}
-            </span>
           </div>
           <div className="mt-4 flex items-end gap-3">
             <p className="text-5xl font-extrabold leading-none tabular-nums">

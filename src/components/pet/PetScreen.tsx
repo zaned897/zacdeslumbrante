@@ -149,7 +149,6 @@ export const PetScreen: React.FC<PetScreenProps> = ({ language, onGoExplore }) =
         <div className="mx-auto max-w-lg flex flex-col gap-1.5">
           <div className="flex items-center justify-between">
             <h1 className="font-extrabold text-xl">{pet.name}</h1>
-            <span className="px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider bg-terracota rounded">{t.demoBadge}</span>
           </div>
           <button
             type="button"

@@ -8,7 +8,7 @@ const STORAGE_KEY = 'zacatecas_session_v1';
 export interface AccountState {
   status: 'loading' | 'signedOut' | 'signedIn';
   user: AccountUser | null;
-  /** `demo`: cuentas en memoria del servidor, sin llaves (badge "Demo"). */
+  /** `demo`: cuentas en memoria del servidor, sin llaves. */
   mode: 'supabase' | 'demo';
   providers: AuthProvider[];
   /** La API de cuentas no respondió (Python dormido u offline). */
