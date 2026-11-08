@@ -19,6 +19,7 @@ Asistente turístico y cultural de Zacatecas (chat con IA, mapa, base de conocim
 3. **Issues:** con el sí se crean, actualizan o cierran (obsoletas → `not planned`) y las listas llevan `status:ready`.
 4. **Código:** solo sobre issues `status:ready`, PR pequeño contra main con capturas.
 5. **Merge:** lo hace el dueño, a mano, tras revisar y con CI en verde. Ningún agente fusiona ni aprueba PRs.
+6. **Tablero:** [Projects #2](https://github.com/users/zaned897/projects/2). Se mueve solo: etiquetas `status:*` y PRs (`.github/workflows/tablero.yml`). Para mover una tarjeta, cambia la etiqueta; no hace falta tocar el tablero.
 
 ## Zonas (no editar fuera de la tuya)
 - Backend Python — Claude Code: `services/api/**`
