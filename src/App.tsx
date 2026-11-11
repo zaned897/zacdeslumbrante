@@ -31,12 +31,7 @@ export default function App() {
   // Pestaña activa (barra inferior), sincronizada con el hash de la URL
   const [tab, setTab] = useState<AppTab>(() => tabFromHash(window.location.hash));
   useEffect(() => {
-    const onChange = () => {
-      setTab(tabFromHash(window.location.hash));
-      // Map3DView guarda su propio idioma; al volver, adopta el último elegido.
-      const stored = localStorage.getItem('zacatecas_lang') as Language | null;
-      if (stored) setLanguage(stored);
-    };
+    const onChange = () => setTab(tabFromHash(window.location.hash));
     window.addEventListener('hashchange', onChange);
     return () => window.removeEventListener('hashchange', onChange);
   }, []);
@@ -373,7 +368,7 @@ export default function App() {
         // La vista 3D se encaja arriba de la barra inferior: su raíz mide h-dvh y aquí se ajusta al hueco.
         <div className="relative w-full overflow-hidden h-[calc(100dvh-var(--tabbar-h))] [&>div]:!h-full">
           <Suspense fallback={<div className="h-full w-full bg-stone-900" aria-busy="true" />}>
-            <Map3DView />
+            <Map3DView language={language} onToggleLanguage={toggleLanguage} />
           </Suspense>
         </div>
       ) : (
