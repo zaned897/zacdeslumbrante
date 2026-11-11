@@ -50,13 +50,13 @@ Los 7 Pueblos Mágicos de Zacatecas, por distancia a la capital: Guadalupe, Jere
 | `pilot` | boolean | no | `true` solo en el pueblo piloto. |
 | `center` | `{ lat, lng }` | sí | De `places.ts` o del nodo `place=town` de OSM. |
 | `distanceKm` | number | sí | `7`. Para ordenar el catálogo por cercanía. |
-| `howToGet` | `Note` | sí | Cómo llegar desde la capital. |
+| `howToGet` | `Note \| null` | sí | Cómo llegar desde la capital. |
 | `timeNeeded` | `{ minutes: number \| null, note: {es,en}, sourceUrl? }` | sí | `minutes: null` mientras no haya fuente o medición. |
 | `circuit` | `Stop[]` | sí | Circuito a pie, en orden. Es el que se recorre en el simulador. |
 | `food` | `{ es, en }[]` | sí | Gastronomía: `["Asado de boda", …]`. |
 | `accessibility` | `Note \| null` | sí | `null` = sin dato; la pantalla dice «por confirmar». |
-| `patronalFeast` | `{ eventId, name: {es,en}, when: {es,en}, sourceUrl }` | sí | `eventId` apunta a `events.json` de #160 (`kind: "festival"`, `townId`). |
-| `returnTrip` | `Note` | sí | Cómo regresar a la capital. |
+| `patronalFeast` | `{ eventId?, name: {es,en}, when: {es,en}, sourceUrl } \| null` | sí | `eventId` apunta a `events.json` de #160 (`kind: "festival"`, `townId`). |
+| `returnTrip` | `Note \| null` | sí | Cómo regresar a la capital. |
 | `outside` | `Spot[]` | no | Lo que está fuera del centro, con distancia y horario si la fuente lo da. |
 | `mainStreets` | string[] | no | El `name` exacto de OSM, como en `scripts/gen-alumbrado.py` (#136). Se resaltan en el mapa. |
 | `heroPhoto` | `PlacePhoto \| null` | no | Mismo formato que `photos.json`: `url`, `author`, `license`, `sourceUrl` y `caption`. Con `null` va la ilustración. |
@@ -74,7 +74,7 @@ El archivo lleva `"_mock": true` hasta que el dueño valide los datos.
 ### Reglas para no inventar
 - **Lugares, comida y fiestas:** de las miniguías oficiales de Zacatecas Travel o del INAH. Cada pueblo cita su fuente en `sources`, y cada nota o parada en su `sourceUrl`.
 - **Horarios y precios:** solo si la fuente los publica, y con enlace a la ficha oficial. Si dos fuentes chocan, se dice «por confirmar».
-- **Tiempos y accesibilidad:** sin fuente o sin medición van en `null`. La pantalla dice «por confirmar»; nunca se pone un número estimado como si fuera real.
+- **Tiempos, accesibilidad, llegada, regreso y fiesta:** sin fuente o sin medición van en `null`. La pantalla dice «por confirmar»; nunca se pone un número estimado como si fuera real.
 - **Amenidades (comer, dormir, recorridos, turismo):** salen de OSM en la caja del centro (`amenity=restaurant|cafe`, `tourism=hotel|guest_house|information`). No se capturan a mano ni se inventan comercios.
 - **Fotos:** de Wikimedia Commons con licencia libre, con autor y licencia visibles. Sin foto libre, va la ilustración.
 
