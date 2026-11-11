@@ -130,28 +130,17 @@ export default function App() {
   };
 
   // Chat Send & Streaming Logic via SSE
-  const handleSendMessage = useCallback(
-    async (text: string) => {
-      if (!text.trim() || isStreaming) return;
-
-      const userMsg: ChatMessage = {
-        id: `user-${Date.now()}`,
-        role: 'user',
-        content: text.trim(),
-        timestamp: Date.now(),
-      };
-
-      const assistantMsgId = `assistant-${Date.now()}`;
-      const placeholderAssistantMsg: ChatMessage = {
-        id: assistantMsgId,
-        role: 'assistant',
-        content: '',
-        timestamp: Date.now(),
-        isStreaming: true,
-      };
-
-      setMessages((prev) => [...prev, userMsg, placeholderAssistantMsg]);
+  // Llena un mensaje del asistente con la respuesta en streaming: breve al preguntar, completa al «Ampliar» (#158).
+  const streamAnswer = useCallback(
+    async (
+      assistantMsgId: string,
+      question: string,
+      history: ChatMessage[],
+      brief: boolean,
+    ): Promise<{ status: 'done' | 'aborted' | 'error'; received: boolean }> => {
       setIsStreaming(true);
+      let status: 'done' | 'aborted' | 'error' = 'done';
+      let received = false;
 
       const controller = new AbortController();
       abortControllerRef.current = controller;
@@ -167,10 +156,11 @@ export default function App() {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            message: text.trim(),
-            history: messages.slice(-6),
+            message: question,
+            history: history.slice(-6),
             language,
             activeKnowledgeUrls: activeUrls,
+            brief,
           }),
           signal: controller.signal,
         });
@@ -213,6 +203,7 @@ export default function App() {
                 );
               } else if (parsed.chunk) {
                 accumulatedContent += parsed.chunk;
+                received = true;
                 setMessages((prev) =>
                   prev.map((m) =>
                     m.id === assistantMsgId
@@ -221,6 +212,7 @@ export default function App() {
                   )
                 );
               } else if (parsed.error) {
+                status = 'error';
                 accumulatedContent += `\n\n⚠️ ${parsed.error}`;
                 setMessages((prev) =>
                   prev.map((m) =>
@@ -233,6 +225,7 @@ export default function App() {
             } catch {
               // Raw string chunk fallback
               accumulatedContent += dataStr;
+              received = true;
               setMessages((prev) =>
                 prev.map((m) =>
                   m.id === assistantMsgId
@@ -264,8 +257,10 @@ export default function App() {
         }
       } catch (err: unknown) {
         if ((err as Error)?.name === 'AbortError') {
+          status = 'aborted';
           console.log('Stream aborted by user');
         } else {
+          status = 'error';
           console.error('Chat stream error:', err);
           const errText =
             language === 'es'
@@ -283,8 +278,62 @@ export default function App() {
         setIsStreaming(false);
         abortControllerRef.current = null;
       }
+      return { status, received };
     },
-    [isStreaming, knowledgeBase, language, messages]
+    [knowledgeBase, language]
+  );
+
+  const handleSendMessage = useCallback(
+    async (text: string) => {
+      if (!text.trim() || isStreaming) return;
+
+      const userMsg: ChatMessage = {
+        id: `user-${Date.now()}`,
+        role: 'user',
+        content: text.trim(),
+        timestamp: Date.now(),
+      };
+
+      const assistantMsgId = `assistant-${Date.now()}`;
+      const placeholderAssistantMsg: ChatMessage = {
+        id: assistantMsgId,
+        role: 'assistant',
+        content: '',
+        timestamp: Date.now(),
+        isStreaming: true,
+        brief: true,
+        question: text.trim(),
+      };
+
+      setMessages((prev) => [...prev, userMsg, placeholderAssistantMsg]);
+      await streamAnswer(assistantMsgId, text.trim(), messages, true);
+    },
+    [isStreaming, messages, streamAnswer]
+  );
+
+  // «Ampliar» (#158): la misma pregunta, ahora completa, en el mismo globo.
+  const handleExpandMessage = useCallback(
+    async (id: string) => {
+      if (isStreaming) return;
+      const index = messages.findIndex((m) => m.id === id);
+      const target = messages[index];
+      if (!target?.question) return;
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === id
+            ? { ...m, content: '', citations: undefined, isStreaming: true, isError: false, brief: false }
+            : m
+        )
+      );
+      // Historial: lo que había antes de la pregunta original.
+      const result = await streamAnswer(id, target.question, messages.slice(0, Math.max(0, index - 1)), false);
+      // Si la ampliación falla, o se detiene antes de que llegue texto, vuelve la respuesta breve
+      // con su «Ampliar» para reintentar (hallazgo de Codex).
+      if (result.status === 'error' || (result.status === 'aborted' && !result.received)) {
+        setMessages((prev) => prev.map((m) => (m.id === id ? { ...target, isStreaming: false } : m)));
+      }
+    },
+    [isStreaming, messages, streamAnswer]
   );
 
   // Desde Planes o Insignias: manda la pregunta y vuelve al chat para ver la respuesta.
@@ -394,6 +443,7 @@ export default function App() {
                   isStreaming={isStreaming}
                   onPlaceClick={handlePlaceClick}
                   onSelectPrompt={(prompt) => handleSendMessage(prompt)}
+                  onExpandMessage={handleExpandMessage}
                   knowledgeBase={knowledgeBase}
                   onOpen3d={() => goToTab('3d')}
                 />

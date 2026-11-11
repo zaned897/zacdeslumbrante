@@ -34,6 +34,10 @@ export interface ChatMessage {
   gapDeclared?: string;
   isStreaming?: boolean;
   isError?: boolean;
+  /** Respuesta en modo breve (#158): se puede «Ampliar» con la misma pregunta. */
+  brief?: boolean;
+  /** Pregunta que originó la respuesta, para «Ampliar». */
+  question?: string;
 }
 
 export interface Place {

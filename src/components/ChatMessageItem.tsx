@@ -10,6 +10,8 @@ interface ChatMessageItemProps {
   onPlaceClick: (place: Place) => void;
   onOpen3d?: () => void;
   knowledgeBase?: KnowledgeBaseURL[];
+  /** Pide la versión completa de una respuesta breve (#158). */
+  onExpand?: () => void;
 }
 
 const URL_RE = /https?:\/\/[^\s)\],·]+/g;
@@ -100,6 +102,7 @@ export const ChatMessageItem: React.FC<ChatMessageItemProps> = ({
   onPlaceClick,
   onOpen3d,
   knowledgeBase = [],
+  onExpand,
 }) => {
   const [copied, setCopied] = useState(false);
   const t = TRANSLATIONS[language];
@@ -259,6 +262,15 @@ export const ChatMessageItem: React.FC<ChatMessageItemProps> = ({
             >
               <Box className="w-3 h-3" />
               {t.chatSee3d}
+            </button>
+          )}
+          {message.brief && !message.isError && onExpand && (
+            <button
+              type="button"
+              onClick={onExpand}
+              className="px-2 py-1.5 text-[11px] font-semibold text-cantera underline underline-offset-2 hover:brightness-90 cursor-pointer"
+            >
+              {t.chatExpand}
             </button>
           )}
           <button

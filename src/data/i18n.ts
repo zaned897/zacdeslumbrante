@@ -130,6 +130,7 @@ export const TRANSLATIONS = {
     dataGapTitle: 'Protocolo de Declaración de Brecha de Datos',
     dataGapNotice: 'Esta información específica no se encuentra registrada en los portales oficiales consultados. Se recomienda validar directamente en el dominio oficial.',
     copyText: 'Copiar respuesta',
+    chatExpand: 'Ampliar',
     copiedText: '¡Copiado!',
     clearConfirm: '¿Deseas iniciar una nueva conversación?',
     
@@ -497,6 +498,7 @@ export const TRANSLATIONS = {
     dataGapTitle: 'Data Gap Declaration Protocol',
     dataGapNotice: 'This specific dynamic information is not confirmed in the official databases consulted. Please verify directly with the official agency.',
     copyText: 'Copy answer',
+    chatExpand: 'Expand',
     copiedText: 'Copied!',
     clearConfirm: 'Do you want to start a new conversation?',
     

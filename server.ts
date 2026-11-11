@@ -6,7 +6,14 @@ import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import { ZACATECAS_PLACES } from './src/data/places.ts';
 import { synthesizeKnowledgeResponse } from './src/server/groundingSynthesizer.ts';
-import { citation, corpusSize, displayTitle, promptContext, searchKnowledge } from './src/server/knowledgeSearch.ts';
+import {
+  citation,
+  corpusSize,
+  displayTitle,
+  promptContext,
+  searchKnowledge,
+  type KnowledgeHit,
+} from './src/server/knowledgeSearch.ts';
 
 dotenv.config();
 
@@ -56,6 +63,25 @@ app.get('/api/health', (_req, res) => {
   });
 });
 
+// Modo breve del chat (#158): se agrega al final de las instrucciones del modelo.
+const BRIEF_INSTRUCTION = `
+MODO BREVE (ACTIVO):
+Responde en 2 o 3 líneas como máximo (unas 60 palabras), sin encabezados ni viñetas, con el dato más útil para la pregunta.
+En este modo no uses las etiquetas [HISTORIA DOCUMENTADA], [LEYENDA CULTURAL] ni [RECOMENDACIÓN PRÁCTICA]; si mencionas una leyenda, dilo en la misma frase («según la leyenda…»).
+Conserva siempre una cita de la fuente en el formato indicado y la línea [LUGARES: …] al final.
+Si hace falta más detalle, el usuario tocará «Ampliar» y recibirá la respuesta completa.`;
+
+/** Respaldo breve con fragmentos: lo más relevante de la mejor fuente, en dos frases y con su cita. */
+function briefExcerpt(hit: KnowledgeHit, language: 'es' | 'en'): string {
+  const sentences = hit.chunk.text.replace(/\s+/g, ' ').match(/[^.!?]+[.!?]?/g) ?? [hit.chunk.text];
+  let text = sentences.slice(0, 2).join('').trim();
+  if (text.length > 240) text = `${text.slice(0, 237).trimEnd()}…`;
+  const intro = language === 'en'
+    ? 'The AI model is not available; this is what the official source says:'
+    : 'El modelo de IA no está disponible; esto dice la fuente oficial:';
+  return `${intro}\n[1] ${text}\n[Fuente: ${citation(hit.chunk)}]`;
+}
+
 // Proxy hacia la API Python (FastAPI): /api/py/<ruta> → PY_API_URL/<ruta>
 const PY_API_URL = (process.env.PY_API_URL || 'http://localhost:8000').replace(/\/$/, '');
 app.all('/api/py/*', async (req, res) => {
@@ -84,6 +110,8 @@ app.all('/api/py/*', async (req, res) => {
 // Real-Time Streaming Chat Endpoint via Server-Sent Events (SSE)
 app.post('/api/chat/stream', async (req, res) => {
   const { message, history = [], language = 'es', activeKnowledgeUrls = [] } = req.body;
+  // Modo breve (#158): 2 o 3 líneas con su fuente; «Ampliar» repite la pregunta con brief: false.
+  const brief = req.body?.brief === true;
 
   if (!message || typeof message !== 'string') {
     res.status(400).json({ error: 'Message is required' });
@@ -180,6 +208,7 @@ Al final de tu respuesta, en una línea separada, incluye los identificadores de
 ITINERARIOS:
 Si el usuario solicita un plan o itinerario de viaje, etiquétalo siempre como:
 ${language === 'en' ? '"Suggested Itinerary (Open Decision)"' : '"Itinerario Sugerido (Decisión Abierta)"'}.
+${brief ? BRIEF_INSTRUCTION : ''}
 `.trim();
 
     // Prepare contents with conversation history
@@ -237,17 +266,20 @@ ${language === 'en' ? '"Suggested Itinerary (Open Decision)"' : '"Itinerario Sug
         console.warn(`Gemini no disponible (${msg.slice(0, 120)}): respondiendo con el respaldo...`);
         // Con fragmentos reales, el respaldo los muestra tal cual en vez del texto escrito a mano.
         const synthesizedText = hits.length > 0
-          ? [
-              language === 'en'
-                ? 'The AI model is not available right now. These are the most relevant excerpts from the official sources:'
-                : 'El modelo de IA no está disponible en este momento. Estos son los fragmentos más relevantes de las fuentes oficiales:',
-              ...hits.map((h, i) => `[${i + 1}] ${h.chunk.text}\n[Fuente: ${citation(h.chunk)}]`),
-            ].join('\n\n')
+          ? brief
+            ? briefExcerpt(hits[0], language === 'en' ? 'en' : 'es')
+            : [
+                language === 'en'
+                  ? 'The AI model is not available right now. These are the most relevant excerpts from the official sources:'
+                  : 'El modelo de IA no está disponible en este momento. Estos son los fragmentos más relevantes de las fuentes oficiales:',
+                ...hits.map((h, i) => `[${i + 1}] ${h.chunk.text}\n[Fuente: ${citation(h.chunk)}]`),
+              ].join('\n\n')
           : synthesizeKnowledgeResponse({
               message,
               history,
               language: language === 'en' ? 'en' : 'es',
               activeKnowledgeUrls,
+              brief,
             });
 
         // Stream synthesized chunks in real-time typewriter effect
