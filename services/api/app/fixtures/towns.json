@@ -1,0 +1,989 @@
+{
+  "_mock": true,
+  "source": "Miniguías de Zacatecas Travel, INAH y OpenStreetMap; ver sources en cada pueblo y docs/design/pueblos-magicos-datos.md (#57).",
+  "towns": [
+    {
+      "id": "guadalupe",
+      "state": "zacatecas",
+      "name": {
+        "es": "Guadalupe",
+        "en": "Guadalupe"
+      },
+      "tagline": {
+        "es": "Convento y arte virreinal",
+        "en": "Convent and viceregal art"
+      },
+      "pilot": true,
+      "center": {
+        "lat": 22.7508,
+        "lng": -102.5186
+      },
+      "distanceKm": 7,
+      "heroPhoto": null,
+      "howToGet": {
+        "es": "7 km desde la capital por el bulevar Adolfo López Mateos; unos 10 minutos en taxi.",
+        "en": "7 km from the capital along Bulevar Adolfo López Mateos; about 10 minutes by taxi.",
+        "sourceUrl": "https://zacatecastravel.com/descargas/miniguiaGuadalupe.pdf"
+      },
+      "timeNeeded": {
+        "minutes": null,
+        "note": {
+          "es": "Por confirmar: se mide al recorrer el circuito en el simulador (#180).",
+          "en": "To be confirmed: measured by walking the circuit in the simulator (#180)."
+        }
+      },
+      "circuit": [
+        {
+          "name": {
+            "es": "Convento y Museo de Guadalupe",
+            "en": "Convent and Museum of Guadalupe"
+          },
+          "note": {
+            "es": "Museo del INAH en el Jardín Juárez Oriente",
+            "en": "INAH museum on Jardín Juárez Oriente"
+          },
+          "sourceUrl": "https://lugares.inah.gob.mx/en/museos-inah/405-museo-regional-de-guadalupe.html",
+          "placeId": "guadalupe-pueblo-magico"
+        },
+        {
+          "name": {
+            "es": "Capilla de Nápoles",
+            "en": "Capilla de Nápoles"
+          },
+          "note": {
+            "es": "Dentro del convento",
+            "en": "Inside the convent"
+          },
+          "sourceUrl": "https://zacatecastravel.com/descargas/miniguiaGuadalupe.pdf"
+        },
+        {
+          "name": {
+            "es": "Jardín Juárez",
+            "en": "Jardín Juárez"
+          },
+          "note": {
+            "es": "Frente al convento",
+            "en": "In front of the convent"
+          },
+          "sourceUrl": "https://zacatecastravel.com/descargas/miniguiaGuadalupe.pdf"
+        },
+        {
+          "name": {
+            "es": "Calle Colegio Militar",
+            "en": "Calle Colegio Militar"
+          },
+          "note": {
+            "es": "Calle comercial del centro",
+            "en": "Shopping street of the center"
+          },
+          "sourceUrl": "https://zacatecastravel.com/descargas/miniguiaGuadalupe.pdf"
+        },
+        {
+          "name": {
+            "es": "Mercado de Guadalupe",
+            "en": "Guadalupe market"
+          },
+          "note": {
+            "es": "Gorditas, birria y menudo",
+            "en": "Gorditas, birria and menudo"
+          },
+          "sourceUrl": "https://zacatecastravel.com/descargas/miniguiaGuadalupe.pdf"
+        }
+      ],
+      "food": [
+        {
+          "es": "Asado de boda",
+          "en": "Asado de boda"
+        },
+        {
+          "es": "Tacos envenenados",
+          "en": "Tacos envenenados"
+        }
+      ],
+      "accessibility": null,
+      "patronalFeast": {
+        "eventId": "feria-virgen-guadalupe",
+        "name": {
+          "es": "Feria de la Virgen de Guadalupe",
+          "en": "Fair of the Virgin of Guadalupe"
+        },
+        "when": {
+          "es": "Primera quincena de diciembre; culmina el 12",
+          "en": "First half of December; peaks on the 12th"
+        },
+        "sourceUrl": "https://mexicodailypost.news/2025/12/07/the-virgins-fair-has-become-a-state-festival-for-zacatecas/"
+      },
+      "returnTrip": {
+        "es": "El mismo camino de regreso; en taxi o con app, unos 10 minutos.",
+        "en": "The same way back; by taxi or ride-hailing, about 10 minutes.",
+        "sourceUrl": "https://en.wikivoyage.org/wiki/Guadalupe_(Zacatecas)"
+      },
+      "outside": [
+        {
+          "name": {
+            "es": "Centro Platero",
+            "en": "Silver Center"
+          },
+          "note": {
+            "es": "Ex hacienda de Bernárdez",
+            "en": "Former Bernárdez hacienda"
+          },
+          "sourceUrl": "https://zacatecastravel.com/descargas/miniguiaGuadalupe.pdf"
+        },
+        {
+          "name": {
+            "es": "Conos de Santa Mónica",
+            "en": "Conos de Santa Mónica"
+          },
+          "note": {
+            "es": "A 20 km de la capital",
+            "en": "20 km from the capital"
+          },
+          "sourceUrl": "https://zacatecastravel.com/descargas/miniguiaGuadalupe.pdf"
+        }
+      ],
+      "mainStreets": [
+        "Colegio Militar",
+        "1910"
+      ],
+      "placeIds": [
+        "guadalupe-pueblo-magico"
+      ],
+      "sources": [
+        {
+          "label": "Miniguía Guadalupe, Zacatecas Travel",
+          "url": "https://zacatecastravel.com/descargas/miniguiaGuadalupe.pdf"
+        },
+        {
+          "label": "Museo de Guadalupe, INAH",
+          "url": "https://lugares.inah.gob.mx/en/museos-inah/405-museo-regional-de-guadalupe.html"
+        }
+      ]
+    },
+    {
+      "id": "jerez",
+      "state": "zacatecas",
+      "name": {
+        "es": "Jerez de García Salinas",
+        "en": "Jerez de García Salinas"
+      },
+      "tagline": {
+        "es": "Teatro, poesía y tambora",
+        "en": "Theater, poetry and tambora"
+      },
+      "center": {
+        "lat": 22.6486,
+        "lng": -102.9908
+      },
+      "distanceKm": 60,
+      "heroPhoto": null,
+      "howToGet": {
+        "es": "60 km desde la capital por la carretera federal 45; unos 35 minutos.",
+        "en": "60 km from the capital on federal highway 45; about 35 minutes.",
+        "sourceUrl": "https://zacatecastravel.com/descargas/miniguiaJerez.pdf"
+      },
+      "timeNeeded": {
+        "minutes": null,
+        "note": {
+          "es": "Por confirmar: se mide al recorrer el circuito en el simulador (#180).",
+          "en": "To be confirmed: measured by walking the circuit in the simulator (#180)."
+        }
+      },
+      "circuit": [
+        {
+          "name": {
+            "es": "Jardín Rafael Páez",
+            "en": "Jardín Rafael Páez"
+          },
+          "note": {
+            "es": "Jardín principal con su quiosco",
+            "en": "Main garden with its kiosk"
+          },
+          "sourceUrl": "https://zacatecastravel.com/descargas/miniguiaJerez.pdf"
+        },
+        {
+          "name": {
+            "es": "Teatro Hinojosa",
+            "en": "Hinojosa Theater"
+          },
+          "note": {
+            "es": "En el centro histórico",
+            "en": "In the historic center"
+          },
+          "sourceUrl": "https://zacatecastravel.com/descargas/miniguiaJerez.pdf",
+          "placeId": "jerez-pueblo-magico"
+        },
+        {
+          "name": {
+            "es": "Santuario de la Virgen de la Soledad",
+            "en": "Sanctuary of the Virgin of La Soledad"
+          },
+          "note": {
+            "es": "Templo del centro",
+            "en": "Church in the center"
+          },
+          "sourceUrl": "https://zacatecastravel.com/descargas/miniguiaJerez.pdf"
+        },
+        {
+          "name": {
+            "es": "Museo Casa Ramón López Velarde",
+            "en": "Ramón López Velarde House Museum"
+          },
+          "note": {
+            "es": "Casa del poeta jerezano",
+            "en": "Home of the poet from Jerez"
+          },
+          "sourceUrl": "https://zacatecastravel.com/descargas/miniguiaJerez.pdf"
+        },
+        {
+          "name": {
+            "es": "Portal de las Palomas",
+            "en": "Portal de las Palomas"
+          },
+          "note": {
+            "es": "En la Plaza Tacuba",
+            "en": "On Plaza Tacuba"
+          },
+          "sourceUrl": "https://zacatecastravel.com/descargas/miniguiaJerez.pdf"
+        }
+      ],
+      "food": [
+        {
+          "es": "Tostadas de cuerito o trompa",
+          "en": "Tostadas with pork rind or snout"
+        },
+        {
+          "es": "Raspanieve",
+          "en": "Raspanieve"
+        }
+      ],
+      "accessibility": null,
+      "patronalFeast": {
+        "name": {
+          "es": "Novenario de la Virgen de la Soledad",
+          "en": "Novena of the Virgin of La Soledad"
+        },
+        "when": {
+          "es": "15 al 17 de septiembre",
+          "en": "September 15 to 17"
+        },
+        "sourceUrl": "https://zacatecastravel.com/descargas/miniguiaJerez.pdf"
+      },
+      "returnTrip": null,
+      "outside": [
+        {
+          "name": {
+            "es": "Panteón de Dolores",
+            "en": "Dolores Cemetery"
+          },
+          "note": {
+            "es": "Panteón museo",
+            "en": "Cemetery museum"
+          },
+          "sourceUrl": "https://zacatecastravel.com/descargas/miniguiaJerez.pdf"
+        },
+        {
+          "name": {
+            "es": "Sierra de Cardos",
+            "en": "Sierra de Cardos"
+          },
+          "note": {
+            "es": "Naturaleza",
+            "en": "Nature"
+          },
+          "sourceUrl": "https://zacatecastravel.com/descargas/miniguiaJerez.pdf"
+        }
+      ],
+      "mainStreets": [
+        "San Luis",
+        "Aurora"
+      ],
+      "placeIds": [
+        "jerez-pueblo-magico"
+      ],
+      "sources": [
+        {
+          "label": "Miniguía Jerez, Zacatecas Travel",
+          "url": "https://zacatecastravel.com/descargas/miniguiaJerez.pdf"
+        }
+      ]
+    },
+    {
+      "id": "villanueva",
+      "state": "zacatecas",
+      "name": {
+        "es": "Villanueva",
+        "en": "Villanueva"
+      },
+      "tagline": {
+        "es": "La Quemada y haciendas",
+        "en": "La Quemada and haciendas"
+      },
+      "center": {
+        "lat": 22.35434,
+        "lng": -102.88338
+      },
+      "distanceKm": 61,
+      "heroPhoto": null,
+      "howToGet": {
+        "es": "61 km desde la capital por la carretera federal 54.",
+        "en": "61 km from the capital on federal highway 54.",
+        "sourceUrl": "https://zacatecastravel.com/descargas/miniguiaVillanueva.pdf"
+      },
+      "timeNeeded": {
+        "minutes": null,
+        "note": {
+          "es": "Por confirmar: se mide al recorrer el circuito en el simulador (#180).",
+          "en": "To be confirmed: measured by walking the circuit in the simulator (#180)."
+        }
+      },
+      "circuit": [
+        {
+          "name": {
+            "es": "Jardín Benito Juárez",
+            "en": "Jardín Benito Juárez"
+          },
+          "note": {
+            "es": "Jardín del centro",
+            "en": "Garden in the center"
+          },
+          "sourceUrl": "https://zacatecastravel.com/descargas/miniguiaVillanueva.pdf"
+        },
+        {
+          "name": {
+            "es": "Iglesia de San Judas Tadeo",
+            "en": "Church of San Judas Tadeo"
+          },
+          "note": {
+            "es": "Templo del centro",
+            "en": "Church in the center"
+          },
+          "sourceUrl": "https://zacatecastravel.com/descargas/miniguiaVillanueva.pdf"
+        },
+        {
+          "name": {
+            "es": "Presidencia Municipal",
+            "en": "Town Hall"
+          },
+          "note": {
+            "es": "En el centro",
+            "en": "In the center"
+          },
+          "sourceUrl": "https://zacatecastravel.com/descargas/miniguiaVillanueva.pdf"
+        },
+        {
+          "name": {
+            "es": "Templo de la Merced",
+            "en": "Templo de la Merced"
+          },
+          "note": {
+            "es": "En el centro",
+            "en": "In the center"
+          },
+          "sourceUrl": "https://zacatecastravel.com/descargas/miniguiaVillanueva.pdf"
+        },
+        {
+          "name": {
+            "es": "Mercado Municipal",
+            "en": "Municipal market"
+          },
+          "note": {
+            "es": "Comida típica",
+            "en": "Typical food"
+          },
+          "sourceUrl": "https://zacatecastravel.com/descargas/miniguiaVillanueva.pdf"
+        }
+      ],
+      "food": [
+        {
+          "es": "Tortas de chorizo",
+          "en": "Chorizo tortas"
+        },
+        {
+          "es": "Huicholas",
+          "en": "Huicholas"
+        },
+        {
+          "es": "Condoches",
+          "en": "Condoches"
+        }
+      ],
+      "accessibility": null,
+      "patronalFeast": {
+        "name": {
+          "es": "Feria Regional, en honor a San Judas Tadeo",
+          "en": "Regional Fair, in honor of Saint Jude Thaddeus"
+        },
+        "when": {
+          "es": "28 de octubre",
+          "en": "October 28"
+        },
+        "sourceUrl": "https://zacatecastravel.com/descargas/miniguiaVillanueva.pdf"
+      },
+      "returnTrip": null,
+      "outside": [
+        {
+          "name": {
+            "es": "Zona arqueológica La Quemada",
+            "en": "La Quemada archaeological site"
+          },
+          "note": {
+            "es": "Con museo de sitio",
+            "en": "With a site museum"
+          },
+          "sourceUrl": "https://zacatecastravel.com/descargas/miniguiaVillanueva.pdf",
+          "placeId": "la-quemada"
+        },
+        {
+          "name": {
+            "es": "Hacienda La Encarnación",
+            "en": "Hacienda La Encarnación"
+          },
+          "note": {
+            "es": "Hacienda histórica",
+            "en": "Historic hacienda"
+          },
+          "sourceUrl": "https://zacatecastravel.com/descargas/miniguiaVillanueva.pdf"
+        }
+      ],
+      "placeIds": [
+        "la-quemada"
+      ],
+      "sources": [
+        {
+          "label": "Miniguía Villanueva, Zacatecas Travel",
+          "url": "https://zacatecastravel.com/descargas/miniguiaVillanueva.pdf"
+        },
+        {
+          "label": "Centro del pueblo: nodo place=town de OpenStreetMap",
+          "url": "https://www.openstreetmap.org/node/299260548"
+        }
+      ]
+    },
+    {
+      "id": "pinos",
+      "state": "zacatecas",
+      "name": {
+        "es": "Pinos",
+        "en": "Pinos"
+      },
+      "tagline": {
+        "es": "San Matías y mezcal",
+        "en": "San Matías and mezcal"
+      },
+      "center": {
+        "lat": 22.2961,
+        "lng": -101.5744
+      },
+      "distanceKm": 125,
+      "heroPhoto": null,
+      "howToGet": {
+        "es": "Por la carretera federal 49 (Zacatecas–San Luis Potosí), con desvío en el cruce de La Trinidad y 26 km más.",
+        "en": "On federal highway 49 (Zacatecas–San Luis Potosí), turning off at La Trinidad and driving 26 km more.",
+        "sourceUrl": "https://zacatecastravel.com/descargas/miniguiaPinos.pdf"
+      },
+      "timeNeeded": {
+        "minutes": null,
+        "note": {
+          "es": "Por confirmar: se mide al recorrer el circuito en el simulador (#180).",
+          "en": "To be confirmed: measured by walking the circuit in the simulator (#180)."
+        }
+      },
+      "circuit": [
+        {
+          "name": {
+            "es": "Plaza Principal",
+            "en": "Main square"
+          },
+          "note": {
+            "es": "Con su quiosco",
+            "en": "With its kiosk"
+          },
+          "sourceUrl": "https://zacatecastravel.com/descargas/miniguiaPinos.pdf"
+        },
+        {
+          "name": {
+            "es": "Parroquia de San Matías y Museo de Arte Sacro",
+            "en": "Parish of San Matías and Sacred Art Museum"
+          },
+          "note": {
+            "es": "Templo y museo del centro",
+            "en": "Church and museum in the center"
+          },
+          "sourceUrl": "https://zacatecastravel.com/descargas/miniguiaPinos.pdf",
+          "placeId": "pinos-pueblo-magico"
+        },
+        {
+          "name": {
+            "es": "Calle y barrio de Tlaxcala",
+            "en": "Tlaxcala street and quarter"
+          },
+          "note": {
+            "es": "Farolillos y nieve artesanal",
+            "en": "Lanterns and handmade ice cream"
+          },
+          "sourceUrl": "https://zacatecastravel.com/descargas/miniguiaPinos.pdf"
+        }
+      ],
+      "food": [
+        {
+          "es": "Asado",
+          "en": "Asado"
+        },
+        {
+          "es": "Tatemado",
+          "en": "Tatemado"
+        },
+        {
+          "es": "Gorditas de horno",
+          "en": "Oven gorditas"
+        },
+        {
+          "es": "Queso de tuna",
+          "en": "Prickly-pear cheese"
+        }
+      ],
+      "accessibility": null,
+      "patronalFeast": {
+        "name": {
+          "es": "Festival Regional, en honor a San Matías Apóstol",
+          "en": "Regional Festival, in honor of Saint Matthias"
+        },
+        "when": {
+          "es": "15 al 25 de febrero",
+          "en": "February 15 to 25"
+        },
+        "sourceUrl": "https://zacatecastravel.com/descargas/miniguiaPinos.pdf"
+      },
+      "returnTrip": null,
+      "outside": [
+        {
+          "name": {
+            "es": "Mezcalera La Pendencia",
+            "en": "La Pendencia mezcal distillery"
+          },
+          "note": {
+            "es": "Hacienda mezcalera",
+            "en": "Mezcal hacienda"
+          },
+          "sourceUrl": "https://zacatecastravel.com/descargas/miniguiaPinos.pdf",
+          "distanceKm": 21
+        }
+      ],
+      "placeIds": [
+        "pinos-pueblo-magico"
+      ],
+      "sources": [
+        {
+          "label": "Miniguía Pinos, Zacatecas Travel",
+          "url": "https://zacatecastravel.com/descargas/miniguiaPinos.pdf"
+        },
+        {
+          "label": "Distancia aproximada: Uno TV",
+          "url": "https://www.unotv.com/turismo/pinos-pueblo-magico-de-zacatecas-que-hacer/"
+        }
+      ]
+    },
+    {
+      "id": "sombrerete",
+      "state": "zacatecas",
+      "name": {
+        "es": "Sombrerete",
+        "en": "Sombrerete"
+      },
+      "tagline": {
+        "es": "Sierra de Órganos y templos",
+        "en": "Sierra de Órganos and churches"
+      },
+      "center": {
+        "lat": 23.6339,
+        "lng": -103.6425
+      },
+      "distanceKm": 166,
+      "heroPhoto": null,
+      "howToGet": {
+        "es": "166 km desde la capital por la carretera federal 45; unas 2 horas.",
+        "en": "166 km from the capital on federal highway 45; about 2 hours.",
+        "sourceUrl": "https://zacatecastravel.com/descargas/miniguiaSombrerete.pdf"
+      },
+      "timeNeeded": {
+        "minutes": null,
+        "note": {
+          "es": "Por confirmar: se mide al recorrer el circuito en el simulador (#180).",
+          "en": "To be confirmed: measured by walking the circuit in the simulator (#180)."
+        }
+      },
+      "circuit": [
+        {
+          "name": {
+            "es": "Avenida Hidalgo",
+            "en": "Avenida Hidalgo"
+          },
+          "note": {
+            "es": "Calle principal del centro",
+            "en": "Main street of the center"
+          },
+          "sourceUrl": "https://zacatecastravel.com/descargas/miniguiaSombrerete.pdf"
+        },
+        {
+          "name": {
+            "es": "Templo y convento de San Francisco",
+            "en": "Church and convent of San Francisco"
+          },
+          "note": {
+            "es": "Torre con doce columnas salomónicas",
+            "en": "Tower with twelve Solomonic columns"
+          },
+          "sourceUrl": "https://zacatecastravel.com/descargas/miniguiaSombrerete.pdf",
+          "placeId": "sombrerete-pueblo-magico"
+        },
+        {
+          "name": {
+            "es": "Templo de Santo Domingo",
+            "en": "Church of Santo Domingo"
+          },
+          "note": {
+            "es": "Portada barroca, siglo XVIII",
+            "en": "Baroque façade, 18th century"
+          },
+          "sourceUrl": "https://zacatecastravel.com/descargas/miniguiaSombrerete.pdf"
+        },
+        {
+          "name": {
+            "es": "Capilla de la Santa Veracruz",
+            "en": "Chapel of the Santa Veracruz"
+          },
+          "note": {
+            "es": "Siglo XVII, con catacumba",
+            "en": "17th century, with a catacomb"
+          },
+          "sourceUrl": "https://zacatecastravel.com/descargas/miniguiaSombrerete.pdf"
+        },
+        {
+          "name": {
+            "es": "Museo Villa de Llerena",
+            "en": "Villa de Llerena Museum"
+          },
+          "note": {
+            "es": "Av. Hidalgo 207",
+            "en": "Av. Hidalgo 207"
+          },
+          "sourceUrl": "https://zacatecastravel.com/descargas/miniguiaSombrerete.pdf"
+        }
+      ],
+      "food": [
+        {
+          "es": "Brujitas",
+          "en": "Brujitas"
+        },
+        {
+          "es": "Rompope de las clarisas",
+          "en": "Poor Clares' rompope"
+        },
+        {
+          "es": "Licor de membrillo",
+          "en": "Quince liqueur"
+        }
+      ],
+      "accessibility": null,
+      "patronalFeast": null,
+      "returnTrip": null,
+      "outside": [
+        {
+          "name": {
+            "es": "Parque Nacional Sierra de Órganos",
+            "en": "Sierra de Órganos National Park"
+          },
+          "note": {
+            "es": "Formaciones rocosas y senderos",
+            "en": "Rock formations and trails"
+          },
+          "sourceUrl": "https://zacatecastravel.com/descargas/miniguiaSombrerete.pdf",
+          "distanceKm": 25
+        },
+        {
+          "name": {
+            "es": "Noria de San Pantaleón",
+            "en": "Noria de San Pantaleón"
+          },
+          "note": {
+            "es": "Pueblo minero del siglo XVI",
+            "en": "16th-century mining town"
+          },
+          "sourceUrl": "https://zacatecastravel.com/descargas/miniguiaSombrerete.pdf"
+        }
+      ],
+      "mainStreets": [
+        "Avenida Hidalgo"
+      ],
+      "placeIds": [
+        "sombrerete-pueblo-magico"
+      ],
+      "sources": [
+        {
+          "label": "Miniguía Sombrerete, Zacatecas Travel",
+          "url": "https://zacatecastravel.com/descargas/miniguiaSombrerete.pdf"
+        }
+      ]
+    },
+    {
+      "id": "teul",
+      "state": "zacatecas",
+      "name": {
+        "es": "Teúl de González Ortega",
+        "en": "Teúl de González Ortega"
+      },
+      "tagline": {
+        "es": "Cerro del Teúl y mezcal",
+        "en": "Cerro del Teúl and mezcal"
+      },
+      "center": {
+        "lat": 21.46349,
+        "lng": -103.46124
+      },
+      "distanceKm": 216,
+      "heroPhoto": null,
+      "howToGet": {
+        "es": "216 km desde la capital por la carretera federal 23; unas 3 horas.",
+        "en": "216 km from the capital on federal highway 23; about 3 hours.",
+        "sourceUrl": "https://zacatecastravel.com/descargas/miniguiaTeul.pdf"
+      },
+      "timeNeeded": {
+        "minutes": null,
+        "note": {
+          "es": "Por confirmar: se mide al recorrer el circuito en el simulador (#180).",
+          "en": "To be confirmed: measured by walking the circuit in the simulator (#180)."
+        }
+      },
+      "circuit": [
+        {
+          "name": {
+            "es": "Plaza de Armas y Portales Trinidad Cervantes",
+            "en": "Plaza de Armas and Portales Trinidad Cervantes"
+          },
+          "note": {
+            "es": "Casonas y faroles",
+            "en": "Old mansions and lanterns"
+          },
+          "sourceUrl": "https://zacatecastravel.com/descargas/miniguiaTeul.pdf"
+        },
+        {
+          "name": {
+            "es": "Parroquia de San Juan Bautista",
+            "en": "Parish of San Juan Bautista"
+          },
+          "note": {
+            "es": "Torre gótica, 1772–1824",
+            "en": "Gothic tower, 1772–1824"
+          },
+          "sourceUrl": "https://zacatecastravel.com/descargas/miniguiaTeul.pdf"
+        },
+        {
+          "name": {
+            "es": "Santuario de la Virgen de Guadalupe",
+            "en": "Sanctuary of the Virgin of Guadalupe"
+          },
+          "note": {
+            "es": "Siglo XVII",
+            "en": "17th century"
+          },
+          "sourceUrl": "https://zacatecastravel.com/descargas/miniguiaTeul.pdf"
+        },
+        {
+          "name": {
+            "es": "Museo del Mezcal",
+            "en": "Mezcal Museum"
+          },
+          "note": {
+            "es": "En la Mezcalería Don Aurelio",
+            "en": "At Mezcalería Don Aurelio"
+          },
+          "sourceUrl": "https://zacatecastravel.com/descargas/miniguiaTeul.pdf"
+        }
+      ],
+      "food": [
+        {
+          "es": "Gorditas de horno",
+          "en": "Oven gorditas"
+        },
+        {
+          "es": "Chamorro de cerdo",
+          "en": "Pork shank"
+        },
+        {
+          "es": "Mezcal",
+          "en": "Mezcal"
+        }
+      ],
+      "accessibility": null,
+      "patronalFeast": null,
+      "returnTrip": null,
+      "outside": [
+        {
+          "name": {
+            "es": "Cerro del Teúl",
+            "en": "Cerro del Teúl"
+          },
+          "note": {
+            "es": "Zona arqueológica; sendero de 1 km",
+            "en": "Archaeological site; 1 km trail"
+          },
+          "sourceUrl": "https://mexiconewsdaily.com/mexico-living/cerro-del-teul-in-zacatecas/",
+          "distanceKm": 1
+        },
+        {
+          "name": {
+            "es": "Presa La Aticuata",
+            "en": "La Aticuata dam"
+          },
+          "note": {
+            "es": "Kayak y trajinera; nado de abril a septiembre",
+            "en": "Kayak and trajinera; swimming April to September"
+          },
+          "sourceUrl": "https://zacatecastravel.com/descargas/miniguiaTeul.pdf"
+        }
+      ],
+      "sources": [
+        {
+          "label": "Miniguía Teúl, Zacatecas Travel",
+          "url": "https://zacatecastravel.com/descargas/miniguiaTeul.pdf"
+        },
+        {
+          "label": "Centro del pueblo: nodo place=town de OpenStreetMap",
+          "url": "https://www.openstreetmap.org/node/320859511"
+        }
+      ]
+    },
+    {
+      "id": "nochistlan",
+      "state": "zacatecas",
+      "name": {
+        "es": "Nochistlán de Mejía",
+        "en": "Nochistlán de Mejía"
+      },
+      "tagline": {
+        "es": "Acueducto y Papaquis",
+        "en": "Aqueduct and Papaquis"
+      },
+      "center": {
+        "lat": 21.36402,
+        "lng": -102.84681
+      },
+      "distanceKm": 226,
+      "heroPhoto": null,
+      "howToGet": {
+        "es": "226 km desde la capital por la carretera federal 45 hacia Aguascalientes y la 205 en Jalisco; unas 3 horas.",
+        "en": "226 km from the capital on federal highway 45 toward Aguascalientes and highway 205 in Jalisco; about 3 hours.",
+        "sourceUrl": "https://zacatecastravel.com/descargas/miniguiaNochistlan.pdf"
+      },
+      "timeNeeded": {
+        "minutes": null,
+        "note": {
+          "es": "Por confirmar: se mide al recorrer el circuito en el simulador (#180).",
+          "en": "To be confirmed: measured by walking the circuit in the simulator (#180)."
+        }
+      },
+      "circuit": [
+        {
+          "name": {
+            "es": "Jardín Morelos",
+            "en": "Jardín Morelos"
+          },
+          "note": {
+            "es": "Para pasar la tarde bajo los árboles",
+            "en": "For an afternoon under the trees"
+          },
+          "sourceUrl": "https://zacatecastravel.com/descargas/miniguiaNochistlan.pdf"
+        },
+        {
+          "name": {
+            "es": "Plaza Héroes del 64",
+            "en": "Plaza Héroes del 64"
+          },
+          "note": {
+            "es": "Lugar de la batalla de 1864",
+            "en": "Site of the 1864 battle"
+          },
+          "sourceUrl": "https://zacatecastravel.com/descargas/miniguiaNochistlan.pdf"
+        },
+        {
+          "name": {
+            "es": "Parián",
+            "en": "Parián"
+          },
+          "note": {
+            "es": "Comercio centenario",
+            "en": "Century-old market building"
+          },
+          "sourceUrl": "https://zacatecastravel.com/descargas/miniguiaNochistlan.pdf"
+        },
+        {
+          "name": {
+            "es": "Acueducto",
+            "en": "Aqueduct"
+          },
+          "note": {
+            "es": "Finales del siglo XVIII",
+            "en": "Late 18th century"
+          },
+          "sourceUrl": "https://zacatecastravel.com/descargas/miniguiaNochistlan.pdf"
+        }
+      ],
+      "food": [
+        {
+          "es": "Birria",
+          "en": "Birria"
+        },
+        {
+          "es": "Pollo a la Valentina",
+          "en": "Pollo a la Valentina"
+        },
+        {
+          "es": "Gorditas de papa y queso",
+          "en": "Potato and cheese gorditas"
+        },
+        {
+          "es": "Tejuino",
+          "en": "Tejuino"
+        }
+      ],
+      "accessibility": null,
+      "patronalFeast": null,
+      "returnTrip": null,
+      "outside": [
+        {
+          "name": {
+            "es": "El Tuiche",
+            "en": "El Tuiche"
+          },
+          "note": {
+            "es": "Sitio sagrado caxcán, con petroglifos",
+            "en": "Sacred Caxcan site, with petroglyphs"
+          },
+          "sourceUrl": "https://zacatecastravel.com/descargas/miniguiaNochistlan.pdf"
+        },
+        {
+          "name": {
+            "es": "Presa Las Tuzas",
+            "en": "Las Tuzas dam"
+          },
+          "note": {
+            "es": "Paseos en kayak",
+            "en": "Kayak rides"
+          },
+          "sourceUrl": "https://zacatecastravel.com/descargas/miniguiaNochistlan.pdf"
+        }
+      ],
+      "sources": [
+        {
+          "label": "Miniguía Nochistlán, Zacatecas Travel",
+          "url": "https://zacatecastravel.com/descargas/miniguiaNochistlan.pdf"
+        },
+        {
+          "label": "Centro del pueblo: nodo place=town de OpenStreetMap",
+          "url": "https://www.openstreetmap.org/node/3206723363"
+        }
+      ]
+    }
+  ]
+}

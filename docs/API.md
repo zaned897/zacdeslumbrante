@@ -178,5 +178,63 @@ Personas del taller SES–COZCyT para la pestaña Equipo (#116). `rol` opcional:
 - `color`: fondo del avatar de iniciales (hex). `contributions`: textos cortos para los chips del perfil.
 - PROTO: las `url` de ejemplo van a `example.com`, porque un usuario inventado podría ser la cuenta de alguien real. Con la lista real serán las URLs de cada red.
 
+### GET /api/py/towns?state= · GET /api/py/towns/{id}  · mock · dueño: Claude Code (#58)
+Pueblos Mágicos de Zacatecas con la estructura común de `docs/design/pueblos-magicos-datos.md` (#57). Datos en `services/api/app/fixtures/towns.json`, tomados de las miniguías de Zacatecas Travel, el INAH y OpenStreetMap. Cada pueblo cita sus fuentes.
+
+`GET /towns` devuelve las tarjetas del catálogo, del pueblo más cercano a la capital al más lejano. `state` es opcional; un estado sin pueblos devuelve una lista vacía.
+```json
+{
+  "_mock": true,
+  "towns": [
+    {
+      "id": "guadalupe",
+      "state": "zacatecas",
+      "name": { "es": "Guadalupe", "en": "Guadalupe" },
+      "tagline": { "es": "Convento y arte virreinal", "en": "Convent and viceregal art" },
+      "pilot": true,
+      "center": { "lat": 22.7508, "lng": -102.5186 },
+      "distanceKm": 7,
+      "heroPhoto": null
+    }
+  ]
+}
+```
+
+`GET /towns/{id}` devuelve la ficha completa; responde 404 si el pueblo no existe.
+```json
+{
+  "_mock": true,
+  "id": "guadalupe",
+  "pilot": true,
+  "howToGet": { "es": "7 km desde la capital…", "en": "7 km from the capital…", "sourceUrl": "https://zacatecastravel.com/…" },
+  "timeNeeded": { "minutes": null, "note": { "es": "Por confirmar…", "en": "To be confirmed…" } },
+  "circuit": [
+    {
+      "name": { "es": "Convento y Museo de Guadalupe", "en": "Convent and Museum of Guadalupe" },
+      "note": { "es": "…", "en": "…" },
+      "placeId": "guadalupe-pueblo-magico",
+      "sourceUrl": "https://lugares.inah.gob.mx/…"
+    }
+  ],
+  "food": [{ "es": "Asado de boda", "en": "Asado de boda" }],
+  "accessibility": null,
+  "patronalFeast": { "eventId": "feria-virgen-guadalupe", "name": { "es": "…", "en": "…" }, "when": { "es": "…", "en": "…" }, "sourceUrl": "https://…" },
+  "returnTrip": { "es": "…", "en": "…", "sourceUrl": "https://…" },
+  "outside": [{ "name": { "es": "Centro Platero", "en": "Silver Center" }, "note": { "es": "…", "en": "…" }, "sourceUrl": "https://…" }],
+  "mainStreets": ["Colegio Militar", "1910"],
+  "placeIds": ["guadalupe-pueblo-magico"],
+  "radiusM": 500,
+  "sources": [{ "label": "Miniguía Guadalupe, Zacatecas Travel", "url": "https://zacatecastravel.com/…" }]
+}
+```
+- La ficha completa también trae los campos de la tarjeta: `name`, `tagline`, `center`, `distanceKm` y `heroPhoto`.
+- `pilot: true` marca al pueblo piloto (Guadalupe), el que se recorre en el simulador (#180).
+- Pueden ser `null`: `accessibility`, `patronalFeast`, `howToGet`, `returnTrip` y `timeNeeded.minutes`. Significa que no hay fuente o medición todavía, y la pantalla debe decir «por confirmar». Nunca se rellenan con un estimado.
+- `circuit` va en el orden del recorrido a pie. Una parada sin `lat`/`lng` sale en la lista, pero no en el mapa.
+- `outside`: lugares fuera del centro. Pueden traer `distanceKm`, `hours` y `placeId` cuando el lugar ya está en `src/data/places.ts` (en Villanueva, La Quemada).
+- `patronalFeast.eventId` apuntará a `events.json` de #160. Hoy solo Guadalupe lo trae.
+- `center`: de `places.ts` para los 4 pueblos que ya estaban; del nodo `place=town` de OSM para Villanueva, Teúl y Nochistlán.
+- `heroPhoto`, cuando llegue, usa el formato de Wikimedia Commons de las fotos: `url`, `author`, `license`, `sourceUrl` y `caption`.
+
 ## Propuestas pendientes
 (Agrega aquí endpoints nuevos antes de implementarlos: método, ruta, body, respuesta, dueño.)
