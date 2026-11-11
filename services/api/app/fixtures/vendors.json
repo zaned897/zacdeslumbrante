@@ -1,0 +1,720 @@
+{
+  "_mock": true,
+  "note": "Mundo de prueba del Centro Histórico (#170): todo es inventado; los nombres de los puestos se ven ficticios a propósito.",
+  "coordinates": "Puntos sobre calles con nombre de OpenStreetMap (public/data/centro-alumbrado.json, ODbL).",
+  "vendors": [
+    {
+      "_mock": true,
+      "id": "gorditas-la-imaginaria",
+      "name": "Gorditas La Imaginaria",
+      "kind": "food",
+      "specialty": {
+        "es": "Gorditas de horno y de comal",
+        "en": "Oven and griddle gorditas"
+      },
+      "street": "Avenida Hidalgo",
+      "lat": 22.776323,
+      "lng": -102.572223,
+      "hours": [
+        {
+          "days": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "open": "08:00",
+          "close": "15:00"
+        }
+      ],
+      "priceRange": "$",
+      "photoUrl": null,
+      "interests": [
+        "hambre",
+        "comer-rapido",
+        "tradicional",
+        "economico"
+      ],
+      "status": "published"
+    },
+    {
+      "_mock": true,
+      "id": "asados-el-inventado",
+      "name": "Asados El Inventado",
+      "kind": "food",
+      "specialty": {
+        "es": "Asado de boda y enchiladas",
+        "en": "Asado de boda and enchiladas"
+      },
+      "street": "Calle Juan de Tolosa",
+      "lat": 22.771884,
+      "lng": -102.578646,
+      "hours": [
+        {
+          "days": [
+            5,
+            6
+          ],
+          "open": "13:00",
+          "close": "18:00"
+        }
+      ],
+      "priceRange": "$$",
+      "photoUrl": null,
+      "interests": [
+        "hambre",
+        "tradicional"
+      ],
+      "status": "published"
+    },
+    {
+      "_mock": true,
+      "id": "dulceria-de-muestra",
+      "name": "Dulcería de Muestra",
+      "kind": "sweets",
+      "specialty": {
+        "es": "Dulces típicos: cocadas, jamoncillo y charamuscas",
+        "en": "Typical sweets: cocadas, jamoncillo and charamuscas"
+      },
+      "street": "Avenida Hidalgo",
+      "lat": 22.774677,
+      "lng": -102.573354,
+      "hours": [
+        {
+          "days": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "open": "10:00",
+          "close": "20:00"
+        }
+      ],
+      "priceRange": "$",
+      "photoUrl": null,
+      "interests": [
+        "dulce",
+        "tradicional",
+        "para-ninos",
+        "economico"
+      ],
+      "status": "published"
+    },
+    {
+      "_mock": true,
+      "id": "cafe-ejemplo-tacuba",
+      "name": "Café Ejemplo de Tacuba",
+      "kind": "coffee",
+      "specialty": {
+        "es": "Café de olla y pan de nata",
+        "en": "Café de olla and pan de nata"
+      },
+      "street": "Calle Tacuba",
+      "lat": 22.774317,
+      "lng": -102.572869,
+      "hours": [
+        {
+          "days": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "open": "08:00",
+          "close": "21:00"
+        }
+      ],
+      "priceRange": "$$",
+      "photoUrl": null,
+      "interests": [
+        "cafe",
+        "descanso"
+      ],
+      "status": "published"
+    },
+    {
+      "_mock": true,
+      "id": "antojitos-ficticios",
+      "name": "Antojitos Ficticios",
+      "kind": "food",
+      "specialty": {
+        "es": "Tacos envenenados y burritos",
+        "en": "Tacos envenenados and burritos"
+      },
+      "street": "Calle Aldama",
+      "lat": 22.773086,
+      "lng": -102.573037,
+      "hours": [
+        {
+          "days": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "open": "12:00",
+          "close": "22:00"
+        }
+      ],
+      "priceRange": "$",
+      "photoUrl": null,
+      "interests": [
+        "hambre",
+        "comer-rapido",
+        "economico"
+      ],
+      "status": "published"
+    },
+    {
+      "_mock": true,
+      "id": "nieves-de-prueba",
+      "name": "Nieves de Prueba",
+      "kind": "sweets",
+      "specialty": {
+        "es": "Raspanieves y nieves de garrafa",
+        "en": "Raspanieves and garrafa ice cream"
+      },
+      "street": "Plaza de Armas",
+      "lat": 22.776111,
+      "lng": -102.571952,
+      "hours": [
+        {
+          "days": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "open": "11:00",
+          "close": "20:00"
+        }
+      ],
+      "priceRange": "$",
+      "photoUrl": null,
+      "interests": [
+        "dulce",
+        "para-ninos",
+        "economico"
+      ],
+      "status": "published"
+    },
+    {
+      "_mock": true,
+      "id": "fonda-dona-ejemplo",
+      "name": "Fonda Doña Ejemplo",
+      "kind": "food",
+      "specialty": {
+        "es": "Comida corrida casera",
+        "en": "Home-style set lunch"
+      },
+      "street": "Calle Fernando Villalpando",
+      "lat": 22.773222,
+      "lng": -102.576183,
+      "hours": [
+        {
+          "days": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "open": "13:00",
+          "close": "17:00"
+        }
+      ],
+      "priceRange": "$$",
+      "photoUrl": null,
+      "interests": [
+        "hambre",
+        "tradicional"
+      ],
+      "status": "published"
+    },
+    {
+      "_mock": true,
+      "id": "cafe-imaginario-del-portal",
+      "name": "Café Imaginario del Portal",
+      "kind": "coffee",
+      "specialty": {
+        "es": "Café de especialidad zacatecano",
+        "en": "Zacatecan specialty coffee"
+      },
+      "street": "Avenida Hidalgo",
+      "lat": 22.775429,
+      "lng": -102.572664,
+      "hours": [
+        {
+          "days": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "open": "09:00",
+          "close": "22:00"
+        }
+      ],
+      "priceRange": "$$",
+      "photoUrl": null,
+      "interests": [
+        "cafe",
+        "descanso",
+        "vista"
+      ],
+      "status": "published"
+    },
+    {
+      "_mock": true,
+      "id": "birrieria-la-inventada",
+      "name": "Birriería La Inventada",
+      "kind": "food",
+      "specialty": {
+        "es": "Birria y menudo",
+        "en": "Birria and menudo"
+      },
+      "street": "Avenida González Ortega",
+      "lat": 22.767402,
+      "lng": -102.577242,
+      "hours": [
+        {
+          "days": [
+            5,
+            6
+          ],
+          "open": "08:00",
+          "close": "14:00"
+        }
+      ],
+      "priceRange": "$$",
+      "photoUrl": null,
+      "interests": [
+        "hambre",
+        "tradicional"
+      ],
+      "status": "published"
+    },
+    {
+      "_mock": true,
+      "id": "tamales-de-muestra",
+      "name": "Tamales de Muestra",
+      "kind": "food",
+      "specialty": {
+        "es": "Tamales y atole",
+        "en": "Tamales and atole"
+      },
+      "street": "Calle Genaro Codina",
+      "lat": 22.777912,
+      "lng": -102.571971,
+      "hours": [
+        {
+          "days": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "open": "07:00",
+          "close": "11:00"
+        },
+        {
+          "days": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "open": "18:00",
+          "close": "21:00"
+        }
+      ],
+      "priceRange": "$",
+      "photoUrl": null,
+      "interests": [
+        "hambre",
+        "comer-rapido",
+        "economico",
+        "tradicional"
+      ],
+      "status": "published"
+    },
+    {
+      "_mock": true,
+      "id": "panaderia-ficticia",
+      "name": "Panadería Ficticia",
+      "kind": "sweets",
+      "specialty": {
+        "es": "Pan de horno de leña",
+        "en": "Wood-oven bread"
+      },
+      "street": "Calle Independencia",
+      "lat": 22.771126,
+      "lng": -102.573978,
+      "hours": [
+        {
+          "days": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "open": "07:00",
+          "close": "14:00"
+        }
+      ],
+      "priceRange": "$",
+      "photoUrl": null,
+      "interests": [
+        "dulce",
+        "economico"
+      ],
+      "status": "published"
+    },
+    {
+      "_mock": true,
+      "id": "mezcaleria-de-ejemplo",
+      "name": "Mezcalería de Ejemplo",
+      "kind": "drinks",
+      "specialty": {
+        "es": "Mezcal zacatecano y botanas",
+        "en": "Zacatecan mezcal and snacks"
+      },
+      "street": "Calle Genaro Codina",
+      "lat": 22.776158,
+      "lng": -102.573319,
+      "hours": [
+        {
+          "days": [
+            3,
+            4,
+            5
+          ],
+          "open": "18:00",
+          "close": "23:59"
+        }
+      ],
+      "priceRange": "$$$",
+      "photoUrl": null,
+      "interests": [
+        "noche",
+        "tradicional"
+      ],
+      "status": "published"
+    },
+    {
+      "_mock": true,
+      "id": "gorditas-de-prueba-torreon",
+      "name": "Gorditas de Prueba",
+      "kind": "food",
+      "specialty": {
+        "es": "Gorditas de cuajada y de chicharrón",
+        "en": "Cuajada and chicharrón gorditas"
+      },
+      "street": "Avenida Torreón",
+      "lat": 22.772065,
+      "lng": -102.574558,
+      "hours": [
+        {
+          "days": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "open": "08:00",
+          "close": "14:00"
+        }
+      ],
+      "priceRange": "$",
+      "photoUrl": null,
+      "interests": [
+        "hambre",
+        "comer-rapido",
+        "economico"
+      ],
+      "status": "published"
+    },
+    {
+      "_mock": true,
+      "id": "cafe-simulado-allende",
+      "name": "Café Simulado",
+      "kind": "coffee",
+      "specialty": {
+        "es": "Chocolate de metate y café",
+        "en": "Stone-ground chocolate and coffee"
+      },
+      "street": "Calle Allende",
+      "lat": 22.773246,
+      "lng": -102.573305,
+      "hours": [
+        {
+          "days": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "open": "09:00",
+          "close": "20:00"
+        }
+      ],
+      "priceRange": "$$",
+      "photoUrl": null,
+      "interests": [
+        "cafe",
+        "dulce",
+        "descanso"
+      ],
+      "status": "published"
+    },
+    {
+      "_mock": true,
+      "id": "jugos-la-inventada",
+      "name": "Jugos La Inventada",
+      "kind": "drinks",
+      "specialty": {
+        "es": "Jugos y licuados",
+        "en": "Juices and smoothies"
+      },
+      "street": "Avenida Juárez",
+      "lat": 22.77192,
+      "lng": -102.57437,
+      "hours": [
+        {
+          "days": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "open": "07:30",
+          "close": "15:00"
+        }
+      ],
+      "priceRange": "$",
+      "photoUrl": null,
+      "interests": [
+        "comer-rapido",
+        "economico",
+        "para-ninos"
+      ],
+      "status": "published"
+    },
+    {
+      "_mock": true,
+      "id": "plateria-de-muestra",
+      "name": "Platería de Muestra",
+      "kind": "crafts",
+      "specialty": {
+        "es": "Joyería de plata (exhibición)",
+        "en": "Silver jewelry (display)"
+      },
+      "street": "Avenida Hidalgo",
+      "lat": 22.772613,
+      "lng": -102.574333,
+      "hours": [
+        {
+          "days": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "open": "10:00",
+          "close": "19:00"
+        }
+      ],
+      "priceRange": "$$$",
+      "photoUrl": null,
+      "interests": [
+        "compras",
+        "artesania"
+      ],
+      "status": "published"
+    },
+    {
+      "_mock": true,
+      "id": "artesanias-ficticias",
+      "name": "Artesanías Ficticias",
+      "kind": "crafts",
+      "specialty": {
+        "es": "Cantera labrada y barro",
+        "en": "Carved cantera and clay"
+      },
+      "street": "Calle Juan de Tolosa",
+      "lat": 22.78018,
+      "lng": -102.571287,
+      "hours": [
+        {
+          "days": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "open": "10:00",
+          "close": "19:00"
+        }
+      ],
+      "priceRange": "$$",
+      "photoUrl": null,
+      "interests": [
+        "compras",
+        "artesania",
+        "para-ninos"
+      ],
+      "status": "published"
+    },
+    {
+      "_mock": true,
+      "id": "elotes-de-ejemplo",
+      "name": "Elotes de Ejemplo",
+      "kind": "food",
+      "specialty": {
+        "es": "Elotes y esquites",
+        "en": "Corn on the cob and esquites"
+      },
+      "street": "Plaza de Armas",
+      "lat": 22.776106,
+      "lng": -102.572243,
+      "hours": [
+        {
+          "days": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "open": "17:00",
+          "close": "22:00"
+        }
+      ],
+      "priceRange": "$",
+      "photoUrl": null,
+      "interests": [
+        "hambre",
+        "comer-rapido",
+        "economico",
+        "noche"
+      ],
+      "status": "published"
+    },
+    {
+      "_mock": true,
+      "id": "cocina-imaginaria-codina",
+      "name": "Cocina Imaginaria",
+      "kind": "food",
+      "specialty": {
+        "es": "Pozole y enchiladas zacatecanas",
+        "en": "Pozole and Zacatecan enchiladas"
+      },
+      "street": "Calle Genaro Codina",
+      "lat": 22.776846,
+      "lng": -102.572709,
+      "hours": [
+        {
+          "days": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "open": "18:00",
+          "close": "23:00"
+        }
+      ],
+      "priceRange": "$$",
+      "photoUrl": null,
+      "interests": [
+        "hambre",
+        "tradicional",
+        "noche"
+      ],
+      "status": "published"
+    },
+    {
+      "_mock": true,
+      "id": "dulces-de-prueba-torreon",
+      "name": "Dulces de Prueba",
+      "kind": "sweets",
+      "specialty": {
+        "es": "Queso de tuna y melcocha",
+        "en": "Prickly-pear cheese and melcocha"
+      },
+      "street": "Avenida Torreón",
+      "lat": 22.773138,
+      "lng": -102.57716,
+      "hours": [
+        {
+          "days": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "open": "10:00",
+          "close": "19:00"
+        }
+      ],
+      "priceRange": "$",
+      "photoUrl": null,
+      "interests": [
+        "dulce",
+        "tradicional",
+        "economico"
+      ],
+      "status": "published"
+    }
+  ]
+}
