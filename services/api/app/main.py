@@ -6,6 +6,7 @@ from app.routers import (
     agent,
     challenges,
     collaborators,
+    events,
     photos,
     recommendations,
     street_life,
@@ -20,7 +21,7 @@ app = FastAPI(title="Zacatecas Deslumbrante API", version="0.1.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000"],
-    allow_methods=["GET", "POST", "PUT"],
+    allow_methods=["GET", "POST", "PUT", "PATCH"],
     allow_headers=["content-type", "authorization"],
 )
 
@@ -28,6 +29,7 @@ app.include_router(account.router)
 app.include_router(agent.router)
 app.include_router(challenges.router)
 app.include_router(collaborators.router)
+app.include_router(events.router)
 app.include_router(photos.router)
 app.include_router(recommendations.router)
 app.include_router(street_life.router)
