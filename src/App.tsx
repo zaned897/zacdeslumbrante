@@ -135,27 +135,9 @@ export default function App() {
   };
 
   // Chat Send & Streaming Logic via SSE
-  const handleSendMessage = useCallback(
-    async (text: string) => {
-      if (!text.trim() || isStreaming) return;
-
-      const userMsg: ChatMessage = {
-        id: `user-${Date.now()}`,
-        role: 'user',
-        content: text.trim(),
-        timestamp: Date.now(),
-      };
-
-      const assistantMsgId = `assistant-${Date.now()}`;
-      const placeholderAssistantMsg: ChatMessage = {
-        id: assistantMsgId,
-        role: 'assistant',
-        content: '',
-        timestamp: Date.now(),
-        isStreaming: true,
-      };
-
-      setMessages((prev) => [...prev, userMsg, placeholderAssistantMsg]);
+  // Llena un mensaje del asistente con la respuesta en streaming: breve al preguntar, completa al «Ampliar» (#158).
+  const streamAnswer = useCallback(
+    async (assistantMsgId: string, question: string, history: ChatMessage[], brief: boolean) => {
       setIsStreaming(true);
 
       const controller = new AbortController();
@@ -172,10 +154,11 @@ export default function App() {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            message: text.trim(),
-            history: messages.slice(-6),
+            message: question,
+            history: history.slice(-6),
             language,
             activeKnowledgeUrls: activeUrls,
+            brief,
           }),
           signal: controller.signal,
         });
@@ -289,7 +272,55 @@ export default function App() {
         abortControllerRef.current = null;
       }
     },
-    [isStreaming, knowledgeBase, language, messages]
+    [knowledgeBase, language]
+  );
+
+  const handleSendMessage = useCallback(
+    async (text: string) => {
+      if (!text.trim() || isStreaming) return;
+
+      const userMsg: ChatMessage = {
+        id: `user-${Date.now()}`,
+        role: 'user',
+        content: text.trim(),
+        timestamp: Date.now(),
+      };
+
+      const assistantMsgId = `assistant-${Date.now()}`;
+      const placeholderAssistantMsg: ChatMessage = {
+        id: assistantMsgId,
+        role: 'assistant',
+        content: '',
+        timestamp: Date.now(),
+        isStreaming: true,
+        brief: true,
+        question: text.trim(),
+      };
+
+      setMessages((prev) => [...prev, userMsg, placeholderAssistantMsg]);
+      await streamAnswer(assistantMsgId, text.trim(), messages, true);
+    },
+    [isStreaming, messages, streamAnswer]
+  );
+
+  // «Ampliar» (#158): la misma pregunta, ahora completa, en el mismo globo.
+  const handleExpandMessage = useCallback(
+    async (id: string) => {
+      if (isStreaming) return;
+      const index = messages.findIndex((m) => m.id === id);
+      const target = messages[index];
+      if (!target?.question) return;
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === id
+            ? { ...m, content: '', citations: undefined, isStreaming: true, isError: false, brief: false }
+            : m
+        )
+      );
+      // Historial: lo que había antes de la pregunta original.
+      await streamAnswer(id, target.question, messages.slice(0, Math.max(0, index - 1)), false);
+    },
+    [isStreaming, messages, streamAnswer]
   );
 
   // Desde Planes o Insignias: manda la pregunta y vuelve al chat para ver la respuesta.
@@ -399,6 +430,7 @@ export default function App() {
                   isStreaming={isStreaming}
                   onPlaceClick={handlePlaceClick}
                   onSelectPrompt={(prompt) => handleSendMessage(prompt)}
+                  onExpandMessage={handleExpandMessage}
                   knowledgeBase={knowledgeBase}
                   onOpen3d={() => goToTab('3d')}
                 />

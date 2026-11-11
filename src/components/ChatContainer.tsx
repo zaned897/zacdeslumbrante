@@ -16,6 +16,8 @@ interface ChatContainerProps {
   isStreaming: boolean;
   onPlaceClick: (place: Place) => void;
   onSelectPrompt: (prompt: string) => void;
+  /** «Ampliar» una respuesta breve (#158). */
+  onExpandMessage?: (id: string) => void;
   knowledgeBase: KnowledgeBaseURL[];
   onOpen3d?: () => void;
 }
@@ -28,6 +30,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
   isStreaming,
   onPlaceClick,
   onSelectPrompt,
+  onExpandMessage,
   knowledgeBase,
   onOpen3d,
 }) => {
@@ -159,6 +162,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
                 onPlaceClick={onPlaceClick}
                 onOpen3d={onOpen3d}
                 knowledgeBase={knowledgeBase}
+                onExpand={!isStreaming && onExpandMessage ? () => onExpandMessage(message.id) : undefined}
               />
             ))}
             {followUps.length > 0 && (

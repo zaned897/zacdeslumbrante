@@ -12,6 +12,8 @@ interface SynthesisOptions {
   history?: ChatHistoryItem[];
   language: 'es' | 'en';
   activeKnowledgeUrls: string[];
+  /** Modo breve (#158): 2 o 3 líneas con su fuente. */
+  brief?: boolean;
 }
 
 // Respaldo cuando Gemini no responde y el corpus no dio fragmentos.
@@ -65,11 +67,36 @@ function describePlace(place: Place, isEn: boolean): string {
     : `• ${name} — ${description}\n  Dirección: ${sentence(place.address)}. Horario (Demo): ${sentence(place.schedule)}. Costo (Demo): ${sentence(place.fee)}.\n  [Fuente por verificar: ${place.officialUrl} · Dato Demo, sin verificar]`;
 }
 
+/** Primera frase de un texto, sin el punto final. */
+function firstSentence(text: string): string {
+  return sentence(text.split(/(?<=[.!?])\s/)[0] ?? text);
+}
+
+function briefResponse(places: Place[], isEn: boolean, sources: string[]): string {
+  if (places.length === 0) {
+    return isEn
+      ? `The AI model is not available and the official sources had no excerpt for this question.\nCheck directly at ${sources[0]}`
+      : `El modelo de IA no está disponible y las fuentes oficiales no dieron fragmentos para esta pregunta.\nVerifica directamente en ${sources[0]}`;
+  }
+  const place = places[0];
+  const name = isEn ? place.name : place.nameEs;
+  const description = firstSentence(isEn ? place.descriptionEn : place.descriptionEs);
+  return [
+    isEn ? 'The AI model is not available; demo data, not verified:' : 'El modelo de IA no está disponible; dato de demostración, sin verificar:',
+    `${name}: ${description}.`,
+    isEn
+      ? `[Source to check: ${place.officialUrl} · sample data]`
+      : `[Fuente por verificar: ${place.officialUrl} · dato de ejemplo]`,
+    `[LUGARES: ${place.id}]`,
+  ].join('\n');
+}
+
 export function synthesizeKnowledgeResponse({
   message,
   history = [],
   language,
   activeKnowledgeUrls,
+  brief = false,
 }: SynthesisOptions): string {
   const isEn = language === 'en';
   const query = normalize(message);
@@ -78,6 +105,11 @@ export function synthesizeKnowledgeResponse({
   const places = findPlaces(query);
   const contextPlaces = places.length > 0 ? places : findPlaces(lastUserTurn);
   const wantsItinerary = ITINERARY_HINT.test(query);
+
+  if (brief) {
+    const sources = [OFFICIAL_PORTAL, ...activeKnowledgeUrls.filter((url) => url !== OFFICIAL_PORTAL)];
+    return briefResponse(contextPlaces, isEn, sources);
+  }
 
   const intro = isEn
     ? 'The AI model is not available right now and the official sources returned no excerpts for this question. What follows is the prototype\'s demo data (Demo), not verified: confirm hours and fees on the official source before your visit.'

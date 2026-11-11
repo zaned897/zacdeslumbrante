@@ -13,8 +13,10 @@ Fuente de verdad entre backend (Claude Code) y frontend (Antigravity). Tipos en 
 ## POST /api/chat/stream  (Server-Sent Events)
 Body:
 ```json
-{ "message": "string (requerido)", "history": [], "language": "es | en", "activeKnowledgeUrls": [] }
+{ "message": "string (requerido)", "history": [], "language": "es | en", "activeKnowledgeUrls": [], "brief": false }
 ```
+- `brief` (opcional, #158): con `true`, el modelo contesta en 2 o 3 líneas, sin encabezados y con la cita de su fuente. Con `false` o sin el campo, da la respuesta completa. El chat principal pregunta con `brief: true` y su enlace «Ampliar» repite la misma pregunta con `brief: false`. El respaldo sin Gemini también respeta el modo breve: muestra solo el mejor fragmento con su cita o, sin fragmentos, un lugar de ejemplo con la fuente por verificar.
+
 Respuestas: `400` si falta `message`. Si no, flujo SSE de líneas `data: ...`:
 - `{ "sources": [{ "n": 1, "title": "string", "url": "string", "fetchedAt": "YYYY-MM-DD" }] }` — opcional, llega antes del primer `chunk`. Son los fragmentos de la base de conocimientos (`services/kb`) que se usaron; la respuesta los cita como `[n]`. Solo llega si existe `services/kb/data/corpus.jsonl` (o `KB_CORPUS_PATH`) y hubo coincidencias entre las fuentes activas.
 - `{ "chunk": "texto" }` — fragmentos de la respuesta, en orden
