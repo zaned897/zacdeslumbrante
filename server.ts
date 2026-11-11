@@ -4,6 +4,7 @@ import { GoogleGenAI } from '@google/genai';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
+import { sourceLine } from './src/server/sourceDates.ts';
 import { ZACATECAS_PLACES } from './src/data/places.ts';
 import { synthesizeKnowledgeResponse } from './src/server/groundingSynthesizer.ts';
 import { citation, corpusSize, displayTitle, promptContext, searchKnowledge } from './src/server/knowledgeSearch.ts';
@@ -138,12 +139,14 @@ app.post('/api/chat/stream', async (req, res) => {
 FRAGMENTOS RECUPERADOS DE LAS FUENTES OFICIALES (de la última ingesta):
 ${promptContext(hits)}
 
-Basa tu respuesta primero en estos fragmentos y cítalos con su número y URL, p. ej. [1] (https://...). Lo que no esté en ellos y venga de tu conocimiento general, márcalo como tal; si el dato no aparece, aplica el protocolo de brecha de datos.`
+Basa tu respuesta primero en estos fragmentos y cítalos con su número y URL, p. ej. [1] (https://...). Cada fragmento trae la fecha de revisión de su fuente («Revisado AAAA-MM-DD»): úsala tal cual en la cita. Lo que no esté en ellos y venga de tu conocimiento general, márcalo como tal; si el dato no aparece, aplica el protocolo de brecha de datos.`
       : '';
 
-    const urlsText = activeKnowledgeUrls.length > 0
-      ? activeKnowledgeUrls.map((u: string) => `• ${u}`).join('\n')
-      : 'https://www.zacatecastravel.com/\nhttps://whc.unesco.org/en/list/676/\nhttps://culturazac.gob.mx/\nhttps://www.inah.gob.mx/';
+    // Cada fuente con su fecha de última revisión (#83), para que la cita diga la fecha real.
+    const urlsText = (activeKnowledgeUrls.length > 0
+      ? activeKnowledgeUrls
+      : ['https://www.zacatecastravel.com/', 'https://whc.unesco.org/en/list/676/', 'https://culturazac.gob.mx/', 'https://www.inah.gob.mx/']
+    ).map((u: string) => sourceLine(u)).join('\n');
 
     const systemInstruction = `
 Eres "Zacatecas Deslumbrante Prototype", el Asistente Oficial Conversacional y Guía Espacial del Estado de Zacatecas (México).
@@ -164,10 +167,11 @@ Evalúa y sustenta tus respuestas en los siguientes portales oficiales activos:
 ${urlsText}
 ${retrievedText}
 
-CITAS DE FUENTES Y VERIFICACIÓN:
-Al final o de forma intercalada, cita las fuentes oficiales correspondientes e incluye siempre la fecha de verificación:
-Formato de ejemplo:
-[Fuente: Portal Oficial Zacatecas Travel / INAH · Verificado Octubre 2026]
+CITAS DE FUENTES Y FECHA DE REVISIÓN:
+Al final o de forma intercalada, cita cada fuente que usaste con su nombre y SU fecha de revisión, tal como aparece en la lista de fuentes o en el fragmento (no inventes ni redondees fechas):
+[Fuente: <nombre de la fuente> · Revisado <AAAA-MM-DD>]
+Ejemplo: [Fuente: Museos de Zacatecas — Red Turística · Revisado 2026-10-15]
+Si una fuente dice «sin fecha de revisión», escríbelo así en la cita.
 
 PROTOCOLO DE BRECHA DE DATOS (MISSING DATA PROTOCOL):
 Si un dato específico (horario extraordinario, tarifa reciente no reportada o evento inédito) no está documentado en los portales oficiales de la base de conocimiento, declara de forma explícita la brecha:
