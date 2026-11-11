@@ -255,9 +255,17 @@ export function seasonFromEvents(events: BackendEvent[]): Season | null {
   const endsOn: MonthDay = [Number(event.end.slice(5, 7)), Number(event.end.slice(8, 10))];
   if (local) {
     // Si la API movió las fechas, el chip dice las nuevas; si no, se queda el texto de siempre.
-    const same = key(startsOn) === key(local.startsOn) && key(endsOn) === key(local.endsOn);
+    const year = Number(event.start.slice(0, 4));
+    const same =
+      key(startsOn) === key(local.startsOn) &&
+      key(endsOn) === key(local.endsOn) &&
+      (local.year === undefined || local.year === year);
     const dateLabel = same ? local.dateLabel : eventDateLabel(event.start, event.end);
-    return { ...local, name: event.name, dateLabel, startsOn, endsOn, ...source };
+    const season: Season = { ...local, name: event.name, dateLabel, startsOn, endsOn, ...source };
+    // Una temporada con año (la Panamericana 2026) trae ruta, misión e insignia de esa fecha.
+    // En otra fecha u otra edición se queda solo el chip: nada de lo de 2026 (hallazgo de Codex).
+    if (local.year !== undefined && !same) return { ...season, year, race: false };
+    return season;
   }
   return {
     id: 'evento',
