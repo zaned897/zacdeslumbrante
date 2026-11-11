@@ -22,6 +22,7 @@ Respuestas: `400` si falta `message`. Si no, flujo SSE de líneas `data: ...`:
 - `{ "chunk": "texto" }` — fragmentos de la respuesta, en orden
 - `{ "error": "mensaje" }` — error durante la generación
 - `[DONE]` — fin del flujo
+- Citas en el texto (#83): `[Fuente: <nombre> · Revisado AAAA-MM-DD]`. La fecha es la `lastVerified` de la fuente en `src/data/knowledgeBase.ts`; si la fuente no está curada, es la fecha de la ingesta. En el respaldo con fragmentos la cita también lleva la URL: `[Fuente: <nombre> · Revisado AAAA-MM-DD · <url>]`.
 
 ## Python (`/api/py/*` → FastAPI :8000)
 Express reenvía `/api/py/<ruta>` a `PY_API_URL/<ruta>`. Si Python no responde: `503 { "error": "python api offline" }`. Respuestas mock incluyen `"_mock": true`.

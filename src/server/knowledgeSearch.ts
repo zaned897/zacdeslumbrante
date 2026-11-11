@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { sourceInfo } from './sourceDates.ts';
 
 // Búsqueda BM25 sobre el corpus que genera `services/kb` (python -m kb.ingest).
 // PROTO: port directo de services/kb/kb/search.py para no levantar Python en cada consulta;
@@ -145,8 +146,14 @@ export function corpusSize(): number {
   return loadIndex()?.chunks.length ?? 0;
 }
 
+/** Fecha de revisión de un fragmento: la de su fuente curada (#83) o, si no se conoce, la de la ingesta. */
+export function reviewedAt(c: KnowledgeChunk): string {
+  return sourceInfo(c.sourceUrl)?.reviewedAt ?? c.fetchedAt.slice(0, 10);
+}
+
+/** «<nombre> · Revisado AAAA-MM-DD · <url>»: va dentro de [Fuente: …] (#83). */
 export function citation(c: KnowledgeChunk): string {
-  return `${displayTitle(c)} · ${c.url} · consultado ${c.fetchedAt.slice(0, 10)}`;
+  return `${displayTitle(c)} · Revisado ${reviewedAt(c)} · ${c.url}`;
 }
 
 export function promptContext(hits: KnowledgeHit[]): string {
