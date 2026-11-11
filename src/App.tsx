@@ -137,8 +137,15 @@ export default function App() {
   // Chat Send & Streaming Logic via SSE
   // Llena un mensaje del asistente con la respuesta en streaming: breve al preguntar, completa al «Ampliar» (#158).
   const streamAnswer = useCallback(
-    async (assistantMsgId: string, question: string, history: ChatMessage[], brief: boolean) => {
+    async (
+      assistantMsgId: string,
+      question: string,
+      history: ChatMessage[],
+      brief: boolean,
+    ): Promise<{ status: 'done' | 'aborted' | 'error'; received: boolean }> => {
       setIsStreaming(true);
+      let status: 'done' | 'aborted' | 'error' = 'done';
+      let received = false;
 
       const controller = new AbortController();
       abortControllerRef.current = controller;
@@ -201,6 +208,7 @@ export default function App() {
                 );
               } else if (parsed.chunk) {
                 accumulatedContent += parsed.chunk;
+                received = true;
                 setMessages((prev) =>
                   prev.map((m) =>
                     m.id === assistantMsgId
@@ -209,6 +217,7 @@ export default function App() {
                   )
                 );
               } else if (parsed.error) {
+                status = 'error';
                 accumulatedContent += `\n\n⚠️ ${parsed.error}`;
                 setMessages((prev) =>
                   prev.map((m) =>
@@ -221,6 +230,7 @@ export default function App() {
             } catch {
               // Raw string chunk fallback
               accumulatedContent += dataStr;
+              received = true;
               setMessages((prev) =>
                 prev.map((m) =>
                   m.id === assistantMsgId
@@ -252,8 +262,10 @@ export default function App() {
         }
       } catch (err: unknown) {
         if ((err as Error)?.name === 'AbortError') {
+          status = 'aborted';
           console.log('Stream aborted by user');
         } else {
+          status = 'error';
           console.error('Chat stream error:', err);
           const errText =
             language === 'es'
@@ -271,6 +283,7 @@ export default function App() {
         setIsStreaming(false);
         abortControllerRef.current = null;
       }
+      return { status, received };
     },
     [knowledgeBase, language]
   );
@@ -318,7 +331,12 @@ export default function App() {
         )
       );
       // Historial: lo que había antes de la pregunta original.
-      await streamAnswer(id, target.question, messages.slice(0, Math.max(0, index - 1)), false);
+      const result = await streamAnswer(id, target.question, messages.slice(0, Math.max(0, index - 1)), false);
+      // Si la ampliación falla, o se detiene antes de que llegue texto, vuelve la respuesta breve
+      // con su «Ampliar» para reintentar (hallazgo de Codex).
+      if (result.status === 'error' || (result.status === 'aborted' && !result.received)) {
+        setMessages((prev) => prev.map((m) => (m.id === id ? { ...target, isStreaming: false } : m)));
+      }
     },
     [isStreaming, messages, streamAnswer]
   );

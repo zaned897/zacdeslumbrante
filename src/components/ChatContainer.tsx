@@ -52,9 +52,15 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
     [],
   );
 
-  // Auto-scroll when new messages or stream chunks arrive
+  // Baja al final cuando llega un mensaje nuevo o mientras se escribe el último. Al «Ampliar»
+  // una respuesta anterior (#158) solo crece ese globo: la vista se queda donde está.
+  const messageCount = useRef(messages.length);
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const grew = messages.length !== messageCount.current;
+    messageCount.current = messages.length;
+    if (grew || messages[messages.length - 1]?.isStreaming) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
   }, [messages]);
 
   // Auto-resize textarea
