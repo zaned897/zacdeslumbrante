@@ -28,53 +28,13 @@
       "targetId": "gorditas-la-imaginaria",
       "kind": "pattern",
       "from": "13:00",
-      "to": "16:00",
+      "to": "15:00",
       "crowd": "alta",
       "waitMin": 20
     },
     {
       "_mock": true,
-      "id": "gorditas-la-imaginaria-4",
-      "targetId": "gorditas-la-imaginaria",
-      "kind": "pattern",
-      "from": "16:00",
-      "to": "19:00",
-      "crowd": "media",
-      "waitMin": 8
-    },
-    {
-      "_mock": true,
-      "id": "gorditas-la-imaginaria-5",
-      "targetId": "gorditas-la-imaginaria",
-      "kind": "pattern",
-      "from": "19:00",
-      "to": "23:59",
-      "crowd": "baja",
-      "waitMin": 4
-    },
-    {
-      "_mock": true,
       "id": "asados-el-inventado-1",
-      "targetId": "asados-el-inventado",
-      "kind": "pattern",
-      "from": "08:00",
-      "to": "11:00",
-      "crowd": "baja",
-      "waitMin": 3
-    },
-    {
-      "_mock": true,
-      "id": "asados-el-inventado-2",
-      "targetId": "asados-el-inventado",
-      "kind": "pattern",
-      "from": "11:00",
-      "to": "13:00",
-      "crowd": "media",
-      "waitMin": 10
-    },
-    {
-      "_mock": true,
-      "id": "asados-el-inventado-3",
       "targetId": "asados-el-inventado",
       "kind": "pattern",
       "from": "13:00",
@@ -84,30 +44,20 @@
     },
     {
       "_mock": true,
-      "id": "asados-el-inventado-4",
+      "id": "asados-el-inventado-2",
       "targetId": "asados-el-inventado",
       "kind": "pattern",
       "from": "16:00",
-      "to": "19:00",
+      "to": "18:00",
       "crowd": "media",
       "waitMin": 8
-    },
-    {
-      "_mock": true,
-      "id": "asados-el-inventado-5",
-      "targetId": "asados-el-inventado",
-      "kind": "pattern",
-      "from": "19:00",
-      "to": "23:59",
-      "crowd": "baja",
-      "waitMin": 4
     },
     {
       "_mock": true,
       "id": "dulceria-de-muestra-1",
       "targetId": "dulceria-de-muestra",
       "kind": "pattern",
-      "from": "08:00",
+      "from": "10:00",
       "to": "12:00",
       "crowd": "baja",
       "waitMin": 2
@@ -134,20 +84,10 @@
     },
     {
       "_mock": true,
-      "id": "dulceria-de-muestra-4",
-      "targetId": "dulceria-de-muestra",
-      "kind": "pattern",
-      "from": "20:00",
-      "to": "23:59",
-      "crowd": "baja",
-      "waitMin": 2
-    },
-    {
-      "_mock": true,
       "id": "cafe-ejemplo-tacuba-1",
       "targetId": "cafe-ejemplo-tacuba",
       "kind": "pattern",
-      "from": "07:00",
+      "from": "08:00",
       "to": "10:00",
       "crowd": "media",
       "waitMin": 8
@@ -188,7 +128,7 @@
       "targetId": "cafe-ejemplo-tacuba",
       "kind": "pattern",
       "from": "20:00",
-      "to": "23:59",
+      "to": "21:00",
       "crowd": "media",
       "waitMin": 6
     },
@@ -197,24 +137,14 @@
       "id": "antojitos-ficticios-1",
       "targetId": "antojitos-ficticios",
       "kind": "pattern",
-      "from": "08:00",
-      "to": "11:00",
-      "crowd": "baja",
-      "waitMin": 3
-    },
-    {
-      "_mock": true,
-      "id": "antojitos-ficticios-2",
-      "targetId": "antojitos-ficticios",
-      "kind": "pattern",
-      "from": "11:00",
+      "from": "12:00",
       "to": "13:00",
       "crowd": "media",
       "waitMin": 10
     },
     {
       "_mock": true,
-      "id": "antojitos-ficticios-3",
+      "id": "antojitos-ficticios-2",
       "targetId": "antojitos-ficticios",
       "kind": "pattern",
       "from": "13:00",
@@ -224,7 +154,7 @@
     },
     {
       "_mock": true,
-      "id": "antojitos-ficticios-4",
+      "id": "antojitos-ficticios-3",
       "targetId": "antojitos-ficticios",
       "kind": "pattern",
       "from": "16:00",
@@ -234,11 +164,11 @@
     },
     {
       "_mock": true,
-      "id": "antojitos-ficticios-5",
+      "id": "antojitos-ficticios-4",
       "targetId": "antojitos-ficticios",
       "kind": "pattern",
       "from": "19:00",
-      "to": "23:59",
+      "to": "22:00",
       "crowd": "baja",
       "waitMin": 4
     },
@@ -247,7 +177,7 @@
       "id": "nieves-de-prueba-1",
       "targetId": "nieves-de-prueba",
       "kind": "pattern",
-      "from": "08:00",
+      "from": "11:00",
       "to": "12:00",
       "crowd": "baja",
       "waitMin": 2
@@ -274,37 +204,7 @@
     },
     {
       "_mock": true,
-      "id": "nieves-de-prueba-4",
-      "targetId": "nieves-de-prueba",
-      "kind": "pattern",
-      "from": "20:00",
-      "to": "23:59",
-      "crowd": "baja",
-      "waitMin": 2
-    },
-    {
-      "_mock": true,
       "id": "fonda-dona-ejemplo-1",
-      "targetId": "fonda-dona-ejemplo",
-      "kind": "pattern",
-      "from": "08:00",
-      "to": "11:00",
-      "crowd": "baja",
-      "waitMin": 3
-    },
-    {
-      "_mock": true,
-      "id": "fonda-dona-ejemplo-2",
-      "targetId": "fonda-dona-ejemplo",
-      "kind": "pattern",
-      "from": "11:00",
-      "to": "13:00",
-      "crowd": "media",
-      "waitMin": 10
-    },
-    {
-      "_mock": true,
-      "id": "fonda-dona-ejemplo-3",
       "targetId": "fonda-dona-ejemplo",
       "kind": "pattern",
       "from": "13:00",
@@ -314,30 +214,20 @@
     },
     {
       "_mock": true,
-      "id": "fonda-dona-ejemplo-4",
+      "id": "fonda-dona-ejemplo-2",
       "targetId": "fonda-dona-ejemplo",
       "kind": "pattern",
       "from": "16:00",
-      "to": "19:00",
+      "to": "17:00",
       "crowd": "media",
       "waitMin": 8
-    },
-    {
-      "_mock": true,
-      "id": "fonda-dona-ejemplo-5",
-      "targetId": "fonda-dona-ejemplo",
-      "kind": "pattern",
-      "from": "19:00",
-      "to": "23:59",
-      "crowd": "baja",
-      "waitMin": 4
     },
     {
       "_mock": true,
       "id": "cafe-imaginario-del-portal-1",
       "targetId": "cafe-imaginario-del-portal",
       "kind": "pattern",
-      "from": "07:00",
+      "from": "09:00",
       "to": "10:00",
       "crowd": "media",
       "waitMin": 8
@@ -378,7 +268,7 @@
       "targetId": "cafe-imaginario-del-portal",
       "kind": "pattern",
       "from": "20:00",
-      "to": "23:59",
+      "to": "22:00",
       "crowd": "media",
       "waitMin": 6
     },
@@ -408,97 +298,67 @@
       "targetId": "birrieria-la-inventada",
       "kind": "pattern",
       "from": "13:00",
-      "to": "16:00",
+      "to": "14:00",
       "crowd": "alta",
       "waitMin": 20
-    },
-    {
-      "_mock": true,
-      "id": "birrieria-la-inventada-4",
-      "targetId": "birrieria-la-inventada",
-      "kind": "pattern",
-      "from": "16:00",
-      "to": "19:00",
-      "crowd": "media",
-      "waitMin": 8
-    },
-    {
-      "_mock": true,
-      "id": "birrieria-la-inventada-5",
-      "targetId": "birrieria-la-inventada",
-      "kind": "pattern",
-      "from": "19:00",
-      "to": "23:59",
-      "crowd": "baja",
-      "waitMin": 4
     },
     {
       "_mock": true,
       "id": "tamales-de-muestra-1",
       "targetId": "tamales-de-muestra",
       "kind": "pattern",
-      "from": "08:00",
-      "to": "11:00",
-      "crowd": "baja",
-      "waitMin": 3
+      "from": "07:00",
+      "to": "09:00",
+      "crowd": "alta",
+      "waitMin": 15
     },
     {
       "_mock": true,
       "id": "tamales-de-muestra-2",
       "targetId": "tamales-de-muestra",
       "kind": "pattern",
-      "from": "11:00",
-      "to": "13:00",
+      "from": "09:00",
+      "to": "11:00",
       "crowd": "media",
-      "waitMin": 10
+      "waitMin": 6
     },
     {
       "_mock": true,
       "id": "tamales-de-muestra-3",
       "targetId": "tamales-de-muestra",
       "kind": "pattern",
-      "from": "13:00",
-      "to": "16:00",
-      "crowd": "alta",
-      "waitMin": 20
-    },
-    {
-      "_mock": true,
-      "id": "tamales-de-muestra-4",
-      "targetId": "tamales-de-muestra",
-      "kind": "pattern",
-      "from": "16:00",
+      "from": "18:00",
       "to": "19:00",
       "crowd": "media",
       "waitMin": 8
     },
     {
       "_mock": true,
-      "id": "tamales-de-muestra-5",
+      "id": "tamales-de-muestra-4",
       "targetId": "tamales-de-muestra",
       "kind": "pattern",
       "from": "19:00",
-      "to": "23:59",
-      "crowd": "baja",
-      "waitMin": 4
+      "to": "21:00",
+      "crowd": "alta",
+      "waitMin": 15
     },
     {
       "_mock": true,
       "id": "panaderia-ficticia-1",
       "targetId": "panaderia-ficticia",
       "kind": "pattern",
-      "from": "08:00",
-      "to": "12:00",
-      "crowd": "baja",
-      "waitMin": 2
+      "from": "07:00",
+      "to": "09:00",
+      "crowd": "alta",
+      "waitMin": 12
     },
     {
       "_mock": true,
       "id": "panaderia-ficticia-2",
       "targetId": "panaderia-ficticia",
       "kind": "pattern",
-      "from": "12:00",
-      "to": "17:00",
+      "from": "09:00",
+      "to": "12:00",
       "crowd": "media",
       "waitMin": 6
     },
@@ -507,44 +367,14 @@
       "id": "panaderia-ficticia-3",
       "targetId": "panaderia-ficticia",
       "kind": "pattern",
-      "from": "17:00",
-      "to": "20:00",
-      "crowd": "alta",
-      "waitMin": 15
-    },
-    {
-      "_mock": true,
-      "id": "panaderia-ficticia-4",
-      "targetId": "panaderia-ficticia",
-      "kind": "pattern",
-      "from": "20:00",
-      "to": "23:59",
+      "from": "12:00",
+      "to": "14:00",
       "crowd": "baja",
       "waitMin": 2
     },
     {
       "_mock": true,
       "id": "mezcaleria-de-ejemplo-1",
-      "targetId": "mezcaleria-de-ejemplo",
-      "kind": "pattern",
-      "from": "07:00",
-      "to": "12:00",
-      "crowd": "baja",
-      "waitMin": 3
-    },
-    {
-      "_mock": true,
-      "id": "mezcaleria-de-ejemplo-2",
-      "targetId": "mezcaleria-de-ejemplo",
-      "kind": "pattern",
-      "from": "12:00",
-      "to": "18:00",
-      "crowd": "media",
-      "waitMin": 7
-    },
-    {
-      "_mock": true,
-      "id": "mezcaleria-de-ejemplo-3",
       "targetId": "mezcaleria-de-ejemplo",
       "kind": "pattern",
       "from": "18:00",
@@ -578,36 +408,16 @@
       "targetId": "gorditas-de-prueba-torreon",
       "kind": "pattern",
       "from": "13:00",
-      "to": "16:00",
+      "to": "14:00",
       "crowd": "alta",
       "waitMin": 20
-    },
-    {
-      "_mock": true,
-      "id": "gorditas-de-prueba-torreon-4",
-      "targetId": "gorditas-de-prueba-torreon",
-      "kind": "pattern",
-      "from": "16:00",
-      "to": "19:00",
-      "crowd": "media",
-      "waitMin": 8
-    },
-    {
-      "_mock": true,
-      "id": "gorditas-de-prueba-torreon-5",
-      "targetId": "gorditas-de-prueba-torreon",
-      "kind": "pattern",
-      "from": "19:00",
-      "to": "23:59",
-      "crowd": "baja",
-      "waitMin": 4
     },
     {
       "_mock": true,
       "id": "cafe-simulado-allende-1",
       "targetId": "cafe-simulado-allende",
       "kind": "pattern",
-      "from": "07:00",
+      "from": "09:00",
       "to": "10:00",
       "crowd": "media",
       "waitMin": 8
@@ -644,50 +454,40 @@
     },
     {
       "_mock": true,
-      "id": "cafe-simulado-allende-5",
-      "targetId": "cafe-simulado-allende",
-      "kind": "pattern",
-      "from": "20:00",
-      "to": "23:59",
-      "crowd": "media",
-      "waitMin": 6
-    },
-    {
-      "_mock": true,
       "id": "jugos-la-inventada-1",
       "targetId": "jugos-la-inventada",
       "kind": "pattern",
-      "from": "07:00",
-      "to": "12:00",
-      "crowd": "baja",
-      "waitMin": 3
+      "from": "07:30",
+      "to": "10:00",
+      "crowd": "alta",
+      "waitMin": 12
     },
     {
       "_mock": true,
       "id": "jugos-la-inventada-2",
       "targetId": "jugos-la-inventada",
       "kind": "pattern",
-      "from": "12:00",
-      "to": "18:00",
+      "from": "10:00",
+      "to": "13:00",
       "crowd": "media",
-      "waitMin": 7
+      "waitMin": 6
     },
     {
       "_mock": true,
       "id": "jugos-la-inventada-3",
       "targetId": "jugos-la-inventada",
       "kind": "pattern",
-      "from": "18:00",
-      "to": "23:59",
-      "crowd": "alta",
-      "waitMin": 18
+      "from": "13:00",
+      "to": "15:00",
+      "crowd": "baja",
+      "waitMin": 3
     },
     {
       "_mock": true,
       "id": "plateria-de-muestra-1",
       "targetId": "plateria-de-muestra",
       "kind": "pattern",
-      "from": "09:00",
+      "from": "10:00",
       "to": "12:00",
       "crowd": "baja",
       "waitMin": 0
@@ -708,7 +508,7 @@
       "targetId": "plateria-de-muestra",
       "kind": "pattern",
       "from": "18:00",
-      "to": "23:59",
+      "to": "19:00",
       "crowd": "baja",
       "waitMin": 0
     },
@@ -717,7 +517,7 @@
       "id": "artesanias-ficticias-1",
       "targetId": "artesanias-ficticias",
       "kind": "pattern",
-      "from": "09:00",
+      "from": "10:00",
       "to": "12:00",
       "crowd": "baja",
       "waitMin": 0
@@ -738,7 +538,7 @@
       "targetId": "artesanias-ficticias",
       "kind": "pattern",
       "from": "18:00",
-      "to": "23:59",
+      "to": "19:00",
       "crowd": "baja",
       "waitMin": 0
     },
@@ -747,48 +547,28 @@
       "id": "elotes-de-ejemplo-1",
       "targetId": "elotes-de-ejemplo",
       "kind": "pattern",
-      "from": "08:00",
-      "to": "11:00",
-      "crowd": "baja",
-      "waitMin": 3
-    },
-    {
-      "_mock": true,
-      "id": "elotes-de-ejemplo-2",
-      "targetId": "elotes-de-ejemplo",
-      "kind": "pattern",
-      "from": "11:00",
-      "to": "13:00",
-      "crowd": "media",
-      "waitMin": 10
-    },
-    {
-      "_mock": true,
-      "id": "elotes-de-ejemplo-3",
-      "targetId": "elotes-de-ejemplo",
-      "kind": "pattern",
-      "from": "13:00",
-      "to": "16:00",
-      "crowd": "alta",
-      "waitMin": 20
-    },
-    {
-      "_mock": true,
-      "id": "elotes-de-ejemplo-4",
-      "targetId": "elotes-de-ejemplo",
-      "kind": "pattern",
-      "from": "16:00",
+      "from": "17:00",
       "to": "19:00",
       "crowd": "media",
       "waitMin": 8
     },
     {
       "_mock": true,
-      "id": "elotes-de-ejemplo-5",
+      "id": "elotes-de-ejemplo-2",
       "targetId": "elotes-de-ejemplo",
       "kind": "pattern",
       "from": "19:00",
-      "to": "23:59",
+      "to": "21:00",
+      "crowd": "alta",
+      "waitMin": 15
+    },
+    {
+      "_mock": true,
+      "id": "elotes-de-ejemplo-3",
+      "targetId": "elotes-de-ejemplo",
+      "kind": "pattern",
+      "from": "21:00",
+      "to": "22:00",
       "crowd": "baja",
       "waitMin": 4
     },
@@ -797,48 +577,28 @@
       "id": "cocina-imaginaria-codina-1",
       "targetId": "cocina-imaginaria-codina",
       "kind": "pattern",
-      "from": "08:00",
-      "to": "11:00",
-      "crowd": "baja",
-      "waitMin": 3
+      "from": "18:00",
+      "to": "20:00",
+      "crowd": "media",
+      "waitMin": 10
     },
     {
       "_mock": true,
       "id": "cocina-imaginaria-codina-2",
       "targetId": "cocina-imaginaria-codina",
       "kind": "pattern",
-      "from": "11:00",
-      "to": "13:00",
-      "crowd": "media",
-      "waitMin": 10
+      "from": "20:00",
+      "to": "22:00",
+      "crowd": "alta",
+      "waitMin": 20
     },
     {
       "_mock": true,
       "id": "cocina-imaginaria-codina-3",
       "targetId": "cocina-imaginaria-codina",
       "kind": "pattern",
-      "from": "13:00",
-      "to": "16:00",
-      "crowd": "alta",
-      "waitMin": 20
-    },
-    {
-      "_mock": true,
-      "id": "cocina-imaginaria-codina-4",
-      "targetId": "cocina-imaginaria-codina",
-      "kind": "pattern",
-      "from": "16:00",
-      "to": "19:00",
-      "crowd": "media",
-      "waitMin": 8
-    },
-    {
-      "_mock": true,
-      "id": "cocina-imaginaria-codina-5",
-      "targetId": "cocina-imaginaria-codina",
-      "kind": "pattern",
-      "from": "19:00",
-      "to": "23:59",
+      "from": "22:00",
+      "to": "23:00",
       "crowd": "baja",
       "waitMin": 4
     },
@@ -847,7 +607,7 @@
       "id": "dulces-de-prueba-torreon-1",
       "targetId": "dulces-de-prueba-torreon",
       "kind": "pattern",
-      "from": "08:00",
+      "from": "10:00",
       "to": "12:00",
       "crowd": "baja",
       "waitMin": 2
@@ -868,19 +628,9 @@
       "targetId": "dulces-de-prueba-torreon",
       "kind": "pattern",
       "from": "17:00",
-      "to": "20:00",
+      "to": "19:00",
       "crowd": "alta",
       "waitMin": 15
-    },
-    {
-      "_mock": true,
-      "id": "dulces-de-prueba-torreon-4",
-      "targetId": "dulces-de-prueba-torreon",
-      "kind": "pattern",
-      "from": "20:00",
-      "to": "23:59",
-      "crowd": "baja",
-      "waitMin": 2
     },
     {
       "_mock": true,
