@@ -1,30 +1,14 @@
-import os
-import secrets
-from typing import Annotated
-
-from fastapi import APIRouter, Depends, Header, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query
 
 from app.models.common import LocalizedText
 from app.models.nearby import NearbyList, VendorList
 from app.models.vendor_requests import PendingList, RequestReceipt, VendorRequest
 from app.models.world import Vendor
+from app.routers.admin import Admin
 from app.services import vendor_requests
 from app.services.world import get_vendor, nearby, parse_at, published_vendors
 
 router = APIRouter(tags=["world"])
-
-
-def admin(authorization: Annotated[str | None, Header()] = None) -> None:
-    """Revisión de altas: `Authorization: Bearer <ADMIN_TOKEN>` (variable de entorno)."""
-    expected = os.environ.get("ADMIN_TOKEN")
-    if not expected:
-        raise HTTPException(503, "falta configurar ADMIN_TOKEN en el servidor")
-    scheme, _, token = (authorization or "").partition(" ")
-    if scheme.lower() != "bearer" or not secrets.compare_digest(token, expected):
-        raise HTTPException(401, "token de administrador inválido")
-
-
-Admin = Annotated[None, Depends(admin)]
 
 
 @router.get("/vendors", response_model=VendorList, response_model_by_alias=True)

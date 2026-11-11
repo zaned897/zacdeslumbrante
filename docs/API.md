@@ -382,5 +382,59 @@ El agente arma el paseo con **reglas simples, sin LLM**. Las reglas son las de `
   - la estancia es fija por tipo de parada;
   - el presupuesto compara la tarifa de entrada: hasta $50 es `$`, hasta $150 es `$$`.
 
+### GET /api/py/events?date=&town= · POST /api/py/events · PATCH /api/py/events/{id}  · mock · dueño: Claude Code (#160)
+Temporadas, fiestas y eventos, **cargados a mano** por ahora. El modelo ya trae `origin` para cuando lleguen solos (#162). Absorbe las ediciones de la Panamericana (#137) y las fiestas patronales (#76).
+
+`GET /events?date=2026-10-22` (sin `date`, hoy en Zacatecas) devuelve solo los eventos **publicados que caen ese día**:
+```json
+{
+  "date": "2026-10-22",
+  "town": null,
+  "events": [
+    {
+      "id": "panamericana-2026",
+      "kind": "event",
+      "name": { "es": "Carrera Panamericana", "en": "Carrera Panamericana" },
+      "start": "2026-10-22", "end": "2026-10-22",
+      "yearly": false,
+      "townId": null,
+      "edition": 2026,
+      "inZacatecas": true,
+      "seasonId": "panamericana",
+      "provisional": false,
+      "sourceUrl": "https://www.zacatecas.gob.mx/…",
+      "sourceNote": "Gobierno de Zacatecas, 21 de octubre de 2026: meta en Zacatecas",
+      "reviewedAt": "2026-10-21",
+      "origin": "manual",
+      "status": "published",
+      "_mock": true
+    }
+  ]
+}
+```
+- `kind`: `season` (temporada base), `festival` (fiesta) o `event` (un día o una edición).
+- **Fechas:**
+  - `start` y `end` son inclusivas (AAAA-MM-DD).
+  - Con `yearly: true` se repiten cada año en los mismos días, a partir del año de `start`. Pueden cruzar el año: Posadas y Navidad va del 16 dic al 6 ene.
+- `town`:
+  - sin él, salen los eventos de la capital y de todo el estado (`townId: null`);
+  - con él, también los de ese pueblo (`towns.json`). La fiesta patronal de cada pueblo apunta aquí desde `patronalFeast.eventId`.
+- **Orden:** evento, luego fiesta, luego temporada; gana el primero que coincide, como en `src/data/seasons.ts`. `seasonId` dice qué temporada del front viste la app.
+- **Panamericana:** cada edición es un evento con su `edition`. Una edición con `inZacatecas: false` se guarda, pero nunca se activa.
+- **Manual sobre automático:** si un evento `auto` cae el mismo día, en el mismo lugar (`townId`) y del mismo tipo (`kind`) que uno `manual`, solo sale el manual.
+- **Fuentes:**
+  - `provisional: true` hasta confirmar la fecha de ese año;
+  - una fecha confirmada (`provisional: false`) exige `sourceUrl`; sin ella, 422;
+  - `reviewedAt` es cuándo se revisó la fuente.
+
+**Carga manual**, con `Authorization: Bearer <ADMIN_TOKEN>` (el mismo de #172):
+- `POST /events` con los mismos campos, sin `id` si se quiere. Responde 201 con el evento.
+  - Sin `id`, se arma con el nombre y la edición: `carrera-panamericana-2027`.
+  - Por omisión: `origin: "manual"`, `status: "published"` y `_mock: false`.
+  - Si el id ya existe, 409.
+- `PATCH /events/{id}` cambia solo los campos que llegan y vuelve a validar el evento. Responde 404 si no existe y 422 si queda inválido.
+- Errores de token: sin token o con uno incorrecto, 401. Sin `ADMIN_TOKEN` configurado, 503.
+- PROTO: lo cargado vive en memoria encima de `services/api/app/fixtures/events.json` y se pierde al reiniciar la API.
+
 ## Propuestas pendientes
 (Agrega aquí endpoints nuevos antes de implementarlos: método, ruta, body, respuesta, dueño.)

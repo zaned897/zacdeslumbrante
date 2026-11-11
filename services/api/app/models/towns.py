@@ -45,7 +45,7 @@ class Spot(CamelModel):
 
 
 class PatronalFeast(CamelModel):
-    # Id del evento en events.json de #160; None hasta que exista ese catálogo.
+    # Id del evento en events.json (#160), donde vive la fecha de cada año.
     event_id: str | None = None
     name: LocalizedText
     when: LocalizedText
