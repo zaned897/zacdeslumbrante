@@ -295,5 +295,31 @@ Puestos publicados y lugares del catálogo a menos de `radius` metros (10–2000
 - **`promotion`:** solo dentro de su vigencia. Es información, no cupón.
 - **`recommendations`:** solo las de los últimos 90 días, contadas por visitante. `reason` las menciona a partir de 3.
 
+### POST /api/py/vendors · GET /api/py/vendors/pending · POST /api/py/vendors/{id}/approve  · mock · dueño: Claude Code (#172)
+Alta de un puesto con revisión. Un puesto dado de alta queda **pendiente** y no aparece en `/vendors` ni en `/nearby` hasta que alguien lo aprueba (regla de #153).
+
+`POST /vendors` es público y responde 201:
+```json
+{
+  "name": "Tortas La Solicitud",
+  "kind": "food",
+  "specialty": "Tortas de lomo",
+  "lat": 22.7752, "lng": -102.5727,
+  "street": "Avenida Hidalgo",
+  "hours": [{ "days": [0, 1, 2, 3, 4, 5, 6], "open": "09:00", "close": "18:00" }],
+  "priceRange": "$",
+  "promotion": { "title": "Torta y agua", "start": "2026-11-01T09:00:00-06:00", "end": "2026-11-30T18:00:00-06:00" },
+  "contact": { "phone": "…", "email": "…" }
+}
+```
+→ `{ "id": "alta-1-tortas-la-solicitud", "status": "pending", "message": { "es": "…", "en": "…" } }`
+- `lat`/`lng` deben caer en el Centro Histórico (22.760–22.790, -102.590 a -102.560); si no, 422. `promotion` y `contact` son opcionales.
+- **Revisión**, con `Authorization: Bearer <ADMIN_TOKEN>` (variable de entorno):
+  - `GET /vendors/pending` → `{ "pending": [{ "vendor": Vendor, "promotion": …, "contact": …, "receivedAt": "…" }] }`.
+  - `POST /vendors/{id}/approve` → el `Vendor` publicado. Desde ese momento sale en `/vendors` y en `/nearby`, con su promoción si la trae.
+- Errores: sin token o con uno incorrecto, 401. Sin `ADMIN_TOKEN` configurado, 503. Si no hay solicitud pendiente con ese id, 404.
+- El contacto solo se ve en la revisión: **nunca** sale en `/vendors` ni en `/nearby`.
+- PROTO: las solicitudes viven en memoria y se pierden al reiniciar la API; pasan a la base de datos de las cuentas cuando exista.
+
 ## Propuestas pendientes
 (Agrega aquí endpoints nuevos antes de implementarlos: método, ruta, body, respuesta, dueño.)

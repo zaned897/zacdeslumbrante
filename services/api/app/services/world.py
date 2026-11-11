@@ -27,6 +27,7 @@ from app.models.world import (
     Vendor,
     VendorFile,
 )
+from app.services import vendor_requests
 
 FIXTURES = Path(__file__).resolve().parent.parent / "fixtures"
 # Zacatecas no cambia de horario desde 2022: UTC-6 todo el año.
@@ -66,8 +67,9 @@ def _places() -> tuple[dict, ...]:
 
 
 def published_vendors() -> list[Vendor]:
-    """Solo los puestos publicados; los pendientes de revisión nunca salen."""
-    return [v for v in _fixture_vendors() if v.status == "published"]
+    """Solo los puestos publicados, del fixture y los aprobados (#172); los pendientes nunca."""
+    fixture = [v for v in _fixture_vendors() if v.status == "published"]
+    return fixture + vendor_requests.approved_vendors()
 
 
 def get_vendor(vendor_id: str) -> Vendor | None:
@@ -102,7 +104,7 @@ def _slot(target_id: str, moment: datetime) -> CrowdReport | None:
 
 
 def _promotion(vendor_id: str, moment: datetime) -> ActivePromotion | None:
-    for p in _promotions():
+    for p in (*_promotions(), *vendor_requests.approved_promotions()):
         if p.vendor_id == vendor_id and parse_at(p.start) <= moment <= parse_at(p.end):
             return ActivePromotion(id=p.id, title=p.title, end=p.end)
     return None

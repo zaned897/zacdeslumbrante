@@ -1,15 +1,62 @@
-from fastapi import APIRouter, HTTPException, Query
+import os
+import secrets
+from typing import Annotated
 
+from fastapi import APIRouter, Depends, Header, HTTPException, Query
+
+from app.models.common import LocalizedText
 from app.models.nearby import NearbyList, VendorList
+from app.models.vendor_requests import PendingList, RequestReceipt, VendorRequest
 from app.models.world import Vendor
+from app.services import vendor_requests
 from app.services.world import get_vendor, nearby, parse_at, published_vendors
 
 router = APIRouter(tags=["world"])
 
 
+def admin(authorization: Annotated[str | None, Header()] = None) -> None:
+    """Revisión de altas: `Authorization: Bearer <ADMIN_TOKEN>` (variable de entorno)."""
+    expected = os.environ.get("ADMIN_TOKEN")
+    if not expected:
+        raise HTTPException(503, "falta configurar ADMIN_TOKEN en el servidor")
+    scheme, _, token = (authorization or "").partition(" ")
+    if scheme.lower() != "bearer" or not secrets.compare_digest(token, expected):
+        raise HTTPException(401, "token de administrador inválido")
+
+
+Admin = Annotated[None, Depends(admin)]
+
+
 @router.get("/vendors", response_model=VendorList, response_model_by_alias=True)
 def get_vendors() -> VendorList:
     return VendorList(vendors=published_vendors())
+
+
+@router.post(
+    "/vendors", response_model=RequestReceipt, response_model_by_alias=True, status_code=201
+)
+def post_vendor(request: VendorRequest) -> RequestReceipt:
+    vendor_id = vendor_requests.submit(request)
+    return RequestReceipt(
+        id=vendor_id,
+        message=LocalizedText(
+            es="Recibimos tu solicitud. Se publica cuando alguien la revise.",
+            en="We got your request. It goes live once someone reviews it.",
+        ),
+    )
+
+
+@router.get("/vendors/pending", response_model=PendingList, response_model_by_alias=True)
+def get_pending(_: Admin) -> PendingList:
+    return PendingList(pending=vendor_requests.pending())
+
+
+@router.post("/vendors/{vendor_id}/approve", response_model=Vendor, response_model_by_alias=True)
+def post_approve(vendor_id: str, _: Admin) -> Vendor:
+    vendor = vendor_requests.approve(vendor_id)
+    if vendor is None:
+        raise HTTPException(status_code=404, detail=f"No hay una solicitud pendiente '{vendor_id}'")
+    return vendor
 
 
 @router.get("/vendors/{vendor_id}", response_model=Vendor, response_model_by_alias=True)
