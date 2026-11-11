@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.routers import (
     account,
+    agent,
     challenges,
     collaborators,
     photos,
@@ -24,6 +25,7 @@ app.add_middleware(
 )
 
 app.include_router(account.router)
+app.include_router(agent.router)
 app.include_router(challenges.router)
 app.include_router(collaborators.router)
 app.include_router(photos.router)

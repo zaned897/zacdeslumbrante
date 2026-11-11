@@ -32,3 +32,14 @@ flowchart LR
 - que los nombres se vean inventados;
 - que los puntos caigan sobre su calle;
 - que las referencias existan y las franjas no se encimen.
+
+## Lugares que el agente puede proponer (#165)
+
+- **`plan_places.json`:** los lugares del catálogo, a pie desde el centro, que tienen horario claro en `src/data/places.ts`: la Catedral, la Plaza de Armas, cuatro museos, el Acueducto y la Mina El Edén.
+  - Horario, tarifa de entrada y `sourceUrl` se copian de `places.ts`. `tests/test_agent_plan.py` falla si dejan de coincidir.
+  - `interests` y `stayMin` son reglas del prototipo, no datos.
+  - Quedan fuera:
+    - el Teatro Calderón, cuyo horario depende de la cartelera;
+    - el Cerro de la Bufa, porque la subida es empinada y el agente aún no calcula pendientes;
+    - el Teleférico, porque termina en otro lugar;
+    - los lugares fuera de la capital.

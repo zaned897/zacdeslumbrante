@@ -320,5 +320,67 @@ Alta de un puesto con revisión. Un puesto dado de alta queda **pendiente** y no
 - El contacto solo se ve en la revisión: **nunca** sale en `/vendors` ni en `/nearby`.
 - PROTO: las solicitudes viven en memoria y se pierden al reiniciar la API; pasan a la base de datos de las cuentas cuando exista.
 
+### POST /api/py/agent/plan  · mock · dueño: Claude Code (#165)
+El agente arma el paseo con **reglas simples, sin LLM**. Las reglas son las de `docs/design/señales-del-agente.md` (#166).
+```json
+{
+  "start": { "lat": 22.7756, "lng": -102.5723 },
+  "minutes": 60,
+  "budget": "$$",
+  "interests": ["museos"],
+  "mobility": "a-pie",
+  "hungry": true,
+  "at": "2026-11-10T13:30:00-06:00",
+  "avoid": ["gorditas-la-imaginaria"]
+}
+```
+- Solo `start` y `minutes` (15–480) son obligatorios.
+- `budget`: `$`, `$$` o `$$$`, como los puestos y los visitantes.
+- `mobility`: `a-pie`, `carriola` o `silla-de-ruedas`.
+- `at`: ISO 8601. Sin zona, hora de Zacatecas; sin `at`, la hora actual.
+- `avoid`: ids que el visitante no quiere («hay mucha espera, dame otra opción»). Con ellos se vuelve a pedir el plan.
+
+→
+```json
+{
+  "_mock": true,
+  "at": "2026-11-10T13:30:00-06:00",
+  "stops": [
+    {
+      "placeId": "gorditas-la-imaginaria",
+      "kind": "vendor",
+      "name": { "es": "Gorditas La Imaginaria", "en": "Gorditas La Imaginaria" },
+      "lat": 22.776323, "lng": -102.572223,
+      "reason": { "es": "Tienes hambre y es comida abierta · a 2 min a pie · a esta hora suele haber afluencia alta · espera estimada de 20 min · 4 visitantes lo recomiendan: para comer rápido · promoción vigente (dato del puesto) hasta el 30 nov", "en": "…" },
+      "arriveAt": "2026-11-10T13:32:00-06:00",
+      "stayMin": 15,
+      "walkMin": 2,
+      "waitMin": 20,
+      "signal": "pattern",
+      "source": "mundo-de-prueba"
+    }
+  ],
+  "totalMin": 54,
+  "notes": [{ "es": "Gorditas La Imaginaria: hay espera larga (unos 20 min). ¿Te propongo otra opción cerca? Pide el plan con avoid: [\"gorditas-la-imaginaria\"].", "en": "…" }]
+}
+```
+- **Candidatos:**
+  - los puestos publicados del mundo de prueba (#170), más los aprobados (#172);
+  - los lugares del catálogo con horario conocido, en `services/api/app/fixtures/plan_places.json`.
+    - Su horario y su tarifa se transcriben de `src/data/places.ts`; un test falla si dejan de coincidir.
+    - `source` es la página oficial de donde sale el horario. En los puestos dice `mundo-de-prueba`.
+- **Orden de las paradas:**
+  1. **Reglas duras:** abierto desde que llega hasta que se va, cabe en el tiempo que queda, dentro del presupuesto y fuera de `avoid`.
+  2. **Interés:** con `hungry`, la primera parada es comida. Con `interests`, solo entran paradas que coinciden.
+  3. **Costo de tiempo:** caminata + espera + estancia. Gana la que deja más margen.
+  4. **Desempates:** una recomendación que coincide con un interés, la distancia más corta, una promoción vigente.
+- La afluencia no ordena nada: solo entra como espera (`waitMin`).
+- Un puesto de cada tipo por plan: no salen dos cafés ni dos comidas.
+- **`notes`:** espera larga (15 min o más) con la sugerencia de `avoid`, comida que no cupo, accesibilidad sin confirmar si `mobility` no es `a-pie`, y el tiempo libre que queda.
+- PROTO:
+  - la caminata es la distancia directa × 1.3, a 70 m/min a pie (60 con carriola y 50 en silla de ruedas);
+  - la estancia es fija por tipo de parada;
+  - el presupuesto compara la tarifa de entrada: hasta $50 es `$`, hasta $150 es `$$`.
+
 ## Propuestas pendientes
 (Agrega aquí endpoints nuevos antes de implementarlos: método, ruta, body, respuesta, dueño.)
