@@ -231,6 +231,7 @@ Pueblos Mágicos de Zacatecas con la estructura común de `docs/design/pueblos-m
 - `pilot: true` marca al pueblo piloto (Guadalupe), el que se recorre en el simulador (#180).
 - Pueden ser `null`: `accessibility`, `patronalFeast`, `howToGet`, `returnTrip` y `timeNeeded.minutes`. Significa que no hay fuente o medición todavía, y la pantalla debe decir «por confirmar». Nunca se rellenan con un estimado.
 - `circuit` va en el orden del recorrido a pie. Una parada sin `lat`/`lng` sale en la lista, pero no en el mapa.
+- `outside`: lugares fuera del centro. Pueden traer `distanceKm`, `hours` y `placeId` cuando el lugar ya está en `src/data/places.ts` (en Villanueva, La Quemada).
 - `patronalFeast.eventId` apuntará a `events.json` de #160. Hoy solo Guadalupe lo trae.
 - `center`: de `places.ts` para los 4 pueblos que ya estaban; del nodo `place=town` de OSM para Villanueva, Teúl y Nochistlán.
 - `heroPhoto`, cuando llegue, usa el formato de Wikimedia Commons de las fotos: `url`, `author`, `license`, `sourceUrl` y `caption`.

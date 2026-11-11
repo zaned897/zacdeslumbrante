@@ -102,15 +102,39 @@ def test_time_slots_do_not_overlap() -> None:
             assert end <= start, target
 
 
-def test_food_is_busier_at_noon_than_at_nine() -> None:
+def _open_at(vendor_id: str, clock: str) -> bool:
+    vendor = next(v for v in VENDORS.vendors if v.id == vendor_id)
+    return any(h.open <= clock < h.close for h in vendor.hours)
+
+
+def test_food_open_at_nine_and_noon_is_busier_at_noon() -> None:
     rank = {"baja": 0, "media": 1, "alta": 2}
 
     def crowd_at(target: str, clock: str) -> int:
         slot = next(r for r in REPORTS.crowd if r.target_id == target and r.from_ <= clock < r.to)
         return rank[slot.crowd]
 
-    food = [v.id for v in VENDORS.vendors if v.kind == "food"]
+    food = [
+        v.id
+        for v in VENDORS.vendors
+        if v.kind == "food" and _open_at(v.id, "09:00") and _open_at(v.id, "13:30")
+    ]
+    assert len(food) >= 3
     assert all(crowd_at(v, "13:30") > crowd_at(v, "09:00") for v in food)
+
+
+def test_crowd_patterns_only_while_the_vendor_is_open() -> None:
+    """Una franja de afluencia de un puesto cae dentro de su horario; el pico también."""
+    vendors = {v.id: v for v in VENDORS.vendors}
+    for vendor in VENDORS.vendors:
+        slots = [r for r in REPORTS.crowd if r.target_id == vendor.id]
+        assert slots, vendor.id
+        for r in slots:
+            assert any(h.open <= r.from_ and r.to <= h.close for h in vendors[vendor.id].hours), (
+                vendor.id,
+                r.from_,
+                r.to,
+            )
 
 
 def test_recommendations_carry_no_ratings_and_vendors_no_contact() -> None:

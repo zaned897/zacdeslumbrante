@@ -1,5 +1,6 @@
 """GET /vendors y GET /nearby con señales según la hora (#171), con las reglas de #166."""
 
+import pytest
 from fastapi.testclient import TestClient
 
 from app.main import app
@@ -101,3 +102,16 @@ def test_radius_limits_results_and_places_are_included() -> None:
 
 def test_bad_at_is_rejected() -> None:
     assert client.get("/nearby", params={**PLAZA, "at": "mañana"}).status_code == 422
+
+
+@pytest.mark.parametrize(
+    "coords",
+    [
+        {"lat": "NaN", "lng": -102.5723},
+        {"lat": 22.7756, "lng": "inf"},
+        {"lat": 91, "lng": -102.5723},
+        {"lat": 22.7756, "lng": -181},
+    ],
+)
+def test_invalid_coordinates_are_422_not_500(coords: dict) -> None:
+    assert client.get("/nearby", params=coords).status_code == 422
