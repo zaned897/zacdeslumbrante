@@ -2,7 +2,7 @@
 
 > Nivel: **boceto**. Idea a futuro para acordar antes de programar. Nada aquí es código ni promesa de producto.
 >
-> El catálogo con miniaturas y la página de cada pueblo, sin la mascota, van aparte: Propuesta H del adelanto y [`pueblos-magicos-datos.md`](pueblos-magicos-datos.md) (#57).
+> Alcance nuevo (9 de nov, #56): primero un pueblo piloto de Zacatecas, probado en el simulador. El piloto, su modelo de datos y las páginas de cada pueblo, sin la mascota, están en la Propuesta J del adelanto y en [`pueblos-magicos-datos.md`](pueblos-magicos-datos.md) (#57).
 
 ## La idea en un minuto
 
