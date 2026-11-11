@@ -1,8 +1,13 @@
+import json
+import re
+from pathlib import Path
+
 from fastapi.testclient import TestClient
 
 from app.main import app
 
 client = TestClient(app)
+ROOT = Path(__file__).resolve().parents[3]
 
 SEVEN = {"guadalupe", "jerez", "villanueva", "pinos", "sombrerete", "teul", "nochistlan"}
 
@@ -74,3 +79,48 @@ def test_unknown_town_is_404() -> None:
 def test_unknown_state_returns_no_towns() -> None:
     body = client.get("/towns", params={"state": "aguascalientes"}).json()
     assert body["towns"] == []
+
+
+def _missing(fixture: object, response: object, path: str = "") -> list[str]:
+    """Rutas que el fixture trae y la respuesta perdió o cambió."""
+    if isinstance(fixture, dict):
+        if not isinstance(response, dict):
+            return [path]
+        return [
+            p
+            for key, value in fixture.items()
+            for p in (
+                _missing(value, response[key], f"{path}.{key}")
+                if key in response
+                else [f"{path}.{key}"]
+            )
+        ]
+    if isinstance(fixture, list):
+        if not isinstance(response, list) or len(fixture) != len(response):
+            return [path]
+        return [
+            p
+            for i, (f, r) in enumerate(zip(fixture, response, strict=True))
+            for p in _missing(f, r, f"{path}[{i}]")
+        ]
+    return [] if fixture == response else [path]
+
+
+def test_detail_keeps_every_field_of_the_fixture() -> None:
+    fixture = json.loads(
+        (ROOT / "services/api/app/fixtures/towns.json").read_text(encoding="utf-8")
+    )
+    for town in fixture["towns"]:
+        body = client.get(f"/towns/{town['id']}").json()
+        assert _missing(town, body) == [], town["id"]
+
+
+def test_place_ids_exist_in_the_catalog() -> None:
+    places_ts = (ROOT / "src/data/places.ts").read_text(encoding="utf-8")
+    known = set(re.findall(r"id:\s*'([a-z0-9-]+)'", places_ts))
+    for town_id in SEVEN:
+        town = client.get(f"/towns/{town_id}").json()
+        linked = [i["placeId"] for i in town["circuit"] + town["outside"] if i.get("placeId")]
+        assert set(linked) <= known, town_id
+    villanueva = client.get("/towns/villanueva").json()
+    assert villanueva["outside"][0]["placeId"] == "la-quemada"

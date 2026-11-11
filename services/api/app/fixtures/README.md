@@ -25,7 +25,8 @@ flowchart LR
   - Una ya terminó, para probar que no se muestra.
 - **`visitors.json`:** 10 visitantes ficticios con intereses, movilidad, presupuesto y tamaño del grupo, para los escenarios del simulador.
 - **`reports.json`:**
-  - `crowd`: afluencia y espera por franja horaria de cada puesto, más la Catedral y la Plaza de Armas. Son patrones (`kind: "pattern"`): el agente los dice como «suele». La comida se llena a mediodía; el café, al atardecer.
+  - `crowd`: afluencia y espera por franja horaria de cada puesto, más la Catedral y la Plaza de Armas. Son patrones (`kind: "pattern"`): el agente los dice como «suele».
+    - Las franjas de un puesto caen dentro de su horario, y su pico también: la comida de mediodía se llena a esa hora, la de la noche en la noche, el pan y los jugos temprano, y el café al atardecer.
   - `recommendations`: el motivo corto de un visitante (`visitorId`) para un puesto o lugar (`targetId`), con fecha. No hay calificaciones ni estrellas. Una tiene más de 90 días, para probar que ya no cuenta.
 
 `tests/test_world_fixtures.py` valida los cuatro archivos contra `app/models/world.py`. También revisa:
