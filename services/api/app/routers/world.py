@@ -53,8 +53,9 @@ def get_vendor_by_id(vendor_id: str) -> Vendor:
 
 @router.get("/nearby", response_model=NearbyList, response_model_by_alias=True)
 def get_nearby(
-    lat: float,
-    lng: float,
+    # Con límites, NaN, infinito o fuera de rango responden 422 en vez de un 500 (Codex).
+    lat: float = Query(ge=-90, le=90),
+    lng: float = Query(ge=-180, le=180),
     radius: int = Query(default=300, ge=10, le=2000),
     at: str | None = None,
     interests: str | None = Query(default=None, description="Lista separada por comas"),

@@ -41,6 +41,8 @@ class Spot(CamelModel):
     note: LocalizedText
     distance_km: float | None = None
     hours: LocalizedText | None = None
+    # Id de src/data/places.ts cuando el lugar ya está en el catálogo (La Quemada).
+    place_id: str | None = None
     source_url: str
 
 
