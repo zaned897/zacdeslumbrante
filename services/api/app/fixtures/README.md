@@ -33,3 +33,24 @@ flowchart LR
 - que los nombres se vean inventados;
 - que los puntos caigan sobre su calle;
 - que las referencias existan y las franjas no se encimen.
+
+## Lugares que el agente puede proponer (#165)
+
+- **`plan_places.json`:** los lugares del catálogo, a pie desde el centro, que tienen horario claro en `src/data/places.ts`: la Catedral, la Plaza de Armas, cuatro museos, el Acueducto y la Mina El Edén.
+  - Horario, tarifa de entrada y `sourceUrl` se copian de `places.ts`. `tests/test_agent_plan.py` falla si dejan de coincidir.
+  - `interests` y `stayMin` son reglas del prototipo, no datos.
+  - Quedan fuera:
+    - el Teatro Calderón, cuyo horario depende de la cartelera;
+    - el Cerro de la Bufa, porque la subida es empinada y el agente aún no calcula pendientes;
+    - el Teleférico, porque termina en otro lugar;
+    - los lugares fuera de la capital.
+
+## Temporadas y eventos (#160)
+
+- **`events.json`:**
+  - las siete temporadas de `src/data/seasons.ts`, con las mismas fechas;
+  - la Carrera Panamericana 2026, como edición, con su fuente;
+  - las fiestas patronales de los pueblos de `towns.json` que traen fecha y fuente: Guadalupe, Jerez, Villanueva y Pinos.
+- Todo va con `provisional: true` salvo la Panamericana 2026, que ya tiene la fecha confirmada.
+- `tests/test_events.py` falla si las fechas dejan de coincidir con `seasons.ts` o si una fiesta de `towns.json` no tiene su evento.
+

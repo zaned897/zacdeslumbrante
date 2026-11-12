@@ -1,0 +1,248 @@
+{
+  "_mock": true,
+  "_source": "Temporadas transcritas de src/data/seasons.ts; fiestas patronales de towns.json (#58), con su fuente. provisional: true hasta confirmar la fecha de cada año.",
+  "events": [
+    {
+      "id": "panamericana-2026",
+      "kind": "event",
+      "name": {
+        "es": "Carrera Panamericana",
+        "en": "Carrera Panamericana"
+      },
+      "start": "2026-10-22",
+      "end": "2026-10-22",
+      "yearly": false,
+      "townId": null,
+      "edition": 2026,
+      "inZacatecas": true,
+      "seasonId": "panamericana",
+      "provisional": false,
+      "sourceUrl": "https://www.zacatecas.gob.mx/zacatecas-alista-operativo-interinstitucional-para-recibir-la-carrera-panamericana-2026/",
+      "sourceNote": "Gobierno de Zacatecas, 21 de octubre de 2026: meta en Zacatecas",
+      "reviewedAt": "2026-10-21",
+      "origin": "manual",
+      "status": "published",
+      "_mock": true
+    },
+    {
+      "id": "muertos",
+      "kind": "festival",
+      "name": {
+        "es": "Día de Muertos",
+        "en": "Day of the Dead"
+      },
+      "start": "2026-11-01",
+      "end": "2026-11-02",
+      "yearly": true,
+      "townId": null,
+      "edition": null,
+      "inZacatecas": true,
+      "seasonId": "muertos",
+      "provisional": true,
+      "sourceUrl": null,
+      "sourceNote": "Por confirmar con el calendario oficial de la Secretaría de Turismo de Zacatecas",
+      "reviewedAt": null,
+      "origin": "manual",
+      "status": "published",
+      "_mock": true
+    },
+    {
+      "id": "feria",
+      "kind": "festival",
+      "name": {
+        "es": "Feria del estado",
+        "en": "State fair"
+      },
+      "start": "2026-09-01",
+      "end": "2026-09-30",
+      "yearly": true,
+      "townId": null,
+      "edition": null,
+      "inZacatecas": true,
+      "seasonId": "feria",
+      "provisional": true,
+      "sourceUrl": null,
+      "sourceNote": "Por confirmar con el calendario oficial de la Secretaría de Turismo de Zacatecas (programa de la Feria Nacional de Zacatecas)",
+      "reviewedAt": null,
+      "origin": "manual",
+      "status": "published",
+      "_mock": true
+    },
+    {
+      "id": "morismas",
+      "kind": "festival",
+      "name": {
+        "es": "Morismas de Bracho",
+        "en": "Morismas de Bracho"
+      },
+      "start": "2026-08-26",
+      "end": "2026-08-31",
+      "yearly": true,
+      "townId": null,
+      "edition": null,
+      "inZacatecas": true,
+      "seasonId": "morismas",
+      "provisional": true,
+      "sourceUrl": null,
+      "sourceNote": "Por confirmar con el calendario oficial de la Secretaría de Turismo de Zacatecas y la cofradía de San Juan Bautista",
+      "reviewedAt": null,
+      "origin": "manual",
+      "status": "published",
+      "_mock": true
+    },
+    {
+      "id": "navidad",
+      "kind": "festival",
+      "name": {
+        "es": "Posadas y Navidad",
+        "en": "Posadas and Christmas"
+      },
+      "start": "2026-12-16",
+      "end": "2027-01-06",
+      "yearly": true,
+      "townId": null,
+      "edition": null,
+      "inZacatecas": true,
+      "seasonId": "navidad",
+      "provisional": true,
+      "sourceUrl": null,
+      "sourceNote": "Por confirmar con el calendario oficial de la Secretaría de Turismo de Zacatecas",
+      "reviewedAt": null,
+      "origin": "manual",
+      "status": "published",
+      "_mock": true
+    },
+    {
+      "id": "primavera",
+      "kind": "season",
+      "name": {
+        "es": "Primavera y Festival Cultural",
+        "en": "Spring and Cultural Festival"
+      },
+      "start": "2026-03-15",
+      "end": "2026-04-30",
+      "yearly": true,
+      "townId": null,
+      "edition": null,
+      "inZacatecas": true,
+      "seasonId": "primavera",
+      "provisional": true,
+      "sourceUrl": null,
+      "sourceNote": "Por confirmar con el calendario oficial de la Secretaría de Turismo de Zacatecas (programa del Festival Cultural Zacatecas)",
+      "reviewedAt": null,
+      "origin": "manual",
+      "status": "published",
+      "_mock": true
+    },
+    {
+      "id": "lluvias",
+      "kind": "season",
+      "name": {
+        "es": "Temporada de lluvias",
+        "en": "Rainy season"
+      },
+      "start": "2026-07-01",
+      "end": "2026-08-25",
+      "yearly": true,
+      "townId": null,
+      "edition": null,
+      "inZacatecas": true,
+      "seasonId": "lluvias",
+      "provisional": true,
+      "sourceUrl": null,
+      "sourceNote": "Aproximado; no es una fiesta",
+      "reviewedAt": null,
+      "origin": "manual",
+      "status": "published",
+      "_mock": true
+    },
+    {
+      "id": "feria-virgen-guadalupe",
+      "kind": "festival",
+      "name": {
+        "es": "Feria de la Virgen de Guadalupe",
+        "en": "Fair of the Virgin of Guadalupe"
+      },
+      "start": "2026-12-01",
+      "end": "2026-12-12",
+      "yearly": true,
+      "townId": "guadalupe",
+      "edition": null,
+      "inZacatecas": true,
+      "seasonId": null,
+      "provisional": true,
+      "sourceUrl": "https://mexicodailypost.news/2025/12/07/the-virgins-fair-has-become-a-state-festival-for-zacatecas/",
+      "sourceNote": "Primera quincena de diciembre; culmina el 12. La edición 46 (2025) terminó el 14, en el Jardín Juárez.",
+      "reviewedAt": "2026-11-10",
+      "origin": "manual",
+      "status": "published",
+      "_mock": true
+    },
+    {
+      "id": "novenario-virgen-soledad-jerez",
+      "kind": "festival",
+      "name": {
+        "es": "Novenario de la Virgen de la Soledad",
+        "en": "Novena of the Virgin of La Soledad"
+      },
+      "start": "2026-09-15",
+      "end": "2026-09-17",
+      "yearly": true,
+      "townId": "jerez",
+      "edition": null,
+      "inZacatecas": true,
+      "seasonId": null,
+      "provisional": true,
+      "sourceUrl": "https://zacatecastravel.com/descargas/miniguiaJerez.pdf",
+      "sourceNote": "Miniguía de Jerez: 15 al 17 de septiembre",
+      "reviewedAt": "2026-11-10",
+      "origin": "manual",
+      "status": "published",
+      "_mock": true
+    },
+    {
+      "id": "feria-san-judas-villanueva",
+      "kind": "festival",
+      "name": {
+        "es": "Feria Regional, en honor a San Judas Tadeo",
+        "en": "Regional Fair, in honor of Saint Jude Thaddeus"
+      },
+      "start": "2026-10-28",
+      "end": "2026-10-28",
+      "yearly": true,
+      "townId": "villanueva",
+      "edition": null,
+      "inZacatecas": true,
+      "seasonId": null,
+      "provisional": true,
+      "sourceUrl": "https://zacatecastravel.com/descargas/miniguiaVillanueva.pdf",
+      "sourceNote": "Miniguía de Villanueva: 28 de octubre",
+      "reviewedAt": "2026-11-10",
+      "origin": "manual",
+      "status": "published",
+      "_mock": true
+    },
+    {
+      "id": "festival-san-matias-pinos",
+      "kind": "festival",
+      "name": {
+        "es": "Festival Regional, en honor a San Matías Apóstol",
+        "en": "Regional Festival, in honor of Saint Matthias"
+      },
+      "start": "2026-02-15",
+      "end": "2026-02-25",
+      "yearly": true,
+      "townId": "pinos",
+      "edition": null,
+      "inZacatecas": true,
+      "seasonId": null,
+      "provisional": true,
+      "sourceUrl": "https://zacatecastravel.com/descargas/miniguiaPinos.pdf",
+      "sourceNote": "Miniguía de Pinos: 15 al 25 de febrero",
+      "reviewedAt": "2026-11-10",
+      "origin": "manual",
+      "status": "published",
+      "_mock": true
+    }
+  ]
+}

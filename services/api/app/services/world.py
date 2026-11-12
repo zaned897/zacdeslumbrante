@@ -62,7 +62,7 @@ def _reports() -> ReportFile:
 
 
 @cache
-def _places() -> tuple[dict, ...]:
+def catalog_places() -> tuple[dict, ...]:
     return tuple(_load("places.json")["places"])
 
 
@@ -103,7 +103,7 @@ def _slot(target_id: str, moment: datetime) -> CrowdReport | None:
     )
 
 
-def _promotion(vendor_id: str, moment: datetime) -> ActivePromotion | None:
+def active_promotion(vendor_id: str, moment: datetime) -> ActivePromotion | None:
     for p in (*_promotions(), *vendor_requests.approved_promotions()):
         if p.vendor_id == vendor_id and parse_at(p.start) <= moment <= parse_at(p.end):
             return ActivePromotion(id=p.id, title=p.title, end=p.end)
@@ -128,7 +128,7 @@ def _recommendations(target_id: str, moment: datetime) -> Recommendations:
     return Recommendations(count=len({r.visitor_id for r in valid}), reasons=ordered)
 
 
-def _distance_m(lat1: float, lng1: float, lat2: float, lng2: float) -> int:
+def distance_m(lat1: float, lng1: float, lat2: float, lng2: float) -> int:
     dlat, dlng = radians(lat2 - lat1), radians(lng2 - lng1)
     a = sin(dlat / 2) ** 2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlng / 2) ** 2
     return round(2 * EARTH_RADIUS_M * asin(sqrt(a)))
@@ -141,7 +141,18 @@ def _reason(item: NearbyItem, moment: datetime) -> LocalizedText:
     if item.open is False:
         es.append("cerrado a esta hora")
         en.append("closed at this time")
-    elif item.crowd:
+    signals_es, signals_en = signal_phrases(item, moment)
+    return LocalizedText(es=" · ".join(es + signals_es), en=" · ".join(en + signals_en))
+
+
+def signal_phrases(item: NearbyItem, moment: datetime) -> tuple[list[str], list[str]]:
+    """Frases de afluencia, espera, recomendaciones y promoción, en español e inglés.
+
+    Las usan `/nearby` y el plan del agente (#165), para que digan lo mismo.
+    """
+    es: list[str] = []
+    en: list[str] = []
+    if item.open is not False and item.crowd:
         text = CROWD_TEXT[item.crowd]
         if item.signal == "pattern":
             es.append(f"a esta hora suele haber {text.es}")
@@ -161,7 +172,7 @@ def _reason(item: NearbyItem, moment: datetime) -> LocalizedText:
         until_es, until_en = _until(parse_at(item.promotion.end), moment)
         es.append(f"promoción vigente (dato del puesto) {until_es}")
         en.append(f"promotion on (vendor's info) {until_en}")
-    return LocalizedText(es=" · ".join(es), en=" · ".join(en))
+    return es, en
 
 
 MONTHS_ES = ("ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic")
@@ -182,7 +193,7 @@ def _until(end: datetime, moment: datetime) -> tuple[str, str]:
     )
 
 
-def _signals(item: NearbyItem, moment: datetime) -> NearbyItem:
+def with_signals(item: NearbyItem, moment: datetime) -> NearbyItem:
     if item.open is not False:
         slot = _slot(item.id, moment)
         if slot:
@@ -209,7 +220,7 @@ def nearby(
     blank = LocalizedText(es="", en="")
     items: list[NearbyItem] = []
     for v in published_vendors():
-        d = _distance_m(lat, lng, v.lat, v.lng)
+        d = distance_m(lat, lng, v.lat, v.lng)
         if d <= radius:
             item = NearbyItem(
                 id=v.id,
@@ -219,14 +230,14 @@ def nearby(
                 lng=v.lng,
                 distance_m=d,
                 open=is_open(v, moment),
-                promotion=_promotion(v.id, moment),
+                promotion=active_promotion(v.id, moment),
                 recommendations=empty,
                 matches=sorted(wanted & set(v.interests)),
                 reason=blank,
             )
-            items.append(_signals(item, moment))
-    for p in _places():
-        d = _distance_m(lat, lng, p["lat"], p["lng"])
+            items.append(with_signals(item, moment))
+    for p in catalog_places():
+        d = distance_m(lat, lng, p["lat"], p["lng"])
         if d <= radius:
             item = NearbyItem(
                 id=p["id"],
@@ -239,7 +250,7 @@ def nearby(
                 recommendations=empty,
                 reason=blank,
             )
-            items.append(_signals(item, moment))
+            items.append(with_signals(item, moment))
     return sorted(
         items,
         key=lambda i: (i.distance_m // 50, -len(i.matches), -i.recommendations.count, i.distance_m),
