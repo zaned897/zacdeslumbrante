@@ -10,6 +10,7 @@ from app.routers import (
     street_life,
     tours,
     towns,
+    world,
 )
 
 app = FastAPI(title="Zacatecas Deslumbrante API", version="0.1.0")
@@ -30,6 +31,7 @@ app.include_router(recommendations.router)
 app.include_router(street_life.router)
 app.include_router(tours.router)
 app.include_router(towns.router)
+app.include_router(world.router)
 
 
 @app.get("/health")

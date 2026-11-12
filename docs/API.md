@@ -236,5 +236,64 @@ Pueblos Mágicos de Zacatecas con la estructura común de `docs/design/pueblos-m
 - `center`: de `places.ts` para los 4 pueblos que ya estaban; del nodo `place=town` de OSM para Villanueva, Teúl y Nochistlán.
 - `heroPhoto`, cuando llegue, usa el formato de Wikimedia Commons de las fotos: `url`, `author`, `license`, `sourceUrl` y `caption`.
 
+### GET /api/py/vendors · GET /api/py/vendors/{id}  · mock · dueño: Claude Code (#171)
+Puestos y comercios **inventados** del mundo de prueba del Centro Histórico (#170). Solo salen los publicados. Datos en `services/api/app/fixtures/vendors.json`; `/vendors/{id}` responde 404 si no existe o no está publicado.
+```json
+{
+  "_mock": true,
+  "vendors": [
+    {
+      "_mock": true,
+      "id": "gorditas-la-imaginaria",
+      "name": "Gorditas La Imaginaria",
+      "kind": "food",
+      "specialty": { "es": "Gorditas de horno y de comal", "en": "Oven and griddle gorditas" },
+      "street": "Avenida Hidalgo",
+      "lat": 22.7754, "lng": -102.5726,
+      "hours": [{ "days": [0, 1, 2, 3, 4, 5, 6], "open": "08:00", "close": "15:00" }],
+      "priceRange": "$",
+      "photoUrl": null,
+      "interests": ["hambre", "comer-rapido", "tradicional", "economico"],
+      "status": "published"
+    }
+  ]
+}
+```
+- `kind`: `food | sweets | coffee | drinks | crafts`. `days`: 0 = lunes … 6 = domingo. `priceRange` sin montos.
+- `street`: calle con nombre de OpenStreetMap sobre la que está el punto.
+
+### GET /api/py/nearby?lat=&lng=&radius=&at=&interests=  · mock · dueño: Claude Code (#171)
+Puestos publicados y lugares del catálogo a menos de `radius` metros (10–2000; por omisión, 300), con sus señales a la hora `at`. Las reglas son las de `docs/design/señales-del-agente.md` (#166).
+- `at`: ISO 8601. Sin zona, se toma la de Zacatecas (-06:00); sin `at`, la hora actual. Un valor inválido responde 422.
+- `interests`: opcional, separado por comas (`hambre,para-ninos`).
+```json
+{
+  "_mock": true,
+  "at": "2026-11-10T13:30:00-06:00",
+  "items": [
+    {
+      "id": "gorditas-la-imaginaria",
+      "kind": "vendor",
+      "name": { "es": "Gorditas La Imaginaria", "en": "Gorditas La Imaginaria" },
+      "lat": 22.7754, "lng": -102.5726,
+      "distanceM": 81,
+      "open": true,
+      "crowd": "alta",
+      "waitMin": 20,
+      "signal": "pattern",
+      "promotion": { "id": "promo-01", "title": { "es": "…", "en": "…" }, "end": "2026-11-30T15:00:00-06:00" },
+      "recommendations": { "count": 4, "reasons": [{ "reason": "comer-rapido", "text": { "es": "Para comer rápido", "en": "For a quick bite" }, "count": 2 }] },
+      "matches": ["hambre"],
+      "reason": { "es": "A 81 m · a esta hora suele haber afluencia alta · espera estimada de 20 min · 4 visitantes lo recomiendan: para comer rápido · promoción vigente (dato del puesto) hasta el 30 nov", "en": "…" }
+    }
+  ]
+}
+```
+- **Orden:** por distancia en tramos de 50 m. Dentro de cada tramo van primero los que coinciden con `interests` (`matches`) y luego los más recomendados.
+- **`crowd` y `waitMin`:** salen de la franja horaria del lugar a la hora `at`. Si está cerrado (`open: false`) van en `null`. `open` es `null` para los lugares del catálogo, que aún no traen horario.
+- **`signal: "pattern"`:** es lo que suele pasar a esa hora; el texto lo dice como «suele». La afluencia nunca se presenta como calidad.
+- **`promotion`:** solo dentro de su vigencia. Es información, no cupón.
+- **`recommendations`:** solo las de los últimos 90 días, contadas por visitante. `reason` las menciona a partir de 3.
+
 ## Propuestas pendientes
 (Agrega aquí endpoints nuevos antes de implementarlos: método, ruta, body, respuesta, dueño.)
