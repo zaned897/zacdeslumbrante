@@ -46,6 +46,7 @@ import { usePlayerPosition, type FallbackReason } from '../scene3d/usePlayerPosi
 import { useCollection } from '../scene3d/useCollection';
 import { useAvatarControls, type AvatarAction } from '../scene3d/useAvatarControls';
 import { loadPlacePhotos, type PlacePhoto } from '../scene3d/placePhotos';
+import { warmPyApi } from '../scene3d/pyApi';
 import { MapAssistantSheet } from './app/MapAssistantSheet';
 import { recordLegendaryFind, recordPlaceVisit } from '../pet/visits';
 import { resolveMapsApiKey } from '../data/mapsApiKey';
@@ -258,6 +259,9 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
   };
   const loadedLayersRef = useRef(new Map<string, string>());
 
+  // Despertar la API Python mientras carga la escena: fotos y puestos dependen de ella.
+  useEffect(() => warmPyApi(), []);
+
   // Recorridos desde la API Python; si no responde, se quedan los de src/data/tours3d.ts.
   useEffect(() => {
     void loadTours().then((all) => setTours(toursForSeason(all, season)));
@@ -381,13 +385,11 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
     setPhotos([]);
     setPhotoIndex(0);
     if (!selectedPlaceId) return;
-    let cancelled = false;
-    void loadPlacePhotos(selectedPlaceId, seasonId).then((list) => {
-      if (!cancelled) setPhotos(list);
+    const controller = new AbortController();
+    void loadPlacePhotos(selectedPlaceId, seasonId, controller.signal).then((list) => {
+      if (!controller.signal.aborted) setPhotos(list);
     });
-    return () => {
-      cancelled = true;
-    };
+    return () => controller.abort();
   }, [selectedPlaceId, seasonId]);
 
   // Repintar marcadores al cambiar puntos, idioma o colección (en exploración, lo no descubierto va en gris).
