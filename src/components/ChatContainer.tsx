@@ -16,6 +16,8 @@ interface ChatContainerProps {
   isStreaming: boolean;
   onPlaceClick: (place: Place) => void;
   onSelectPrompt: (prompt: string) => void;
+  /** «Ampliar» una respuesta breve (#158). */
+  onExpandMessage?: (id: string) => void;
   knowledgeBase: KnowledgeBaseURL[];
   onOpen3d?: () => void;
 }
@@ -28,6 +30,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
   isStreaming,
   onPlaceClick,
   onSelectPrompt,
+  onExpandMessage,
   knowledgeBase,
   onOpen3d,
 }) => {
@@ -49,9 +52,15 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
     [],
   );
 
-  // Auto-scroll when new messages or stream chunks arrive
+  // Baja al final cuando llega un mensaje nuevo o mientras se escribe el último. Al «Ampliar»
+  // una respuesta anterior (#158) solo crece ese globo: la vista se queda donde está.
+  const messageCount = useRef(messages.length);
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const grew = messages.length !== messageCount.current;
+    messageCount.current = messages.length;
+    if (grew || messages[messages.length - 1]?.isStreaming) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
   }, [messages]);
 
   // Auto-resize textarea
@@ -159,6 +168,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
                 onPlaceClick={onPlaceClick}
                 onOpen3d={onOpen3d}
                 knowledgeBase={knowledgeBase}
+                onExpand={!isStreaming && onExpandMessage ? () => onExpandMessage(message.id) : undefined}
               />
             ))}
             {followUps.length > 0 && (

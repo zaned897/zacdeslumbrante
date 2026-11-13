@@ -1,4 +1,5 @@
 import type * as THREE from 'three';
+import type { VegetationLayer } from './vegetation';
 import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import type { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import type { CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
@@ -8,11 +9,36 @@ import type {
   SceneEngine,
   ScenePlayer,
   ScenePoi,
+  ScenePoiKind,
   SceneSeasonLook,
   SceneTimeOfDay,
+  SceneWeatherCondition,
 } from '../types/scene3d';
+import { WeatherController } from './weather';
 
 type Three = typeof THREE;
+
+/**
+ * Prioridad de las etiquetas cuando chocan (#182): gana el tipo más alto. Entre lugares gana el que
+ * va antes en el catálogo (la Catedral primero); entre puestos, fotos o retos, el más cercano a la
+ * cámara. Al acercarse, las etiquetas se separan y aparecen las que estaban tapadas.
+ */
+const LABEL_RANK: Record<ScenePoiKind, number> = { place: 4, challenge: 3, recommendation: 2, vendor: 1, photo: 1 };
+/** Espacio mínimo entre etiquetas y con el borde de la vista, en píxeles. */
+const LABEL_GAP = 4;
+
+interface PoiLabel {
+  el: HTMLElement;
+  obj: THREE.Object3D;
+  rank: number;
+  w: number;
+  h: number;
+  shown: boolean;
+  /** Lugar en la lista que llegó a setPois (el catálogo de lugares va en orden de importancia). */
+  order: number;
+  /** Desplazamiento vertical en uso (px): 0 en su lugar, o arriba / abajo para esquivar a otra. */
+  dy: number;
+}
 
 interface BuildingsFile {
   license: string;
@@ -346,7 +372,11 @@ export class ThreeOsmEngine implements SceneEngine {
   private resizeObserver: ResizeObserver | null = null;
   private ground: THREE.Mesh | null = null;
   private terrain: Terrain | null = null;
+  private vegetation: VegetationLayer | null = null;
+  private vegetationAbort: AbortController | null = null;
   private poiGroup: THREE.Group | null = null;
+  private poiLabels: PoiLabel[] = [];
+  private labelPoint: THREE.Vector3 | null = null;
   private route: THREE.Mesh | null = null;
   private player: THREE.Object3D | null = null;
   private avatarSrc: string | null = null;
@@ -378,6 +408,8 @@ export class ThreeOsmEngine implements SceneEngine {
   private streetPoints: Array<{ x: number; z: number }> = [];
   private petals: THREE.InstancedMesh | null = null;
   private seasonLook: SceneSeasonLook | null = null;
+  private weather: WeatherController | null = null;
+  private weatherCondition: SceneWeatherCondition | null = null;
   private readonly reducedMotion =
     typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   private raceParked = false;
@@ -525,6 +557,7 @@ export class ThreeOsmEngine implements SceneEngine {
     }
     this.nightLights = this.makeNightLights(T, lights.lines, windows);
     scene.add(this.nightLights);
+    this.weather = new WeatherController(T, scene, (x, z) => this.heightAt(x, z));
     this.applySeason();
 
     const attribution = document.createElement('div');
@@ -549,6 +582,13 @@ export class ThreeOsmEngine implements SceneEngine {
       this.tick(now);
       firstFrame();
     });
+    const vegetationAbort = new AbortController();
+    this.vegetationAbort = vegetationAbort;
+    void this.readyPromise.then(() => import('./vegetation')).then(async ({ loadVegetation }) => {
+      const layer = await loadVegetation({ T, scene, project: toLocal, height: terrain ? (x, z) => terrain.at(x, z) : null,
+        buildings: data.buildings, roads: roads?.roads ?? [] }, vegetationAbort.signal);
+      if (!vegetationAbort.signal.aborted) { this.vegetation = layer; layer?.updateSeason(this.seasonLook?.rainy === true); }
+    }).catch(error => console.warn('[vegetation] No se pudo cargar el módulo.', error));
   }
 
   ready(): Promise<void> {
@@ -692,6 +732,9 @@ export class ThreeOsmEngine implements SceneEngine {
   }
 
   destroy(): void {
+    this.vegetationAbort?.abort();
+    this.vegetationAbort = null;
+    this.vegetation = null;
     this.stop();
     this.renderer?.setAnimationLoop(null);
     this.renderer?.domElement.removeEventListener('click', this.onClick);
@@ -709,6 +752,8 @@ export class ThreeOsmEngine implements SceneEngine {
       }
     });
     this.nightLights = null;
+    this.weather?.dispose();
+    this.weather = null;
     this.renderer?.dispose();
     this.renderer?.domElement.remove();
     this.labels?.domElement.remove();
@@ -886,6 +931,7 @@ export class ThreeOsmEngine implements SceneEngine {
   }
 
   setSeason(look: SceneSeasonLook | null): void {
+    this.vegetation?.updateSeason(look?.rainy === true);
     this.seasonLook = look;
     this.applySeason();
   }
@@ -895,6 +941,12 @@ export class ThreeOsmEngine implements SceneEngine {
     if (time === this.timeOfDay && this.timeApplied) return;
     this.timeOfDay = time;
     this.timeApplied = this.scene !== null;
+    this.applySeason();
+  }
+
+  setWeather(condition: SceneWeatherCondition | null): void {
+    if (condition === this.weatherCondition) return;
+    this.weatherCondition = condition;
     this.applySeason();
   }
 
@@ -955,6 +1007,18 @@ export class ThreeOsmEngine implements SceneEngine {
     const wantPetals = (this.seasonLook?.petals ?? false) && this.streetPoints.length > 0;
     if (wantPetals && !this.petals) this.petals = this.makePetals(T, scene);
     if (this.petals) this.petals.visible = wantPetals;
+    this.weather?.apply({
+      condition: this.weatherCondition,
+      time,
+      renderer: this.renderer,
+      hemi,
+      sun,
+      ground: this.ground,
+      buildings: this.buildings,
+      roads: this.roads,
+      looks: this.looks,
+      streetPoints: this.streetPoints,
+    });
   }
 
   /** Ruta de la carrera a cuadros sobre el relieve y autos clásicos que la recorren en bucle. */
@@ -1065,8 +1129,65 @@ export class ThreeOsmEngine implements SceneEngine {
       this.moveRaceCars(0);
       this.raceParked = true;
     }
+    this.weather?.tick(dt, camera, controls.target, this.reducedMotion);
     renderer.render(scene, camera);
     labels.render(scene, camera);
+    this.declutterLabels(camera);
+  }
+
+  /**
+   * Oculta las etiquetas que se enciman con otra de más prioridad o que saldrían cortadas por el
+   * borde (#182). El marcador se queda; solo se esconde el texto.
+   */
+  private declutterLabels(camera: THREE.PerspectiveCamera): void {
+    const { container, T } = this;
+    if (!container || !T || !this.poiLabels.length) return;
+    const w = container.clientWidth;
+    const h = container.clientHeight;
+    const p = (this.labelPoint ??= new T.Vector3());
+    const candidates: { label: PoiLabel; x: number; y: number; dist: number }[] = [];
+    for (const label of this.poiLabels) {
+      if (!label.w) {
+        label.w = label.el.offsetWidth;
+        label.h = label.el.offsetHeight;
+      }
+      label.obj.getWorldPosition(p);
+      const dist = p.distanceTo(camera.position);
+      p.project(camera);
+      if (!label.w || p.z > 1 || p.z < -1) continue; // detrás de la cámara o aún sin medir
+      candidates.push({ label, x: ((p.x + 1) / 2) * w, y: ((1 - p.y) / 2) * h, dist });
+    }
+    const place = LABEL_RANK.place;
+    candidates.sort((a, b) => b.label.rank - a.label.rank || (a.label.rank === place ? a.label.order - b.label.order : a.dist - b.dist));
+    const placed: { l: number; r: number; t: number; b: number }[] = [];
+    const visible = new Set<PoiLabel>();
+    const offsets = new Map<PoiLabel, number>();
+    for (const { label, x, y } of candidates) {
+      // En su lugar; si choca, un poco más arriba o más abajo; si sigue chocando, se oculta.
+      for (const dy of [0, -(label.h + LABEL_GAP), label.h + LABEL_GAP]) {
+        const box = { l: x - label.w / 2, r: x + label.w / 2, t: y + dy - label.h / 2, b: y + dy + label.h / 2 };
+        const inside = box.l >= LABEL_GAP && box.r <= w - LABEL_GAP && box.t >= LABEL_GAP && box.b <= h - LABEL_GAP;
+        if (!inside) continue;
+        const clash = placed.some((o) => box.l < o.r + LABEL_GAP && o.l < box.r + LABEL_GAP && box.t < o.b + LABEL_GAP && o.t < box.b + LABEL_GAP);
+        if (clash) continue;
+        placed.push(box);
+        visible.add(label);
+        offsets.set(label, dy);
+        break;
+      }
+    }
+    for (const label of this.poiLabels) {
+      const shown = visible.has(label);
+      const dy = offsets.get(label) ?? label.dy;
+      if (dy !== label.dy) {
+        label.dy = dy;
+        label.el.style.marginTop = dy ? `${dy}px` : '';
+      }
+      if (shown === label.shown) continue;
+      label.shown = shown;
+      label.el.style.visibility = shown ? '' : 'hidden';
+      label.el.style.pointerEvents = shown ? 'auto' : 'none';
+    }
   }
 
   private resize(): void {
@@ -1110,7 +1231,8 @@ export class ThreeOsmEngine implements SceneEngine {
       });
       group.remove(child);
     });
-    for (const poi of pois) {
+    this.poiLabels = [];
+    for (const [order, poi] of pois.entries()) {
       const { x, z } = toLocal(poi.lat, poi.lng);
       const color = new T.Color(poi.color ?? '#9A3412');
       const pin = new T.Group();
@@ -1144,6 +1266,10 @@ export class ThreeOsmEngine implements SceneEngine {
       label.position.y = 42;
       pin.add(label);
       group.add(pin);
+      // Oculta hasta el primer acomodo, para que no parpadee encimada.
+      el.style.visibility = 'hidden';
+      el.style.pointerEvents = 'none';
+      this.poiLabels.push({ el, obj: label, rank: LABEL_RANK[poi.kind] ?? 0, w: 0, h: 0, shown: false, order, dy: 0 });
     }
   }
 

@@ -50,6 +50,7 @@ import { MapAssistantSheet } from './app/MapAssistantSheet';
 import { recordLegendaryFind, recordPlaceVisit } from '../pet/visits';
 import { resolveMapsApiKey } from '../data/mapsApiKey';
 import { forcedTimeOfDay, zacatecasTimeOfDay } from '../scene3d/timeOfDay';
+import { forcedWeather } from '../scene3d/weather';
 
 
 /** Recorridos que tocan hoy: los de temporada solo en su temporada, y primero. */
@@ -113,17 +114,20 @@ const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 type GoogleAuthWindow = Window & { gm_authFailure?: () => void };
 
+interface Map3DViewProps {
+  /** Idioma de toda la app: lo guarda App, así el cambio llega también a la barra inferior (#181). */
+  language: Language;
+  onToggleLanguage: () => void;
+}
+
 /** Vista 3D de la ciudad (nivel mock). Es la pantalla de inicio (/ o /#3d). */
-export const Map3DView: React.FC = () => (
-  <Map3DErrorBoundary>
-    <Map3DScene />
+export const Map3DView: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) => (
+  <Map3DErrorBoundary language={language}>
+    <Map3DScene language={language} onToggleLanguage={onToggleLanguage} />
   </Map3DErrorBoundary>
 );
 
-const Map3DScene: React.FC = () => {
-  const [language, setLanguage] = useState<Language>(
-    () => (localStorage.getItem('zacatecas_lang') as Language) || 'es',
-  );
+const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) => {
   const [status, setStatus] = useState<Status>('loading');
   const [errorDetail, setErrorDetail] = useState('');
   const [enabledLayers, setEnabledLayers] = useState<Set<string>>(DEFAULT_LAYERS);
@@ -254,11 +258,6 @@ const Map3DScene: React.FC = () => {
     visitedPlaceIds: Object.keys(collection),
   };
   const loadedLayersRef = useRef(new Map<string, string>());
-
-  useEffect(() => {
-    localStorage.setItem('zacatecas_lang', language);
-    document.documentElement.lang = language;
-  }, [language]);
 
   // Recorridos desde la API Python; si no responde, se quedan los de src/data/tours3d.ts.
   useEffect(() => {
@@ -407,7 +406,7 @@ const Map3DScene: React.FC = () => {
   useEffect(() => {
     if (status !== 'ready') return;
     engineRef.current?.setSeason?.(
-      season ? { night: season.night, petals: season.petals, raceRoute: season.race ? DESFILE_ROUTE : undefined } : null,
+      season ? { night: season.night, petals: season.petals, rainy: season.id === 'lluvias', raceRoute: season.race ? DESFILE_ROUTE : undefined } : null,
     );
   }, [season, status, engineId]);
 
@@ -421,6 +420,12 @@ const Map3DScene: React.FC = () => {
     if (forced) return;
     const timer = window.setInterval(apply, 60_000);
     return () => window.clearInterval(timer);
+  }, [status, engineId]);
+
+  // PROTO: ?clima=soleado|nublado|lluvia para probar el clima 3D (#201).
+  useEffect(() => {
+    if (status !== 'ready') return;
+    engineRef.current?.setWeather?.(forcedWeather(window.location.search));
   }, [status, engineId]);
 
   // Jugador: moverlo, seguirlo con la cámara y descubrir lugares cercanos.
@@ -607,7 +612,7 @@ const Map3DScene: React.FC = () => {
           <span className="font-serif font-bold text-sm md:text-base">{t.view3d}</span>
         </div>
         <button
-          onClick={() => setLanguage((l) => (l === 'es' ? 'en' : 'es'))}
+          onClick={onToggleLanguage}
           className="pointer-events-auto flex items-center gap-1.5 px-3 py-2 text-xs font-semibold bg-[#FBF9F5]/95 border border-stone-200 rounded-lg shadow-sm hover:bg-white cursor-pointer"
           aria-label={t.toggleLanguage}
         >
@@ -1092,7 +1097,7 @@ const PadButton: React.FC<{
 };
 
 /** Si algo revienta dentro de la vista 3D, muestra un aviso con salida en vez de una pantalla en blanco. */
-class Map3DErrorBoundary extends React.Component<{ children: React.ReactNode }, { error: Error | null }> {
+class Map3DErrorBoundary extends React.Component<{ children: React.ReactNode; language: Language }, { error: Error | null }> {
   state: { error: Error | null } = { error: null };
 
   static getDerivedStateFromError(error: Error) {
@@ -1106,8 +1111,7 @@ class Map3DErrorBoundary extends React.Component<{ children: React.ReactNode }, 
   render() {
     const { error } = this.state;
     if (!error) return this.props.children;
-    const language = (localStorage.getItem('zacatecas_lang') as Language) || 'es';
-    const t = TRANSLATIONS[language];
+    const t = TRANSLATIONS[this.props.language];
     const retryStylized = () => {
       const url = new URL(window.location.href);
       url.searchParams.set('engine', 'three');
