@@ -117,6 +117,12 @@ def test_requests_outside_the_center_or_without_hours_are_rejected() -> None:
         {"title": "Torta y agua", "start": "2026-11-01T09:00:00-06:00", "end": "30 de noviembre"},
         # Termina antes de empezar.
         {"title": "Torta y agua", "start": "2026-11-30T18:00:00-06:00", "end": "2026-11-01T09:00"},
+        # Año fuera de rango: ya aprobada, desbordaba al pasarla a hora de Zacatecas.
+        {
+            "title": "Torta y agua",
+            "start": "2026-11-01T09:00:00-06:00",
+            "end": "9999-12-31T23:59:59-12:00",
+        },
     ],
 )
 def test_promotion_with_bad_dates_is_rejected(promotion: dict) -> None:

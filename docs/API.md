@@ -267,7 +267,7 @@ Puestos y comercios **inventados** del mundo de prueba del Centro Histórico (#1
 
 ### GET /api/py/nearby?lat=&lng=&radius=&at=&interests=  · mock · dueño: Claude Code (#171)
 Puestos publicados y lugares del catálogo a menos de `radius` metros (10–2000; por omisión, 300), con sus señales a la hora `at`. Las reglas son las de `docs/design/señales-del-agente.md` (#166).
-- `at`: ISO 8601. Sin zona, se toma la de Zacatecas (-06:00); sin `at`, la hora actual. Un valor inválido responde 422.
+- `at`: ISO 8601, con año entre 2000 y 2100. Sin zona, se toma la de Zacatecas (-06:00); sin `at`, la hora actual. Un valor inválido responde 422.
 - `interests`: opcional, separado por comas (`hambre,para-ninos`).
 ```json
 {
@@ -318,7 +318,7 @@ Alta de un puesto con revisión. Un puesto dado de alta queda **pendiente** y no
 ```
 → `{ "id": "alta-1-tortas-la-solicitud", "status": "pending", "message": { "es": "…", "en": "…" } }`
 - `lat`/`lng` deben caer en el Centro Histórico (22.760–22.790, -102.590 a -102.560); si no, 422. `promotion` y `contact` son opcionales.
-- `promotion.start` y `promotion.end` son fecha y hora ISO 8601; sin zona se toma la de Zacatecas. Una fecha ilegible, o un `end` anterior a `start`, responde 422.
+- `promotion.start` y `promotion.end` son fecha y hora ISO 8601, con año entre 2000 y 2100; sin zona se toma la de Zacatecas. Una fecha ilegible o fuera de esos años, o un `end` anterior a `start`, responde 422.
 - **Revisión**, con `Authorization: Bearer <ADMIN_TOKEN>` (variable de entorno):
   - `GET /vendors/pending` → `{ "pending": [{ "vendor": Vendor, "promotion": …, "contact": …, "receivedAt": "…" }] }`.
   - `POST /vendors/{id}/approve` → el `Vendor` publicado. Desde ese momento sale en `/vendors` y en `/nearby`, con su promoción si la trae.
@@ -343,7 +343,7 @@ El agente arma el paseo con **reglas simples, sin LLM**. Las reglas son las de `
 - Solo `start` y `minutes` (15–480) son obligatorios.
 - `budget`: `$`, `$$` o `$$$`, como los puestos y los visitantes.
 - `mobility`: `a-pie`, `carriola` o `silla-de-ruedas`.
-- `at`: ISO 8601. Sin zona, hora de Zacatecas; sin `at`, la hora actual.
+- `at`: ISO 8601, con año entre 2000 y 2100. Sin zona, hora de Zacatecas; sin `at`, la hora actual. Un valor inválido responde 422.
 - `avoid`: ids que el visitante no quiere («hay mucha espera, dame otra opción»). Con ellos se vuelve a pedir el plan.
 
 →
@@ -469,8 +469,8 @@ Un visitante reporta cuánta gente hay en un lugar o lo recomienda. Son dos señ
   - Vale **90 días** y suma a `recommendations.count`. No lleva calificación ni estrellas.
   - Se menciona en el `reason` a partir de 3 recomendaciones.
 - **Sin datos personales:** el reporte es anónimo. Cualquier otro campo (`name`, `email`…) responde 422.
-- `at`: opcional, ISO 8601; sin él, ahora. Sirve para el simulador (#175): un reporte no cuenta antes de su hora.
-- Errores: `value` que no corresponde al `kind`, `kind` desconocido o `at` ilegible → 422.
+- `at`: opcional, ISO 8601 con año entre 2000 y 2100; sin él, ahora. Sirve para el simulador (#175): un reporte no cuenta antes de su hora.
+- Errores: `value` que no corresponde al `kind`, `kind` desconocido, o `at` ilegible o fuera de esos años → 422.
 - PROTO:
   - los reportes viven en memoria (los 2000 más recientes) y se pierden al reiniciar la API;
   - como son anónimos, cada recomendación cuenta como un visitante distinto;

@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 
 from app.models.reports import ReportInput, ReportReceipt
 from app.services import reports
-from app.services.world import parse_at, target_exists
+from app.services.world import BAD_AT, parse_at, target_exists
 
 router = APIRouter(tags=["reports"])
 
@@ -17,7 +17,7 @@ def post_report(report: ReportInput) -> ReportReceipt:
     try:
         moment = parse_at(report.at)
     except ValueError as exc:
-        raise HTTPException(status_code=422, detail="`at` debe ser ISO 8601") from exc
+        raise HTTPException(status_code=422, detail=BAD_AT) from exc
     saved = reports.add(report.place_id, report.kind, report.value, moment)
     return ReportReceipt(
         id=saved.id,

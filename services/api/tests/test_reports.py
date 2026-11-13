@@ -146,6 +146,12 @@ def test_without_at_the_report_is_from_now() -> None:
         ({"placeId": GORDITAS, "kind": "recommend", "value": "el mejor"}, 422),
         ({"placeId": GORDITAS, "kind": "queja", "value": "alta"}, 422),
         ({"placeId": GORDITAS, "kind": "crowd", "value": "alta", "at": "ahorita"}, 422),
+        # Años fuera de rango: desbordaban al calcular hasta cuándo cuenta el reporte.
+        ({"placeId": GORDITAS, "kind": "recommend", "at": "9999-12-31T23:59:59"}, 422),
+        (
+            {"placeId": GORDITAS, "kind": "crowd", "value": "alta", "at": "0001-01-01T00:00+14:00"},
+            422,
+        ),
         # Nada de datos personales: cualquier campo de más se rechaza.
         ({"placeId": GORDITAS, "kind": "recommend", "name": "Ana"}, 422),
         ({"placeId": GORDITAS, "kind": "recommend", "email": "ana@example.com"}, 422),

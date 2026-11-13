@@ -12,7 +12,13 @@ from functools import cache
 from math import asin, cos, radians, sin, sqrt
 from pathlib import Path
 
-from app.models.common import ZACATECAS, LocalizedText
+from app.models.common import (
+    MAX_YEAR,
+    MIN_YEAR,
+    ZACATECAS,
+    LocalizedText,
+    moment_in_zacatecas,
+)
 from app.models.nearby import (
     ActivePromotion,
     NearbyItem,
@@ -81,14 +87,15 @@ def get_vendor(vendor_id: str) -> Vendor | None:
     return next((v for v in published_vendors() if v.id == vendor_id), None)
 
 
+# Lo que responden con 422 los endpoints que reciben `at`.
+BAD_AT = f"`at` debe ser ISO 8601, con año entre {MIN_YEAR} y {MAX_YEAR}"
+
+
 def parse_at(at: str | None) -> datetime:
-    """Hora de la consulta en Zacatecas. Sin zona, se asume la de Zacatecas."""
+    """Hora de la consulta en Zacatecas; sin `at`, ahora. ValueError si no se puede leer."""
     if not at:
         return datetime.now(UTC).astimezone(ZACATECAS)
-    moment = datetime.fromisoformat(at)
-    if moment.tzinfo is None:
-        moment = moment.replace(tzinfo=ZACATECAS)
-    return moment.astimezone(ZACATECAS)
+    return moment_in_zacatecas(at)
 
 
 def _clock(moment: datetime) -> str:
