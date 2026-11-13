@@ -51,6 +51,7 @@ import { MapAssistantSheet } from './app/MapAssistantSheet';
 import { recordLegendaryFind, recordPlaceVisit } from '../pet/visits';
 import { resolveMapsApiKey } from '../data/mapsApiKey';
 import { forcedTimeOfDay, zacatecasTimeOfDay } from '../scene3d/timeOfDay';
+import { forcedWeather } from '../scene3d/weather';
 
 
 /** Recorridos que tocan hoy: los de temporada solo en su temporada, y primero. */
@@ -409,7 +410,7 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
   useEffect(() => {
     if (status !== 'ready') return;
     engineRef.current?.setSeason?.(
-      season ? { night: season.night, petals: season.petals, raceRoute: season.race ? DESFILE_ROUTE : undefined } : null,
+      season ? { night: season.night, petals: season.petals, rainy: season.id === 'lluvias', raceRoute: season.race ? DESFILE_ROUTE : undefined } : null,
     );
   }, [season, status, engineId]);
 
@@ -427,6 +428,12 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
     if (forced) return;
     const timer = window.setInterval(apply, 60_000);
     return () => window.clearInterval(timer);
+  }, [status, engineId]);
+
+  // PROTO: ?clima=soleado|nublado|lluvia para probar el clima 3D (#201).
+  useEffect(() => {
+    if (status !== 'ready') return;
+    engineRef.current?.setWeather?.(forcedWeather(window.location.search));
   }, [status, engineId]);
 
   // El cielo solo se ofrece de noche (por la hora o por una temporada nocturna) en la ciudad estilizada.

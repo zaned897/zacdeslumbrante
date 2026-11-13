@@ -1,4 +1,5 @@
 import type * as THREE from 'three';
+import type { VegetationLayer } from './vegetation';
 import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import type { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import type { CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
@@ -11,8 +12,10 @@ import type {
   ScenePoiKind,
   SceneSeasonLook,
   SceneTimeOfDay,
+  SceneWeatherCondition,
 } from '../types/scene3d';
 import { StarSky, skyMoment } from './starSky';
+import { WeatherController } from './weather';
 
 type Three = typeof THREE;
 
@@ -373,6 +376,8 @@ export class ThreeOsmEngine implements SceneEngine {
   private resizeObserver: ResizeObserver | null = null;
   private ground: THREE.Mesh | null = null;
   private terrain: Terrain | null = null;
+  private vegetation: VegetationLayer | null = null;
+  private vegetationAbort: AbortController | null = null;
   private poiGroup: THREE.Group | null = null;
   private poiLabels: PoiLabel[] = [];
   private labelPoint: THREE.Vector3 | null = null;
@@ -411,6 +416,8 @@ export class ThreeOsmEngine implements SceneEngine {
   private streetPoints: Array<{ x: number; z: number }> = [];
   private petals: THREE.InstancedMesh | null = null;
   private seasonLook: SceneSeasonLook | null = null;
+  private weather: WeatherController | null = null;
+  private weatherCondition: SceneWeatherCondition | null = null;
   private readonly reducedMotion =
     typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   private raceParked = false;
@@ -568,6 +575,7 @@ export class ThreeOsmEngine implements SceneEngine {
     }
     this.nightLights = this.makeNightLights(T, lights.lines, windows);
     scene.add(this.nightLights);
+    this.weather = new WeatherController(T, scene, (x, z) => this.heightAt(x, z));
     this.applySeason();
 
     const attribution = document.createElement('div');
@@ -592,6 +600,13 @@ export class ThreeOsmEngine implements SceneEngine {
       this.tick(now);
       firstFrame();
     });
+    const vegetationAbort = new AbortController();
+    this.vegetationAbort = vegetationAbort;
+    void this.readyPromise.then(() => import('./vegetation')).then(async ({ loadVegetation }) => {
+      const layer = await loadVegetation({ T, scene, project: toLocal, height: terrain ? (x, z) => terrain.at(x, z) : null,
+        buildings: data.buildings, roads: roads?.roads ?? [] }, vegetationAbort.signal);
+      if (!vegetationAbort.signal.aborted) { this.vegetation = layer; layer?.updateSeason(this.seasonLook?.rainy === true); }
+    }).catch(error => console.warn('[vegetation] No se pudo cargar el módulo.', error));
   }
 
   ready(): Promise<void> {
@@ -737,6 +752,9 @@ export class ThreeOsmEngine implements SceneEngine {
   }
 
   destroy(): void {
+    this.vegetationAbort?.abort();
+    this.vegetationAbort = null;
+    this.vegetation = null;
     this.stop();
     this.renderer?.setAnimationLoop(null);
     this.renderer?.domElement.removeEventListener('click', this.onClick);
@@ -756,6 +774,8 @@ export class ThreeOsmEngine implements SceneEngine {
       }
     });
     this.nightLights = null;
+    this.weather?.dispose();
+    this.weather = null;
     this.renderer?.dispose();
     this.renderer?.domElement.remove();
     this.labels?.domElement.remove();
@@ -933,6 +953,7 @@ export class ThreeOsmEngine implements SceneEngine {
   }
 
   setSeason(look: SceneSeasonLook | null): void {
+    this.vegetation?.updateSeason(look?.rainy === true);
     this.seasonLook = look;
     this.applySeason();
   }
@@ -942,6 +963,12 @@ export class ThreeOsmEngine implements SceneEngine {
     if (time === this.timeOfDay && this.timeApplied) return;
     this.timeOfDay = time;
     this.timeApplied = this.scene !== null;
+    this.applySeason();
+  }
+
+  setWeather(condition: SceneWeatherCondition | null): void {
+    if (condition === this.weatherCondition) return;
+    this.weatherCondition = condition;
     this.applySeason();
   }
 
@@ -1057,6 +1084,18 @@ export class ThreeOsmEngine implements SceneEngine {
     const wantPetals = (this.seasonLook?.petals ?? false) && this.streetPoints.length > 0;
     if (wantPetals && !this.petals) this.petals = this.makePetals(T, scene);
     if (this.petals) this.petals.visible = wantPetals;
+    this.weather?.apply({
+      condition: this.weatherCondition,
+      time,
+      renderer: this.renderer,
+      hemi,
+      sun,
+      ground: this.ground,
+      buildings: this.buildings,
+      roads: this.roads,
+      looks: this.looks,
+      streetPoints: this.streetPoints,
+    });
   }
 
   /** Ruta de la carrera a cuadros sobre el relieve y autos clásicos que la recorren en bucle. */
@@ -1168,6 +1207,7 @@ export class ThreeOsmEngine implements SceneEngine {
       this.moveRaceCars(0);
       this.raceParked = true;
     }
+    this.weather?.tick(dt, camera, controls.target, this.reducedMotion);
     renderer.render(scene, camera);
     labels.render(scene, camera);
     this.declutterLabels(camera);
