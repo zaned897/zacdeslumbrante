@@ -97,6 +97,9 @@ export interface SceneSeasonLook {
 /** Hora de la escena (#128, #129): día, tarde o noche. */
 export type SceneTimeOfDay = 'day' | 'dusk' | 'night';
 
+/** Clima de la escena (#201): soleado, nublado o lluvia. */
+export type SceneWeatherCondition = 'soleado' | 'nublado' | 'lluvia';
+
 /** Lo que sabe la vista al pedir los puntos de una capa. */
 export interface SceneLayerContext {
   player?: { lat: number; lng: number };
@@ -131,5 +134,7 @@ export interface SceneEngine {
   setSeason?(look: SceneSeasonLook | null): void;
   /** Día, tarde o noche con luz propia (#128, #129). Opcional: Google y Cesium no dejan cambiar su luz. */
   setTimeOfDay?(time: SceneTimeOfDay): void;
+  /** Clima en 3D (#201); null = como hoy. Opcional: los motores que no lo implementen lo ignoran. */
+  setWeather?(condition: SceneWeatherCondition | null): void;
   destroy(): void;
 }
