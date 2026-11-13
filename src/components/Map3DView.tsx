@@ -17,6 +17,7 @@ import {
   RotateCcw,
   RotateCw,
   Square,
+  Store,
   Trophy,
   X,
 } from 'lucide-react';
@@ -48,6 +49,8 @@ import { useAvatarControls, type AvatarAction } from '../scene3d/useAvatarContro
 import { loadPlacePhotos, type PlacePhoto } from '../scene3d/placePhotos';
 import { MapAssistantSheet } from './app/MapAssistantSheet';
 import { PlaceReport } from './app/PlaceReport';
+import { VendorFormSheet } from './app/VendorFormSheet';
+import { EMPTY_DRAFT, clearDraft, inCenter, readDraft, saveDraft, type VendorDraft } from '../scene3d/vendorRequest';
 import { recordLegendaryFind, recordPlaceVisit } from '../pet/visits';
 import { resolveMapsApiKey } from '../data/mapsApiKey';
 import { forcedTimeOfDay, zacatecasTimeOfDay } from '../scene3d/timeOfDay';
@@ -157,6 +160,14 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
   const [isExploring, setIsExploring] = useState(false);
   const [avatar, setAvatar] = useState<AvatarId>(readAvatar);
   const [toast, setToast] = useState<string | null>(null);
+  // Dar de alta un puesto (#173): la hoja, su borrador y el modo de marcar la ubicación en la ciudad.
+  const [vendorOpen, setVendorOpen] = useState(false);
+  const [pickingSpot, setPickingSpot] = useState(false);
+  const [vendorDraft, setVendorDraft] = useState<VendorDraft>(readDraft);
+  const updateVendorDraft = useCallback((draft: VendorDraft) => {
+    setVendorDraft(draft);
+    saveDraft(draft);
+  }, []);
   const [timings, setTimings] = useState<{ mountMs: number | null; readyMs: number | null }>({
     mountMs: null,
     readyMs: null,
@@ -187,6 +198,17 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
   const act = useAvatarControls(isExploring, position, teleport);
   const teleportRef = useRef<typeof teleport | null>(null);
   teleportRef.current = isExploring ? teleport : null;
+  const pickSpotRef = useRef<((at: { lat: number; lng: number }) => void) | null>(null);
+  pickSpotRef.current = pickingSpot
+    ? (at) => {
+        if (!inCenter(at)) {
+          setToast(TRANSLATIONS[language].vendorFormOutside);
+          return;
+        }
+        updateVendorDraft({ ...vendorDraft, spot: { lat: Number(at.lat.toFixed(6)), lng: Number(at.lng.toFixed(6)) } });
+        setPickingSpot(false);
+      }
+    : null;
 
   const pois = useMemo(
     () => SCENE_LAYERS.filter((l) => enabledLayers.has(l.id)).flatMap((l) => layerPois[l.id] ?? []),
@@ -243,9 +265,21 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
       },
     ];
   }, [season]);
+  // El lugar marcado para el puesto se ve en la ciudad mientras dura el alta (#173).
+  const spotPoi = useMemo<ScenePoi | null>(() => {
+    if (!vendorDraft.spot || !(vendorOpen || pickingSpot)) return null;
+    return {
+      id: 'alta-puesto',
+      kind: 'vendor',
+      title: { es: TRANSLATIONS.es.vendorFormSpotPin, en: TRANSLATIONS.en.vendorFormSpotPin },
+      ...vendorDraft.spot,
+      color: '#E4007C',
+      icon: '📍',
+    };
+  }, [vendorDraft.spot, vendorOpen, pickingSpot]);
   const scenePois = useMemo(
-    () => [...pois, ...racePois, ...(meteor ? [meteor] : [])],
-    [pois, racePois, meteor],
+    () => [...pois, ...racePois, ...(meteor ? [meteor] : []), ...(spotPoi ? [spotPoi] : [])],
+    [pois, racePois, meteor, spotPoi],
   );
   const placePois = useMemo(() => pois.filter((p) => p.kind === 'place' && p.placeId), [pois]);
   const discoveredCount = placePois.filter((p) => p.placeId && collection[p.placeId]).length;
@@ -313,8 +347,9 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
         void engine.ready().then(() => {
           if (!cancelled) setTimings((prev) => ({ ...prev, readyMs: performance.now() - startedAt }));
         });
-        engine.onPoiClick(setSelected);
-        engine.onGroundClick((at) => teleportRef.current?.(at));
+        // Mientras se marca la ubicación de un puesto (#173), el toque elige el lugar en vez de abrir fichas o mover al avatar.
+        engine.onPoiClick((poi) => (pickSpotRef.current ? pickSpotRef.current(poi) : setSelected(poi)));
+        engine.onGroundClick((at) => (pickSpotRef.current ? pickSpotRef.current(at) : teleportRef.current?.(at)));
         setStatus('ready');
       })
       .catch((err: unknown) => {
@@ -612,6 +647,21 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
         <div className="pointer-events-auto flex items-center gap-2 px-3 py-2 bg-[#FBF9F5]/95 border border-stone-200 rounded-lg shadow-sm">
           <span className="font-serif font-bold text-sm md:text-base">{t.view3d}</span>
         </div>
+        {/* Dar de alta un puesto (#173) */}
+        {status === 'ready' && !isTouring && !pickingSpot && (
+          <button
+            onClick={() => {
+              setSelected(null);
+              setVendorOpen(true);
+            }}
+            className="pointer-events-auto ml-auto flex items-center gap-1.5 px-3 py-2 text-xs font-semibold bg-[#FBF9F5]/95 border border-stone-200 rounded-lg shadow-sm hover:bg-white cursor-pointer"
+            aria-label={t.vendorFormOpenLabel}
+            title={t.vendorFormOpenLabel}
+          >
+            <Store className="w-3.5 h-3.5 text-[#E4007C]" />
+            {t.vendorFormOpen}
+          </button>
+        )}
         <button
           onClick={onToggleLanguage}
           className="pointer-events-auto flex items-center gap-1.5 px-3 py-2 text-xs font-semibold bg-[#FBF9F5]/95 border border-stone-200 rounded-lg shadow-sm hover:bg-white cursor-pointer"
@@ -638,7 +688,7 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
       )}
 
       {/* La ciudad estilizada es la vista normal (#127): el aviso solo sale si cayó desde Google o no hay llave. */}
-      {engineId === 'three' && status === 'ready' && !isExploring && (engineFallback || !apiKey) && (
+      {engineId === 'three' && status === 'ready' && !isExploring && !pickingSpot && (engineFallback || !apiKey) && (
         <div className="absolute top-16 inset-x-3 md:inset-x-auto md:left-4 md:max-w-xs z-10 text-[11px] text-stone-700 bg-[#FBF9F5]/90 border border-stone-200 rounded-lg px-3 py-2">
           {engineFallback ? (
             <>
@@ -660,7 +710,7 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
       {showStats && <SceneStats engine={engineId} mountMs={timings.mountMs} readyMs={timings.readyMs} />}
 
       {/* HUD de exploración */}
-      {isExploring && (
+      {isExploring && !pickingSpot && (
         <div className="absolute top-16 inset-x-3 md:inset-x-auto md:left-4 md:w-72 z-10 bg-[#FBF9F5]/95 border border-stone-200 rounded-xl shadow-sm p-3 text-xs">
           <div className="flex items-center justify-between gap-2">
             <span className="flex items-center gap-1.5 font-semibold text-stone-800">
@@ -946,6 +996,39 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
           )}
         </div>
       )}
+
+      {/* Dar de alta un puesto (#173): al marcar la ubicación la hoja se esconde para tocar la ciudad. */}
+      {pickingSpot && (
+        <div
+          className="absolute top-16 inset-x-3 md:inset-x-auto md:left-4 md:w-96 z-20 flex items-center gap-3 bg-[#FBF9F5] border-2 border-[#E4007C] rounded-xl shadow-lg p-3"
+          role="status"
+          data-testid="vendor-pick"
+        >
+          <MapPin className="w-5 h-5 shrink-0 text-[#E4007C] motion-safe:animate-bounce" />
+          <p className="min-w-0 flex-1 text-xs font-bold text-stone-900">{t.vendorFormPickHint}</p>
+          <button
+            onClick={() => setPickingSpot(false)}
+            className="shrink-0 px-2.5 py-1.5 text-xs font-bold text-stone-700 bg-white border border-stone-300 rounded-lg cursor-pointer hover:border-stone-500"
+          >
+            {t.vendorFormPickCancel}
+          </button>
+        </div>
+      )}
+      <VendorFormSheet
+        open={vendorOpen && !pickingSpot}
+        onClose={() => setVendorOpen(false)}
+        language={language}
+        draft={vendorDraft}
+        onChange={updateVendorDraft}
+        onPickSpot={() => {
+          setSelected(null);
+          setPickingSpot(true);
+        }}
+        onSent={() => {
+          setVendorDraft(EMPTY_DRAFT);
+          clearDraft();
+        }}
+      />
 
       {/* Asistente dentro del mapa (#43), acotado al lugar elegido */}
       {askPlace && (
