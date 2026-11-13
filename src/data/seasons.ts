@@ -263,8 +263,11 @@ export function seasonFromEvents(events: BackendEvent[]): Season | null {
     const dateLabel = same ? local.dateLabel : eventDateLabel(event.start, event.end);
     const season: Season = { ...local, name: event.name, dateLabel, startsOn, endsOn, ...source };
     // Una temporada con año (la Panamericana 2026) trae ruta, misión e insignia de esa fecha.
-    // En otra fecha u otra edición se queda solo el chip: nada de lo de 2026 (hallazgo de Codex).
-    if (local.year !== undefined && !same) return { ...season, year, race: false };
+    // En otra fecha u otra edición se queda solo el chip: nada de lo de 2026, ni el meteorito
+    // legendario, que en la carrera solo lo da la misión (hallazgos de Codex).
+    if (local.year !== undefined && !same) {
+      return { ...season, year, race: false, legendaryDrops: false };
+    }
     return season;
   }
   return {
