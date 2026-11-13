@@ -406,7 +406,7 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
   useEffect(() => {
     if (status !== 'ready') return;
     engineRef.current?.setSeason?.(
-      season ? { night: season.night, petals: season.petals, raceRoute: season.race ? DESFILE_ROUTE : undefined } : null,
+      season ? { night: season.night, petals: season.petals, rainy: season.id === 'lluvias', raceRoute: season.race ? DESFILE_ROUTE : undefined } : null,
     );
   }, [season, status, engineId]);
 
