@@ -295,6 +295,7 @@ Puestos publicados y lugares del catálogo a menos de `radius` metros (10–2000
 - **Orden:** por distancia en tramos de 50 m. Dentro de cada tramo van primero los que coinciden con `interests` (`matches`) y luego los más recomendados.
 - **`crowd` y `waitMin`:** salen de la franja horaria del lugar a la hora `at`. Si está cerrado (`open: false`) van en `null`. `open` es `null` para los lugares del catálogo, que aún no traen horario.
 - **`signal: "pattern"`:** es lo que suele pasar a esa hora; el texto lo dice como «suele». La afluencia nunca se presenta como calidad.
+- **`signal: "live"`:** hay un reporte de un visitante de los últimos 45 minutos (`POST /api/py/reports`, #174). Manda sobre el patrón y el texto dice «ahora hay…».
 - **`promotion`:** solo dentro de su vigencia. Es información, no cupón.
 - **`recommendations`:** solo las de los últimos 90 días, contadas por visitante. `reason` las menciona a partir de 3.
 
@@ -441,6 +442,39 @@ Temporadas, fiestas y eventos, **cargados a mano** por ahora. El modelo ya trae 
 - `PATCH /events/{id}` cambia solo los campos que llegan y vuelve a validar el evento. Responde 404 si no existe y 422 si queda inválido.
 - Errores de token: sin token o con uno incorrecto, 401. Sin `ADMIN_TOKEN` configurado, 503.
 - PROTO: lo cargado vive en memoria encima de `services/api/app/fixtures/events.json` y se pierde al reiniciar la API.
+
+### POST /api/py/reports  · mock · dueño: Claude Code (#174)
+Un visitante reporta cuánta gente hay en un lugar o lo recomienda. Son dos señales distintas: se guardan y se muestran por separado, con las reglas de `docs/design/señales-del-agente.md` (#166).
+```json
+{ "placeId": "gorditas-la-imaginaria", "kind": "crowd", "value": "alta" }
+```
+→ 201
+```json
+{
+  "_mock": true,
+  "id": "reporte-1",
+  "placeId": "gorditas-la-imaginaria",
+  "kind": "crowd",
+  "value": "alta",
+  "at": "2026-11-10T09:00:00-06:00",
+  "expiresAt": "2026-11-10T09:45:00-06:00"
+}
+```
+- `placeId`: un lugar del catálogo (`places.json`) o un puesto publicado. Si no existe, 404.
+- **`kind: "crowd"`:** `value` es `baja`, `media` o `alta`, obligatorio.
+  - Vale **45 minutos**. En ese rato `/nearby` y `/agent/plan` lo usan en vez del patrón de la franja, con `signal: "live"`.
+  - La espera sale de la afluencia reportada: 3, 10 o 20 minutos.
+  - Si hay varios reportes vigentes, cuenta el más reciente. Un puesto cerrado sigue sin mostrar afluencia.
+- **`kind: "recommend"`:** `value` es opcional y es un motivo corto: `comer-rapido`, `economico`, `para-ninos`, `tradicional`, `descanso`, `artesania` o `vista`.
+  - Vale **90 días** y suma a `recommendations.count`. No lleva calificación ni estrellas.
+  - Se menciona en el `reason` a partir de 3 recomendaciones.
+- **Sin datos personales:** el reporte es anónimo. Cualquier otro campo (`name`, `email`…) responde 422.
+- `at`: opcional, ISO 8601; sin él, ahora. Sirve para el simulador (#175): un reporte no cuenta antes de su hora.
+- Errores: `value` que no corresponde al `kind`, `kind` desconocido o `at` ilegible → 422.
+- PROTO:
+  - los reportes viven en memoria (los 2000 más recientes) y se pierden al reiniciar la API;
+  - como son anónimos, cada recomendación cuenta como un visitante distinto;
+  - `at` lo pone quien llama. Con visitantes reales lo pondría el servidor.
 
 ## Propuestas pendientes
 (Agrega aquí endpoints nuevos antes de implementarlos: método, ruta, body, respuesta, dueño.)
