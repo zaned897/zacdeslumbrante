@@ -140,6 +140,33 @@ def test_nothing_open_returns_empty_plan_with_a_note() -> None:
     assert body["notes"][0]["es"].startswith("No encontramos paradas")
 
 
+def test_hungry_without_food_still_respects_interests() -> None:
+    # Hallazgo de Codex: si no cabía comida, el plan seguía con cualquier parada abierta,
+    # aunque no coincidiera con lo que pidió el visitante.
+    night = ask(hungry=True, interests=["museos"], at="2026-11-10T03:00:00-06:00")
+    assert night["stops"] == []
+    assert night["notes"][0]["es"].startswith("No encontramos paradas")
+    food = [c.id for c in CANDIDATES.values() if c.group == "food"]
+    day = ask(
+        minutes=480,
+        hungry=True,
+        interests=["museos"],
+        avoid=food,
+        at="2026-11-10T10:00:00-06:00",
+    )
+    assert day["stops"]
+    for i in ids(day):
+        assert "museos" in CANDIDATES[i].interests, i
+    assert any("No hay comida abierta" in n["es"] for n in day["notes"])
+
+
+def test_hungry_without_interests_goes_on_with_what_is_open() -> None:
+    # Solo hambre y nada de comida a las 3:00: el plan sigue sin ella y lo dice.
+    body = ask(hungry=True, at="2026-11-10T03:00:00-06:00")
+    assert body["stops"]
+    assert any("No hay comida abierta" in n["es"] for n in body["notes"])
+
+
 def test_one_vendor_of_each_kind() -> None:
     body = ask(minutes=240, interests=["cafe", "dulce", "hambre"], at=NOON)
     groups = [CANDIDATES[i].group for i in ids(body) if CANDIDATES[i].kind == "vendor"]

@@ -234,7 +234,9 @@ def _key(o: Option) -> tuple:
 
 def plan(request: PlanRequest, moment: datetime) -> Plan:
     speed = WALK_SPEED[request.mobility]
-    wanted = set(request.interests)
+    # Lo que pidió el visitante; `wanted` además cuenta el hambre.
+    asked = set(request.interests)
+    wanted = set(asked)
     need_food = request.hungry
     if need_food:
         wanted.add("hambre")
@@ -263,7 +265,11 @@ def plan(request: PlanRequest, moment: datetime) -> Plan:
         ]
         if need_food:
             food = [o for o in options if o.candidate.group == "food"]
-            options = food or options
+            if food:
+                options = food
+            elif asked:
+                # Sin comida que quepa, el plan sigue sin ella, pero solo con lo que pidió.
+                options = [o for o in options if o.matches & asked]
         elif wanted:
             options = [o for o in options if o.matches]
         if not options:

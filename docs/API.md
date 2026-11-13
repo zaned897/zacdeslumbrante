@@ -374,6 +374,7 @@ El agente arma el paseo con **reglas simples, sin LLM**. Las reglas son las de `
 - **Orden de las paradas:**
   1. **Reglas duras:** abierto desde que llega hasta que se va, cabe en el tiempo que queda, dentro del presupuesto y fuera de `avoid`.
   2. **Interés:** con `hungry`, la primera parada es comida. Con `interests`, solo entran paradas que coinciden.
+     - Si no cabe ninguna comida, el plan sigue sin ella y lo dice en `notes`; los `interests` se siguen respetando.
   3. **Costo de tiempo:** caminata + espera + estancia. Gana la que deja más margen.
   4. **Desempates:** una recomendación que coincide con un interés, la distancia más corta, una promoción vigente.
 - La afluencia no ordena nada: solo entra como espera (`waitMin`).
