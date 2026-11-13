@@ -11,7 +11,9 @@ import type {
   ScenePoiKind,
   SceneSeasonLook,
   SceneTimeOfDay,
+  SceneWeatherCondition,
 } from '../types/scene3d';
+import { WeatherController } from './weather';
 
 type Three = typeof THREE;
 
@@ -403,6 +405,8 @@ export class ThreeOsmEngine implements SceneEngine {
   private streetPoints: Array<{ x: number; z: number }> = [];
   private petals: THREE.InstancedMesh | null = null;
   private seasonLook: SceneSeasonLook | null = null;
+  private weather: WeatherController | null = null;
+  private weatherCondition: SceneWeatherCondition | null = null;
   private readonly reducedMotion =
     typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   private raceParked = false;
@@ -550,6 +554,7 @@ export class ThreeOsmEngine implements SceneEngine {
     }
     this.nightLights = this.makeNightLights(T, lights.lines, windows);
     scene.add(this.nightLights);
+    this.weather = new WeatherController(T, scene, (x, z) => this.heightAt(x, z));
     this.applySeason();
 
     const attribution = document.createElement('div');
@@ -734,6 +739,8 @@ export class ThreeOsmEngine implements SceneEngine {
       }
     });
     this.nightLights = null;
+    this.weather?.dispose();
+    this.weather = null;
     this.renderer?.dispose();
     this.renderer?.domElement.remove();
     this.labels?.domElement.remove();
@@ -923,6 +930,12 @@ export class ThreeOsmEngine implements SceneEngine {
     this.applySeason();
   }
 
+  setWeather(condition: SceneWeatherCondition | null): void {
+    if (condition === this.weatherCondition) return;
+    this.weatherCondition = condition;
+    this.applySeason();
+  }
+
   /** Degradado vertical del cielo; se crea una vez por hora y se reutiliza. */
   private skyTexture(T: Three, time: SceneTimeOfDay): THREE.Texture | THREE.Color {
     const cached = this.skies[time];
@@ -980,6 +993,18 @@ export class ThreeOsmEngine implements SceneEngine {
     const wantPetals = (this.seasonLook?.petals ?? false) && this.streetPoints.length > 0;
     if (wantPetals && !this.petals) this.petals = this.makePetals(T, scene);
     if (this.petals) this.petals.visible = wantPetals;
+    this.weather?.apply({
+      condition: this.weatherCondition,
+      time,
+      renderer: this.renderer,
+      hemi,
+      sun,
+      ground: this.ground,
+      buildings: this.buildings,
+      roads: this.roads,
+      looks: this.looks,
+      streetPoints: this.streetPoints,
+    });
   }
 
   /** Ruta de la carrera a cuadros sobre el relieve y autos clásicos que la recorren en bucle. */
@@ -1090,6 +1115,7 @@ export class ThreeOsmEngine implements SceneEngine {
       this.moveRaceCars(0);
       this.raceParked = true;
     }
+    this.weather?.tick(dt, camera, controls.target, this.reducedMotion);
     renderer.render(scene, camera);
     labels.render(scene, camera);
     this.declutterLabels(camera);

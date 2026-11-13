@@ -50,6 +50,7 @@ import { MapAssistantSheet } from './app/MapAssistantSheet';
 import { recordLegendaryFind, recordPlaceVisit } from '../pet/visits';
 import { resolveMapsApiKey } from '../data/mapsApiKey';
 import { forcedTimeOfDay, zacatecasTimeOfDay } from '../scene3d/timeOfDay';
+import { forcedWeather } from '../scene3d/weather';
 
 
 /** Recorridos que tocan hoy: los de temporada solo en su temporada, y primero. */
@@ -419,6 +420,12 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
     if (forced) return;
     const timer = window.setInterval(apply, 60_000);
     return () => window.clearInterval(timer);
+  }, [status, engineId]);
+
+  // PROTO: ?clima=soleado|nublado|lluvia para probar el clima 3D (#201).
+  useEffect(() => {
+    if (status !== 'ready') return;
+    engineRef.current?.setWeather?.(forcedWeather(window.location.search));
   }, [status, engineId]);
 
   // Jugador: moverlo, seguirlo con la cámara y descubrir lugares cercanos.
