@@ -314,6 +314,7 @@ Alta de un puesto con revisión. Un puesto dado de alta queda **pendiente** y no
 ```
 → `{ "id": "alta-1-tortas-la-solicitud", "status": "pending", "message": { "es": "…", "en": "…" } }`
 - `lat`/`lng` deben caer en el Centro Histórico (22.760–22.790, -102.590 a -102.560); si no, 422. `promotion` y `contact` son opcionales.
+- `promotion.start` y `promotion.end` son fecha y hora ISO 8601; sin zona se toma la de Zacatecas. Una fecha ilegible, o un `end` anterior a `start`, responde 422.
 - **Revisión**, con `Authorization: Bearer <ADMIN_TOKEN>` (variable de entorno):
   - `GET /vendors/pending` → `{ "pending": [{ "vendor": Vendor, "promotion": …, "contact": …, "receivedAt": "…" }] }`.
   - `POST /vendors/{id}/approve` → el `Vendor` publicado. Desde ese momento sale en `/vendors` y en `/nearby`, con su promoción si la trae.

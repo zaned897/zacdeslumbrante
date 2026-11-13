@@ -7,12 +7,12 @@ Las reglas salen de docs/design/señales-del-agente.md (#166):
 """
 
 import json
-from datetime import UTC, datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from functools import cache
 from math import asin, cos, radians, sin, sqrt
 from pathlib import Path
 
-from app.models.common import LocalizedText
+from app.models.common import ZACATECAS, LocalizedText
 from app.models.nearby import (
     ActivePromotion,
     NearbyItem,
@@ -30,8 +30,6 @@ from app.models.world import (
 from app.services import vendor_requests
 
 FIXTURES = Path(__file__).resolve().parent.parent / "fixtures"
-# Zacatecas no cambia de horario desde 2022: UTC-6 todo el año.
-ZACATECAS = timezone(timedelta(hours=-6))
 EARTH_RADIUS_M = 6_371_000
 RECOMMENDATION_DAYS = 90
 MENTION_FROM = 3

@@ -108,3 +108,41 @@ def test_requests_outside_the_center_or_without_hours_are_rejected() -> None:
     assert client.post("/vendors", json=far).status_code == 422
     no_hours = {**REQUEST, "hours": []}
     assert client.post("/vendors", json=no_hours).status_code == 422
+
+
+@pytest.mark.parametrize(
+    "promotion",
+    [
+        {"title": "Torta y agua", "start": "mañana", "end": "2026-11-30T18:00:00-06:00"},
+        {"title": "Torta y agua", "start": "2026-11-01T09:00:00-06:00", "end": "30 de noviembre"},
+        # Termina antes de empezar.
+        {"title": "Torta y agua", "start": "2026-11-30T18:00:00-06:00", "end": "2026-11-01T09:00"},
+    ],
+)
+def test_promotion_with_bad_dates_is_rejected(promotion: dict) -> None:
+    # Hallazgo de Codex: una fecha que no se puede leer pasaba el alta y, ya aprobada,
+    # tumbaba /nearby y el plan del agente con 500.
+    assert client.post("/vendors", json={**REQUEST, "promotion": promotion}).status_code == 422
+    assert client.get("/vendors/pending", headers=ADMIN).json()["pending"] == []
+
+
+def test_promotion_without_time_zone_is_read_as_zacatecas() -> None:
+    promotion = {"title": "Torta y agua", "start": "2026-11-01T09:00", "end": "2026-11-30T18:00"}
+    res = client.post("/vendors", json={**REQUEST, "promotion": promotion})
+    assert res.status_code == 201
+    vendor_id = res.json()["id"]
+    assert client.post(f"/vendors/{vendor_id}/approve", headers=ADMIN).status_code == 200
+    near = client.get("/nearby", params={"lat": 22.7756, "lng": -102.5723, "at": NOON})
+    assert near.status_code == 200
+    item = next(i for i in near.json()["items"] if i["id"] == vendor_id)
+    assert item["promotion"]["end"] == "2026-11-30T18:00"
+    plan = client.post(
+        "/agent/plan",
+        json={
+            "start": {"lat": 22.7756, "lng": -102.5723},
+            "minutes": 60,
+            "hungry": True,
+            "at": NOON,
+        },
+    )
+    assert plan.status_code == 200
