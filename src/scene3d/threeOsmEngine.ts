@@ -1,4 +1,5 @@
 import type * as THREE from 'three';
+import type { VegetationLayer } from './vegetation';
 import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import type { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import type { CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
@@ -369,6 +370,8 @@ export class ThreeOsmEngine implements SceneEngine {
   private resizeObserver: ResizeObserver | null = null;
   private ground: THREE.Mesh | null = null;
   private terrain: Terrain | null = null;
+  private vegetation: VegetationLayer | null = null;
+  private vegetationAbort: AbortController | null = null;
   private poiGroup: THREE.Group | null = null;
   private poiLabels: PoiLabel[] = [];
   private labelPoint: THREE.Vector3 | null = null;
@@ -574,6 +577,13 @@ export class ThreeOsmEngine implements SceneEngine {
       this.tick(now);
       firstFrame();
     });
+    const vegetationAbort = new AbortController();
+    this.vegetationAbort = vegetationAbort;
+    void this.readyPromise.then(() => import('./vegetation')).then(async ({ loadVegetation }) => {
+      const layer = await loadVegetation({ T, scene, project: toLocal, height: terrain ? (x, z) => terrain.at(x, z) : null,
+        buildings: data.buildings, roads: roads?.roads ?? [] }, vegetationAbort.signal);
+      if (!vegetationAbort.signal.aborted) { this.vegetation = layer; layer?.updateSeason(this.seasonLook?.rainy === true); }
+    }).catch(error => console.warn('[vegetation] No se pudo cargar el módulo.', error));
   }
 
   ready(): Promise<void> {
@@ -717,6 +727,9 @@ export class ThreeOsmEngine implements SceneEngine {
   }
 
   destroy(): void {
+    this.vegetationAbort?.abort();
+    this.vegetationAbort = null;
+    this.vegetation = null;
     this.stop();
     this.renderer?.setAnimationLoop(null);
     this.renderer?.domElement.removeEventListener('click', this.onClick);
@@ -911,6 +924,7 @@ export class ThreeOsmEngine implements SceneEngine {
   }
 
   setSeason(look: SceneSeasonLook | null): void {
+    this.vegetation?.updateSeason(look?.rainy === true);
     this.seasonLook = look;
     this.applySeason();
   }

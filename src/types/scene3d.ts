@@ -90,6 +90,8 @@ export interface SceneLayer {
 export interface SceneSeasonLook {
   night: boolean;
   petals: boolean;
+  /** Temporada de lluvias: el matorral se ve más verde (#231). */
+  rainy?: boolean;
   /** Ruta de una carrera con autos clásicos que la recorren (Carrera Panamericana, #87). */
   raceRoute?: Array<{ lat: number; lng: number }>;
 }
