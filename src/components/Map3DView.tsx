@@ -16,12 +16,13 @@ import {
   Play,
   RotateCcw,
   RotateCw,
+  Sparkles,
   Square,
   Trophy,
   X,
 } from 'lucide-react';
 import { Language, type Place } from '../types';
-import type { SceneEngine, SceneLayerContext, ScenePoi, Tour } from '../types/scene3d';
+import type { SceneEngine, SceneLayerContext, ScenePoi, SceneTimeOfDay, Tour } from '../types/scene3d';
 import { TRANSLATIONS } from '../data/i18n';
 import { SEASONAL_TOURS_3D, TOURS_3D, ZACATECAS_3D_HOME, loadTours } from '../data/tours3d';
 import { activeSeason, type Season } from '../data/seasons';
@@ -46,10 +47,12 @@ import { usePlayerPosition, type FallbackReason } from '../scene3d/usePlayerPosi
 import { useCollection } from '../scene3d/useCollection';
 import { useAvatarControls, type AvatarAction } from '../scene3d/useAvatarControls';
 import { loadPlacePhotos, type PlacePhoto } from '../scene3d/placePhotos';
+import { warmPyApi } from '../scene3d/pyApi';
 import { MapAssistantSheet } from './app/MapAssistantSheet';
 import { recordLegendaryFind, recordPlaceVisit } from '../pet/visits';
 import { resolveMapsApiKey } from '../data/mapsApiKey';
 import { forcedTimeOfDay, zacatecasTimeOfDay } from '../scene3d/timeOfDay';
+import { forcedWeather } from '../scene3d/weather';
 
 
 /** Recorridos que tocan hoy: los de temporada solo en su temporada, y primero. */
@@ -153,6 +156,9 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
   // Puestos ya anunciados en esta visita: el aviso sale una sola vez por puesto.
   const announcedRef = useRef(new Set<string>());
   const [isExploring, setIsExploring] = useState(false);
+  const [timeOfDay, setTimeOfDay] = useState<SceneTimeOfDay>('day');
+  // Mirar el cielo estrellado desde la plaza (solo de noche y en la ciudad estilizada).
+  const [isStargazing, setIsStargazing] = useState(false);
   const [avatar, setAvatar] = useState<AvatarId>(readAvatar);
   const [toast, setToast] = useState<string | null>(null);
   const [timings, setTimings] = useState<{ mountMs: number | null; readyMs: number | null }>({
@@ -257,6 +263,9 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
     visitedPlaceIds: Object.keys(collection),
   };
   const loadedLayersRef = useRef(new Map<string, string>());
+
+  // Despertar la API Python mientras carga la escena: fotos y puestos dependen de ella.
+  useEffect(() => warmPyApi(), []);
 
   // Recorridos desde la API Python; si no responde, se quedan los de src/data/tours3d.ts.
   useEffect(() => {
@@ -381,13 +390,11 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
     setPhotos([]);
     setPhotoIndex(0);
     if (!selectedPlaceId) return;
-    let cancelled = false;
-    void loadPlacePhotos(selectedPlaceId, seasonId).then((list) => {
-      if (!cancelled) setPhotos(list);
+    const controller = new AbortController();
+    void loadPlacePhotos(selectedPlaceId, seasonId, controller.signal).then((list) => {
+      if (!controller.signal.aborted) setPhotos(list);
     });
-    return () => {
-      cancelled = true;
-    };
+    return () => controller.abort();
   }, [selectedPlaceId, seasonId]);
 
   // Repintar marcadores al cambiar puntos, idioma o colección (en exploración, lo no descubierto va en gris).
@@ -405,7 +412,7 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
   useEffect(() => {
     if (status !== 'ready') return;
     engineRef.current?.setSeason?.(
-      season ? { night: season.night, petals: season.petals, raceRoute: season.race ? DESFILE_ROUTE : undefined } : null,
+      season ? { night: season.night, petals: season.petals, rainy: season.id === 'lluvias', raceRoute: season.race ? DESFILE_ROUTE : undefined } : null,
     );
   }, [season, status, engineId]);
 
@@ -414,12 +421,30 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
   useEffect(() => {
     if (status !== 'ready') return;
     const forced = forcedTimeOfDay(window.location.search);
-    const apply = () => engineRef.current?.setTimeOfDay?.(forced ?? zacatecasTimeOfDay(new Date()));
+    const apply = () => {
+      const time = forced ?? zacatecasTimeOfDay(new Date());
+      setTimeOfDay(time);
+      engineRef.current?.setTimeOfDay?.(time);
+    };
     apply();
     if (forced) return;
     const timer = window.setInterval(apply, 60_000);
     return () => window.clearInterval(timer);
   }, [status, engineId]);
+
+  // PROTO: ?clima=soleado|nublado|lluvia para probar el clima 3D (#201).
+  useEffect(() => {
+    if (status !== 'ready') return;
+    engineRef.current?.setWeather?.(forcedWeather(window.location.search));
+  }, [status, engineId]);
+
+  // El cielo solo se ofrece de noche (por la hora o por una temporada nocturna) en la ciudad estilizada.
+  const canStargaze = engineId === 'three' && status === 'ready' && (timeOfDay === 'night' || Boolean(season?.night));
+  useEffect(() => {
+    if (canStargaze || !isStargazing) return;
+    engineRef.current?.setSkyView?.(false);
+    setIsStargazing(false);
+  }, [canStargaze, isStargazing]);
 
   // Jugador: moverlo, seguirlo con la cámara y descubrir lugares cercanos.
   useEffect(() => {
@@ -499,6 +524,8 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
       if (!engine) return;
       const run = ++tourRunRef.current;
       const isCurrent = () => tourRunRef.current === run;
+      engine.setSkyView?.(false);
+      setIsStargazing(false);
       setSelected(null);
       setAskPlace(null);
       setIsTouring(true);
@@ -523,7 +550,14 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
     [],
   );
 
+  // Se avisa al motor en el momento: si se espera al efecto, deshacer la vista del cielo frenaría un vuelo recién empezado.
+  const setStargazing = (on: boolean) => {
+    engineRef.current?.setSkyView?.(on);
+    setIsStargazing(on);
+  };
+
   const toggleExplore = () => {
+    setStargazing(false);
     stopTour();
     setSelected(null);
     setAskPlace(null);
@@ -541,6 +575,7 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
     : null;
 
   const goHome = () => {
+    setStargazing(false);
     setIsExploring(false);
     stopTour();
     void engineRef.current?.flyTo(ZACATECAS_3D_HOME, 2500);
@@ -604,14 +639,28 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
         <div className="pointer-events-auto flex items-center gap-2 px-3 py-2 bg-[#FBF9F5]/95 border border-stone-200 rounded-lg shadow-sm">
           <span className="font-serif font-bold text-sm md:text-base">{t.view3d}</span>
         </div>
-        <button
-          onClick={onToggleLanguage}
-          className="pointer-events-auto flex items-center gap-1.5 px-3 py-2 text-xs font-semibold bg-[#FBF9F5]/95 border border-stone-200 rounded-lg shadow-sm hover:bg-white cursor-pointer"
-          aria-label={t.toggleLanguage}
-        >
-          <Globe className="w-3.5 h-3.5 text-stone-500" />
-          <span className="uppercase">{language}</span>
-        </button>
+        <div className="flex items-center gap-2">
+          {canStargaze && !isTouring && !isExploring && !isStargazing && (
+            <button
+              onClick={() => {
+                setSelected(null);
+                setStargazing(true);
+              }}
+              className="pointer-events-auto flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-white bg-[#1B2347] border border-[#4C4F8A] rounded-lg shadow-sm hover:bg-[#262F5C] cursor-pointer"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-[#FCD9A0]" />
+              {t.view3dSky}
+            </button>
+          )}
+          <button
+            onClick={onToggleLanguage}
+            className="pointer-events-auto flex items-center gap-1.5 px-3 py-2 text-xs font-semibold bg-[#FBF9F5]/95 border border-stone-200 rounded-lg shadow-sm hover:bg-white cursor-pointer"
+            aria-label={t.toggleLanguage}
+          >
+            <Globe className="w-3.5 h-3.5 text-stone-500" />
+            <span className="uppercase">{language}</span>
+          </button>
+        </div>
       </div>
 
       {/* Estados sin mapa */}
@@ -630,7 +679,7 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
       )}
 
       {/* La ciudad estilizada es la vista normal (#127): el aviso solo sale si cayó desde Google o no hay llave. */}
-      {engineId === 'three' && status === 'ready' && !isExploring && (engineFallback || !apiKey) && (
+      {engineId === 'three' && status === 'ready' && !isExploring && !isStargazing && (engineFallback || !apiKey) && (
         <div className="absolute top-16 inset-x-3 md:inset-x-auto md:left-4 md:max-w-xs z-10 text-[11px] text-stone-700 bg-[#FBF9F5]/90 border border-stone-200 rounded-lg px-3 py-2">
           {engineFallback ? (
             <>
@@ -961,7 +1010,7 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
       )}
 
       {/* Hoja del recorrido: elegir uno (#34) o seguir la parada en curso */}
-      {status === 'ready' && !isExploring && !selected && !askPlace && (isTouring ? tourStep : tours.length > 1) && (
+      {status === 'ready' && !isExploring && !isStargazing && !selected && !askPlace && (isTouring ? tourStep : tours.length > 1) && (
         <div className="absolute inset-x-3 bottom-20 md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:w-[28rem] z-10 bg-[#FBF9F5] rounded-2xl shadow-lg border border-stone-200 p-3">
           {tourStep ? (
             <>
@@ -1009,8 +1058,33 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
         </div>
       )}
 
+      {/* Mirar el cielo: aviso de qué se ve y salida */}
+      {isStargazing && (
+        <div className="absolute top-16 inset-x-3 md:inset-x-auto md:left-4 md:w-80 z-10 bg-[#0B1022]/85 border border-[#1B2347] text-stone-100 rounded-xl shadow-lg p-3">
+          <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-[#BACEFF]">
+            <Sparkles className="w-3.5 h-3.5" />
+            {t.view3dSkyTitle}
+          </p>
+          <p className="mt-1 text-[11px] leading-snug text-stone-300">
+            {zacatecasTimeOfDay(new Date()) === 'night' ? t.view3dSkyNow : t.view3dSkyTonight}
+          </p>
+          <p className="mt-1 text-[10px] text-stone-500">{t.view3dSource}: d3-celestial · XHIP (Hipparcos)</p>
+        </div>
+      )}
+
       {/* Controles */}
-      {status === 'ready' && (
+      {status === 'ready' && isStargazing && (
+        <div className="absolute inset-x-0 bottom-0 z-10 flex justify-center gap-2 p-4">
+          <button
+            onClick={() => setStargazing(false)}
+            className="flex items-center gap-2 px-3.5 py-3 text-sm font-semibold whitespace-nowrap text-stone-800 bg-[#FBF9F5] border border-stone-200 rounded-full shadow-lg hover:bg-white cursor-pointer"
+          >
+            <Home className="w-4 h-4 text-[#9A3412]" />
+            {t.view3dSkyBack}
+          </button>
+        </div>
+      )}
+      {status === 'ready' && !isStargazing && (
         <div className="absolute inset-x-0 bottom-0 z-10 flex justify-center gap-2 p-4">
           {isTouring ? (
             <button
