@@ -1,6 +1,7 @@
 import type * as THREE from 'three';
 import type { VegetationLayer } from './vegetation';
 import type { RailLayer } from './rail';
+import { FreightTrain } from './freightTrain';
 import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import type { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import type { CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
@@ -380,6 +381,9 @@ export class ThreeOsmEngine implements SceneEngine {
   private vegetation: VegetationLayer | null = null;
   private vegetationAbort: AbortController | null = null;
   private rail: RailLayer | null = null;
+  private freight: FreightTrain | null = null;
+  private freightEnabled = true;
+  private freightBlocked = false;
   private railAbort: AbortController | null = null;
   private poiGroup: THREE.Group | null = null;
   private poiLabels: PoiLabel[] = [];
@@ -615,12 +619,23 @@ export class ThreeOsmEngine implements SceneEngine {
     void this.readyPromise.then(() => import('./rail')).then(async ({ loadRail }) => {
       const layer = await loadRail({ T, scene, ground, roads: this.roads, project: toLocal,
         height: (x, z) => terrain?.at(x, z) ?? 0, attribution }, railAbort.signal);
-      if (!railAbort.signal.aborted) this.rail = layer;
+      if (!railAbort.signal.aborted) {
+        this.rail = layer;
+        if (layer) {
+          this.freight = new FreightTrain(T, scene, layer, camera, controls);
+          this.freight.setEnabled(this.freightEnabled);
+          this.freight.setBlocked(this.freightBlocked);
+        }
+      }
     }).catch(error => console.warn('[rail] No se pudo cargar el módulo.', error));
   }
 
   /** Costura para #246: disponible tras la carga opcional, null si no hay datos válidos. */
   getRailLayer(): RailLayer | null { return this.rail; }
+  getFreightState() { return this.freight?.state ?? 'unavailable' as const; }
+  setFreightEnabled(on: boolean): void { this.freightEnabled = on; this.freight?.setEnabled(on); }
+  watchFreight(follow: boolean): void { this.stop(); this.freight?.watch(follow); }
+  stopFreightFollowing(): void { this.freight?.stopFollowing(); }
 
   ready(): Promise<void> {
     return this.readyPromise;
@@ -690,6 +705,7 @@ export class ThreeOsmEngine implements SceneEngine {
   }
 
   stop(): void {
+    this.freight?.stopFollowing();
     const anim = this.animation;
     this.animation = null;
     anim?.resolve();
@@ -730,6 +746,8 @@ export class ThreeOsmEngine implements SceneEngine {
   }
 
   setRoute(points: Array<{ lat: number; lng: number }> | null): void {
+    this.freightBlocked = points !== null;
+    this.freight?.setBlocked(this.freightBlocked);
     const { T, scene } = this;
     if (!T || !scene) return;
     if (this.route) {
@@ -765,6 +783,8 @@ export class ThreeOsmEngine implements SceneEngine {
   }
 
   destroy(): void {
+    this.freight?.dispose();
+    this.freight = null;
     this.railAbort?.abort();
     this.railAbort = null;
     this.rail = null;
@@ -1213,6 +1233,7 @@ export class ThreeOsmEngine implements SceneEngine {
     if (!this.animation) controls.update();
     this.starSky?.tick(camera, now, new Date());
     const dt = clock.getDelta();
+    this.freight?.tick(dt);
     if (this.walkAction) {
       const walking = now - this.lastMoveAt < 600;
       this.walkAction.paused = !walking;

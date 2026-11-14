@@ -17,6 +17,7 @@ export interface RailCrossing {
   readonly road: RailFile['crossings'][number]['road'];
   readonly state: BarrierState;
   setState(state: BarrierState): void;
+  setFlashing?(lit: boolean): void;
 }
 export interface RailLayer {
   /** Metros locales, sobre la cabeza del riel. Cada tramo conserva sus extremos; no se inventan enlaces. */
@@ -297,6 +298,7 @@ function build(options: Options, data: RailFile): RailLayer {
       }
       let state: BarrierState = 'arriba';
       const crossing: RailCrossing = {
+        setFlashing(lit) { lights.forEach(l => l.emissive.set(lit ? '#FF2412' : '#000000')); },
         position: holder.position.clone(), road: c.road, get state() { return state; },
         setState(next) {
           state = next;
