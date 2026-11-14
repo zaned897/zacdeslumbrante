@@ -1,6 +1,7 @@
 import type * as THREE from 'three';
 import type { VegetationLayer } from './vegetation';
 import type { RailLayer } from './rail';
+import type { CableCarLayer } from './cableCar';
 import { FreightTrain } from './freightTrain';
 import type { TrenecitoLayer } from './trenecito';
 import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js';
@@ -313,6 +314,8 @@ class Terrain {
     return this.meta.license;
   }
 
+  elevationY(elevationM: number): number { return elevationM - this.origin; }
+
   /** Altura en (x, z) locales, interpolada; fuera de la cuadrícula toma el borde. */
   at(x: number, z: number): number {
     const { lat, lng } = toLatLng(x, z);
@@ -382,6 +385,8 @@ export class ThreeOsmEngine implements SceneEngine {
   private vegetation: VegetationLayer | null = null;
   private vegetationAbort: AbortController | null = null;
   private rail: RailLayer | null = null;
+  private cableCar: CableCarLayer | null = null;
+  private cableCarAbort: AbortController | null = null;
   private freight: FreightTrain | null = null;
   private freightEnabled = true;
   private freightBlocked = false;
@@ -618,7 +623,7 @@ export class ThreeOsmEngine implements SceneEngine {
     }).catch(error => console.warn('[vegetation] No se pudo cargar el módulo.', error));
     const railAbort = new AbortController();
     this.railAbort = railAbort;
-    void this.readyPromise.then(() => import('./rail')).then(async ({ loadRail }) => {
+    const railReady = this.readyPromise.then(() => import('./rail')).then(async ({ loadRail }) => {
       const layer = await loadRail({ T, scene, ground, roads: this.roads, project: toLocal,
         height: (x, z) => terrain?.at(x, z) ?? 0, attribution }, railAbort.signal);
       if (!railAbort.signal.aborted) {
@@ -635,7 +640,25 @@ export class ThreeOsmEngine implements SceneEngine {
         }
       }
     }).catch(error => console.warn('[rail] No se pudo cargar el módulo.', error));
+    // Sin datum de terreno no inventamos una conversión de las cotas publicadas.
+    if (terrain) {
+      const cableCarAbort = new AbortController();
+      this.cableCarAbort = cableCarAbort;
+      // Espera el posible ajuste del relieve de rail antes de comprobar el gálibo.
+      void railReady.then(() => import('./cableCar')).then(async ({ loadCableCar }) => {
+        const layer = await loadCableCar({ T, scene, ground, buildings: this.buildings, project: toLocal,
+          height: (x, z) => terrain.at(x, z), elevationY: elevation => terrain.elevationY(elevation) }, cableCarAbort.signal);
+        if (!cableCarAbort.signal.aborted) {
+          this.cableCar = layer;
+          layer?.setLanguage(this.language);
+          layer?.setTimeOfDay(this.seasonLook?.night ? 'night' : this.timeOfDay);
+        }
+      }).catch(error => console.warn('[cableCar] No se pudo cargar el módulo.', error));
+    } else console.warn('[cableCar] Sin relieve para convertir las cotas; se omite el teleférico.');
   }
+
+  /** Costura para #263: polilíneas y estaciones en metros locales tras la carga opcional. */
+  getCableCarLayer(): CableCarLayer | null { return this.cableCar; }
 
   /** Costura para #246: disponible tras la carga opcional, null si no hay datos válidos. */
   getRailLayer(): RailLayer | null { return this.rail; }
@@ -650,6 +673,7 @@ export class ThreeOsmEngine implements SceneEngine {
 
   setPois(pois: ScenePoi[], language: Language): void {
     this.language = language;
+    this.cableCar?.setLanguage(language);
     this.starSky?.setLanguage(language);
     const { T, poiGroup } = this;
     if (!T || !poiGroup) return;
@@ -793,6 +817,9 @@ export class ThreeOsmEngine implements SceneEngine {
     this.freight?.dispose();
     this.freight = null;
     this.railAbort?.abort();
+    this.cableCarAbort?.abort();
+    this.cableCarAbort = null;
+    this.cableCar = null;
     this.railAbort = null;
     this.rail = null;
     this.trenecito?.dispose();
@@ -1096,6 +1123,7 @@ export class ThreeOsmEngine implements SceneEngine {
     if (!T || !scene || !hemi || !sun) return;
     const time: SceneTimeOfDay = this.seasonLook?.night ? 'night' : this.timeOfDay;
     const night = time === 'night';
+    this.cableCar?.setTimeOfDay(time);
     const sky = SKIES[time];
     scene.background = this.skyTexture(T, time);
     if (scene.fog instanceof T.Fog) scene.fog.color.set(sky[sky.length - 1]);
