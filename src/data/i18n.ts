@@ -1,5 +1,8 @@
 export const TRANSLATIONS = {
   es: {
+    cableCarGrillo: 'Estación Cerro del Grillo · Mina El Edén',
+    cableCarBufa: 'Estación La Bufa',
+    cableCarLine: 'Teleférico · {length} m',
     freightSettings: "Tren de maqueta · ajustes",
     freightEnabled: "Mostrar tren",
     freightSound: "Silbato (opcional)",
@@ -403,6 +406,9 @@ export const TRANSLATIONS = {
     trainTrenecitoParked: 'Estacionado fuera de horario',
   },
   en: {
+    cableCarGrillo: 'Cerro del Grillo station · El Edén Mine',
+    cableCarBufa: 'La Bufa station',
+    cableCarLine: 'Cable car · {length} m',
     freightSettings: "Model train · settings",
     freightEnabled: "Show train",
     freightSound: "Whistle (optional)",
