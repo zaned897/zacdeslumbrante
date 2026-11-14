@@ -4,8 +4,8 @@ import type { FreightState, SceneEngine } from '../../types/scene3d';
 import { TRANSLATIONS } from '../../data/i18n';
 import { TrainCard } from './TrainCard';
 
-export function FreightNotice({ engine, language, hidden }: {
-  engine: SceneEngine | null; language: Language; hidden: boolean;
+export function FreightNotice({ engine, language, hidden, inline = false }: {
+  engine: SceneEngine | null; language: Language; hidden: boolean; inline?: boolean;
 }) {
   const t = TRANSLATIONS[language];
   const [state, setState] = useState<FreightState>('unavailable');
@@ -43,7 +43,7 @@ export function FreightNotice({ engine, language, hidden }: {
   if (hidden || state === 'unavailable') return null;
   const button = 'rounded-full bg-[#9A3412] px-3 py-1.5 text-xs font-semibold text-white';
   return (
-    <aside className="absolute left-3 right-3 top-36 z-20 mx-auto max-w-sm text-stone-900">
+    <aside className={inline ? "text-stone-900" : "absolute left-3 right-3 top-36 z-20 mx-auto max-w-sm text-stone-900"}>
       <details className="rounded-xl border border-stone-200 bg-[#FBF9F5] p-2 text-xs shadow-sm">
         <summary className="cursor-pointer">{t.freightSettings}</summary>
         <p className="my-2">{t.trainModelRandomNote}</p>

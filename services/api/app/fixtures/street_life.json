@@ -125,8 +125,8 @@
       },
       "when": { "es": "Suele verse de día", "en": "Usually daytime" },
       "nearPlaceId": "teleferico-zacatecas",
-      "lat": 22.77795,
-      "lng": -102.57720
+      "lat": 22.7783,
+      "lng": -102.57400
     },
     {
       "id": "atole-del-acueducto",

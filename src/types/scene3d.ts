@@ -1,3 +1,4 @@
+import type { CabinState } from '../scene3d/cableCabins';
 // Contrato del modo 3D (ver docs/MAPA3D.md). Compartido: cambios con acuerdo.
 import type { Language } from './index';
 
@@ -113,6 +114,8 @@ export interface SceneLayerContext {
  * Mañana: CesiumJS o Three.js, sin tocar los componentes.
  */
 export interface SceneEngine {
+  getCableCabinState?(): CabinState;
+  rideCableCabin?(on: boolean): void;
   getFreightState?(): FreightState;
   setFreightEnabled?(enabled: boolean): void;
   watchFreight?(follow: boolean): void;
