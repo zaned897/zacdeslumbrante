@@ -278,6 +278,15 @@ const CLOUD_CLUSTERS = 30;
 const PUFFS_PER_CLOUD = 5;
 const CLOUD_SPAN_M = 1350;
 const CLOUD_DRIFT_MPS = 9;
+/** Altura mínima de las nubes sobre el punto más alto del relieve. */
+const CLOUD_BASE_M = 260;
+const CLOUD_LAYER_M = 220;
+/**
+ * Una nube por debajo de la cámara tapa la ciudad como mancha (#252).
+ * Se encoge al acercarse a la altura de la cámara y desaparece por debajo.
+ */
+const CLOUD_HIDE_BELOW_CAMERA_M = 60;
+const CLOUD_FADE_M = 120;
 
 const RAIN_DROPS = 650;
 const RAIN_BOX = { x: 420, y: 240, z: 420 };
@@ -321,6 +330,7 @@ export class WeatherController {
     material: THREE.MeshLambertMaterial;
     puffs: CloudPuff[];
     offset: number;
+    cameraY: number;
   } | null = null;
   private rain: {
     lines: THREE.LineSegments;
@@ -412,9 +422,14 @@ export class WeatherController {
 
   tick(dt: number, camera: THREE.Camera, target: THREE.Vector3, reducedMotion: boolean): void {
     if (!this.activeCondition) return;
-    if (this.clouds?.mesh.visible && !reducedMotion) {
-      this.clouds.offset = (this.clouds.offset + dt * CLOUD_DRIFT_MPS) % (CLOUD_SPAN_M * 2);
-      this.updateCloudMatrices();
+    const clouds = this.clouds;
+    if (clouds?.mesh.visible) {
+      const moved = Math.abs(camera.position.y - clouds.cameraY) > 1;
+      if (!reducedMotion) clouds.offset = (clouds.offset + dt * CLOUD_DRIFT_MPS) % (CLOUD_SPAN_M * 2);
+      if (moved || !reducedMotion) {
+        clouds.cameraY = camera.position.y;
+        this.updateCloudMatrices();
+      }
     }
     if (this.rain?.lines.visible) {
       this.placeRainVolume(camera, target);
@@ -552,10 +567,15 @@ export class WeatherController {
     const { T } = this;
     const rng = seededRandom(201);
     const puffs: CloudPuff[] = [];
+    // Muestra el relieve para que ninguna nube quede dentro de un cerro.
+    let ground = 0;
+    for (let x = -CLOUD_SPAN_M; x <= CLOUD_SPAN_M; x += 150) {
+      for (let z = -CLOUD_SPAN_M; z <= CLOUD_SPAN_M; z += 150) ground = Math.max(ground, this.heightAt(x, z));
+    }
     for (let c = 0; c < CLOUD_CLUSTERS; c++) {
       const cx = (rng() * 2 - 1) * CLOUD_SPAN_M;
       const cz = (rng() * 2 - 1) * CLOUD_SPAN_M;
-      const cy = 190 + rng() * 190;
+      const cy = ground + CLOUD_BASE_M + rng() * CLOUD_LAYER_M;
       const scale = 0.85 + rng() * 0.7;
       for (let p = 0; p < PUFFS_PER_CLOUD; p++) {
         const angle = (p / PUFFS_PER_CLOUD) * Math.PI * 2 + rng() * 0.5;
@@ -576,7 +596,7 @@ export class WeatherController {
     const mesh = new T.InstancedMesh(geometry, material, puffs.length);
     mesh.frustumCulled = false;
     this.scene.add(mesh);
-    const state = { mesh, material, puffs, offset: 0 };
+    const state = { mesh, material, puffs, offset: 0, cameraY: Number.POSITIVE_INFINITY };
     this.clouds = state;
     this.updateCloudMatrices();
     return state;
@@ -597,7 +617,9 @@ export class WeatherController {
       const wrappedX = ((((p.baseX + clouds.offset + span) % width) + width) % width) - span;
       pos.set(wrappedX, p.y, p.z);
       quat.setFromAxisAngle(up, p.rotY);
-      scale.set(p.sx, p.sy, p.sz);
+      const above = p.y - (clouds.cameraY + CLOUD_HIDE_BELOW_CAMERA_M);
+      const k = Math.min(Math.max(above / CLOUD_FADE_M, 0), 1);
+      scale.set(p.sx * k, p.sy * k, p.sz * k);
       m.compose(pos, quat, scale);
       clouds.mesh.setMatrixAt(i, m);
     });
