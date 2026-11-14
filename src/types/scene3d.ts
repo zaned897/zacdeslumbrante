@@ -113,6 +113,10 @@ export interface SceneLayerContext {
  * Mañana: CesiumJS o Three.js, sin tocar los componentes.
  */
 export interface SceneEngine {
+  getFreightState?(): FreightState;
+  setFreightEnabled?(enabled: boolean): void;
+  watchFreight?(follow: boolean): void;
+  stopFreightFollowing?(): void;
   mount(container: HTMLElement, initial: SceneCamera): Promise<void>;
   /** Resuelve cuando la primera vista terminó de cargar (para medir tiempo hasta primer render). */
   ready(): Promise<void>;
@@ -142,3 +146,5 @@ export interface SceneEngine {
   setWeather?(condition: SceneWeatherCondition | null): void;
   destroy(): void;
 }
+
+export type FreightState = 'unavailable' | 'disabled' | 'waiting' | 'warning' | 'running' | 'following' | 'parked';
