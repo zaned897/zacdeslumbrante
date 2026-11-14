@@ -1,5 +1,6 @@
 import type * as THREE from 'three';
 import type { VegetationLayer } from './vegetation';
+import type { RailLayer } from './rail';
 import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import type { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import type { CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
@@ -378,6 +379,8 @@ export class ThreeOsmEngine implements SceneEngine {
   private terrain: Terrain | null = null;
   private vegetation: VegetationLayer | null = null;
   private vegetationAbort: AbortController | null = null;
+  private rail: RailLayer | null = null;
+  private railAbort: AbortController | null = null;
   private poiGroup: THREE.Group | null = null;
   private poiLabels: PoiLabel[] = [];
   private labelPoint: THREE.Vector3 | null = null;
@@ -607,7 +610,17 @@ export class ThreeOsmEngine implements SceneEngine {
         buildings: data.buildings, roads: roads?.roads ?? [] }, vegetationAbort.signal);
       if (!vegetationAbort.signal.aborted) { this.vegetation = layer; layer?.updateSeason(this.seasonLook?.rainy === true); }
     }).catch(error => console.warn('[vegetation] No se pudo cargar el módulo.', error));
+    const railAbort = new AbortController();
+    this.railAbort = railAbort;
+    void this.readyPromise.then(() => import('./rail')).then(async ({ loadRail }) => {
+      const layer = await loadRail({ T, scene, ground, roads: this.roads, project: toLocal,
+        height: (x, z) => terrain?.at(x, z) ?? 0, attribution }, railAbort.signal);
+      if (!railAbort.signal.aborted) this.rail = layer;
+    }).catch(error => console.warn('[rail] No se pudo cargar el módulo.', error));
   }
+
+  /** Costura para #246: disponible tras la carga opcional, null si no hay datos válidos. */
+  getRailLayer(): RailLayer | null { return this.rail; }
 
   ready(): Promise<void> {
     return this.readyPromise;
@@ -752,6 +765,9 @@ export class ThreeOsmEngine implements SceneEngine {
   }
 
   destroy(): void {
+    this.railAbort?.abort();
+    this.railAbort = null;
+    this.rail = null;
     this.vegetationAbort?.abort();
     this.vegetationAbort = null;
     this.vegetation = null;
@@ -1187,7 +1203,7 @@ export class ThreeOsmEngine implements SceneEngine {
   }
 
   private heightAt(x: number, z: number): number {
-    return this.terrain?.at(x, z) ?? 0;
+    return this.rail?.heightAt(x, z) ?? this.terrain?.at(x, z) ?? 0;
   }
 
   private tick(now: number): void {
