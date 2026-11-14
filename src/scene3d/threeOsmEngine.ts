@@ -2,6 +2,7 @@ import type * as THREE from 'three';
 import type { VegetationLayer } from './vegetation';
 import type { RailLayer } from './rail';
 import { FreightTrain } from './freightTrain';
+import type { TrenecitoLayer } from './trenecito';
 import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import type { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import type { CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
@@ -385,6 +386,7 @@ export class ThreeOsmEngine implements SceneEngine {
   private freightEnabled = true;
   private freightBlocked = false;
   private railAbort: AbortController | null = null;
+  private trenecito: TrenecitoLayer | null = null;
   private poiGroup: THREE.Group | null = null;
   private poiLabels: PoiLabel[] = [];
   private labelPoint: THREE.Vector3 | null = null;
@@ -625,6 +627,11 @@ export class ThreeOsmEngine implements SceneEngine {
           this.freight = new FreightTrain(T, scene, layer, camera, controls);
           this.freight.setEnabled(this.freightEnabled);
           this.freight.setBlocked(this.freightBlocked);
+          const { loadTrenecito } = await import('./trenecito');
+          this.trenecito = await loadTrenecito(
+            { T, scene, rail: layer, project: toLocal, reducedMotion: this.reducedMotion },
+            railAbort.signal,
+          );
         }
       }
     }).catch(error => console.warn('[rail] No se pudo cargar el módulo.', error));
@@ -788,6 +795,8 @@ export class ThreeOsmEngine implements SceneEngine {
     this.railAbort?.abort();
     this.railAbort = null;
     this.rail = null;
+    this.trenecito?.dispose();
+    this.trenecito = null;
     this.vegetationAbort?.abort();
     this.vegetationAbort = null;
     this.vegetation = null;
@@ -1244,6 +1253,7 @@ export class ThreeOsmEngine implements SceneEngine {
       this.moveRaceCars(0);
       this.raceParked = true;
     }
+    this.trenecito?.tick(now);
     this.weather?.tick(dt, camera, controls.target, this.reducedMotion);
     renderer.render(scene, camera);
     labels.render(scene, camera);
