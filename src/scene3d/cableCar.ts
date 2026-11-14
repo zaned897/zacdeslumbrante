@@ -1,4 +1,5 @@
 import type * as THREE from 'three';
+import { parseCabinConfig, type CabinConfig } from './cableCabins';
 import { CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
 import { TRANSLATIONS } from '../data/i18n';
 import type { Language } from '../types';
@@ -11,6 +12,7 @@ interface CableCarFile {
   line: { lengthM: number };
 }
 export interface CableCarLayer {
+  readonly cabinConfig: CabinConfig;
   /** Metros locales. Ambos ramales van de Grillo a Bufa; #263 invierte el segundo al volver. */
   readonly cables: readonly [readonly THREE.Vector3[], readonly THREE.Vector3[]];
   /** Posición del piso a la cota publicada; los extremos de cables son los puntos de embarque. */
@@ -44,6 +46,7 @@ export function parseCableCarFile(value: unknown): CableCarFile {
     || value.towers[0].id !== 'P1' || value.towers[1].id !== 'P2'
     || !record(value.line) || !finite(value.line.lengthM)
     || value.line.lengthM <= 0 || value.line.lengthM > 2000) throw new Error('Formato teleferico.json inválido');
+  parseCabinConfig(value);
   return value as unknown as CableCarFile;
 }
 
@@ -110,10 +113,11 @@ function build(options: Options, data: CableCarFile): CableCarLayer {
         if (overlaps(b, corridor)) obstacles.push(b);
       }
     }
+    // #263: include the hanging cabin (5.2 m), sway and its rotated footprint.
     const clearance = (p: THREE.Vector3, q: THREE.Vector3) => {
-      const b: Bounds = { minX: Math.min(p.x, q.x) - 1, maxX: Math.max(p.x, q.x) + 1,
-        minZ: Math.min(p.z, q.z) - 1, maxZ: Math.max(p.z, q.z) + 1, top: 0 };
-      return obstacles.reduce((top, o) => overlaps(b, o) ? Math.max(top, o.top + 3) : top, -Infinity);
+      const b: Bounds = { minX: Math.min(p.x, q.x) - 3, maxX: Math.max(p.x, q.x) + 3,
+        minZ: Math.min(p.z, q.z) - 3, maxZ: Math.max(p.z, q.z) + 3, top: 0 };
+      return obstacles.reduce((top, o) => overlaps(b, o) ? Math.max(top, o.top + 7) : top, -Infinity);
     };
     const makeCable = (side: number) => {
       const points: THREE.Vector3[] = [];
@@ -238,7 +242,7 @@ function build(options: Options, data: CableCarFile): CableCarLayer {
       stationLights.forEach(light => { light.intensity = night ? 900 : dusk ? 250 : 0; });
     };
     setLanguage('es'); setTimeOfDay('day'); options.scene.add(group);
-    return { cables, stations, setLanguage, setTimeOfDay, dispose };
+    return { cables, stations, cabinConfig: parseCabinConfig(data), setLanguage, setTimeOfDay, dispose };
   } catch (error) { dispose(); throw error; }
 }
 

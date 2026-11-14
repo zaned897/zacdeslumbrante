@@ -54,6 +54,7 @@ import { resolveMapsApiKey } from '../data/mapsApiKey';
 import { forcedTimeOfDay, zacatecasTimeOfDay } from '../scene3d/timeOfDay';
 import { forcedWeather } from '../scene3d/weather';
 import { FreightNotice } from './map3d/FreightNotice';
+import { CableCabinView } from './map3d/CableCabinView';
 
 
 /** Recorridos que tocan hoy: los de temporada solo en su temporada, y primero. */
@@ -605,7 +606,13 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
     <div className="relative h-dvh w-full overflow-hidden bg-stone-900 text-stone-900">
       {/* isolate: las etiquetas CSS2D de three.js traen z-index propio y no deben tapar la UI. */}
       <div ref={containerRef} className="absolute inset-0 isolate" />
-      {engineId === 'three' && status === 'ready' && <FreightNotice engine={engineRef.current} language={language} hidden={Boolean(askPlace || selected || isTouring || isExploring || isStargazing)} />}
+      {engineId === 'three' && status === 'ready' && (
+        <div className="absolute left-3 right-3 top-36 z-20 mx-auto grid max-h-[calc(100%_-_20rem)] max-w-sm gap-2 overflow-y-auto">
+          <FreightNotice inline engine={engineRef.current} language={language} hidden={Boolean(askPlace || selected || isTouring || isExploring || isStargazing)} />
+          <CableCabinView engine={engineRef.current} language={language} frameContainer={containerRef.current}
+            hidden={Boolean(askPlace || selected || isTouring || isExploring || isStargazing)} />
+        </div>
+      )}
       {season && status === 'ready' && <SeasonOverlay season={season} tintNight={engineId !== 'three'} />}
 
       {/* Chip de la temporada (#68): siempre con "fechas por confirmar" hasta tener el calendario oficial. */}

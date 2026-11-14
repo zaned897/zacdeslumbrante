@@ -60,3 +60,13 @@ Límites conocidos, que abren issues:
 6. Desde la tarjeta de un lugar, abrir el chat RAG con ese lugar como contexto.
 
 Detalle y orden en las épicas de GitHub: #7 (Ciudad 3D), #8 (modo juego) y #9 (contenido enchufable).
+
+## Teleférico simulado (#263 / #264, demo)
+`cableCabins.ts` usa los cables locales y `cabinConfig` de `CableCarLayer`, validados desde
+`public/data/teleferico.json`. `SceneEngine.getCableCabinState?()` devuelve estado
+(`unavailable`, `closed`, `running`, `reduced`), `riding` y `heightM` (null si no es válida).
+`rideCableCabin?(boolean)` entra/sale de la cámara bajo el piso; salir restaura la cámara anterior.
+La altura es piso menos DEM en las mismas coordenadas métricas; no es una medición en vivo.
+`stop`, otros modos, cierre de horario y movimiento reducido cancelan el seguimiento.
+En desarrollo `?hora=12` / `?hora=20` fuerzan horario e iluminación; producción ignora la hora numérica.
+Las cabinas llevan `_mock: true`; la UI informa de la simulación y del horario pendiente de confirmar.
