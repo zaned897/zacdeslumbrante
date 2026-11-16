@@ -5,9 +5,10 @@ import { FreightTrain } from './freightTrain';
 import type { TrenecitoLayer } from './trenecito';
 import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import type { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import type { CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
+import type { CSS2DObject, CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
 import type { Language } from '../types';
 import type {
+  FloatingPhoto,
   SceneCamera,
   SceneEngine,
   ScenePlayer,
@@ -30,6 +31,27 @@ type Three = typeof THREE;
 const LABEL_RANK: Record<ScenePoiKind, number> = { place: 4, challenge: 3, recommendation: 2, vendor: 1, photo: 1 };
 /** Espacio mínimo entre etiquetas y con el borde de la vista, en píxeles. */
 const LABEL_GAP = 4;
+
+/** Distancia máxima (m) de la cámara al lugar para mostrar sus fotos flotantes (#232). */
+const PHOTO_NEAR_M = 650;
+const PHOTO_HEIGHT_M = 70;
+const PHOTO_MAX_PER_PLACE = 3;
+const PHOTO_CHECK_MS = 200;
+const PHOTO_GAP_PX = 8;
+
+function photoNearDistance(): number {
+  if (typeof window === 'undefined') return PHOTO_NEAR_M;
+  const raw = new URLSearchParams(window.location.search).get('fotosDist');
+  if (!raw) return PHOTO_NEAR_M;
+  const n = Number(raw);
+  return Number.isFinite(n) && n > 0 ? n : PHOTO_NEAR_M;
+}
+
+interface FloatingPhotoGroup {
+  group: THREE.Group;
+  cards: HTMLElement[];
+  shown: boolean;
+}
 
 interface PoiLabel {
   el: HTMLElement;
@@ -429,6 +451,13 @@ export class ThreeOsmEngine implements SceneEngine {
   private weatherCondition: SceneWeatherCondition | null = null;
   private readonly reducedMotion =
     typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  private readonly photoNearM = photoNearDistance();
+  private Label: typeof CSS2DObject | null = null;
+  private photoGroup: THREE.Group | null = null;
+  private photoGroups: FloatingPhotoGroup[] = [];
+  private pendingPhotos: FloatingPhoto[] | null = null;
+  private lastPhotoCheckAt = -PHOTO_CHECK_MS;
+  private photoCompact: boolean | null = null;
   private raceParked = false;
   private race: { group: THREE.Group; curve: THREE.CatmullRomCurve3; cars: THREE.Object3D[] } | null = null;
   private gltfLoaderPromise: Promise<typeof import('three/examples/jsm/loaders/GLTFLoader.js')> | null = null;
@@ -441,6 +470,7 @@ export class ThreeOsmEngine implements SceneEngine {
       import('three/examples/jsm/utils/BufferGeometryUtils.js'),
     ]);
     this.T = T;
+    this.Label = Label;
     this.container = container;
     this.clock = new T.Clock();
 
@@ -504,6 +534,12 @@ export class ThreeOsmEngine implements SceneEngine {
 
     this.poiGroup = new T.Group();
     scene.add(this.poiGroup);
+    this.photoGroup = new T.Group();
+    scene.add(this.photoGroup);
+    if (this.pendingPhotos) {
+      this.setFloatingPhotos(this.pendingPhotos);
+      this.pendingPhotos = null;
+    }
 
     const camera = new T.PerspectiveCamera(35, 1, 1, 10000);
     this.camera = camera;
@@ -654,6 +690,39 @@ export class ThreeOsmEngine implements SceneEngine {
     const { T, poiGroup } = this;
     if (!T || !poiGroup) return;
     void this.makePois(T, poiGroup, pois, language);
+  }
+
+  setFloatingPhotos(photos: FloatingPhoto[]): void {
+    const { T, photoGroup, Label } = this;
+    if (!T || !photoGroup || !Label) {
+      this.pendingPhotos = photos;
+      return;
+    }
+    this.clearFloatingPhotos();
+    const byPlace = new Map<string, FloatingPhoto[]>();
+    for (const photo of photos) {
+      const list = byPlace.get(photo.placeId);
+      if (!list) byPlace.set(photo.placeId, [photo]);
+      else if (list.length < PHOTO_MAX_PER_PLACE) list.push(photo);
+    }
+    const compact = (this.container?.clientWidth ?? 1024) < 640;
+    this.photoCompact = compact;
+    for (const list of byPlace.values()) {
+      const first = list[0];
+      if (!first) continue;
+      const { x, z } = toLocal(first.lat, first.lng);
+      const group = new T.Group();
+      group.position.set(x, this.heightAt(x, z) + PHOTO_HEIGHT_M, z);
+      const cards = list.map((photo) => {
+        const card = this.makePhotoCard(photo);
+        group.add(new Label(card));
+        return card;
+      });
+      this.layoutPhotoCards(cards, compact);
+      photoGroup.add(group);
+      this.photoGroups.push({ group, cards, shown: false });
+    }
+    this.lastPhotoCheckAt = -PHOTO_CHECK_MS;
   }
 
   onPoiClick(handler: (poi: ScenePoi) => void): void {
@@ -821,6 +890,10 @@ export class ThreeOsmEngine implements SceneEngine {
     this.nightLights = null;
     this.weather?.dispose();
     this.weather = null;
+    this.clearFloatingPhotos();
+    this.photoGroup = null;
+    this.pendingPhotos = null;
+    this.Label = null;
     this.renderer?.dispose();
     this.renderer?.domElement.remove();
     this.labels?.domElement.remove();
@@ -1258,6 +1331,119 @@ export class ThreeOsmEngine implements SceneEngine {
     renderer.render(scene, camera);
     labels.render(scene, camera);
     this.declutterLabels(camera);
+    if (this.photoGroups.length && now - this.lastPhotoCheckAt >= PHOTO_CHECK_MS) {
+      this.lastPhotoCheckAt = now;
+      this.updateFloatingPhotos(camera);
+    }
+  }
+
+  private clearFloatingPhotos(): void {
+    for (const item of this.photoGroups) {
+      for (const card of item.cards) card.remove();
+      this.photoGroup?.remove(item.group);
+    }
+    this.photoGroups = [];
+  }
+
+  private makePhotoCard(photo: FloatingPhoto): HTMLElement {
+    const figure = document.createElement('figure');
+    Object.assign(figure.style, {
+      margin: '0',
+      background: '#FBF9F5',
+      border: '1px solid #E7DCCB',
+      borderRadius: '12px',
+      boxShadow: '0 4px 12px rgba(28, 25, 23, 0.14)',
+      overflow: 'hidden',
+      pointerEvents: 'none',
+      visibility: 'hidden',
+      opacity: '0',
+      transition: this.reducedMotion ? 'none' : 'opacity 200ms ease',
+    });
+    const box = document.createElement('div');
+    Object.assign(box.style, {
+      width: '100%',
+      aspectRatio: '4 / 3',
+      overflow: 'hidden',
+      background: '#E7DCCB',
+      pointerEvents: 'none',
+    });
+    const img = document.createElement('img');
+    img.src = photo.thumbUrl;
+    img.width = photo.thumbWidth;
+    img.height = photo.thumbHeight;
+    img.alt = photo.alt;
+    img.loading = 'lazy';
+    img.decoding = 'async';
+    Object.assign(img.style, {
+      display: 'block',
+      width: '100%',
+      height: '100%',
+      objectFit: 'cover',
+      pointerEvents: 'none',
+    });
+    box.appendChild(img);
+    const caption = document.createElement('figcaption');
+    Object.assign(caption.style, {
+      padding: '4px 6px',
+      font: '500 10px "Manrope", sans-serif',
+      lineHeight: '1.25',
+      color: '#57534E',
+      // El crédito completo (autor y licencia) siempre se ve: puede ocupar dos líneas.
+      overflowWrap: 'break-word',
+      pointerEvents: 'none',
+    });
+    const link = document.createElement('a');
+    link.href = photo.sourceUrl;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    link.textContent = photo.credit;
+    Object.assign(link.style, {
+      color: '#9A3412',
+      textDecoration: 'underline',
+      pointerEvents: 'auto',
+    });
+    link.addEventListener('click', (e) => e.stopPropagation());
+    caption.appendChild(link);
+    figure.append(box, caption);
+    return figure;
+  }
+
+  private layoutPhotoCards(cards: HTMLElement[], compact: boolean): void {
+    const cardW = compact ? 108 : 148;
+    const step = cardW + PHOTO_GAP_PX;
+    cards.forEach((card, i) => {
+      const dx = (i - (cards.length - 1) / 2) * step;
+      card.style.width = `${cardW}px`;
+      card.style.marginLeft = dx ? `${dx}px` : '0px';
+    });
+  }
+
+  private updateFloatingPhotos(camera: THREE.PerspectiveCamera): void {
+    const { T } = this;
+    if (!T) return;
+    const p = (this.labelPoint ??= new T.Vector3());
+    // Solo el lugar más cercano dentro del umbral: los del centro están a 100–300 m y sus tarjetas se enciman.
+    let nearest: FloatingPhotoGroup | null = null;
+    let nearestDist = this.photoNearM;
+    if (!this.skyView) {
+      for (const item of this.photoGroups) {
+        const dist = camera.position.distanceTo(item.group.position);
+        if (dist >= nearestDist) continue;
+        p.copy(item.group.position).project(camera);
+        if (p.z < -1 || p.z > 1 || Math.abs(p.x) > 1 || Math.abs(p.y) > 1) continue; // fuera de cuadro
+        nearest = item;
+        nearestDist = dist;
+      }
+    }
+    for (const item of this.photoGroups) {
+      const show = item === nearest;
+      if (show === item.shown) continue;
+      item.shown = show;
+      for (const card of item.cards) {
+        card.style.visibility = show ? 'visible' : 'hidden';
+        card.style.opacity = show ? '1' : '0';
+      }
+    }
   }
 
   /**
@@ -1324,6 +1510,11 @@ export class ThreeOsmEngine implements SceneEngine {
     labels.setSize(w, h);
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
+    const compact = w < 640;
+    if (compact !== this.photoCompact && this.photoGroups.length) {
+      this.photoCompact = compact;
+      for (const item of this.photoGroups) this.layoutPhotoCards(item.cards, compact);
+    }
   }
 
   private onClick = (event: MouseEvent): void => {

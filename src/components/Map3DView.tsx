@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   ArrowDown,
   ArrowUp,
+  Camera,
   Check,
   ChevronLeft,
   ChevronRight,
@@ -46,7 +47,7 @@ import { distanceMeters } from '../scene3d/geo';
 import { usePlayerPosition, type FallbackReason } from '../scene3d/usePlayerPosition';
 import { useCollection } from '../scene3d/useCollection';
 import { useAvatarControls, type AvatarAction } from '../scene3d/useAvatarControls';
-import { loadPlacePhotos, type PlacePhoto } from '../scene3d/placePhotos';
+import { loadAllPhotos, loadPlacePhotos, type PlacePhoto } from '../scene3d/placePhotos';
 import { warmPyApi } from '../scene3d/pyApi';
 import { MapAssistantSheet } from './app/MapAssistantSheet';
 import { recordLegendaryFind, recordPlaceVisit } from '../pet/visits';
@@ -54,6 +55,7 @@ import { resolveMapsApiKey } from '../data/mapsApiKey';
 import { forcedTimeOfDay, zacatecasTimeOfDay } from '../scene3d/timeOfDay';
 import { forcedWeather } from '../scene3d/weather';
 import { FreightNotice } from './map3d/FreightNotice';
+import { ProposePhotoSheet } from './map3d/ProposePhotoSheet';
 
 
 /** Recorridos que tocan hoy: los de temporada solo en su temporada, y primero. */
@@ -152,6 +154,8 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
   const [tourId, setTourId] = useState<string | null>(null);
   const [photos, setPhotos] = useState<PlacePhoto[]>([]);
   const [photoIndex, setPhotoIndex] = useState(0);
+  const [allPhotos, setAllPhotos] = useState<PlacePhoto[]>([]);
+  const [proposePlaceId, setProposePlaceId] = useState<string | null>(null);
   const [askPlace, setAskPlace] = useState<Place | null>(null);
   const [nearby, setNearby] = useState<ScenePoi | null>(null);
   // Puestos ya anunciados en esta visita: el aviso sale una sola vez por puesto.
@@ -446,6 +450,39 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
     engineRef.current?.setSkyView?.(false);
     setIsStargazing(false);
   }, [canStargaze, isStargazing]);
+
+  // Fotos publicadas sobre la ciudad 3D (#232): se cargan una vez y se ocultan al mirar el cielo.
+  useEffect(() => {
+    if (engineId !== 'three' || status !== 'ready') return;
+    const controller = new AbortController();
+    void loadAllPhotos(controller.signal).then((list) => {
+      if (!controller.signal.aborted) setAllPhotos(list);
+    });
+    return () => controller.abort();
+  }, [engineId, status]);
+
+  useEffect(() => {
+    if (engineId !== 'three' || status !== 'ready') return;
+    if (isStargazing) {
+      engineRef.current?.setFloatingPhotos?.([]);
+      return;
+    }
+    engineRef.current?.setFloatingPhotos?.(
+      allPhotos.map((p) => ({
+        id: p.id,
+        placeId: p.placeId,
+        lat: p.lat,
+        lng: p.lng,
+        thumbUrl: p.thumbUrl,
+        thumbWidth: p.thumbWidth,
+        thumbHeight: p.thumbHeight,
+        alt: p.caption[language],
+        // La licencia no se parte en dos líneas («CC BY-SA 4.0» completa).
+        credit: t.view3dPhotoBy.replace('{author}', p.author).replace('{license}', p.license.replace(/ /g, ' ').replace(/-/g, '‑')),
+        sourceUrl: p.sourceUrl,
+      })),
+    );
+  }, [engineId, status, allPhotos, language, t.view3dPhotoBy, isStargazing]);
 
   // Jugador: moverlo, seguirlo con la cámara y descubrir lugares cercanos.
   useEffect(() => {
@@ -985,7 +1022,26 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
               </button>
             </>
           )}
+          {selected.placeId && (
+            <button
+              type="button"
+              onClick={() => setProposePlaceId(selected.placeId ?? null)}
+              className="mt-2 flex w-full min-h-11 items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold text-[#9A3412] hover:bg-stone-200/60 rounded-full cursor-pointer"
+            >
+              <Camera className="w-4 h-4" />
+              {t.view3dProposePhoto}
+            </button>
+          )}
         </div>
+      )}
+
+      {proposePlaceId && (
+        <ProposePhotoSheet
+          placeId={proposePlaceId}
+          placeName={placeName(proposePlaceId, language)}
+          language={language}
+          onClose={() => setProposePlaceId(null)}
+        />
       )}
 
       {/* Asistente dentro del mapa (#43), acotado al lugar elegido */}
