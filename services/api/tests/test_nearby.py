@@ -100,8 +100,18 @@ def test_radius_limits_results_and_places_are_included() -> None:
     assert {"vendor", "place"} <= {i["kind"] for i in near(at=NOON)}
 
 
-def test_bad_at_is_rejected() -> None:
-    assert client.get("/nearby", params={**PLAZA, "at": "mañana"}).status_code == 422
+@pytest.mark.parametrize(
+    "at",
+    [
+        "mañana",
+        # Un año absurdo desbordaba las cuentas con fechas (90 días atrás, cambio de zona): 500.
+        "0001-01-01T00:00:00",
+        "0001-01-01T00:00:00+14:00",
+        "9999-12-31T23:59:59-12:00",
+    ],
+)
+def test_bad_at_is_rejected(at: str) -> None:
+    assert client.get("/nearby", params={**PLAZA, "at": at}).status_code == 422
 
 
 @pytest.mark.parametrize(

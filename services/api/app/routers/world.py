@@ -6,7 +6,7 @@ from app.models.vendor_requests import PendingList, RequestReceipt, VendorReques
 from app.models.world import Vendor
 from app.routers.admin import Admin
 from app.services import vendor_requests
-from app.services.world import get_vendor, nearby, parse_at, published_vendors
+from app.services.world import BAD_AT, get_vendor, nearby, parse_at, published_vendors
 
 router = APIRouter(tags=["world"])
 
@@ -63,6 +63,6 @@ def get_nearby(
     try:
         moment = parse_at(at)
     except ValueError as exc:
-        raise HTTPException(status_code=422, detail="`at` debe ser ISO 8601") from exc
+        raise HTTPException(status_code=422, detail=BAD_AT) from exc
     wanted = {i.strip() for i in interests.split(",") if i.strip()} if interests else None
     return NearbyList(at=moment.isoformat(), items=nearby(lat, lng, radius, moment, wanted))

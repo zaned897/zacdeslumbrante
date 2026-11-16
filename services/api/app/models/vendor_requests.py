@@ -1,16 +1,9 @@
-from datetime import datetime
 from typing import Self
 
 from pydantic import Field, field_validator, model_validator
 
-from app.models.common import ZACATECAS, CamelModel, LocalizedText
+from app.models.common import MAX_YEAR, MIN_YEAR, CamelModel, LocalizedText, moment_in_zacatecas
 from app.models.world import OpeningHours, PriceRange, Vendor, VendorKind
-
-
-def _moment(value: str) -> datetime:
-    """Fecha y hora ISO 8601; sin zona se toma la de Zacatecas, como en `parse_at`."""
-    moment = datetime.fromisoformat(value)
-    return moment if moment.tzinfo else moment.replace(tzinfo=ZACATECAS)
 
 
 class RequestedPromotion(CamelModel):
@@ -22,16 +15,19 @@ class RequestedPromotion(CamelModel):
     @field_validator("start", "end")
     @classmethod
     def must_be_iso(cls, value: str) -> str:
-        # Una fecha ilegible, ya aprobada, tumbaría /nearby y el plan del agente.
+        # Una fecha que `parse_at` no lea, ya aprobada, tumbaría /nearby y el plan del agente.
         try:
-            _moment(value)
+            moment_in_zacatecas(value)
         except ValueError as exc:
-            raise ValueError("debe ser ISO 8601, como 2026-11-30T18:00:00-06:00") from exc
+            raise ValueError(
+                f"debe ser ISO 8601 con año entre {MIN_YEAR} y {MAX_YEAR}, "
+                "como 2026-11-30T18:00:00-06:00"
+            ) from exc
         return value
 
     @model_validator(mode="after")
     def end_is_not_before_start(self) -> Self:
-        if _moment(self.end) < _moment(self.start):
+        if moment_in_zacatecas(self.end) < moment_in_zacatecas(self.start):
             raise ValueError("`end` no puede ser antes de `start`")
         return self
 

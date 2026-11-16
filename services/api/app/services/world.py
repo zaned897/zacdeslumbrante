@@ -12,13 +12,20 @@ from functools import cache
 from math import asin, cos, radians, sin, sqrt
 from pathlib import Path
 
-from app.models.common import ZACATECAS, LocalizedText
+from app.models.common import (
+    MAX_YEAR,
+    MIN_YEAR,
+    ZACATECAS,
+    LocalizedText,
+    moment_in_zacatecas,
+)
 from app.models.nearby import (
     ActivePromotion,
     NearbyItem,
     RecommendationReason,
     Recommendations,
 )
+from app.models.reports import REASONS
 from app.models.world import (
     CrowdReport,
     Promotion,
@@ -27,11 +34,10 @@ from app.models.world import (
     Vendor,
     VendorFile,
 )
-from app.services import vendor_requests
+from app.services import reports, vendor_requests
 
 FIXTURES = Path(__file__).resolve().parent.parent / "fixtures"
 EARTH_RADIUS_M = 6_371_000
-RECOMMENDATION_DAYS = 90
 MENTION_FROM = 3
 CROWD_TEXT = {
     "baja": LocalizedText(es="poca gente", en="few people"),
@@ -70,18 +76,26 @@ def published_vendors() -> list[Vendor]:
     return fixture + vendor_requests.approved_vendors()
 
 
+def target_exists(target_id: str) -> bool:
+    """¿Es un puesto publicado o un lugar del catálogo? Solo de esos se aceptan reportes."""
+    return any(v.id == target_id for v in published_vendors()) or any(
+        p["id"] == target_id for p in catalog_places()
+    )
+
+
 def get_vendor(vendor_id: str) -> Vendor | None:
     return next((v for v in published_vendors() if v.id == vendor_id), None)
 
 
+# Lo que responden con 422 los endpoints que reciben `at`.
+BAD_AT = f"`at` debe ser ISO 8601, con año entre {MIN_YEAR} y {MAX_YEAR}"
+
+
 def parse_at(at: str | None) -> datetime:
-    """Hora de la consulta en Zacatecas. Sin zona, se asume la de Zacatecas."""
+    """Hora de la consulta en Zacatecas; sin `at`, ahora. ValueError si no se puede leer."""
     if not at:
         return datetime.now(UTC).astimezone(ZACATECAS)
-    moment = datetime.fromisoformat(at)
-    if moment.tzinfo is None:
-        moment = moment.replace(tzinfo=ZACATECAS)
-    return moment.astimezone(ZACATECAS)
+    return moment_in_zacatecas(at)
 
 
 def _clock(moment: datetime) -> str:
@@ -109,7 +123,7 @@ def active_promotion(vendor_id: str, moment: datetime) -> ActivePromotion | None
 
 
 def _recommendations(target_id: str, moment: datetime) -> Recommendations:
-    since = moment.date() - timedelta(days=RECOMMENDATION_DAYS)
+    since = moment.date() - timedelta(days=reports.RECOMMENDATION_DAYS)
     valid: list[Recommendation] = [
         r
         for r in _reports().recommendations
@@ -122,8 +136,17 @@ def _recommendations(target_id: str, moment: datetime) -> Recommendations:
             reasons[r.reason].count += 1
         else:
             reasons[r.reason] = RecommendationReason(reason=r.reason, text=r.text, count=1)
+    # Las de visitantes (#174) son anónimas: cada una cuenta como una persona.
+    live = reports.recommendations(target_id, moment)
+    for r in live:
+        if r.value is None:
+            continue
+        if r.value in reasons:
+            reasons[r.value].count += 1
+        else:
+            reasons[r.value] = RecommendationReason(reason=r.value, text=REASONS[r.value], count=1)
     ordered = sorted(reasons.values(), key=lambda x: -x.count)
-    return Recommendations(count=len({r.visitor_id for r in valid}), reasons=ordered)
+    return Recommendations(count=len({r.visitor_id for r in valid}) + len(live), reasons=ordered)
 
 
 def distance_m(lat1: float, lng1: float, lat2: float, lng2: float) -> int:
@@ -162,10 +185,11 @@ def signal_phrases(item: NearbyItem, moment: datetime) -> tuple[list[str], list[
             es.append(f"espera estimada de {item.wait_min} min")
             en.append(f"estimated wait {item.wait_min} min")
     top = item.recommendations.reasons[0] if item.recommendations.reasons else None
-    if top and item.recommendations.count >= MENTION_FROM:
-        n = item.recommendations.count
-        es.append(f"{n} visitantes lo recomiendan: {_lower(top.text.es)}")
-        en.append(f"recommended by {n} visitors: {_lower(top.text.en)}")
+    n = item.recommendations.count
+    if n >= MENTION_FROM:
+        # Una recomendación de visitante puede venir sin motivo (#174).
+        es.append(f"{n} visitantes lo recomiendan" + (f": {_lower(top.text.es)}" if top else ""))
+        en.append(f"recommended by {n} visitors" + (f": {_lower(top.text.en)}" if top else ""))
     if item.promotion:
         until_es, until_en = _until(parse_at(item.promotion.end), moment)
         es.append(f"promoción vigente (dato del puesto) {until_es}")
@@ -193,8 +217,13 @@ def _until(end: datetime, moment: datetime) -> tuple[str, str]:
 
 def with_signals(item: NearbyItem, moment: datetime) -> NearbyItem:
     if item.open is not False:
+        # Un reporte reciente de un visitante (#174) manda sobre el patrón de la franja.
+        live = reports.live_crowd(item.id, moment)
         slot = _slot(item.id, moment)
-        if slot:
+        if live and live.value in reports.WAIT_BY_CROWD:
+            item.crowd, item.signal = live.value, "live"
+            item.wait_min = reports.WAIT_BY_CROWD[live.value]
+        elif slot:
             item.crowd, item.wait_min, item.signal = slot.crowd, slot.wait_min, slot.kind
     item.recommendations = _recommendations(item.id, moment)
     item.reason = _reason(item, moment)

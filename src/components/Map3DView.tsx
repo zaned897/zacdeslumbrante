@@ -49,6 +49,7 @@ import { useAvatarControls, type AvatarAction } from '../scene3d/useAvatarContro
 import { loadPlacePhotos, type PlacePhoto } from '../scene3d/placePhotos';
 import { warmPyApi } from '../scene3d/pyApi';
 import { MapAssistantSheet } from './app/MapAssistantSheet';
+import { PlaceReport } from './app/PlaceReport';
 import { recordLegendaryFind, recordPlaceVisit } from '../pet/visits';
 import { resolveMapsApiKey } from '../data/mapsApiKey';
 import { forcedTimeOfDay, zacatecasTimeOfDay } from '../scene3d/timeOfDay';
@@ -983,6 +984,8 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
                 <MessageCircle className="w-4 h-4" />
                 {t.view3dAsk}
               </button>
+              {/* Reportar afluencia y recomendar (#174) */}
+              <PlaceReport place={selectedPlace} language={language} />
             </>
           )}
         </div>

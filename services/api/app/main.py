@@ -9,6 +9,7 @@ from app.routers import (
     events,
     photos,
     recommendations,
+    reports,
     street_life,
     tours,
     towns,
@@ -32,6 +33,7 @@ app.include_router(collaborators.router)
 app.include_router(events.router)
 app.include_router(photos.router)
 app.include_router(recommendations.router)
+app.include_router(reports.router)
 app.include_router(street_life.router)
 app.include_router(tours.router)
 app.include_router(towns.router)

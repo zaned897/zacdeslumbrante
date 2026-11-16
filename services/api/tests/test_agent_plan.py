@@ -178,6 +178,9 @@ def test_one_vendor_of_each_kind() -> None:
     [
         {"start": PLAZA, "minutes": 5},
         {"start": PLAZA, "minutes": 60, "at": "mañana"},
+        # Años fuera de rango: antes desbordaban y respondían 500.
+        {"start": PLAZA, "minutes": 60, "at": "0001-01-01T00:00:00"},
+        {"start": PLAZA, "minutes": 60, "at": "9999-12-31T23:59:59"},
         {"start": PLAZA, "minutes": 60, "budget": "$$$$"},
         {"start": {"lat": 120, "lng": 0}, "minutes": 60},
         {"minutes": 60},

@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 
 from app.models.agent import Plan, PlanRequest
 from app.services.agent import plan
-from app.services.world import parse_at
+from app.services.world import BAD_AT, parse_at
 
 router = APIRouter(prefix="/agent", tags=["agent"])
 
@@ -12,5 +12,5 @@ def post_plan(request: PlanRequest) -> Plan:
     try:
         moment = parse_at(request.at)
     except ValueError as exc:
-        raise HTTPException(status_code=422, detail="`at` debe ser ISO 8601") from exc
+        raise HTTPException(status_code=422, detail=BAD_AT) from exc
     return plan(request, moment)
