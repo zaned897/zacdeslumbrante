@@ -8,7 +8,16 @@ import type { Localized } from '../types/scene3d';
  * `provisional: true` hasta confirmarlas cada año con el calendario oficial
  * (Secretaría de Turismo de Zacatecas, Ayuntamiento, programa de cada fiesta).
  */
-export type SeasonId = 'panamericana' | 'primavera' | 'lluvias' | 'morismas' | 'feria' | 'muertos' | 'navidad';
+export type SeasonId =
+  | 'panamericana'
+  | 'primavera'
+  | 'lluvias'
+  | 'morismas'
+  | 'feria'
+  | 'muertos'
+  | 'navidad'
+  /** Evento cargado en la API Python sin temporada propia del front (#161): solo chip y acento. */
+  | 'evento';
 
 /** Mes (1–12) y día. */
 type MonthDay = [number, number];
@@ -39,7 +48,8 @@ export interface Season {
   accent: string;
   /** true hasta confirmar la fecha con la fuente oficial; la UI muestra "fechas por confirmar". */
   provisional: boolean;
-  _mock: true;
+  /** Las temporadas locales son de prueba; un evento cargado a mano en la API puede ser real. */
+  _mock: boolean;
   /** Fuente con la que se confirma la fecha cada año. */
   sourceNote: string;
   sourceUrl?: string;
@@ -187,9 +197,121 @@ function forcedSeason(): Season | null | undefined {
   return SEASONS.find((s) => s.id === forced) ?? null;
 }
 
+/** Fecha local AAAA-MM-DD, la misma que usa `inRange`. */
+function dayKey(date: Date): string {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
+/** Lo que el front usa de un evento de `GET /api/py/events` (#160, contrato en docs/API.md). */
+export interface BackendEvent {
+  id: string;
+  kind: 'season' | 'festival' | 'event';
+  name: Localized;
+  start: string;
+  end: string;
+  seasonId: string | null;
+  provisional: boolean;
+  sourceUrl: string | null;
+  sourceNote: string | null;
+  _mock: boolean;
+}
+
+const MONTHS: Record<'es' | 'en', string[]> = {
+  es: ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'],
+  en: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+};
+
+/** «22 de oct», «20 al 22 de nov», «16 dic – 6 ene». */
+export function eventDateLabel(start: string, end: string): Localized {
+  const [, m1, d1] = start.split('-').map(Number);
+  const [, m2, d2] = end.split('-').map(Number);
+  const es = MONTHS.es;
+  const en = MONTHS.en;
+  if (start === end) return { es: `${d1} de ${es[m1 - 1]}`, en: `${en[m1 - 1]} ${d1}` };
+  if (m1 === m2) return { es: `${d1} al ${d2} de ${es[m1 - 1]}`, en: `${en[m1 - 1]} ${d1}–${d2}` };
+  return {
+    es: `${d1} ${es[m1 - 1]} – ${d2} ${es[m2 - 1]}`,
+    en: `${en[m1 - 1]} ${d1} – ${en[m2 - 1]} ${d2}`,
+  };
+}
+
+/**
+ * La temporada que viste la app según los eventos del día. La API ya los manda en orden
+ * (evento, fiesta, temporada) y gana el primero, igual que en `SEASONS`.
+ * Con una temporada conocida se usan sus efectos; un evento nuevo sale con chip y acento.
+ */
+export function seasonFromEvents(events: BackendEvent[]): Season | null {
+  const event = events[0];
+  if (!event) return null;
+  const local = SEASONS.find((s) => s.id === event.seasonId);
+  const source = {
+    provisional: event.provisional,
+    _mock: event._mock,
+    sourceNote: event.sourceNote ?? local?.sourceNote ?? '',
+    sourceUrl: event.sourceUrl ?? local?.sourceUrl,
+  };
+  const startsOn: MonthDay = [Number(event.start.slice(5, 7)), Number(event.start.slice(8, 10))];
+  const endsOn: MonthDay = [Number(event.end.slice(5, 7)), Number(event.end.slice(8, 10))];
+  if (local) {
+    // Si la API movió las fechas, el chip dice las nuevas; si no, se queda el texto de siempre.
+    const year = Number(event.start.slice(0, 4));
+    const same =
+      key(startsOn) === key(local.startsOn) &&
+      key(endsOn) === key(local.endsOn) &&
+      (local.year === undefined || local.year === year);
+    const dateLabel = same ? local.dateLabel : eventDateLabel(event.start, event.end);
+    const season: Season = { ...local, name: event.name, dateLabel, startsOn, endsOn, ...source };
+    // Una temporada con año (la Panamericana 2026) trae ruta, misión e insignia de esa fecha.
+    // En otra fecha u otra edición se queda solo el chip: nada de lo de 2026, ni el meteorito
+    // legendario, que en la carrera solo lo da la misión (hallazgos de Codex).
+    if (local.year !== undefined && !same) {
+      return { ...season, year, race: false, legendaryDrops: false };
+    }
+    return season;
+  }
+  return {
+    id: 'evento',
+    name: event.name,
+    dateLabel: eventDateLabel(event.start, event.end),
+    startsOn,
+    endsOn,
+    legendaryDrops: false,
+    night: false,
+    petals: false,
+    fireworks: false,
+    papelPicado: false,
+    accent: '#D97706',
+    ...source,
+  };
+}
+
+/** Temporada que mandó la API para un día; null si ese día no hay ninguna. */
+let fromBackend: { day: string; season: Season | null } | null = null;
+
+/**
+ * #161: pide a la API Python la temporada de hoy, antes de pintar la app (src/main.tsx).
+ * Así, cargar o mover un evento con `POST /api/py/events` no requiere desplegar el front.
+ * Si la API no responde bien en `timeoutMs`, se queda el calendario local de `SEASONS`.
+ */
+export async function loadSeasonFromBackend(date: Date = new Date(), timeoutMs = 1200): Promise<void> {
+  const day = dayKey(date);
+  try {
+    const res = await fetch(`/api/py/events?date=${day}`, { signal: AbortSignal.timeout(timeoutMs) });
+    if (!res.ok) return;
+    const body: unknown = await res.json();
+    const events = (body as { events?: unknown }).events;
+    if (!Array.isArray(events)) return;
+    fromBackend = { day, season: seasonFromEvents(events as BackendEvent[]) };
+  } catch {
+    // Sin la API Python: calendario local.
+  }
+}
+
 /** La temporada o fiesta de esa fecha, o null si no hay ninguna. */
 export function activeSeason(date: Date): Season | null {
   const forced = forcedSeason();
   if (forced !== undefined) return forced;
+  if (fromBackend && fromBackend.day === dayKey(date)) return fromBackend.season;
   return SEASONS.find((s) => inRange(date, s)) ?? null;
 }

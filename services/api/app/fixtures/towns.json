@@ -259,6 +259,7 @@
       ],
       "accessibility": null,
       "patronalFeast": {
+        "eventId": "novenario-virgen-soledad-jerez",
         "name": {
           "es": "Novenario de la Virgen de la Soledad",
           "en": "Novena of the Virgin of La Soledad"
@@ -410,6 +411,7 @@
       ],
       "accessibility": null,
       "patronalFeast": {
+        "eventId": "feria-san-judas-villanueva",
         "name": {
           "es": "Feria Regional, en honor a San Judas Tadeo",
           "en": "Regional Fair, in honor of Saint Jude Thaddeus"
@@ -545,6 +547,7 @@
       ],
       "accessibility": null,
       "patronalFeast": {
+        "eventId": "festival-san-matias-pinos",
         "name": {
           "es": "Festival Regional, en honor a San Matías Apóstol",
           "en": "Regional Festival, in honor of Saint Matthias"

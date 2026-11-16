@@ -1,5 +1,10 @@
+from datetime import timedelta, timezone
+
 from pydantic import BaseModel, ConfigDict
 from pydantic.alias_generators import to_camel
+
+# Zacatecas no cambia de horario desde 2022: UTC-6 todo el año.
+ZACATECAS = timezone(timedelta(hours=-6))
 
 
 class CamelModel(BaseModel):
