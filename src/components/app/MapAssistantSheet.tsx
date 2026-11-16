@@ -96,9 +96,11 @@ export const MapAssistantSheet: React.FC<MapAssistantSheetProps> = ({ language, 
 
   const suggestions = [t.mapAssistantSuggest1, t.mapAssistantSuggest2, t.mapAssistantSuggest3];
 
+  // text-carbon: Map3DView fija text-stone-900; sin esto, en modo oscuro el texto escrito
+  // salía casi negro sobre el fondo oscuro de la hoja y parecía que no se escribía nada.
   return (
     <section
-      className="absolute inset-x-0 bottom-0 top-[46%] z-30 flex flex-col bg-papel rounded-t-[22px] shadow-[0_-8px_24px_-8px_rgba(0,0,0,0.3)] md:inset-x-auto md:right-4 md:bottom-4 md:top-auto md:w-96 md:h-[60%] md:rounded-[22px]"
+      className="absolute inset-x-0 bottom-0 top-[46%] z-30 flex flex-col bg-papel text-carbon rounded-t-[22px] shadow-[0_-8px_24px_-8px_rgba(0,0,0,0.3)] md:inset-x-auto md:right-4 md:bottom-4 md:top-auto md:w-96 md:h-[60%] md:rounded-[22px]"
       aria-label={t.mapAssistantAbout.replace('{name}', name)}
     >
       <span className="self-center mt-2 w-9 h-1 rounded-full bg-linea md:hidden" aria-hidden="true" />
@@ -148,7 +150,7 @@ export const MapAssistantSheet: React.FC<MapAssistantSheetProps> = ({ language, 
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder={t.mapAssistantPlaceholder.replace('{name}', name)}
-          className="flex-1 min-w-0 py-1.5 text-sm bg-transparent focus:outline-none placeholder:text-tenue"
+          className="flex-1 min-w-0 py-1.5 text-sm text-carbon caret-cantera bg-transparent focus:outline-none placeholder:text-tenue"
         />
         {busy ? (
           <button

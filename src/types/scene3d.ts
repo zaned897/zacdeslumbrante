@@ -113,6 +113,10 @@ export interface SceneLayerContext {
  * Mañana: CesiumJS o Three.js, sin tocar los componentes.
  */
 export interface SceneEngine {
+  getFreightState?(): FreightState;
+  setFreightEnabled?(enabled: boolean): void;
+  watchFreight?(follow: boolean): void;
+  stopFreightFollowing?(): void;
   mount(container: HTMLElement, initial: SceneCamera): Promise<void>;
   /** Resuelve cuando la primera vista terminó de cargar (para medir tiempo hasta primer render). */
   ready(): Promise<void>;
@@ -136,7 +140,11 @@ export interface SceneEngine {
   setSeason?(look: SceneSeasonLook | null): void;
   /** Día, tarde o noche con luz propia (#128, #129). Opcional: Google y Cesium no dejan cambiar su luz. */
   setTimeOfDay?(time: SceneTimeOfDay): void;
+  /** Mirar el cielo estrellado desde la plaza (solo de noche). Opcional: solo la ciudad estilizada lo tiene. */
+  setSkyView?(on: boolean): void;
   /** Clima en 3D (#201); null = como hoy. Opcional: los motores que no lo implementen lo ignoran. */
   setWeather?(condition: SceneWeatherCondition | null): void;
   destroy(): void;
 }
+
+export type FreightState = 'unavailable' | 'disabled' | 'waiting' | 'warning' | 'running' | 'following' | 'parked';

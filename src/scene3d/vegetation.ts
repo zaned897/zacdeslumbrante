@@ -22,6 +22,8 @@ interface Options {
 }
 export interface VegetationLayer { updateSeason(rainy: boolean): void; dispose(): void }
 
+/** PROTO #253: tope de plantas; con ~3000 por especie sigue siendo una sola llamada de dibujo por pieza. */
+const MAX_PLANTS = 9000;
 const record = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null;
 const finite = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
 const point = (v: unknown): v is Point => Array.isArray(v) && v.length === 2 && v.every(finite)
@@ -70,6 +72,7 @@ function build(options: Options, data: VegetationFile): VegetationLayer {
   group.name = 'vegetation';
   group.userData = { _mock: true, source: 'PROTO #231: especies y distribución ilustrativas sobre OSM' };
   const meshes: THREE.InstancedMesh[] = [];
+  const lawnMeshes: THREE.Mesh[] = [];
   const seasonal: Array<{ material: THREE.MeshLambertMaterial; dry: string }> = [];
   const updateSeason = (wet: boolean) => {
     seasonal.forEach(({ material, dry }) => material.color.set(wet ? '#4D8845' : dry));
@@ -77,6 +80,9 @@ function build(options: Options, data: VegetationFile): VegetationLayer {
   const dispose = () => {
     group.removeFromParent();
     meshes.forEach(mesh => { mesh.dispose(); mesh.geometry.dispose(); (mesh.material as THREE.Material).dispose(); });
+    lawnMeshes.forEach(mesh => mesh.geometry.dispose());
+    if (lawnMeshes[0]) (lawnMeshes[0].material as THREE.Material).dispose();
+    lawnMeshes.length = 0;
     meshes.length = 0;
     seasonal.length = 0;
   };
@@ -110,7 +116,7 @@ function build(options: Options, data: VegetationFile): VegetationLayer {
   let count = 0;
   const add = (species: Species, p: Local) => {
     const key = `${Math.round(p.x / 5)},${Math.round(p.z / 5)}`;
-    if (count >= 5000 || occupied.has(key) || blocked(p)) return;
+    if (count >= MAX_PLANTS || occupied.has(key) || blocked(p)) return;
     occupied.add(key); spots.get(species)?.push(p); count++;
   };
   // PROTO: sin taxón OSM reconocido se dibuja un pirul ilustrativo, no una identificación botánica.
@@ -145,20 +151,28 @@ function build(options: Options, data: VegetationFile): VegetationLayer {
   if (height) {
     const nw = local([data.bbox[0], data.bbox[3]]), se = local([data.bbox[2], data.bbox[1]]);
     let i = 0;
-    for (let x = nw.x; x < se.x && count < 5000; x += 18) {
-      for (let z = nw.z; z < se.z && count < 5000; z += 18) {
-        const p = { x: x + 6 * Math.sin(++i * 7), z: z + 6 * Math.cos(i * 3) };
+    // PROTO #253: se reparte el presupuesto en todas las laderas; antes el tope de 5000 se
+    // llenaba de oeste a este y La Bufa quedaba pelona.
+    const slopes: Array<{ p: Local; k: number }> = [];
+    for (let x = nw.x; x < se.x; x += 15) {
+      for (let z = nw.z; z < se.z; z += 15) {
+        const p = { x: x + 5 * Math.sin(++i * 7), z: z + 5 * Math.cos(i * 3) };
         const slope = Math.hypot(height(p.x + 5, p.z) - height(p.x - 5, p.z),
           height(p.x, p.z + 5) - height(p.x, p.z - 5)) / 10;
-        if (height(p.x, p.z) > 25 && slope > 0.12 && slope < 1.2
-          && !gardens.some(g => g.rings.some(r => inside(p, r)) && !g.holes.some(h => inside(p, h)))) {
-          add((['nopal', 'maguey', 'huizache'] as const)[i % 3], p);
-        }
+        if (height(p.x, p.z) > 15 && slope > 0.08 && slope < 1.2) slopes.push({ p, k: i });
+      }
+    }
+    const stride = Math.max(1, slopes.length / Math.max(1, MAX_PLANTS - count));
+    for (let n = 0; n < slopes.length && count < MAX_PLANTS; n += stride) {
+      const { p, k } = slopes[Math.floor(n)];
+      if (!gardens.some(g => g.rings.some(r => inside(p, r)) && !g.holes.some(h => inside(p, h)))) {
+        add((['nopal', 'maguey', 'huizache'] as const)[k % 3], p);
       }
     }
   }
   const dummy = new T.Object3D();
-  const batch = (geometry: THREE.BufferGeometry, color: string, points: Local[], scrub = false) => {
+  // PROTO #253: escala exagerada para que se lea desde la vista aérea (antes ×1.6 para todo).
+  const batch = (geometry: THREE.BufferGeometry, color: string, points: Local[], scrub = false, size = 1.6) => {
     if (!points.length) { geometry.dispose(); return; }
     const material = new T.MeshLambertMaterial({ color });
     const mesh = new T.InstancedMesh(geometry, material, points.length);
@@ -167,7 +181,7 @@ function build(options: Options, data: VegetationFile): VegetationLayer {
     points.forEach((p, i) => {
       dummy.position.set(p.x, height?.(p.x, p.z) ?? 0, p.z);
       dummy.rotation.set(0, i * 2.4, 0);
-      dummy.scale.setScalar(1.6); // PROTO: exagerado para que se lea desde la vista aérea.
+      dummy.scale.setScalar(size * (0.85 + ((i * 37) % 10) / 33));
       dummy.updateMatrix(); mesh.setMatrixAt(i, dummy.matrix);
     });
     mesh.instanceMatrix.needsUpdate = true;
@@ -180,22 +194,43 @@ function build(options: Options, data: VegetationFile): VegetationLayer {
       if (species === 'nopal') {
         for (const [x, y, scale] of [[0, 1.4, 1], [-0.8, 2.3, 0.7], [0.8, 2.7, 0.8]]) {
           batch(new T.IcosahedronGeometry(1, 0).scale(0.8 * scale, 1.4 * scale, 0.3)
-            .translate(x, y, 0), '#87905A', points, true);
+            .translate(x, y, 0), '#7F9A52', points, true, 2.6);
         }
       } else if (species === 'maguey') {
         for (let leaf = 0; leaf < 6; leaf++) {
           batch(new T.ConeGeometry(0.5, 3, 3).translate(0, 1.5, 0).rotateZ(0.85)
-            .rotateY(leaf * Math.PI / 3), '#7B8B76', points, true);
+            .rotateY(leaf * Math.PI / 3), '#7C9A76', points, true, 2.6);
         }
       } else {
         const [radius, tall, color] = {
-          pirul: [3.5, 8, '#728558'], mezquite: [3, 5, '#8B8955'], huizache: [2, 3.5, '#99905B'],
-          jacaranda: [3.8, 7, '#9674B8'], fresno: [4, 10, '#64845B'],
+          pirul: [3.5, 8, '#6A9150'], mezquite: [3, 5, '#86934F'], huizache: [2, 3.5, '#9A9852'],
+          jacaranda: [3.8, 7, '#9674B8'], fresno: [4, 10, '#5D8E52'],
         }[species] as [number, number, string];
-        batch(new T.CylinderGeometry(0.22, 0.4, tall * 0.65, 5).translate(0, tall * 0.325, 0), '#78614A', points);
+        const size = species === 'huizache' || species === 'mezquite' ? 2.2 : 2.4;
+        batch(new T.CylinderGeometry(0.22, 0.4, tall * 0.65, 5).translate(0, tall * 0.325, 0), '#78614A', points, false, size);
         batch(new T.IcosahedronGeometry(radius, 0).scale(1, species === 'pirul' ? 1.3 : 0.8, 1)
-          .translate(0, tall * 0.75, 0), color, points, species === 'huizache' || species === 'mezquite');
+          .translate(0, tall * 0.75, 0), color, points, species === 'huizache' || species === 'mezquite', size);
       }
+    }
+    // PROTO #253: pasto de los jardines OSM pegado al relieve para que el jardín se lea desde arriba.
+    const lawns = gardens.flatMap(g => g.rings.map(ring => {
+      const shape = new T.Shape(ring.map(p => new T.Vector2(p.x, p.z)));
+      shape.holes = g.holes.filter(h => inside(h[0], ring)).map(h => new T.Path(h.map(p => new T.Vector2(p.x, p.z))));
+      const geometry = new T.ShapeGeometry(shape);
+      const position = geometry.attributes.position as THREE.BufferAttribute;
+      for (let v = 0; v < position.count; v++) {
+        const x = position.getX(v), z = position.getY(v);
+        position.setXYZ(v, x, (height?.(x, z) ?? 0) + 0.35, z);
+      }
+      geometry.computeVertexNormals();
+      return geometry;
+    }));
+    if (lawns.length) {
+      const material = new T.MeshLambertMaterial({ color: '#A7B884', side: T.DoubleSide,
+        polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
+      const merged = lawns.map(g => new T.Mesh(g, material));
+      merged.forEach(mesh => group.add(mesh));
+      lawnMeshes.push(...merged);
     }
     batch(new T.BoxGeometry(3, 0.5, 1).translate(0, 0.7, 0), '#89654C', benches);
     batch(new T.CylinderGeometry(2.6, 2.8, 0.8, 10).translate(0, 0.4, 0), '#C9AD95', fountains);

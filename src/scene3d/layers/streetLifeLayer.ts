@@ -1,5 +1,6 @@
 import type { Localized, SceneLayer } from '../../types/scene3d';
 import { ZACATECAS_PLACES } from '../../data/places';
+import { getPyJson } from '../pyApi';
 
 // Rosa mexicano: distinto de los colores de lugares y del gris de "no descubierto".
 const STREET_COLOR = '#E4007C';
@@ -51,29 +52,24 @@ export const streetLifeLayer: SceneLayer = {
   label: { es: 'Vida de calle', en: 'Street life' },
   enabledByDefault: true,
   async load() {
-    try {
-      const res = await fetch('/api/py/street-life', { signal: AbortSignal.timeout(3000) });
-      if (!res.ok) return [];
-      const body = (await res.json()) as { spots?: StreetSpotDto[] };
-      return (body.spots ?? []).map((s) => ({
-        id: `vendor:${s.id}`,
-        kind: 'vendor' as const,
-        // Sin placeId: el modo Explorar no los pinta de gris ni cuentan para la colección.
-        title: s.title,
-        icon: ICON_GLYPHS[s.icon] ?? CATEGORY_GLYPHS[s.category] ?? '📍',
-        subtitle: subtitleFor(s),
-        summary: { es: `«${s.cry.es}»`, en: `“${s.cry.en}”` },
-        note: s.when,
-        // En Explorar, al acercarse, se "oye" el pregón.
-        nearbyNotice: s.cry,
-        lat: s.lat,
-        lng: s.lng,
-        color: STREET_COLOR,
-        isMock: true,
-      }));
-    } catch {
-      // Sin Python la calle queda en silencio; el resto de la escena sigue igual.
-      return [];
-    }
+    // Espera a que despierte la API (Render gratis): con 3 s la calle quedaba vacía tras cada siesta.
+    const body = await getPyJson<{ spots?: StreetSpotDto[] }>('/street-life');
+    if (!body) return [];
+    return (body.spots ?? []).map((s) => ({
+      id: `vendor:${s.id}`,
+      kind: 'vendor' as const,
+      // Sin placeId: el modo Explorar no los pinta de gris ni cuentan para la colección.
+      title: s.title,
+      icon: ICON_GLYPHS[s.icon] ?? CATEGORY_GLYPHS[s.category] ?? '📍',
+      subtitle: subtitleFor(s),
+      summary: { es: `«${s.cry.es}»`, en: `“${s.cry.en}”` },
+      note: s.when,
+      // En Explorar, al acercarse, se "oye" el pregón.
+      nearbyNotice: s.cry,
+      lat: s.lat,
+      lng: s.lng,
+      color: STREET_COLOR,
+      isMock: true,
+    }));
   },
 };
