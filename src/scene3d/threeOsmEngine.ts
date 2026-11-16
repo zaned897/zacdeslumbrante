@@ -163,7 +163,7 @@ const NIGHT = {
   hemiIntensity: 0.3,
   sun: '#AFC0F0', // luna
   sunIntensity: 0.3,
-  road: '#1B1D29', // calles sin alumbrado
+  road: '#80643F', // calles secundarias: luz tenue y cálida (#268)
 };
 // PROTO: valores a ojo, no medición; afinar con fotos de referencia.
 const STREET_LIGHT = {
@@ -915,7 +915,7 @@ export class ThreeOsmEngine implements SceneEngine {
     const [r, g, b] = STREET_LIGHT.warm;
     const streets = this.ribbon(T, lines, 0.6, (meters) => {
       const pool = 0.5 + 0.5 * Math.cos((2 * Math.PI * meters) / STREET_LIGHT.lampSpacingM);
-      const k = 0.45 + 0.55 * pool;
+      const k = 0.75 + 0.5 * pool; // principales más brillantes (#268)
       return [toLinear(r * k), toLinear(g * k), toLinear(b * k)];
     });
     if (streets) {
