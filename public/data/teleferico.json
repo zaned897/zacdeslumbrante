@@ -1,0 +1,165 @@
+{
+ "_mock": false,
+ "updatedAt": "2026-11-13",
+ "note": "Datos públicos con fuente. Lo marcado con verify:true hay que confirmarlo con la operadora antes de presentarlo como vigente.",
+ "sources": {
+  "poma": {
+   "name": "POMA, «Zacatecas touristic gondola lift» (2018)",
+   "url": "https://www.poma.net/en/work/zacatecas-touristic-gondola-lift/",
+   "date": "2018"
+  },
+  "rm": {
+   "name": "remontees-mecaniques.net, reportaje TCD8 Teleférico Zacatecas",
+   "url": "https://www.remontees-mecaniques.net/bdd/reportage-7765.html",
+   "date": "2018"
+  },
+  "tbn": {
+   "name": "Tus Buenas Noticias, «¿Cuánto cuesta el paseo en el Teleférico de Zacatecas?»",
+   "url": "https://www.tusbuenasnoticias.com/noticias/turismo/2025/08/06/48792-cuanto-cuesta-el-paseo-en-el-teleferico-de-zacatecas-y-horario",
+   "date": "2025-08-06"
+  },
+  "adn40": {
+   "name": "adn40, «El primer teleférico de México tiene descuento para adultos mayores»",
+   "url": "https://www.adn40.mx/mexico/2026-08-25/el-primer-teleferico-de-mexico-tiene-descuento-para-adultos-mayores-un-plan-distinto-para-el-dia-del-abuelo-2026-con-mirador-panoramico-de-zacatecas/",
+   "date": "2026-08-25"
+  },
+  "overture": {
+   "name": "Overture Maps Places, release 2026-10-21.0 (ODbL / CDLA)",
+   "url": "https://docs.overturemaps.org/",
+   "date": "2026-10-21"
+  }
+ },
+ "stations": [
+  {
+   "id": "grillo",
+   "name": {
+    "es": "Estación Cerro del Grillo · Mina El Edén",
+    "en": "Cerro del Grillo station · El Edén Mine"
+   },
+   "lng": -102.57352,
+   "lat": 22.7785,
+   "elevationM": 2486,
+   "overtureId": "f81f0680-1c11-427d-a6e3-497e1c3a4252",
+   "source": [
+    "overture",
+    "rm"
+   ]
+  },
+  {
+   "id": "bufa",
+   "name": {
+    "es": "Estación La Bufa",
+    "en": "La Bufa station"
+   },
+   "lng": -102.56742,
+   "lat": 22.77879,
+   "elevationM": 2582,
+   "overtureId": "d18b0a49-fd39-45f6-b47e-43f92cd32d26",
+   "source": [
+    "overture",
+    "rm"
+   ]
+  }
+ ],
+ "towers": [
+  {
+   "id": "P1",
+   "lng": -102.57149,
+   "lat": 22.7786,
+   "_mock": true,
+   "note": "posición aproximada"
+  },
+  {
+   "id": "P2",
+   "lng": -102.56945,
+   "lat": 22.77869,
+   "_mock": true,
+   "note": "posición aproximada"
+  }
+ ],
+ "line": {
+  "lengthM": 645,
+  "riseM": 96,
+  "tripSeconds": 130,
+  "type": "telecabina desembragable",
+  "builder": "POMA",
+  "opened": 2018,
+  "source": [
+   "poma",
+   "rm"
+  ]
+ },
+ "cabins": {
+  "count": 7,
+  "seats": 8,
+  "glassFloor": 1,
+  "source": [
+   "poma",
+   "rm",
+   "tbn"
+  ]
+ },
+ "schedule": {
+  "days": [
+   0,
+   1,
+   2,
+   3,
+   4,
+   5,
+   6
+  ],
+  "open": "10:00",
+  "close": "18:00",
+  "verify": true,
+  "source": [
+   "adn40"
+  ]
+ },
+ "fares": {
+  "currency": "MXN",
+  "verify": true,
+  "source": [
+   "tbn",
+   "adn40"
+  ],
+  "rows": [
+   {
+    "id": "adult",
+    "label": {
+     "es": "Adulto",
+     "en": "Adult"
+    },
+    "oneWay": 100,
+    "roundTrip": 160,
+    "source": [
+     "tbn"
+    ]
+   },
+   {
+    "id": "reduced",
+    "label": {
+     "es": "Niño · INAPAM",
+     "en": "Child · INAPAM"
+    },
+    "oneWay": 50,
+    "roundTrip": 80,
+    "source": [
+     "tbn",
+     "adn40"
+    ]
+   },
+   {
+    "id": "glass",
+    "label": {
+     "es": "Piso de cristal (extra)",
+     "en": "Glass floor (extra)"
+    },
+    "extra": 20,
+    "source": [
+     "tbn"
+    ]
+   }
+  ]
+ }
+}
