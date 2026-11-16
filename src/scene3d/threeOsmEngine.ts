@@ -2,6 +2,7 @@ import type * as THREE from 'three';
 import type { VegetationLayer } from './vegetation';
 import type { RailLayer } from './rail';
 import type { CableCarLayer } from './cableCar';
+import { CableCabins } from './cableCabins';
 import { FreightTrain } from './freightTrain';
 import type { TrenecitoLayer } from './trenecito';
 import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js';
@@ -386,6 +387,7 @@ export class ThreeOsmEngine implements SceneEngine {
   private vegetationAbort: AbortController | null = null;
   private rail: RailLayer | null = null;
   private cableCar: CableCarLayer | null = null;
+  private cableCabins: CableCabins | null = null;
   private cableCarAbort: AbortController | null = null;
   private freight: FreightTrain | null = null;
   private freightEnabled = true;
@@ -650,6 +652,11 @@ export class ThreeOsmEngine implements SceneEngine {
           height: (x, z) => terrain.at(x, z), elevationY: elevation => terrain.elevationY(elevation) }, cableCarAbort.signal);
         if (!cableCarAbort.signal.aborted) {
           this.cableCar = layer;
+          if (layer) {
+            this.cableCabins = new CableCabins(T, scene, layer, camera, controls,
+              (x, z) => terrain.at(x, z), window.location.search, import.meta.env.DEV);
+            this.cableCabins.setTimeOfDay(this.seasonLook?.night ? 'night' : this.timeOfDay);
+          }
           layer?.setLanguage(this.language);
           layer?.setTimeOfDay(this.seasonLook?.night ? 'night' : this.timeOfDay);
         }
@@ -659,6 +666,11 @@ export class ThreeOsmEngine implements SceneEngine {
 
   /** Costura para #263: polilíneas y estaciones en metros locales tras la carga opcional. */
   getCableCarLayer(): CableCarLayer | null { return this.cableCar; }
+  getCableCabinState() { return this.cableCabins?.getState() ?? { status: 'unavailable' as const, riding: false, heightM: null }; }
+  rideCableCabin(on: boolean): void {
+    if (on) this.stop();
+    this.cableCabins?.ride(on);
+  }
 
   /** Costura para #246: disponible tras la carga opcional, null si no hay datos válidos. */
   getRailLayer(): RailLayer | null { return this.rail; }
@@ -732,10 +744,12 @@ export class ThreeOsmEngine implements SceneEngine {
   }
 
   jumpTo(camera: SceneCamera): void {
+    this.cableCabins?.ride(false);
     this.place(camera);
   }
 
   stop(): void {
+    this.cableCabins?.ride(false);
     this.freight?.stopFollowing();
     const anim = this.animation;
     this.animation = null;
@@ -817,6 +831,8 @@ export class ThreeOsmEngine implements SceneEngine {
     this.freight?.dispose();
     this.freight = null;
     this.railAbort?.abort();
+    this.cableCabins?.dispose();
+    this.cableCabins = null;
     this.cableCarAbort?.abort();
     this.cableCarAbort = null;
     this.cableCar = null;
@@ -1124,6 +1140,7 @@ export class ThreeOsmEngine implements SceneEngine {
     const time: SceneTimeOfDay = this.seasonLook?.night ? 'night' : this.timeOfDay;
     const night = time === 'night';
     this.cableCar?.setTimeOfDay(time);
+    this.cableCabins?.setTimeOfDay(time);
     const sky = SKIES[time];
     scene.background = this.skyTexture(T, time);
     if (scene.fog instanceof T.Fog) scene.fog.color.set(sky[sky.length - 1]);
@@ -1267,10 +1284,11 @@ export class ThreeOsmEngine implements SceneEngine {
     const { renderer, labels, scene, camera, controls, clock } = this;
     if (!renderer || !labels || !scene || !camera || !controls || !clock) return;
     if (this.animation && this.animation.step(now)) this.stop();
-    if (!this.animation) controls.update();
+    if (!this.animation && !this.cableCabins?.getState().riding) controls.update();
     this.starSky?.tick(camera, now, new Date());
     const dt = clock.getDelta();
     this.freight?.tick(dt);
+    this.cableCabins?.tick(dt);
     if (this.walkAction) {
       const walking = now - this.lastMoveAt < 600;
       this.walkAction.paused = !walking;
