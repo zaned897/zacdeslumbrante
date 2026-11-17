@@ -1,4 +1,5 @@
 import type { Localized } from '../types/scene3d';
+import { getPyJson } from './pyApi';
 
 /** Foto de un lugar con su crédito, tal como la sirve `GET /api/py/places/{placeId}/photos` (#23). */
 export interface PlacePhoto {
@@ -23,23 +24,20 @@ const isPhoto = (v: unknown): v is PlacePhoto => {
 
 /**
  * Fotos curadas de Wikimedia Commons; con `season`, las de esa temporada primero.
- * Sin Python o sin fotos: lista vacía y la tarjeta queda sin carrusel.
+ * Sin Python (tras reintentar) o sin fotos: lista vacía y la tarjeta queda sin carrusel.
  */
-export async function loadPlacePhotos(placeId: string, season?: string): Promise<PlacePhoto[]> {
+export async function loadPlacePhotos(placeId: string, season?: string, signal?: AbortSignal): Promise<PlacePhoto[]> {
   const key = `${placeId}|${season ?? ''}`;
   const cached = cache.get(key);
   if (cached) return cached;
   const query = season ? `?season=${encodeURIComponent(season)}` : '';
-  try {
-    const res = await fetch(`/api/py/places/${encodeURIComponent(placeId)}/photos${query}`, {
-      signal: AbortSignal.timeout(3000),
-    });
-    if (!res.ok) return [];
-    const body = (await res.json()) as { photos?: unknown[] };
-    const photos = (body.photos ?? []).filter(isPhoto);
-    cache.set(key, photos);
-    return photos;
-  } catch {
-    return [];
-  }
+  // Espera a que despierte la API (Render gratis) en vez de rendirse a los 3 s.
+  const body = await getPyJson<{ photos?: unknown[] }>(
+    `/places/${encodeURIComponent(placeId)}/photos${query}`,
+    signal,
+  );
+  if (!body) return [];
+  const photos = (body.photos ?? []).filter(isPhoto);
+  cache.set(key, photos);
+  return photos;
 }

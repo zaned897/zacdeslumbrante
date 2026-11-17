@@ -1,5 +1,8 @@
 import type * as THREE from 'three';
 import type { VegetationLayer } from './vegetation';
+import type { RailLayer } from './rail';
+import { FreightTrain } from './freightTrain';
+import type { TrenecitoLayer } from './trenecito';
 import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import type { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import type { CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
@@ -14,6 +17,7 @@ import type {
   SceneTimeOfDay,
   SceneWeatherCondition,
 } from '../types/scene3d';
+import { StarSky, skyMoment } from './starSky';
 import { WeatherController } from './weather';
 
 type Three = typeof THREE;
@@ -119,6 +123,9 @@ function footprintArea(corners: Array<{ x: number; z: number }>): number {
   });
   return Math.abs(sum) / 2;
 }
+// Mirador para ver el cielo: la cima del Cerro de la Bufa, sobre la ciudad y lejos de sus luces.
+// Unos metros arriba del suelo para no quedar dentro del santuario.
+const SKY_VIEWPOINT = { lat: 22.7738, lng: -102.5649, eyeM: 8, headingDeg: 225 };
 // PROTO: avatar exagerado (estilo juego) para verse a la distancia de cámara habitual.
 const AVATAR_SCALE = 8;
 
@@ -156,7 +163,7 @@ const NIGHT = {
   hemiIntensity: 0.3,
   sun: '#AFC0F0', // luna
   sunIntensity: 0.3,
-  road: '#1B1D29', // calles sin alumbrado
+  road: '#80643F', // calles secundarias: luz tenue y cálida (#268)
 };
 // PROTO: valores a ojo, no medición; afinar con fotos de referencia.
 const STREET_LIGHT = {
@@ -374,6 +381,12 @@ export class ThreeOsmEngine implements SceneEngine {
   private terrain: Terrain | null = null;
   private vegetation: VegetationLayer | null = null;
   private vegetationAbort: AbortController | null = null;
+  private rail: RailLayer | null = null;
+  private freight: FreightTrain | null = null;
+  private freightEnabled = true;
+  private freightBlocked = false;
+  private railAbort: AbortController | null = null;
+  private trenecito: TrenecitoLayer | null = null;
   private poiGroup: THREE.Group | null = null;
   private poiLabels: PoiLabel[] = [];
   private labelPoint: THREE.Vector3 | null = null;
@@ -403,6 +416,10 @@ export class ThreeOsmEngine implements SceneEngine {
   private timeOfDay: SceneTimeOfDay = 'day';
   private timeApplied = false;
   private skies: Partial<Record<SceneTimeOfDay, THREE.Texture>> = {};
+  // Estrellas y constelaciones reales: se ven de noche; «mirar el cielo» pone la cámara en la plaza.
+  private starSky: StarSky | null = null;
+  private language: Language = 'es';
+  private skyView: { saved: SceneCamera | null } | null = null;
   // Calles con alumbrado, sus lámparas y algunas ventanas: solo se ven de noche (#136).
   private nightLights: THREE.Group | null = null;
   private streetPoints: Array<{ x: number; z: number }> = [];
@@ -417,7 +434,7 @@ export class ThreeOsmEngine implements SceneEngine {
   private gltfLoaderPromise: Promise<typeof import('three/examples/jsm/loaders/GLTFLoader.js')> | null = null;
 
   async mount(container: HTMLElement, initial: SceneCamera): Promise<void> {
-    const [T, { OrbitControls: Orbit }, { CSS2DRenderer: Labels }, { mergeGeometries }] = await Promise.all([
+    const [T, { OrbitControls: Orbit }, { CSS2DRenderer: Labels, CSS2DObject: Label }, { mergeGeometries }] = await Promise.all([
       import('three'),
       import('three/examples/jsm/controls/OrbitControls.js'),
       import('three/examples/jsm/renderers/CSS2DRenderer.js'),
@@ -451,6 +468,16 @@ export class ThreeOsmEngine implements SceneEngine {
     scene.add(sun);
     this.sun = sun;
     this.scene = scene;
+
+    // El cielo no detiene la carga de la ciudad; si falla, la noche queda sin estrellas.
+    void StarSky.load(T, Label, this.reducedMotion).then((sky) => {
+      if (!sky || this.scene !== scene) return;
+      this.starSky = sky;
+      sky.setLanguage(this.language);
+      sky.orient(skyMoment(new Date()));
+      scene.add(sky.group);
+      this.applySeason();
+    });
 
     const [terrain, response, roads, litStreets] = await Promise.all([
       Terrain.load(),
@@ -589,13 +616,41 @@ export class ThreeOsmEngine implements SceneEngine {
         buildings: data.buildings, roads: roads?.roads ?? [] }, vegetationAbort.signal);
       if (!vegetationAbort.signal.aborted) { this.vegetation = layer; layer?.updateSeason(this.seasonLook?.rainy === true); }
     }).catch(error => console.warn('[vegetation] No se pudo cargar el módulo.', error));
+    const railAbort = new AbortController();
+    this.railAbort = railAbort;
+    void this.readyPromise.then(() => import('./rail')).then(async ({ loadRail }) => {
+      const layer = await loadRail({ T, scene, ground, roads: this.roads, project: toLocal,
+        height: (x, z) => terrain?.at(x, z) ?? 0, attribution }, railAbort.signal);
+      if (!railAbort.signal.aborted) {
+        this.rail = layer;
+        if (layer) {
+          this.freight = new FreightTrain(T, scene, layer, camera, controls);
+          this.freight.setEnabled(this.freightEnabled);
+          this.freight.setBlocked(this.freightBlocked);
+          const { loadTrenecito } = await import('./trenecito');
+          this.trenecito = await loadTrenecito(
+            { T, scene, rail: layer, project: toLocal, reducedMotion: this.reducedMotion },
+            railAbort.signal,
+          );
+        }
+      }
+    }).catch(error => console.warn('[rail] No se pudo cargar el módulo.', error));
   }
+
+  /** Costura para #246: disponible tras la carga opcional, null si no hay datos válidos. */
+  getRailLayer(): RailLayer | null { return this.rail; }
+  getFreightState() { return this.freight?.state ?? 'unavailable' as const; }
+  setFreightEnabled(on: boolean): void { this.freightEnabled = on; this.freight?.setEnabled(on); }
+  watchFreight(follow: boolean): void { this.stop(); this.freight?.watch(follow); }
+  stopFreightFollowing(): void { this.freight?.stopFollowing(); }
 
   ready(): Promise<void> {
     return this.readyPromise;
   }
 
   setPois(pois: ScenePoi[], language: Language): void {
+    this.language = language;
+    this.starSky?.setLanguage(language);
     const { T, poiGroup } = this;
     if (!T || !poiGroup) return;
     void this.makePois(T, poiGroup, pois, language);
@@ -657,6 +712,7 @@ export class ThreeOsmEngine implements SceneEngine {
   }
 
   stop(): void {
+    this.freight?.stopFollowing();
     const anim = this.animation;
     this.animation = null;
     anim?.resolve();
@@ -697,6 +753,8 @@ export class ThreeOsmEngine implements SceneEngine {
   }
 
   setRoute(points: Array<{ lat: number; lng: number }> | null): void {
+    this.freightBlocked = points !== null;
+    this.freight?.setBlocked(this.freightBlocked);
     const { T, scene } = this;
     if (!T || !scene) return;
     if (this.route) {
@@ -732,6 +790,13 @@ export class ThreeOsmEngine implements SceneEngine {
   }
 
   destroy(): void {
+    this.freight?.dispose();
+    this.freight = null;
+    this.railAbort?.abort();
+    this.railAbort = null;
+    this.rail = null;
+    this.trenecito?.dispose();
+    this.trenecito = null;
     this.vegetationAbort?.abort();
     this.vegetationAbort = null;
     this.vegetation = null;
@@ -744,6 +809,8 @@ export class ThreeOsmEngine implements SceneEngine {
     this.looks = null;
     Object.values(this.skies).forEach((t) => t?.dispose());
     this.skies = {};
+    this.starSky?.dispose();
+    this.starSky = null;
     const T = this.T;
     this.nightLights?.traverse((o) => {
       if (T && o instanceof T.Mesh) {
@@ -848,7 +915,7 @@ export class ThreeOsmEngine implements SceneEngine {
     const [r, g, b] = STREET_LIGHT.warm;
     const streets = this.ribbon(T, lines, 0.6, (meters) => {
       const pool = 0.5 + 0.5 * Math.cos((2 * Math.PI * meters) / STREET_LIGHT.lampSpacingM);
-      const k = 0.45 + 0.55 * pool;
+      const k = 0.75 + 0.5 * pool; // principales más brillantes (#268)
       return [toLinear(r * k), toLinear(g * k), toLinear(b * k)];
     });
     if (streets) {
@@ -950,6 +1017,60 @@ export class ThreeOsmEngine implements SceneEngine {
     this.applySeason();
   }
 
+  /**
+   * Mirar el cielo: la cámara sube al mirador del Cerro de la Bufa y mira al suroeste, sobre el
+   * centro, a media altura; arrastrar gira la vista. Al salir vuelve a donde estaba.
+   */
+  setSkyView(on: boolean): void {
+    const { T, camera, controls } = this;
+    if (!T || !camera || !controls || on === Boolean(this.skyView)) return;
+    this.stop();
+    if (on) {
+      this.skyView = { saved: this.current };
+      this.starSky?.setLookingUp(true);
+      if (this.poiGroup) this.poiGroup.visible = false;
+      const { x, z } = toLocal(SKY_VIEWPOINT.lat, SKY_VIEWPOINT.lng);
+      const eye = new T.Vector3(x, this.heightAt(x, z) + SKY_VIEWPOINT.eyeM, z);
+      const alt = (22 * Math.PI) / 180;
+      camera.fov = 60;
+      camera.updateProjectionMatrix();
+      camera.position.copy(eye);
+      // Hacia el suroeste, con la ciudad abajo; el objetivo queda a un metro: la órbita se vuelve girar la cabeza.
+      // Rumbo 0 = norte (−z), 90 = este (+x).
+      const az = (SKY_VIEWPOINT.headingDeg * Math.PI) / 180;
+      controls.target.set(
+        x + Math.sin(az) * Math.cos(alt),
+        eye.y + Math.sin(alt),
+        z - Math.cos(az) * Math.cos(alt),
+      );
+      controls.minDistance = 1;
+      controls.maxDistance = 1;
+      // Ángulo polar de la cámara vista desde el objetivo: 80° = un poco abajo del horizonte, 179° = cenit.
+      controls.minPolarAngle = (80 * Math.PI) / 180;
+      controls.maxPolarAngle = (179 * Math.PI) / 180;
+      controls.enablePan = false;
+      controls.enableZoom = false;
+      controls.rotateSpeed = -0.35;
+      camera.lookAt(controls.target);
+      controls.update();
+      return;
+    }
+    const saved = this.skyView?.saved ?? null;
+    this.skyView = null;
+    this.starSky?.setLookingUp(false);
+    if (this.poiGroup) this.poiGroup.visible = true;
+    camera.fov = 35;
+    camera.updateProjectionMatrix();
+    controls.minDistance = 30;
+    controls.maxDistance = 4000;
+    controls.minPolarAngle = 0;
+    controls.maxPolarAngle = Math.PI / 2.1;
+    controls.enablePan = true;
+    controls.enableZoom = true;
+    controls.rotateSpeed = 1;
+    if (saved) this.place(saved);
+  }
+
   /** Degradado vertical del cielo; se crea una vez por hora y se reutiliza. */
   private skyTexture(T: Three, time: SceneTimeOfDay): THREE.Texture | THREE.Color {
     const cached = this.skies[time];
@@ -1003,6 +1124,7 @@ export class ThreeOsmEngine implements SceneEngine {
       if (this.roads) this.roads.material = look.road;
     }
     if (this.nightLights) this.nightLights.visible = night;
+    this.starSky?.setVisible(night);
     this.setRace(T, scene, this.seasonLook?.raceRoute ?? null);
     const wantPetals = (this.seasonLook?.petals ?? false) && this.streetPoints.length > 0;
     if (wantPetals && !this.petals) this.petals = this.makePetals(T, scene);
@@ -1110,7 +1232,7 @@ export class ThreeOsmEngine implements SceneEngine {
   }
 
   private heightAt(x: number, z: number): number {
-    return this.terrain?.at(x, z) ?? 0;
+    return this.rail?.heightAt(x, z) ?? this.terrain?.at(x, z) ?? 0;
   }
 
   private tick(now: number): void {
@@ -1118,7 +1240,9 @@ export class ThreeOsmEngine implements SceneEngine {
     if (!renderer || !labels || !scene || !camera || !controls || !clock) return;
     if (this.animation && this.animation.step(now)) this.stop();
     if (!this.animation) controls.update();
+    this.starSky?.tick(camera, now, new Date());
     const dt = clock.getDelta();
+    this.freight?.tick(dt);
     if (this.walkAction) {
       const walking = now - this.lastMoveAt < 600;
       this.walkAction.paused = !walking;
@@ -1129,6 +1253,7 @@ export class ThreeOsmEngine implements SceneEngine {
       this.moveRaceCars(0);
       this.raceParked = true;
     }
+    this.trenecito?.tick(now);
     this.weather?.tick(dt, camera, controls.target, this.reducedMotion);
     renderer.render(scene, camera);
     labels.render(scene, camera);
