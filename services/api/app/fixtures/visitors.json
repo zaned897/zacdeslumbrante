@@ -1,0 +1,133 @@
+{
+  "_mock": true,
+  "note": "Mundo de prueba del Centro Histórico (#170): todo es inventado; los nombres de los puestos se ven ficticios a propósito.",
+  "visitors": [
+    {
+      "_mock": true,
+      "id": "visitante-ficticio-1",
+      "alias": "Ana Prueba",
+      "interests": [
+        "hambre",
+        "tradicional",
+        "museos"
+      ],
+      "mobility": "a-pie",
+      "budget": "$$",
+      "groupSize": 1
+    },
+    {
+      "_mock": true,
+      "id": "visitante-ficticio-2",
+      "alias": "Beto Ejemplo",
+      "interests": [
+        "cafe",
+        "vista",
+        "descanso"
+      ],
+      "mobility": "a-pie",
+      "budget": "$$",
+      "groupSize": 2
+    },
+    {
+      "_mock": true,
+      "id": "visitante-ficticio-3",
+      "alias": "Carmen Simulada",
+      "interests": [
+        "para-ninos",
+        "dulce",
+        "economico"
+      ],
+      "mobility": "carriola",
+      "budget": "$",
+      "groupSize": 4
+    },
+    {
+      "_mock": true,
+      "id": "visitante-ficticio-4",
+      "alias": "Daniel Inventado",
+      "interests": [
+        "noche",
+        "tradicional"
+      ],
+      "mobility": "a-pie",
+      "budget": "$$$",
+      "groupSize": 2
+    },
+    {
+      "_mock": true,
+      "id": "visitante-ficticio-5",
+      "alias": "Elena de Muestra",
+      "interests": [
+        "museos",
+        "artesania",
+        "compras"
+      ],
+      "mobility": "a-pie",
+      "budget": "$$",
+      "groupSize": 1
+    },
+    {
+      "_mock": true,
+      "id": "visitante-ficticio-6",
+      "alias": "Fermín Ficticio",
+      "interests": [
+        "hambre",
+        "comer-rapido",
+        "economico"
+      ],
+      "mobility": "a-pie",
+      "budget": "$",
+      "groupSize": 1
+    },
+    {
+      "_mock": true,
+      "id": "visitante-ficticio-7",
+      "alias": "Gaby Prueba",
+      "interests": [
+        "para-ninos",
+        "museos"
+      ],
+      "mobility": "silla-de-ruedas",
+      "budget": "$$",
+      "groupSize": 3
+    },
+    {
+      "_mock": true,
+      "id": "visitante-ficticio-8",
+      "alias": "Hugo Ejemplo",
+      "interests": [
+        "cafe",
+        "dulce"
+      ],
+      "mobility": "a-pie",
+      "budget": "$",
+      "groupSize": 2
+    },
+    {
+      "_mock": true,
+      "id": "visitante-ficticio-9",
+      "alias": "Inés Simulada",
+      "interests": [
+        "tradicional",
+        "artesania",
+        "vista"
+      ],
+      "mobility": "a-pie",
+      "budget": "$$",
+      "groupSize": 2
+    },
+    {
+      "_mock": true,
+      "id": "visitante-ficticio-10",
+      "alias": "Jorge de Muestra",
+      "interests": [
+        "hambre",
+        "noche",
+        "comer-rapido"
+      ],
+      "mobility": "a-pie",
+      "budget": "$$",
+      "groupSize": 3
+    }
+  ]
+}

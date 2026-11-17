@@ -1,0 +1,70 @@
+{
+  "_mock": true,
+  "_source": "Horario y tarifa transcritos de src/data/places.ts (campos schedule y fee) y de su officialUrl. Las etiquetas y la estancia son reglas del prototipo (PROTO), no datos.",
+  "places": [
+    {
+      "id": "catedral-zacatecas",
+      "hours": [{ "days": [0, 1, 2, 3, 4, 5, 6], "open": "07:00", "close": "20:30" }],
+      "feeMxn": 0,
+      "stayMin": 20,
+      "interests": ["historia", "arquitectura", "tradicional"],
+      "sourceUrl": "https://capitaldezacatecas.gob.mx/municipio/servicios-turisticos/atracciones/"
+    },
+    {
+      "id": "plaza-armas",
+      "hours": [{ "days": [0, 1, 2, 3, 4, 5, 6], "open": "00:00", "close": "23:59" }],
+      "feeMxn": 0,
+      "stayMin": 10,
+      "interests": ["historia", "descanso", "para-ninos"],
+      "sourceUrl": "https://capitaldezacatecas.gob.mx/municipio/servicios-turisticos/atracciones/"
+    },
+    {
+      "id": "museo-pedro-coronel",
+      "hours": [{ "days": [0, 1, 2, 4, 5, 6], "open": "10:00", "close": "17:00" }],
+      "feeMxn": 40,
+      "stayMin": 45,
+      "interests": ["museos", "arte", "historia"],
+      "sourceUrl": "https://culturazac.gob.mx/museos/"
+    },
+    {
+      "id": "museo-rafael-coronel",
+      "hours": [{ "days": [0, 1, 3, 4, 5, 6], "open": "10:00", "close": "17:00" }],
+      "feeMxn": 40,
+      "stayMin": 45,
+      "interests": ["museos", "arte", "tradicional"],
+      "sourceUrl": "https://culturazac.gob.mx/museos/"
+    },
+    {
+      "id": "museo-felguerez",
+      "hours": [{ "days": [0, 2, 3, 4, 5, 6], "open": "10:00", "close": "17:00" }],
+      "feeMxn": 40,
+      "stayMin": 45,
+      "interests": ["museos", "arte"],
+      "sourceUrl": "https://maamf.com.mx/"
+    },
+    {
+      "id": "museo-francisco-goitia",
+      "hours": [{ "days": [1, 2, 3, 4, 5, 6], "open": "10:00", "close": "17:00" }],
+      "feeMxn": 40,
+      "stayMin": 40,
+      "interests": ["museos", "arte"],
+      "sourceUrl": "https://culturazac.gob.mx/museos/"
+    },
+    {
+      "id": "acueducto-el-cubo",
+      "hours": [{ "days": [0, 1, 2, 3, 4, 5, 6], "open": "00:00", "close": "23:59" }],
+      "feeMxn": 0,
+      "stayMin": 10,
+      "interests": ["historia", "arquitectura", "vista"],
+      "sourceUrl": "https://capitaldezacatecas.gob.mx/municipio/servicios-turisticos/atracciones/"
+    },
+    {
+      "id": "mina-el-eden",
+      "hours": [{ "days": [0, 1, 2, 3, 4, 5, 6], "open": "10:00", "close": "18:00" }],
+      "feeMxn": 130,
+      "stayMin": 60,
+      "interests": ["historia", "para-ninos"],
+      "sourceUrl": "https://www.zacatecastravel.com/actividades"
+    }
+  ]
+}
