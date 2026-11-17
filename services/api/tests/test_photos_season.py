@@ -12,7 +12,12 @@ def _photo(photo_id: str, season: str | None) -> Photo:
     return Photo(
         id=photo_id,
         place_id=PLACE,
+        lat=22.77543,
+        lng=-102.57242,
         url=f"https://example.org/{photo_id}.jpg",
+        thumb_url=f"/photos/places/{photo_id}.webp",
+        thumb_width=320,
+        thumb_height=240,
         author="Autor",
         license="CC BY-SA 4.0",
         source_url="https://commons.wikimedia.org/",

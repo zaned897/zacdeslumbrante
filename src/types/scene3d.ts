@@ -102,6 +102,20 @@ export type SceneTimeOfDay = 'day' | 'dusk' | 'night';
 /** Clima de la escena (#201): soleado, nublado o lluvia. */
 export type SceneWeatherCondition = 'soleado' | 'nublado' | 'lluvia';
 
+/** Tarjeta de foto flotante sobre un lugar en la ciudad 3D (#232), con texto alternativo y crédito ya traducidos. */
+export interface FloatingPhoto {
+  id: string;
+  placeId: string;
+  lat: number;
+  lng: number;
+  thumbUrl: string;
+  thumbWidth: number;
+  thumbHeight: number;
+  alt: string;
+  credit: string;
+  sourceUrl: string;
+}
+
 /** Lo que sabe la vista al pedir los puntos de una capa. */
 export interface SceneLayerContext {
   player?: { lat: number; lng: number };
@@ -144,6 +158,8 @@ export interface SceneEngine {
   setSkyView?(on: boolean): void;
   /** Clima en 3D (#201); null = como hoy. Opcional: los motores que no lo implementen lo ignoran. */
   setWeather?(condition: SceneWeatherCondition | null): void;
+  /** Tarjetas de fotos flotantes sobre los lugares (#232). Opcional: Google 3D y Cesium no lo implementan. */
+  setFloatingPhotos?(photos: FloatingPhoto[]): void;
   destroy(): void;
 }
 

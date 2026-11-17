@@ -112,7 +112,34 @@ Opcional `?season=muertos` (id de `src/data/seasons.ts`, #75): las fotos con ese
       "author": "…",
       "license": "CC BY-SA 3.0",
       "sourceUrl": "https://commons.wikimedia.org/wiki/File:…",
-      "caption": { "es": "Fachada principal de la Catedral", "en": "Main façade of the Cathedral" }
+      "caption": { "es": "Fachada principal de la Catedral", "en": "Main façade of the Cathedral" },
+      "lat": 22.77543, "lng": -102.57242,
+      "thumbUrl": "/photos/places/catedral-zacatecas-1.webp", "thumbWidth": 320, "thumbHeight": 214,
+      "season": null
+    }
+  ]
+}
+```
+- Cada foto trae `author`, `license` y `sourceUrl` (la página del archivo en Commons); un test de pytest falla si falta alguno. Solo licencias libres (`CC BY`, `CC BY-SA`, dominio público), verificadas en la página del archivo.
+- `lat`/`lng`: dónde flota la tarjeta en la ciudad 3D (#232); hoy son las del lugar en `places.json`.
+- `thumbUrl`: miniatura WebP de 320 px servida por la web desde `public/photos/places/` (bajada de Commons); `url` sigue siendo la imagen de Commons para la tarjeta del lugar.
+
+### GET /api/py/photos  · mock · dueño: Claude Code (#232)
+Todas las fotos publicadas, con el mismo formato de arriba, para las tarjetas flotantes de la ciudad 3D. Las propuestas pendientes nunca salen aquí ni en `/places/{placeId}/photos`.
+```json
+{ "source": "Wikimedia Commons", "_mock": true, "photos": [ { "id": "catedral-zacatecas-1", "placeId": "catedral-zacatecas", "lat": 22.77543, "lng": -102.57242, "…": "…" } ] }
+```
+
+### POST /api/py/photos/proposals  · mock · dueño: Claude Code (#232)
+Un colaborador propone una foto por URL (no se suben archivos). PROTO: se guarda en memoria con `status: "pending"` y se pierde al reiniciar; no hay panel de moderación.
+```json
+{ "placeId": "catedral-zacatecas", "url": "https://…", "author": "…", "license": "CC BY-SA 4.0", "sourceUrl": "https://…", "comment": "opcional" }
+```
+Respuesta `201`:
+```json
+{ "id": "proposal-1a2b3c4d5e6f", "status": "pending", "_mock": true }
+```
+- `422` si falta `author`, `license` o `sourceUrl`, o si `url`/`sourceUrl` no son `https://`. `404` si `placeId` no está en `places.json`.
 
 ### GET /api/py/recommendations?lat=&lng=&visited=  · mock · dueño: Claude Code (#24)
 Los 3 lugares no visitados más cercanos (haversine), compatibles con `ScenePoi`. `lat` y `lng` obligatorios; `visited` son ids separados por coma. Lugares en `services/api/app/fixtures/places.json` (generado desde `src/data/places.ts`).
@@ -129,6 +156,10 @@ Los 3 lugares no visitados más cercanos (haversine), compatibles con `ScenePoi`
       "isMock": true,
       "reason": { "es": "A 90 m de ti", "en": "90 m from you" },
       "distanceMeters": 90
+    }
+  ]
+}
+```
 
 ### Cuentas y progreso · PoC · dueño: Claude Code (#53)
 Supabase Auth (Google y correo/contraseña) y una tabla `user_progress` con RLS. Si faltan `SUPABASE_URL` y `SUPABASE_ANON_KEY` en `zacdes-api`, corre en **modo demo**: cuentas y progreso en memoria (se borran al reiniciar), sin Google, respuestas con `"_mock": true`. Configuración: `docs/CUENTAS.md`. Cliente en `src/components/account/`.
