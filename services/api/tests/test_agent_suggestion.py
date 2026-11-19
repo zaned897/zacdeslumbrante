@@ -1,5 +1,6 @@
 """GET /agent/suggestion (#277): una sugerencia puntual de la mascota, sin LLM."""
 
+import re
 from collections.abc import Iterator
 
 import pytest
@@ -11,6 +12,8 @@ from app.services import events, reports
 client = TestClient(app)
 PLAZA = {"lat": 22.7756, "lng": -102.5723}
 GUADALUPE = {"lat": 22.7508, "lng": -102.5186}
+# ~5.7 km al noroeste de Plaza de Armas: fuera de la capital (> 3 km) y lejos de los pueblos.
+OUTSIDE_CAPITAL = {"lat": 22.82, "lng": -102.60}
 ASADOS = {"lat": 22.771884, "lng": -102.578646}
 PEDRO_CORONEL = {"lat": 22.7765, "lng": -102.5731}
 # Martes 10 de noviembre de 2026, hora de Zacatecas.
@@ -18,6 +21,7 @@ MORNING = "2026-11-10T09:00:00-06:00"
 NOON = "2026-11-10T13:30:00-06:00"
 NIGHT = "2026-11-10T03:00:00-06:00"
 FORBIDDEN_WORDS = ("lleno", "popular", "el mejor", "lo mejor", "imperdible", "packed")
+METERS_RE = re.compile(r"\d+ m\b")
 
 
 @pytest.fixture(autouse=True)
@@ -56,6 +60,75 @@ def test_town_festival_triggers_when_near_that_town() -> None:
     assert s is not None
     assert (s["trigger"], s["placeId"]) == ("event-today", "feria-virgen-guadalupe")
     assert s["source"].startswith("https://")
+
+
+def test_capital_event_without_venue_has_null_coords_and_no_meters() -> None:
+    # La Feria del estado (`townId: null`) no tiene sede publicada: dentro de la capital
+    # se sugiere sin coordenadas ni metros inventados.
+    s = ask(at="2026-09-15T12:00:00-06:00")["suggestion"]
+    assert s is not None
+    assert (s["trigger"], s["placeId"]) == ("event-today", "feria")
+    assert s["lat"] is None and s["lng"] is None
+    assert "en la ciudad" in s["line"]["es"]
+    assert "in the city" in s["line"]["en"]
+    assert "Evento publicado para hoy en Zacatecas" in s["reason"]["es"]
+    for text in (s["line"]["es"], s["line"]["en"], s["reason"]["es"], s["reason"]["en"]):
+        assert not METERS_RE.search(text), text
+
+
+def test_capital_event_is_not_suggested_outside_capital() -> None:
+    s = ask(**OUTSIDE_CAPITAL, at="2026-09-15T12:00:00-06:00")["suggestion"]
+    assert s is None or s["trigger"] != "event-today"
+
+
+def test_provisional_event_reason_matches_in_both_languages() -> None:
+    # Feria de la Virgen de Guadalupe es provisional, trae sourceNote y reviewedAt.
+    s = ask(**GUADALUPE, at="2026-12-12T12:00:00-06:00")["suggestion"]
+    assert s is not None
+    assert (s["trigger"], s["placeId"]) == ("event-today", "feria-virgen-guadalupe")
+    assert s["lat"] is None and s["lng"] is None
+    assert "en Guadalupe" in s["line"]["es"]
+    assert "in Guadalupe" in s["line"]["en"]
+    note = (
+        "Primera quincena de diciembre; culmina el 12. "
+        "La edición 46 (2025) terminó el 14, en el Jardín Juárez."
+    )
+    assert "fecha por confirmar" in s["reason"]["es"]
+    assert "date to be confirmed" in s["reason"]["en"]
+    assert note in s["reason"]["es"]
+    assert note in s["reason"]["en"]
+    assert "revisado 2026-11-10" in s["reason"]["es"]
+    assert "reviewed 2026-11-10" in s["reason"]["en"]
+
+
+def test_event_without_source_url_uses_calendar_source() -> None:
+    # Día de Muertos trae sourceNote pero no sourceUrl: la nota va en reason, no en source.
+    s = ask(at="2026-11-01T12:00:00-06:00")["suggestion"]
+    assert s is not None
+    assert (s["trigger"], s["placeId"]) == ("event-today", "muertos")
+    assert s["source"] == "calendario-de-eventos"
+    note = "Por confirmar con el calendario oficial de la Secretaría de Turismo de Zacatecas"
+    assert "fecha por confirmar" in s["reason"]["es"]
+    assert "date to be confirmed" in s["reason"]["en"]
+    assert note in s["reason"]["es"]
+    assert note in s["reason"]["en"]
+
+
+def test_utc_midnight_uses_zacatecas_date_for_events() -> None:
+    # Día de Muertos es 1 y 2 nov. En UTC-6:
+    # - 2026-11-01T05:30:00Z es 31 oct 23:30 en Zacatecas (aún no empieza).
+    # - 2026-11-02T05:30:00Z es 1 nov 23:30 en Zacatecas (ya es Día de Muertos).
+    # - 2026-11-03T05:30:00Z es 2 nov 23:30 en Zacatecas (todavía es Día de Muertos).
+    before = ask(at="2026-11-01T05:30:00Z")["suggestion"]
+    assert before is None or before["trigger"] != "event-today"
+
+    first_night = ask(at="2026-11-02T05:30:00Z")["suggestion"]
+    assert first_night is not None
+    assert (first_night["trigger"], first_night["placeId"]) == ("event-today", "muertos")
+
+    second_night = ask(at="2026-11-03T05:30:00Z")["suggestion"]
+    assert second_night is not None
+    assert (second_night["trigger"], second_night["placeId"]) == ("event-today", "muertos")
 
 
 def test_base_season_does_not_trigger_event_today() -> None:

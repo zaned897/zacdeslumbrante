@@ -512,7 +512,7 @@ Elige **una** sugerencia puntual para este momento y la dice en una línea, con 
 - `lat`, `lng`: obligatorios (mismos límites que `/nearby`; fuera de rango o `NaN` → 422).
 - `at`: opcional, ISO 8601 con año entre 2000 y 2100. Sin zona, hora de Zacatecas; sin él, ahora. Inválido → 422.
 - `visited`, `dismissed`, `planStops`: opcionales, ids separados por coma. Nunca se sugiere un id presente en ninguna de las tres listas.
-- `lang`: opcional (`es` o `en`, por omisión `es`; otro valor → 422). La respuesta siempre incluye `es` y `en` en `name`, `line` y `reason`.
+- `lang`: opcional (`es` o `en`, por omisión `es`; otro valor → 422). Se acepta en el query y la respuesta siempre trae `es` y `en` en `name`, `line` y `reason`.
 
 ```json
 {
@@ -531,15 +531,16 @@ Elige **una** sugerencia puntual para este momento y la dice en una línea, con 
   }
 }
 ```
-- Sin candidatos abiertos y no excluidos en 600 m, responde `200` con `{ "_mock": true, "suggestion": null }`.
-- **Prioridad (en 600 m):**
-  1. `event-today`: un evento o fiesta publicada de hoy (`event` o `festival`, no temporadas base `season`) que no esté excluida. `kind: "event"`, `signal: null`, `source`: `sourceUrl` del evento (o su `sourceNote` si aún es provisional).
-  2. `promotion`: un puesto abierto con promoción vigente que encaje con la hora (comida al mediodía o cena, café por la mañana o tarde, dulces por la tarde, bebidas por la noche, artesanías en horario diurno).
-  3. `recommended`: un puesto o lugar abierto con 3 o más recomendaciones vigentes de visitantes.
-  4. `nearby`: el puesto o lugar abierto no visitado más cercano.
+- Sin eventos vigentes para la zona ni candidatos abiertos y no excluidos en 600 m, responde `200` con `{ "_mock": true, "suggestion": null }`.
+- `lat`/`lng` son `null` cuando el evento no tiene sede publicada.
+- **Prioridad:**
+  1. `event-today`: un evento o fiesta publicada de hoy (`event` o `festival`, no temporadas base `season`) que no esté excluida: los de la capital (`townId: null`) cuentan a ≤ 3000 m de Plaza de Armas; los de un Pueblo Mágico, a ≤ 600 m de su centro. `kind: "event"`, `lat`/`lng` son `null` (sin distancias en metros), `signal: null`, `source`: `sourceUrl` del evento o `"calendario-de-eventos"` (`sourceNote` va solo en `reason`).
+  2. `promotion` (en 600 m): un puesto abierto con promoción vigente que encaje con la hora (comida al mediodía o cena, café por la mañana o tarde, dulces por la tarde, bebidas por la noche, artesanías en horario diurno).
+  3. `recommended` (en 600 m): un puesto o lugar abierto con 3 o más recomendaciones vigentes de visitantes.
+  4. `nearby` (en 600 m): el puesto o lugar abierto no visitado más cercano.
 - Nunca se sugiere un puesto o lugar del catálogo (`plan_places.json`) cerrado a la hora `at`.
 - La afluencia nunca se presenta como prueba de calidad; cuando es alta solo advierte posible espera (`signal: "live"` si viene de un reporte de los últimos 45 min, `"pattern"` si es por franja horaria).
-- PROTO: los eventos de la capital (`townId: null`) se ubican en Plaza de Armas; los de un Pueblo Mágico, en el `center` de `towns.json`. Las franjas horarias por tipo de puesto son reglas fijas del prototipo.
+- PROTO: los eventos de la capital (`townId: null`) cuentan dentro de un radio fijo de 3000 m desde Plaza de Armas; los de un Pueblo Mágico, dentro de 600 m de su `center` en `towns.json`. Las franjas horarias por tipo de puesto son reglas fijas del prototipo.
 
 ## Propuestas pendientes
 (Agrega aquí endpoints nuevos antes de implementarlos: método, ruta, body, respuesta, dueño.)

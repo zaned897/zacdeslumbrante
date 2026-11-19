@@ -84,8 +84,9 @@ class Suggestion(CamelModel):
     place_id: str
     kind: SuggestionKind
     name: LocalizedText
-    lat: float
-    lng: float
+    # None cuando el evento no tiene sede publicada.
+    lat: float | None = None
+    lng: float | None = None
     line: LocalizedText
     reason: LocalizedText
     trigger: SuggestionTrigger

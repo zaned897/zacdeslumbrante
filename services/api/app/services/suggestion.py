@@ -1,7 +1,8 @@
 """Una sugerencia puntual de la mascota para este momento (#277): reglas simples, sin LLM.
 
 Prioridad:
-1. Un evento o fiesta publicada de hoy cerca (<= 600 m) que no esté excluida.
+1. Un evento o fiesta publicada de hoy en la capital (<= 3000 m de Plaza de Armas) o en un Pueblo
+   Mágico cercano (<= 600 m) que no esté excluida.
 2. Un puesto abierto con promoción vigente que encaje con la hora (comida cerca del mediodía).
 3. Un puesto o lugar abierto con 3 o más recomendaciones vigentes de visitantes.
 4. El puesto o lugar abierto no visitado más cercano.
@@ -16,6 +17,7 @@ from app.models.agent import PlanPlace, Suggestion, SuggestionTrigger
 from app.models.common import LocalizedText
 from app.models.events import Event
 from app.models.nearby import NearbyItem
+from app.models.towns import Town
 from app.models.world import VendorKind
 from app.services import events, towns
 from app.services.agent import plan_places
@@ -31,12 +33,14 @@ from app.services.world import (
 )
 
 SUGGESTION_RADIUS_M = 600
+# PROTO: radio alrededor de Plaza de Armas que cuenta como «en la capital» para eventos sin sede.
+CAPITAL_RADIUS_M = 3000
 # PROTO: franjas horarias en las que una promoción del puesto encaja con el momento del día.
 PROMO_WINDOWS: dict[VendorKind, tuple[tuple[str, str], ...]] = {
     "food": (("11:30", "15:30"), ("18:30", "21:30")),
     "coffee": (("07:00", "11:00"), ("16:30", "20:00")),
     "sweets": (("14:00", "20:00"),),
-    "drinks": (("17:00", "23:59"),),
+    "drinks": (("17:00", "24:00"),),
     "crafts": (("10:00", "19:00"),),
 }
 
@@ -51,6 +55,11 @@ def _capital_center() -> tuple[float, float]:
     return float(plaza["lat"]), float(plaza["lng"])
 
 
+def _in_capital(lat: float, lng: float) -> bool:
+    cap_lat, cap_lng = _capital_center()
+    return distance_m(lat, lng, cap_lat, cap_lng) <= CAPITAL_RADIUS_M
+
+
 def _nearby_town_id(lat: float, lng: float) -> str | None:
     """Si el visitante está cerca de un Pueblo Mágico, devuelve su id para sumar sus eventos."""
     near = [
@@ -61,43 +70,36 @@ def _nearby_town_id(lat: float, lng: float) -> str | None:
     return min(near)[1] if near else None
 
 
-def _event_coords(event: Event) -> tuple[float, float] | None:
-    if event.town_id is None:
-        return _capital_center()
-    town = towns.get_town(event.town_id)
-    if town is None:
-        return None
-    return town.center.lat, town.center.lng
-
-
-def _event_suggestion(event: Event, lat: float, lng: float, dist: int) -> Suggestion:
+def _event_suggestion(event: Event, town: Town | None) -> Suggestion:
+    where_es = f"en {town.name.es}" if town else "en la ciudad"
+    where_en = f"in {town.name.en}" if town else "in the city"
+    prov_es = " (fecha por confirmar)" if event.provisional else ""
+    prov_en = " (date to be confirmed)" if event.provisional else ""
+    line = LocalizedText(
+        es=f"Hoy es {event.name.es} {where_es}{prov_es}. ¿Lo sumamos al plan?",
+        en=f"{event.name.en} is on {where_en} today{prov_en}. Add it to your plan?",
+    )
+    place_es = town.name.es if town else "Zacatecas"
+    place_en = town.name.en if town else "Zacatecas"
+    reason_es = [f"Evento publicado para hoy en {place_es}"]
+    reason_en = [f"Published event for today in {place_en}"]
     if event.provisional:
-        line = LocalizedText(
-            es=f"Hoy es {event.name.es} cerca de aquí (fecha por confirmar). ¿Lo sumamos al plan?",
-            en=f"{event.name.en} is today nearby (date to be confirmed). Add it to your plan?",
-        )
-    else:
-        line = LocalizedText(
-            es=f"Hoy es {event.name.es} cerca de aquí. ¿Lo sumamos al plan?",
-            en=f"{event.name.en} is happening nearby today. Add it to your plan?",
-        )
-    reason_es = [f"Evento publicado hoy a {dist} m"]
+        reason_es.append("fecha por confirmar")
+        reason_en.append("date to be confirmed")
     if event.source_note:
         reason_es.append(event.source_note)
-    elif event.provisional:
-        reason_es.append("fecha por confirmar")
-    reason_en = [f"Published event today, {dist} m away"]
-    if event.provisional:
-        reason_en.append("date to be confirmed")
-    elif event.reviewed_at:
-        reason_en.append(f"reviewed {event.reviewed_at.isoformat()}")
-    source = event.source_url or event.source_note or "calendario-de-eventos"
+        reason_en.append(event.source_note)
+    if event.reviewed_at:
+        reviewed = event.reviewed_at.isoformat()
+        reason_es.append(f"revisado {reviewed}")
+        reason_en.append(f"reviewed {reviewed}")
+    source = event.source_url or "calendario-de-eventos"
     return Suggestion(
         place_id=event.id,
         kind="event",
         name=event.name,
-        lat=lat,
-        lng=lng,
+        lat=None,
+        lng=None,
         line=line,
         reason=LocalizedText(es=" · ".join(reason_es), en=" · ".join(reason_en)),
         trigger="event-today",
@@ -107,17 +109,20 @@ def _event_suggestion(event: Event, lat: float, lng: float, dist: int) -> Sugges
 
 
 def _pick_event(lat: float, lng: float, moment: datetime, excluded: set[str]) -> Suggestion | None:
+    in_capital = _in_capital(lat, lng)
     near_town = _nearby_town_id(lat, lng)
+    if not in_capital and near_town is None:
+        return None
     for event in events.active(moment.date(), town=near_town):
         if event.kind == "season" or event.id in excluded:
             continue
-        coords = _event_coords(event)
-        if coords is None:
-            continue
-        ev_lat, ev_lng = coords
-        dist = distance_m(lat, lng, ev_lat, ev_lng)
-        if dist <= SUGGESTION_RADIUS_M:
-            return _event_suggestion(event, ev_lat, ev_lng, dist)
+        if event.town_id is None:
+            if in_capital:
+                return _event_suggestion(event, town=None)
+        elif event.town_id == near_town:
+            town = towns.get_town(event.town_id)
+            if town is not None:
+                return _event_suggestion(event, town=town)
     return None
 
 
@@ -164,7 +169,8 @@ def _item_suggestion(
 ) -> Suggestion:
     note_es, note_en = _crowd_note(item)
     if trigger == "promotion":
-        assert item.promotion is not None
+        if item.promotion is None:
+            raise ValueError(f"trigger 'promotion' requiere promoción vigente ({item.id})")
         until_es, until_en = until_text(parse_at(item.promotion.end), moment)
         line = LocalizedText(
             es=f"{item.name.es} está a {item.distance_m} m y tiene una promoción "
