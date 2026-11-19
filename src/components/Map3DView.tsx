@@ -527,14 +527,18 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
     if (!engine || status !== 'ready') return;
     engine.setPlayer(position);
     if (!position) return;
-    engine.jumpTo({
-      lat: position.lat,
-      lng: position.lng,
-      altitude: FOLLOW_ALTITUDE,
-      range: 260,
-      tilt: 62,
-      heading: position.heading,
-    });
+    // Mientras se marca la ubicación de un puesto (#173), la cámara queda libre para buscarlo;
+    // al terminar, vuelve al jugador.
+    if (!pickingSpot) {
+      engine.jumpTo({
+        lat: position.lat,
+        lng: position.lng,
+        altitude: FOLLOW_ALTITUDE,
+        range: 260,
+        tilt: 62,
+        heading: position.heading,
+      });
+    }
     const found = placePois.find(
       (p) => p.placeId && !collection[p.placeId] && distanceMeters(position, p) <= DISCOVER_RADIUS_M,
     );
@@ -567,7 +571,7 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
         setRaceBadgeCard(true);
       }
     }
-  }, [position, status, placePois, pois, collection, discover, t, language, meteor, season, raceMissionDone]);
+  }, [position, status, placePois, pois, collection, discover, t, language, meteor, season, raceMissionDone, pickingSpot]);
 
   useEffect(() => {
     if (!nearby) return;
@@ -1135,8 +1139,8 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
         <MapAssistantSheet language={language} place={askPlace} onClose={() => setAskPlace(null)} />
       )}
 
-      {/* Pad táctil del avatar (también WASD / flechas) */}
-      {isExploring && status === 'ready' && (
+      {/* Pad táctil del avatar (también WASD / flechas). Se esconde mientras se marca la ubicación de un puesto. */}
+      {isExploring && status === 'ready' && !pickingSpot && (
         <div className="absolute right-3 bottom-24 z-10 grid grid-cols-3 gap-1.5 select-none">
           {(
             [
