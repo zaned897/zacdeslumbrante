@@ -7,6 +7,7 @@ from app.routers import (
     challenges,
     collaborators,
     events,
+    museums,
     photos,
     recommendations,
     reports,
@@ -31,6 +32,7 @@ app.include_router(agent.router)
 app.include_router(challenges.router)
 app.include_router(collaborators.router)
 app.include_router(events.router)
+app.include_router(museums.router)
 app.include_router(photos.router)
 app.include_router(recommendations.router)
 app.include_router(reports.router)

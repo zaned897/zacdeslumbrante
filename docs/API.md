@@ -270,6 +270,39 @@ Pueblos Mágicos de Zacatecas con la estructura común de `docs/design/pueblos-m
 - `center`: de `places.ts` para los 4 pueblos que ya estaban; del nodo `place=town` de OSM para Villanueva, Teúl y Nochistlán.
 - `heroPhoto`, cuando llegue, usa el formato de Wikimedia Commons de las fotos: `url`, `author`, `license`, `sourceUrl` y `caption`.
 
+### GET /api/py/museums  · mock · dueño: Claude Code (#85)
+Los museos de Zacatecas del directorio de datos abiertos del SIC (Secretaría de Cultura), tal como vienen: 67 al 2026-11-19. Copia en `services/api/app/fixtures/museums.json`, generada con `app/open_data.py`.
+```json
+{
+  "_mock": true,
+  "items": [
+    {
+      "id": "sic-museo-636",
+      "name": "Museo Pedro Coronel",
+      "theme": "Arte",
+      "operator": "Instituto Zacatecano de Cultura Ramón López Velarde",
+      "municipality": "Zacatecas",
+      "locality": "Zacatecas",
+      "street": "Plaza de Santo Domingo s/n",
+      "neighborhood": "Centro",
+      "postalCode": "98000",
+      "phone": "492 922 80 21",
+      "lat": 22.77622,
+      "lng": -102.57375,
+      "sicUrl": "http://sic.gob.mx/ficha.php?table=museo&table_id=636",
+      "source": "https://sic.cultura.gob.mx/opendata/d/32_museo_directorio.csv",
+      "license": "\"Directorio de museos\", publicado por el Sistema de Información Cultural/Secretaría de Cultura. Consultado en http://sic.cultura.gob.mx/datos.php?table=museo el 2026-11-19.",
+      "retrievedAt": "2026-11-19"
+    }
+  ]
+}
+```
+- Cada museo lleva `source` (el archivo de datos abiertos), `license` (el crédito que pide el SIC, con la fecha de consulta) y `retrievedAt`. Quien los muestre debe mostrar `license`.
+- Pueden ser `null`: `theme`, `operator`, `neighborhood`, `postalCode`, `phone`, `lat` y `lng`. `theme` viene como lo escribe el SIC (`Historia`, `Arte`, `TND`…).
+- Sin correo, redes ni páginas web: varios correos son personales (hotmail, gmail). `sicUrl` lleva a la ficha completa del SIC.
+- Las zonas arqueológicas del INAH (4 en Zacatecas) se guardan en `services/api/app/fixtures/archaeology_sites.json`, con los mismos `source`, `license` (CC BY 4.0) y `retrievedAt`. Todavía no tienen endpoint, y el archivo del INAH no trae coordenadas.
+- Regenerar (necesita red hacia sic.cultura.gob.mx y datos.inah.gob.mx): `cd services/api && uv run python -m app.open_data`. Con los CSV ya bajados: `--desde <carpeta>`. Si una fuente no se puede bajar o leer, lo dice, deja su fixture como estaba y sale con código 1.
+
 ### GET /api/py/vendors · GET /api/py/vendors/{id}  · mock · dueño: Claude Code (#171)
 Puestos y comercios **inventados** del mundo de prueba del Centro Histórico (#170). Solo salen los publicados. Datos en `services/api/app/fixtures/vendors.json`; `/vendors/{id}` responde 404 si no existe o no está publicado.
 ```json

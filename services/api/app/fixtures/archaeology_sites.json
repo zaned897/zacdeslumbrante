@@ -1,0 +1,57 @@
+{
+  "_source": "Generado con `uv run python -m app.open_data` desde las zonas arqueológicas del INAH (#85). No se edita a mano.",
+  "sites": [
+    {
+      "id": "inah-alta-vista",
+      "name": "Alta Vista",
+      "location": "Rancho Colorado CP 99260 Municipio de Chalchihuites, Zacatecas",
+      "status": "Abierta",
+      "siteMuseum": true,
+      "introRoom": false,
+      "managedBy": "Centro INAH Zacatecas",
+      "inahUrl": "https://lugares.inah.gob.mx/es/node/4371",
+      "source": "https://datos.inah.gob.mx/sites/default/files/conjuntos/datos/INAH_zonas_arqueologicas.csv",
+      "license": "\"Zonas Arqueológicas abiertas al público\", Instituto Nacional de Antropología e Historia (INAH), https://datos.inah.gob.mx/datos-abiertos/zonas-arqueologicas. Licencia CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/deed.es). Consultado el 2026-11-19. Solo los registros de Zacatecas.",
+      "retrievedAt": "2026-11-19"
+    },
+    {
+      "id": "inah-el-teul",
+      "name": "El Teúl",
+      "location": "Se localiza 1km al suroeste del Centro del municipio de Teúl de González Ortega, al final de la calle Manuel Caloca",
+      "status": "Abierta",
+      "siteMuseum": false,
+      "introRoom": false,
+      "managedBy": "Centro INAH Zacatecas",
+      "inahUrl": "https://lugares.inah.gob.mx/es/node/4542",
+      "source": "https://datos.inah.gob.mx/sites/default/files/conjuntos/datos/INAH_zonas_arqueologicas.csv",
+      "license": "\"Zonas Arqueológicas abiertas al público\", Instituto Nacional de Antropología e Historia (INAH), https://datos.inah.gob.mx/datos-abiertos/zonas-arqueologicas. Licencia CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/deed.es). Consultado el 2026-11-19. Solo los registros de Zacatecas.",
+      "retrievedAt": "2026-11-19"
+    },
+    {
+      "id": "inah-la-quemada",
+      "name": "La Quemada",
+      "location": "Camino a la Zona Arqueológica La Quemada \"Ruinas de Chicomoztoc\" Km. 2, Municipio de Villanueva, Zacatecas. Acceso al camino desde el Km. 56 de la Carretera Federal No. 54",
+      "status": "Abierta",
+      "siteMuseum": true,
+      "introRoom": false,
+      "managedBy": "Centro INAH Zacatecas",
+      "inahUrl": "https://lugares.inah.gob.mx/es/node/4349",
+      "source": "https://datos.inah.gob.mx/sites/default/files/conjuntos/datos/INAH_zonas_arqueologicas.csv",
+      "license": "\"Zonas Arqueológicas abiertas al público\", Instituto Nacional de Antropología e Historia (INAH), https://datos.inah.gob.mx/datos-abiertos/zonas-arqueologicas. Licencia CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/deed.es). Consultado el 2026-11-19. Solo los registros de Zacatecas.",
+      "retrievedAt": "2026-11-19"
+    },
+    {
+      "id": "inah-las-ventanas",
+      "name": "Las Ventanas",
+      "location": "Localizada en el Cerro de Las Ventanas, en las inmediaciones del poblado El Remolino, del Municipio Juchipila, en Zacatecas",
+      "status": "Abierta",
+      "siteMuseum": false,
+      "introRoom": false,
+      "managedBy": "Centro INAH Zacatecas",
+      "inahUrl": "https://lugares.inah.gob.mx/es/node/4432",
+      "source": "https://datos.inah.gob.mx/sites/default/files/conjuntos/datos/INAH_zonas_arqueologicas.csv",
+      "license": "\"Zonas Arqueológicas abiertas al público\", Instituto Nacional de Antropología e Historia (INAH), https://datos.inah.gob.mx/datos-abiertos/zonas-arqueologicas. Licencia CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/deed.es). Consultado el 2026-11-19. Solo los registros de Zacatecas.",
+      "retrievedAt": "2026-11-19"
+    }
+  ]
+}

@@ -54,3 +54,11 @@ flowchart LR
 - Todo va con `provisional: true` salvo la Panamericana 2026, que ya tiene la fecha confirmada.
 - `tests/test_events.py` falla si las fechas dejan de coincidir con `seasons.ts` o si una fiesta de `towns.json` no tiene su evento.
 
+## Datos abiertos (#85)
+
+- **`museums.json`:** los museos de Zacatecas del directorio del SIC (Secretaría de Cultura).
+- **`archaeology_sites.json`:** las zonas arqueológicas de Zacatecas abiertas al público, del INAH (CC BY 4.0).
+- Son datos reales, no inventados. No se editan a mano: los genera `uv run python -m app.open_data`.
+- Cada registro lleva `source`, `license` (el crédito que pide la institución) y `retrievedAt`.
+- Sin correo ni redes. `tests/test_museums.py` lo revisa.
+
