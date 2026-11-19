@@ -171,36 +171,47 @@ def _start_town(lat: float, lng: float) -> str | None:
 
 
 def _with_events(candidates: list[Candidate], day: date, town: str | None) -> list[Candidate]:
-    """Los eventos de hoy con lugar se vuelven paradas: el lugar del plan, o uno del catálogo.
+    """Los eventos de hoy con lugar se suman como paradas: el lugar del plan, o uno del catálogo.
 
     Como en /events, la fiesta de un pueblo solo cuenta si el paseo empieza en ese pueblo.
+    El lugar de siempre se queda en la lista: si al llegar el evento ya terminó, sigue siendo
+    una parada normal.
     """
     by_id = {c.id: c for c in candidates}
     catalog = {p["id"]: p for p in catalog_places()}
+    extra: list[Candidate] = []
     for e in events.active(day, town):
         if e.place_id is None:
             continue
         if e.place_id in by_id:
             base = by_id[e.place_id]
-            by_id[e.place_id] = replace(base, event=e, source=e.source_url or base.source)
+            extra.append(replace(base, event=e, source=e.source_url or base.source))
         elif e.place_id in catalog:
             place = catalog[e.place_id]
-            by_id[e.place_id] = Candidate(
-                id=e.place_id,
-                kind="place",
-                group="place",
-                name=LocalizedText.model_validate(place["name"]),
-                lat=place["lat"],
-                lng=place["lng"],
-                hours=EVENT_HOURS,
-                price=EVENT_PRICE,
-                stay_min=EVENT_STAY,
-                interests=set(),
-                source=e.source_url or "calendario-de-eventos",
-                event=e,
+            extra.append(
+                Candidate(
+                    id=e.place_id,
+                    kind="place",
+                    group="place",
+                    name=LocalizedText.model_validate(place["name"]),
+                    lat=place["lat"],
+                    lng=place["lng"],
+                    hours=EVENT_HOURS,
+                    price=EVENT_PRICE,
+                    stay_min=EVENT_STAY,
+                    interests=set(),
+                    source=e.source_url or "calendario-de-eventos",
+                    event=e,
+                )
             )
         # Un lugar que no está en ningún catálogo no se puede ubicar: el evento no es parada.
-    return list(by_id.values())
+    return candidates + extra
+
+
+def _during_event(o: Option) -> bool:
+    """El evento sigue el día en que se llega (un paseo puede pasar de la medianoche)."""
+    event = o.candidate.event
+    return event is None or events.is_active(event, o.arrive.date())
 
 
 def open_during(hours: list[OpeningHours], start: datetime, end: datetime) -> bool:
@@ -332,7 +343,9 @@ def plan(request: PlanRequest, moment: datetime) -> Plan:
         options = [
             o
             for o in (_option(c, lat, lng, now, speed, wanted) for c in pool)
-            if o.cost <= left and open_during(o.candidate.hours, o.arrive, o.leave)
+            if o.cost <= left
+            and open_during(o.candidate.hours, o.arrive, o.leave)
+            and _during_event(o)
         ]
         if need_food:
             food = [o for o in options if o.candidate.group == "food"]

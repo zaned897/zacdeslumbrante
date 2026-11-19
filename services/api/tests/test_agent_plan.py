@@ -308,6 +308,17 @@ def test_provisional_event_says_so_in_the_reason() -> None:
 
 
 @pytest.mark.usefixtures("clean_world")
+def test_event_that_ended_before_arrival_is_not_a_stop() -> None:
+    # Hallazgo de Codex: la feria termina el 12 de diciembre; a las 23:58 se llega el 13.
+    body = client.post(
+        "/agent/plan",
+        json={"start": GUADALUPE, "minutes": 120, "at": "2026-12-12T23:58:00-06:00"},
+    ).json()
+    assert "guadalupe-pueblo-magico" not in ids(body)
+    assert event_stops(body) == []
+
+
+@pytest.mark.usefixtures("clean_world")
 def test_town_feast_only_when_the_walk_starts_in_that_town() -> None:
     # Desde Plaza de Armas la feria de Guadalupe no es parada, aunque el tiempo alcance.
     body = ask(at=FERIA_GUADALUPE, minutes=480)
