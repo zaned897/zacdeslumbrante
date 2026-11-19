@@ -1,4 +1,3 @@
-import type { CabinState } from '../scene3d/cableCabins';
 // Contrato del modo 3D (ver docs/MAPA3D.md). Compartido: cambios con acuerdo.
 import type { Language } from './index';
 
@@ -164,6 +163,13 @@ export interface SceneEngine {
   /** Tarjetas de fotos flotantes sobre los lugares (#232). Opcional: Google 3D y Cesium no lo implementan. */
   setFloatingPhotos?(photos: FloatingPhoto[]): void;
   destroy(): void;
+}
+
+/** Estado de las cabinas del teleférico (#263). */
+export interface CabinState {
+  status: 'unavailable' | 'closed' | 'running' | 'reduced';
+  riding: boolean;
+  heightM: number | null;
 }
 
 export type FreightState = 'unavailable' | 'disabled' | 'waiting' | 'warning' | 'running' | 'following' | 'parked';

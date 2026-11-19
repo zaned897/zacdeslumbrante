@@ -19,8 +19,17 @@ export interface CableCarLayer {
   readonly stations: ReadonlyArray<{ id: string; position: THREE.Vector3; elevationM: number }>;
   setLanguage(language: Language): void;
   setTimeOfDay(time: SceneTimeOfDay): void;
+  /** #275: ¿el toque cae en una estación o a pocos píxeles del cable? `pointer` en NDC. */
+  pick(ray: THREE.Raycaster, camera: THREE.Camera, pointer: THREE.Vector2, size: { width: number; height: number }): boolean;
+  /** #275: las etiquetas de estaciones y línea avisan al tocarlas. */
+  onSelect(handler: (() => void) | null): void;
+  /** Fuera mientras se mira el cielo, como los demás pines. */
+  setLabelsVisible(visible: boolean): void;
   dispose(): void;
 }
+
+/** Tolerancia en píxeles para tocar el cable, que mide menos de un píxel a la distancia habitual. */
+const CABLE_PICK_PX = 14;
 interface Options {
   T: typeof THREE;
   scene: THREE.Scene;
@@ -67,10 +76,13 @@ function build(options: Options, data: CableCarFile): CableCarLayer {
   group.userData = { _mock: true, note: 'Estaciones ilustrativas; P1/P2 en posición aproximada' };
   const geometries = new Set<THREE.BufferGeometry>(), materials = new Set<THREE.Material>();
   const instances: THREE.InstancedMesh[] = [], labels: CSS2DObject[] = [];
+  const lights: THREE.PointLight[] = [], stationGroups: THREE.Object3D[] = [];
+  let selectHandler: (() => void) | null = null;
   let disposed = false;
   const dispose = () => {
     if (disposed) return; disposed = true;
-    group.removeFromParent(); labels.forEach(l => l.element.remove());
+    selectHandler = null;
+    group.removeFromParent(); labels.forEach(l => l.element.remove()); lights.forEach(l => l.dispose());
     instances.forEach(m => m.dispose()); geometries.forEach(g => g.dispose()); materials.forEach(m => m.dispose());
   };
   try {
@@ -184,7 +196,7 @@ function build(options: Options, data: CableCarFile): CableCarLayer {
     batch(cables.flatMap(points => points.slice(1).map((q, i): [THREE.Vector3, THREE.Vector3] => [points[i], q])), 0.65, cableMat);
     stations.forEach((station, i) => {
       const g = new T.Group(); g.position.copy(station.position);
-      g.rotation.y = Math.atan2(direction.x, direction.z) + (i ? Math.PI : 0); group.add(g);
+      g.rotation.y = Math.atan2(direction.x, direction.z) + (i ? Math.PI : 0); group.add(g); stationGroups.push(g);
       // Basamento hasta la ladera: el piso conserva su cota aunque el DEM esté más abajo.
       const groundY = Math.min(...[-15, 15].flatMap(x => [-20, 10].map(z => {
         const wx = station.position.x + x * Math.cos(g.rotation.y) + z * Math.sin(g.rotation.y);
@@ -202,9 +214,12 @@ function build(options: Options, data: CableCarFile): CableCarLayer {
     const anchors = [start.clone().add(new T.Vector3(0, 36, 0)), end.clone().add(new T.Vector3(0, 36, 0)),
       cables[0][Math.floor(cables[0].length / 2)].clone().add(new T.Vector3(0, 25, 0))];
     anchors.forEach(p => {
-      const el = document.createElement('div');
+      const el = document.createElement('button');
+      el.type = 'button';
       Object.assign(el.style, { background: '#F5EFE6', color: '#292524', border: '1px solid #C98B78',
-        borderRadius: '3px', padding: '4px 8px', font: '600 12px sans-serif', whiteSpace: 'nowrap', pointerEvents: 'none' });
+        borderRadius: '3px', padding: '4px 8px', font: '600 12px sans-serif', whiteSpace: 'nowrap',
+        pointerEvents: 'auto', cursor: 'pointer' });
+      el.addEventListener('click', event => { event.stopPropagation(); selectHandler?.(); });
       const label = new CSS2DObject(el); label.position.copy(p); group.add(label); labels.push(label);
     });
     const setLanguage = (language: Language) => {
@@ -229,7 +244,7 @@ function build(options: Options, data: CableCarFile): CableCarLayer {
     }
     const stationLights = stations.map(station => {
       const light = new T.PointLight('#FFC27A', 0, 140, 1.4);
-      light.position.copy(station.position).add(new T.Vector3(0, 30, 0)); group.add(light); return light;
+      light.position.copy(station.position).add(new T.Vector3(0, 30, 0)); group.add(light); lights.push(light); return light;
     });
     const setTimeOfDay = (time: SceneTimeOfDay) => {
       const night = time === 'night', dusk = time === 'dusk';
@@ -241,8 +256,25 @@ function build(options: Options, data: CableCarFile): CableCarLayer {
       lamps.visible = night || dusk;
       stationLights.forEach(light => { light.intensity = night ? 900 : dusk ? 250 : 0; });
     };
+    const onRay = new T.Vector3(), onSegment = new T.Vector3(), screen = new T.Vector3();
+    const pick: CableCarLayer['pick'] = (ray, camera, pointer, size) => {
+      if (disposed) return false;
+      if (ray.intersectObjects(stationGroups, true).length) return true;
+      for (const points of cables) {
+        for (let i = 1; i < points.length; i++) {
+          ray.ray.distanceSqToSegment(points[i - 1], points[i], onRay, onSegment);
+          screen.copy(onSegment).project(camera);
+          if (screen.z > 1) continue;
+          const dx = (screen.x - pointer.x) * size.width / 2, dy = (screen.y - pointer.y) * size.height / 2;
+          if (dx * dx + dy * dy <= CABLE_PICK_PX * CABLE_PICK_PX) return true;
+        }
+      }
+      return false;
+    };
+    const onSelect = (handler: (() => void) | null) => { selectHandler = handler; };
+    const setLabelsVisible = (visible: boolean) => { labels.forEach(label => { label.visible = visible; }); };
     setLanguage('es'); setTimeOfDay('day'); options.scene.add(group);
-    return { cables, stations, cabinConfig: parseCabinConfig(data), setLanguage, setTimeOfDay, dispose };
+    return { cables, stations, cabinConfig: parseCabinConfig(data), setLanguage, setTimeOfDay, pick, onSelect, setLabelsVisible, dispose };
   } catch (error) { dispose(); throw error; }
 }
 

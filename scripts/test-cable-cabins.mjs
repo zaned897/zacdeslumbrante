@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { test } from 'node:test';
 import { cabinProgress, cabinPhase, cabinsOpen, parseCabinConfig, CABIN_TURN_SECONDS } from '../src/scene3d/cableCabins.ts';
-import { forcedMinutes, zacatecasMinutes, zacatecasWeekday } from '../src/scene3d/timeOfDay.ts';
+import { forcedClockMinutes, forcedMinutes, forcedZacatecasDate, zacatecasMinutes, zacatecasWeekday } from '../src/scene3d/timeOfDay.ts';
 const data = JSON.parse(await readFile(new URL('../public/data/teleferico.json', import.meta.url), 'utf8'));
 const config = parseCabinConfig(data);
 
@@ -19,6 +19,19 @@ test('schedule uses Zacatecas boundaries, weekday and development-only override'
   assert.equal(cabinsOpen({ ...config, days: [0] }, noon, '?hora=12', true), false);
   for (const value of ['24', '-1', '', 'Infinity', 'noche']) assert.equal(forcedMinutes(`?hora=${value}`, true), null);
   assert.equal(forcedMinutes('?hora=17.5', true), 1050);
+});
+test('#275: words force one clock for sky, cabins and card', () => {
+  const noon = new Date('2026-11-13T18:00:00Z');
+  assert.equal(forcedClockMinutes('?hora=noche', false), 21 * 60);
+  assert.equal(forcedClockMinutes('?noche=1', false), 21 * 60);
+  assert.equal(forcedClockMinutes('?hora=dia', false), 12 * 60);
+  assert.equal(forcedClockMinutes('?hora=20', false), null);
+  assert.equal(forcedClockMinutes('', true), null);
+  assert.equal(cabinsOpen(config, noon, '?hora=noche', false), false);
+  const forced = forcedZacatecasDate('?hora=20', true, noon);
+  assert.equal(zacatecasMinutes(forced), 20 * 60);
+  assert.equal(zacatecasWeekday(forced), zacatecasWeekday(noon));
+  assert.equal(forcedZacatecasDate('', true, noon), null);
 });
 test('invalid operation data fails loudly', () => {
   for (const change of [{ cabins: { count: 6, glassFloor: 1 } }, { line: { tripSeconds: 0 } },

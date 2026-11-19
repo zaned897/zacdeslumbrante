@@ -1,18 +1,6 @@
 import type { Localized } from '../types/scene3d';
-import { zacatecasMinutes } from '../scene3d/timeOfDay';
+import { zacatecasMinutes, zacatecasWeekday as weekdayInZacatecas } from '../scene3d/timeOfDay';
 import { TRANSLATIONS } from './i18n';
-
-const ZACATECAS_TZ = 'America/Mexico_City';
-
-const WEEKDAY_INDEX: Record<string, number> = {
-  Sun: 0,
-  Mon: 1,
-  Tue: 2,
-  Wed: 3,
-  Thu: 4,
-  Fri: 5,
-  Sat: 6,
-};
 
 const WEEKDAY_NAMES: Record<number, Localized> = {
   0: { es: 'domingo', en: 'Sunday' },
@@ -129,10 +117,11 @@ export const DEFAULT_TELEFERICO_SCHEDULE: TelefericoSchedule = {
  * Convierte una hora en formato "HH:MM" a minutos desde la medianoche.
  */
 export function parseTimeMinutes(hhmm: string): number {
-  const [hStr, mStr] = hhmm.split(':');
-  const hours = Number(hStr);
-  const minutes = Number(mStr ?? 0);
-  if (!Number.isFinite(hours) || !Number.isFinite(minutes)) {
+  // Estricto: "HH:MM" de 00:00 a 24:00; "" o "25:99" fallan en vez de dar 0 o una hora imposible.
+  const match = /^(\d{2}):(\d{2})$/.exec(hhmm);
+  const hours = match ? Number(match[1]) : NaN;
+  const minutes = match ? Number(match[2]) : NaN;
+  if (!match || minutes > 59 || hours > 24 || (hours === 24 && minutes > 0)) {
     throw new Error(`Hora inválida en horario del teleférico: "${hhmm}"`);
   }
   return hours * 60 + minutes;
@@ -152,12 +141,7 @@ export function formatTripDuration(tripSeconds: number): string {
  * Día de la semana (0 = domingo … 6 = sábado) en la zona horaria de Zacatecas.
  */
 export function zacatecasWeekday(fecha: Date = new Date()): number {
-  const parts = new Intl.DateTimeFormat('en-US', {
-    timeZone: ZACATECAS_TZ,
-    weekday: 'short',
-  }).formatToParts(fecha);
-  const wk = parts.find((p) => p.type === 'weekday')?.value ?? 'Sun';
-  return WEEKDAY_INDEX[wk] ?? 0;
+  return weekdayInZacatecas(fecha);
 }
 
 /**
@@ -249,17 +233,67 @@ export async function loadTeleferico(): Promise<TelefericoData> {
       `No se pudo cargar /data/teleferico.json (HTTP ${response.status} ${response.statusText})`,
     );
   }
-  const data: unknown = await response.json();
-  if (
-    typeof data !== 'object' ||
-    data === null ||
-    !('line' in data) ||
-    !('schedule' in data) ||
-    !('fares' in data) ||
-    !('stations' in data) ||
-    !('sources' in data)
-  ) {
-    throw new Error('Formato inválido en /data/teleferico.json');
+  return parseTelefericoData(await response.json());
+}
+
+const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null;
+const isLocalized = (v: unknown): v is Localized =>
+  isRecord(v) && typeof v.es === 'string' && typeof v.en === 'string';
+const isNumber = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
+const isOptionalNumber = (v: unknown) => v === undefined || isNumber(v);
+const isIdList = (v: unknown, sources: Record<string, unknown>): boolean =>
+  Array.isArray(v) && v.every((id) => typeof id === 'string' && id in sources);
+
+/**
+ * Valida lo que usan la tarjeta y el horario antes de confiar en el JSON (#275): sin `as` a ciegas.
+ * Falla ruidosa con la ruta del primer campo inválido.
+ */
+export function parseTelefericoData(value: unknown): TelefericoData {
+  const fail = (path: string): never => {
+    throw new Error(`Formato inválido en /data/teleferico.json: ${path}`);
+  };
+  if (!isRecord(value)) fail('raíz');
+  const data = value as Record<string, unknown>;
+  const sources = isRecord(data.sources) ? data.sources : fail('sources');
+  for (const [id, source] of Object.entries(sources)) {
+    if (!isRecord(source) || typeof source.name !== 'string' || typeof source.url !== 'string') fail(`sources.${id}`);
   }
-  return data as TelefericoData;
+  if (!Array.isArray(data.stations) || !data.stations.every((s) => isRecord(s) && typeof s.id === 'string' && isLocalized(s.name))) {
+    fail('stations');
+  }
+  const line = isRecord(data.line) ? data.line : fail('line');
+  if (!isNumber(line.lengthM) || !isNumber(line.riseM) || !isNumber(line.tripSeconds) || !isIdList(line.source, sources)) fail('line');
+  const schedule = isRecord(data.schedule) ? data.schedule : fail('schedule');
+  if (
+    !Array.isArray(schedule.days) ||
+    !schedule.days.every((d) => Number.isInteger(d) && d >= 0 && d <= 6) ||
+    typeof schedule.open !== 'string' ||
+    typeof schedule.close !== 'string' ||
+    typeof schedule.verify !== 'boolean' ||
+    !isIdList(schedule.source, sources)
+  ) {
+    fail('schedule');
+  }
+  parseTimeMinutes(schedule.open as string);
+  parseTimeMinutes(schedule.close as string);
+  const fares = isRecord(data.fares) ? data.fares : fail('fares');
+  if (typeof fares.currency !== 'string' || typeof fares.verify !== 'boolean' || !isIdList(fares.source, sources) || !Array.isArray(fares.rows)) {
+    fail('fares');
+  }
+  (fares.rows as unknown[]).forEach((row, i) => {
+    if (
+      !isRecord(row) ||
+      typeof row.id !== 'string' ||
+      !isLocalized(row.label) ||
+      !isOptionalNumber(row.oneWay) ||
+      !isOptionalNumber(row.roundTrip) ||
+      !isOptionalNumber(row.extra) ||
+      (row.verify !== undefined && typeof row.verify !== 'boolean') ||
+      !isIdList(row.source, sources)
+    ) {
+      fail(`fares.rows[${i}]`);
+    }
+  });
+  // Validado arriba lo que se lee; el resto (torres, notas) solo se muestra tal cual.
+  return value as TelefericoData;
 }

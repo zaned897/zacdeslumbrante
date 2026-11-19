@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { Language } from '../../types';
-import type { SceneEngine } from '../../types/scene3d';
-import type { CabinState } from '../../scene3d/cableCabins';
+import type { CabinState, SceneEngine } from '../../types/scene3d';
 import { TRANSLATIONS } from '../../data/i18n';
 
 export function CableCabinView({ engine, language, hidden, frameContainer }: {
@@ -24,7 +23,7 @@ export function CableCabinView({ engine, language, hidden, frameContainer }: {
   }, [engine, state.riding]);
   if (hidden || state.status === 'unavailable') return null;
   return <>
-    <aside className="rounded-xl border border-stone-200 bg-[#FBF9F5] p-2 text-xs text-stone-900 shadow-sm">
+    <aside aria-label={t.telefericoTitle} className="rounded-xl border border-stone-200 bg-[#FBF9F5] p-2 text-xs text-stone-900 shadow-sm">
       <p role="status" className="font-semibold">{state.status === 'closed' ? t.cabinClosed : state.status === 'reduced' ? t.cabinReduced : t.cabinRunning}</p>
       <p className="my-1 text-stone-600">{t.cabinSimulation}</p>
       <button type="button" aria-pressed={state.riding} disabled={!state.riding && state.status !== 'running'}

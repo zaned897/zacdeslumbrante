@@ -1,8 +1,8 @@
 import type * as THREE from 'three';
 import type { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import type { CableCarLayer } from './cableCar';
-import type { SceneTimeOfDay } from '../types/scene3d';
-import { forcedMinutes, zacatecasMinutes, zacatecasWeekday } from './timeOfDay.ts';
+import type { CabinState, SceneTimeOfDay } from '../types/scene3d';
+import { forcedClockMinutes, zacatecasMinutes, zacatecasWeekday } from './timeOfDay.ts';
 
 export interface CabinConfig {
   tripSeconds: number;
@@ -12,11 +12,7 @@ export interface CabinConfig {
   open: number;
   close: number;
 }
-export interface CabinState {
-  status: 'unavailable' | 'closed' | 'running' | 'reduced';
-  riding: boolean;
-  heightM: number | null;
-}
+export type { CabinState } from '../types/scene3d';
 const record = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null;
 export function parseCabinConfig(value: unknown): CabinConfig {
   const fail = (): never => { throw new Error('Teleférico: cabinas u horario inválidos'); };
@@ -33,7 +29,7 @@ export function parseCabinConfig(value: unknown): CabinConfig {
   return { tripSeconds: line.tripSeconds, count: cabins.count, glassIndex: 3, days: schedule.days, open, close };
 }
 export function cabinsOpen(config: CabinConfig, now: Date, search: string, development: boolean): boolean {
-  const minutes = forcedMinutes(search, development) ?? zacatecasMinutes(now);
+  const minutes = forcedClockMinutes(search, development) ?? zacatecasMinutes(now);
   return config.days.includes(zacatecasWeekday(now)) && minutes >= config.open && minutes < config.close;
 }
 
@@ -159,17 +155,18 @@ export class CableCabins {
       this.open = cabinsOpen(config, now, this.search, this.development);
     }
     const open = this.open, reduced = this.motion.matches;
-    this.state.status = reduced ? 'reduced' : open ? 'running' : 'closed';
+    // Fuera de horario manda: con movimiento reducido las cabinas también quedan en el andén.
+    this.state.status = !open ? 'closed' : reduced ? 'reduced' : 'running';
     if (!open || reduced) this.ride(false);
     if (open && !reduced && !document.hidden) this.elapsed += Math.max(0, Math.min(dt, 0.1));
     this.cabins.forEach((cabin, i) => {
       const phase = cabinPhase(reduced ? 0 : this.elapsed, i, config);
       let position: THREE.Vector3;
-      if (reduced) {
-        position = this.sample(i % 2, (Math.floor(i / 2) + 1) / (Math.ceil(config.count / 2) + 1));
-      } else if (!open) {
+      if (!open) {
         position = this.layer.stations[0].position.clone().addScaledVector(this.normal, (i % 4 - 1.5) * 4)
           .addScaledVector(this.direction, -5 - Math.floor(i / 4) * 5); position.y += 14;
+      } else if (reduced) {
+        position = this.sample(i % 2, (Math.floor(i / 2) + 1) / (Math.ceil(config.count / 2) + 1));
       } else if (phase.leg % 2 === 0) {
         position = this.sample(phase.leg / 2, phase.leg === 0 ? cabinProgress(phase.t) : 1 - cabinProgress(phase.t));
       } else {

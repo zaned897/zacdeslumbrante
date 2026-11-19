@@ -53,3 +53,25 @@ export function forcedTimeOfDay(search: string): SceneTimeOfDay | null {
   if (hora && FORCED[hora]) return FORCED[hora];
   return params.has('noche') ? 'night' : null;
 }
+
+// PROTO: reloj representativo de cada palabra, para que cabinas y tarjeta sigan al cielo forzado (#275).
+const FORCED_CLOCK: Record<string, number> = { dia: 12 * 60, tarde: 18 * 60 + 30, noche: 21 * 60 };
+
+/** Reloj forzado de todo el modo 3D: número (solo en desarrollo), `dia|tarde|noche` o `?noche=1`. */
+export function forcedClockMinutes(search: string, development: boolean): number | null {
+  const minutes = forcedMinutes(search, development);
+  if (minutes !== null) return minutes;
+  const params = new URLSearchParams(search);
+  const hora = params.get('hora');
+  if (hora && Object.hasOwn(FORCED_CLOCK, hora)) return FORCED_CLOCK[hora];
+  return params.has('noche') ? FORCED_CLOCK.noche : null;
+}
+
+/** Hoy en Zacatecas con el reloj forzado; null si no se fuerza. Zacatecas es UTC−6 fijo. */
+export function forcedZacatecasDate(search: string, development: boolean, now: Date = new Date()): Date | null {
+  const minutes = forcedClockMinutes(search, development);
+  if (minutes === null) return null;
+  const [y, m, d] = new Intl.DateTimeFormat('en-CA', { timeZone: ZACATECAS_TZ, year: 'numeric', month: '2-digit', day: '2-digit' })
+    .format(now).split('-').map(Number);
+  return new Date(Date.UTC(y, m - 1, d, 6, minutes));
+}
