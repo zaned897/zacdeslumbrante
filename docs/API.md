@@ -406,15 +406,24 @@ El agente arma el paseo con **reglas simples, sin LLM**. Las reglas son las de `
   - los lugares del catálogo con horario conocido, en `services/api/app/fixtures/plan_places.json`.
     - Su horario y su tarifa se transcriben de `src/data/places.ts`; un test falla si dejan de coincidir.
     - `source` es la página oficial de donde sale el horario. En los puestos dice `mundo-de-prueba`.
+  - **los eventos publicados del día de `at` que dicen dónde son** (`placeId`, ver `/events`) (#164):
+    - el de la capital siempre; el de un pueblo, solo si el paseo empieza en ese pueblo (más cerca de su centro que de Plaza de Armas), como en `/events`;
+    - si su lugar está en `plan_places.json`, la parada es ese lugar con su horario y su estancia;
+    - si solo está en `places.json`, PROTO: abre todo el día mientras dura el evento, la estancia es de 60 min y cuenta como `$`;
+    - su `reason` empieza con «Hoy hay Carrera Panamericana» y, si es `provisional`, agrega «(fecha por confirmar)»; `source` es el `sourceUrl` del evento;
+    - un evento sin `placeId`, no publicado o fuera de fecha nunca es parada.
 - **Orden de las paradas:**
   1. **Reglas duras:** abierto desde que llega hasta que se va, cabe en el tiempo que queda, dentro del presupuesto y fuera de `avoid`.
-  2. **Interés:** con `hungry`, la primera parada es comida. Con `interests`, solo entran paradas que coinciden.
+  2. **Evento de hoy:** va antes que las demás paradas, aunque no coincida con `interests`. Con `hungry`, va después de la comida.
+  3. **Interés:** con `hungry`, la primera parada es comida. Con `interests`, solo entran paradas que coinciden (y el evento de hoy).
      - Si no cabe ninguna comida, el plan sigue sin ella y lo dice en `notes`; los `interests` se siguen respetando.
-  3. **Costo de tiempo:** caminata + espera + estancia. Gana la que deja más margen.
-  4. **Desempates:** una recomendación que coincide con un interés, la distancia más corta, una promoción vigente.
+  4. **Costo de tiempo:** caminata + espera + estancia. Gana la que deja más margen.
+  5. **Desempates:** una recomendación que coincide con un interés, la distancia más corta, una promoción vigente.
 - La afluencia no ordena nada: solo entra como espera (`waitMin`).
 - Un puesto de cada tipo por plan: no salen dos cafés ni dos comidas.
 - **`notes`:** espera larga (15 min o más) con la sugerencia de `avoid`, comida que no cupo, accesibilidad sin confirmar si `mobility` no es `a-pie`, y el tiempo libre que queda.
+  - Con una fiesta o temporada de la capital ese día, la primera nota la dice sin cambiar el orden: «Es temporada de Día de Muertos: espera más gente en el centro.» En una temporada (`kind: season`) solo dice «Es temporada de lluvias.» (#164)
+- Sin eventos ese día, el plan es igual que antes de #164 (prueba de regresión en `services/api/tests/test_agent_plan.py`).
 - PROTO:
   - la caminata es la distancia directa × 1.3, a 70 m/min a pie (60 con carriola y 50 en silla de ruedas);
   - la estancia es fija por tipo de parada;
@@ -439,9 +448,10 @@ Temporadas, fiestas y eventos, **cargados a mano** por ahora. El modelo ya trae 
       "edition": 2026,
       "inZacatecas": true,
       "seasonId": "panamericana",
+      "placeId": "catedral-zacatecas",
       "provisional": false,
       "sourceUrl": "https://www.zacatecas.gob.mx/…",
-      "sourceNote": "Gobierno de Zacatecas, 21 de octubre de 2026: meta en Zacatecas",
+      "sourceNote": "Gobierno de Zacatecas, 21 de octubre de 2026: meta en Zacatecas, con el banderazo final frente a la Catedral Basílica, sobre la avenida Hidalgo",
       "reviewedAt": "2026-10-21",
       "origin": "manual",
       "status": "published",
@@ -458,6 +468,8 @@ Temporadas, fiestas y eventos, **cargados a mano** por ahora. El modelo ya trae 
   - sin él, salen los eventos de la capital y de todo el estado (`townId: null`);
   - con él, también los de ese pueblo (`towns.json`). La fiesta patronal de cada pueblo apunta aquí desde `patronalFeast.eventId`.
 - **Orden:** evento, luego fiesta, luego temporada; gana el primero que coincide, como en `src/data/seasons.ts`. `seasonId` dice qué temporada del front viste la app.
+- `placeId` (opcional): dónde es, con un id de `plan_places.json` o de `places.json`, solo si la fuente lo dice. Con él, el evento puede ser parada de `/agent/plan`; sin él, solo puede salir en sus `notes` (#164).
+  - Lo tienen la Panamericana 2026 (banderazo frente a la Catedral) y la Feria de la Virgen de Guadalupe (Jardín Juárez, en Guadalupe). Los demás eventos no dicen dónde son.
 - **Panamericana:** cada edición es un evento con su `edition`. Una edición con `inZacatecas: false` se guarda, pero nunca se activa.
 - **Manual sobre automático:** si un evento `auto` cae el mismo día, en el mismo lugar (`townId`) y del mismo tipo (`kind`) que uno `manual`, solo sale el manual.
 - **Fuentes:**

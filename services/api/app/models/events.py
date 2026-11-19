@@ -26,6 +26,9 @@ class EventFields(CamelModel):
     yearly: bool = False
     # Pueblo de towns.json; None = la capital o todo el estado.
     town_id: str | None = None
+    # Dónde es: id de plan_places.json o de places.json, solo si la fuente lo dice (#164).
+    # Con él, el evento puede ser una parada del plan; sin él, solo sale en sus notas.
+    place_id: str | None = None
     # Año de la edición (Panamericana 2026).
     edition: int | None = None
     # false para una edición que no pasa por Zacatecas: se guarda, pero nunca se activa.
@@ -73,6 +76,7 @@ class EventPatch(CamelModel):
     end: date | None = None
     yearly: bool | None = None
     town_id: str | None = None
+    place_id: str | None = None
     edition: int | None = None
     in_zacatecas: bool | None = None
     season_id: str | None = None
