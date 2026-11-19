@@ -7,7 +7,7 @@ import dotenv from 'dotenv';
 import { sourceLine } from './src/server/sourceDates.ts';
 import { ZACATECAS_PLACES } from './src/data/places.ts';
 import { synthesizeKnowledgeResponse } from './src/server/groundingSynthesizer.ts';
-import { deducePlan, planFallbackText, planInstruction } from './src/server/planHints.ts';
+import { deducePlan, planFallbackText, planInstruction, planLine } from './src/server/planHints.ts';
 import {
   citation,
   corpusSize,
@@ -71,7 +71,6 @@ MODO BREVE (ACTIVO):
 Responde en 2 o 3 líneas como máximo (unas 60 palabras), sin encabezados ni viñetas, con el dato más útil para la pregunta.
 En este modo no uses las etiquetas [HISTORIA DOCUMENTADA], [LEYENDA CULTURAL] ni [RECOMENDACIÓN PRÁCTICA]; si mencionas una leyenda, dilo en la misma frase («según la leyenda…»).
 Conserva siempre una cita de la fuente en el formato indicado y la línea [LUGARES: …] al final.
-Si el visitante pide un paseo, la frase corta y la línea [PLAN: …] reemplazan a la cita: no hace falta fuente.
 Si hace falta más detalle, el usuario tocará «Ampliar» y recibirá la respuesta completa.`;
 
 /** Respaldo breve con fragmentos: lo más relevante de la mejor fuente, en dos frases y con su cita. */
@@ -116,7 +115,7 @@ app.post('/api/chat/stream', async (req, res) => {
   // Modo breve (#158): 2 o 3 líneas con su fuente; «Ampliar» repite la pregunta con brief: false.
   const brief = req.body?.brief === true;
 
-  if (!message || typeof message !== 'string') {
+  if (!message || typeof message !== 'string' || !message.trim()) {
     res.status(400).json({ error: 'Message is required' });
     return;
   }
@@ -140,6 +139,27 @@ app.post('/api/chat/stream', async (req, res) => {
     }
   };
 
+  const lang: 'es' | 'en' = language === 'en' ? 'en' : 'es';
+  // Un paseo (#278) nunca cae al itinerario improvisado: sin Gemini, la línea [PLAN: …] sale por reglas.
+  const plan = deducePlan(message);
+
+  /** Envía un texto de respaldo en trozos, como si se escribiera. */
+  const streamText = async (text: string) => {
+    const words = text.split(/(\s+)/);
+    for (let i = 0; i < words.length; i += 3) {
+      if (!isClientConnected) break;
+      sendEvent({ chunk: words.slice(i, i + 3).join('') });
+      await new Promise((r) => setTimeout(r, 8));
+    }
+  };
+
+  if (!apiKey && plan) {
+    await streamText(planFallbackText(plan, lang));
+    sendEvent('[DONE]');
+    res.end();
+    return;
+  }
+
   if (!apiKey) {
     sendEvent({
       chunk: language === 'es'
@@ -154,7 +174,8 @@ app.post('/api/chat/stream', async (req, res) => {
   try {
     // Fragmentos reales de las fuentes activas (corpus de services/kb); vacío si no hay corpus.
     const hits = searchKnowledge(message, 4, activeKnowledgeUrls);
-    if (hits.length > 0) {
+    // Un paseo no lleva citas: las fuentes no le corresponden.
+    if (hits.length > 0 && !plan) {
       sendEvent({
         sources: hits.map((h, i) => ({
           n: i + 1,
@@ -250,12 +271,39 @@ ${brief ? BRIEF_INSTRUCTION : ''}
       }
     };
 
+    /** Respaldo sin Gemini. Devuelve false si el fallo no tiene respaldo y hay que reportarlo. */
+    const respondWithFallback = async (err: unknown): Promise<boolean> => {
+      const msg = err instanceof Error ? err.message : String(err);
+      const isBusy = msg.includes('503') || msg.includes('UNAVAILABLE') || msg.includes('high demand') || msg.includes('timed out');
+      // Con fragmentos reales o un paseo, cualquier fallo de Gemini (p. ej. llave inválida) cae al respaldo.
+      if (!isBusy && hits.length === 0 && !plan) return false;
+      console.warn(`Gemini no disponible (${msg.slice(0, 120)}): respondiendo con el respaldo...`);
+      // Con fragmentos reales, el respaldo los muestra tal cual en vez del texto escrito a mano.
+      const synthesizedText = plan
+        ? planFallbackText(plan, lang)
+        : hits.length > 0
+        ? brief
+          ? briefExcerpt(hits[0], lang)
+          : [
+              lang === 'en'
+                ? 'The AI model is not available right now. These are the most relevant excerpts from the official sources:'
+                : 'El modelo de IA no está disponible en este momento. Estos son los fragmentos más relevantes de las fuentes oficiales:',
+              ...hits.map((h, i) => `[${i + 1}] ${h.chunk.text}\n[Fuente: ${citation(h.chunk)}]`),
+            ].join('\n\n')
+        : synthesizeKnowledgeResponse({ message, history, language: lang, activeKnowledgeUrls, brief });
+      await streamText(synthesizedText);
+      sendEvent('[DONE]');
+      res.end();
+      return true;
+    };
+
     // Margen para el primer fragmento de Gemini: en Render free (0.1 CPU) 4 s es poco.
     let responseStream;
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
     try {
-      const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('503 Stream request timed out')), 15000)
-      );
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        timeoutId = setTimeout(() => reject(new Error('503 Stream request timed out')), 15000);
+      });
       // Try gemini-3.8-flash first, then gemini-3.1-flash-lite
       responseStream = await Promise.race([
         callStream('gemini-3.8-flash').catch(() => callStream('gemini-3.1-flash-lite')),
@@ -264,55 +312,29 @@ ${brief ? BRIEF_INSTRUCTION : ''}
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       if (msg.includes('timed out')) recordGeminiError('timeout', err);
-      const isBusy = msg.includes('503') || msg.includes('UNAVAILABLE') || msg.includes('high demand') || msg.includes('timed out');
-      // Un paseo (#278) no cae al itinerario improvisado: la línea [PLAN: …] deducida por reglas.
-      const plan = deducePlan(message);
-      // Con fragmentos reales o un paseo, cualquier fallo de Gemini (p. ej. llave inválida) cae al respaldo.
-      if (isBusy || hits.length > 0 || plan) {
-        console.warn(`Gemini no disponible (${msg.slice(0, 120)}): respondiendo con el respaldo...`);
-        // Con fragmentos reales, el respaldo los muestra tal cual en vez del texto escrito a mano.
-        const synthesizedText = plan
-          ? planFallbackText(plan, language === 'en' ? 'en' : 'es')
-          : hits.length > 0
-          ? brief
-            ? briefExcerpt(hits[0], language === 'en' ? 'en' : 'es')
-            : [
-                language === 'en'
-                  ? 'The AI model is not available right now. These are the most relevant excerpts from the official sources:'
-                  : 'El modelo de IA no está disponible en este momento. Estos son los fragmentos más relevantes de las fuentes oficiales:',
-                ...hits.map((h, i) => `[${i + 1}] ${h.chunk.text}\n[Fuente: ${citation(h.chunk)}]`),
-              ].join('\n\n')
-          : synthesizeKnowledgeResponse({
-              message,
-              history,
-              language: language === 'en' ? 'en' : 'es',
-              activeKnowledgeUrls,
-              brief,
-            });
-
-        // Stream synthesized chunks in real-time typewriter effect
-        const words = synthesizedText.split(/(\s+)/);
-        for (let i = 0; i < words.length; i += 3) {
-          if (!isClientConnected) break;
-          const chunk = words.slice(i, i + 3).join('');
-          sendEvent({ chunk });
-          await new Promise((r) => setTimeout(r, 8));
-        }
-
-        sendEvent('[DONE]');
-        res.end();
-        return;
-      } else {
-        throw err;
-      }
+      if (await respondWithFallback(err)) return;
+      throw err;
+    } finally {
+      clearTimeout(timeoutId);
     }
 
-    for await (const chunk of responseStream) {
-      if (!isClientConnected) break;
-      const text = chunk.text;
-      if (text) {
-        sendEvent({ chunk: text });
+    // Un fallo a mitad del flujo (#278): sin texto enviado, cae al respaldo;
+    // con texto a medias y un paseo, cierra con la línea [PLAN: …] para que la tarjeta salga igual.
+    let sentText = false;
+    try {
+      for await (const chunk of responseStream) {
+        if (!isClientConnected) break;
+        const text = chunk.text;
+        if (text) {
+          sentText = true;
+          sendEvent({ chunk: text });
+        }
       }
+    } catch (err: unknown) {
+      recordGeminiError('stream', err);
+      if (!sentText && (await respondWithFallback(err))) return;
+      if (!plan) throw err;
+      sendEvent({ chunk: `\n${planLine(plan)}` });
     }
 
     sendEvent('[DONE]');

@@ -1,5 +1,4 @@
 import { ZACATECAS_PLACES } from '../data/places.ts';
-import { SUGGESTED_ITINERARIES } from '../data/itineraries.ts';
 import type { Place } from '../types';
 
 interface ChatHistoryItem {
@@ -31,8 +30,6 @@ const CATEGORY_HINTS: [Place['category'], RegExp][] = [
   ['pueblo_magico', /\b(pueblo|pueblos|magic town|magical town)/],
   ['archaeology', /(arqueolog|archaeolog|archeolog|piramide|pyramid|ruinas|ruins)/],
 ];
-
-const ITINERARY_HINT = /(itinerar|plan de viaje|travel plan|\bplan\b|fin de semana|weekend|\bdias?\b|\bdays?\b)/;
 
 function normalize(text: string): string {
   return text.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
@@ -104,7 +101,6 @@ export function synthesizeKnowledgeResponse({
 
   const places = findPlaces(query);
   const contextPlaces = places.length > 0 ? places : findPlaces(lastUserTurn);
-  const wantsItinerary = ITINERARY_HINT.test(query);
 
   if (brief) {
     const sources = [OFFICIAL_PORTAL, ...activeKnowledgeUrls.filter((url) => url !== OFFICIAL_PORTAL)];
@@ -120,17 +116,6 @@ export function synthesizeKnowledgeResponse({
   if (contextPlaces.length > 0) {
     parts.push(`[${isEn ? 'PRACTICAL RECOMMENDATION' : 'RECOMENDACIÓN PRÁCTICA'}]\n${intro}`);
     parts.push(contextPlaces.map((place) => describePlace(place, isEn)).join('\n\n'));
-  }
-
-  if (wantsItinerary) {
-    const label = isEn ? 'Suggested Itinerary (Open Decision)' : 'Itinerario Sugerido (Decisión Abierta)';
-    const titles = SUGGESTED_ITINERARIES.map((it) => `• ${isEn ? it.titleEn : it.titleEs}`).join('\n');
-    if (contextPlaces.length === 0) parts.push(`[${isEn ? 'PRACTICAL RECOMMENDATION' : 'RECOMENDACIÓN PRÁCTICA'}]\n${intro}`);
-    parts.push(
-      isEn
-        ? `${label} — demo routes you can open from the itinerary planner:\n${titles}`
-        : `${label} — rutas de demostración que puedes abrir desde el generador de itinerarios:\n${titles}`
-    );
   }
 
   if (parts.length === 0) {
