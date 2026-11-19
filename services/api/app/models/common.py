@@ -8,6 +8,9 @@ ZACATECAS = timezone(timedelta(hours=-6))
 # Años que acepta la API en una fecha (consulta, reporte o promoción). Fuera de ellos no hay visita
 # real ni simulada, y las cuentas con fechas (90 días atrás, cambio de zona) se desbordan.
 MIN_YEAR, MAX_YEAR = 2000, 2100
+# Largo máximo del id de un lugar o de un puesto. Los del catálogo y del mundo de prueba son cortos;
+# el alta (#172) recorta los que genera para que quepan, y los reportes (#174) aceptan hasta aquí.
+ID_MAX_LENGTH = 80
 
 
 def moment_in_zacatecas(value: str) -> datetime:
