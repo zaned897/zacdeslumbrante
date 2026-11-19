@@ -8,7 +8,7 @@ from typing import Literal, Self
 from pydantic import ConfigDict, Field, model_validator
 from pydantic.alias_generators import to_camel
 
-from app.models.common import CamelModel, LocalizedText
+from app.models.common import ID_MAX_LENGTH, CamelModel, LocalizedText
 from app.models.world import Crowd
 
 ReportKind = Literal["crowd", "recommend"]
@@ -31,7 +31,7 @@ class ReportInput(CamelModel):
     model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True, extra="forbid")
 
     # Id de un lugar del catálogo (places.json) o de un puesto publicado.
-    place_id: str = Field(min_length=1, max_length=80)
+    place_id: str = Field(min_length=1, max_length=ID_MAX_LENGTH)
     kind: ReportKind
     # crowd: "baja", "media" o "alta" (obligatorio). recommend: un motivo de REASONS (opcional).
     value: str | None = Field(default=None, max_length=40)

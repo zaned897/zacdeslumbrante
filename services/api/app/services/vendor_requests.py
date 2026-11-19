@@ -9,7 +9,7 @@ import unicodedata
 from datetime import UTC, datetime
 from threading import Lock
 
-from app.models.common import LocalizedText
+from app.models.common import ID_MAX_LENGTH, LocalizedText
 from app.models.vendor_requests import PendingVendor, VendorRequest
 from app.models.world import Promotion, Vendor
 
@@ -29,7 +29,11 @@ def submit(request: VendorRequest) -> str:
     global _counter
     with _lock:
         _counter += 1
-        vendor_id = f"alta-{_counter}-{_slug(request.name)}"
+        prefix = f"alta-{_counter}-"
+        # El nombre puede crecer al pasarlo a ASCII («ﬃ» → «ffi»): se recorta para que el id quepa
+        # en ID_MAX_LENGTH, el largo que aceptan los reportes (#174).
+        slug = _slug(request.name)[: ID_MAX_LENGTH - len(prefix)].rstrip("-") or "puesto"
+        vendor_id = prefix + slug
         vendor = Vendor(
             id=vendor_id,
             name=request.name,

@@ -61,14 +61,19 @@ def add(target_id: str, kind: ReportKind, value: str | None, moment: datetime) -
 
 
 def live_crowd(target_id: str, moment: datetime) -> LiveReport | None:
-    """El reporte de afluencia más reciente que sigue vigente a esa hora."""
+    """El reporte de afluencia vigente a esa hora: el de hora más reciente.
+
+    Si dos tienen la misma hora, gana el último en llegar (`_reports` guarda el orden de llegada).
+    """
     with _lock:
         valid = [
-            r
-            for r in _reports
+            (arrival, r)
+            for arrival, r in enumerate(_reports)
             if r.kind == "crowd" and r.target_id == target_id and r.counts_at(moment)
         ]
-    return max(valid, key=lambda r: r.at, default=None)
+    if not valid:
+        return None
+    return max(valid, key=lambda pair: (pair[1].at, pair[0]))[1]
 
 
 def recommendations(target_id: str, moment: datetime) -> list[LiveReport]:
