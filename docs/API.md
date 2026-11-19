@@ -23,6 +23,13 @@ Respuestas: `400` si falta `message`. Si no, flujo SSE de líneas `data: ...`:
 - `{ "error": "mensaje" }` — error durante la generación
 - `[DONE]` — fin del flujo
 - Citas en el texto (#83): `[Fuente: <nombre> · Revisado AAAA-MM-DD]`. La fecha es la `lastVerified` de la fuente en `src/data/knowledgeBase.ts`; si la fuente no está curada, es la fecha de la ingesta. En el respaldo con fragmentos la cita también lleva la URL: `[Fuente: <nombre> · Revisado AAAA-MM-DD · <url>]`.
+- Paseos (#278): cuando el visitante pide armar un paseo («tengo una hora y hambre»), el texto es una frase corta, sin paradas ni horarios, y termina con una línea de metadatos, antes de `[LUGARES: …]` si la hay:
+  `[PLAN: {"minutes":60,"hungry":true,"interests":["museos"],"budget":"$$"}]`
+  - Son campos de `POST /api/py/agent/plan`: `minutes` (siempre, 15–480), y solo si se deducen `hungry`, `interests`, `budget` y `mobility`. `start`, `at` y `avoid` los pone el cliente.
+  - `interests` usa el vocabulario de `PLAN_INTERESTS` en `src/server/planHints.ts`.
+  - El cliente valida cada campo contra el contrato, descarta los que no pasen, llama al agente y quita la línea del texto visible.
+  - Sin Gemini, el respaldo deduce la línea por reglas (`deducePlan`) en vez de improvisar un itinerario.
+  - PROTO: sin duración en el mensaje, `minutes` es 120; con varios días, 480 (el paseo es para hoy).
 
 ## Python (`/api/py/*` → FastAPI :8000)
 Express reenvía `/api/py/<ruta>` a `PY_API_URL/<ruta>`. Si Python no responde: `503 { "error": "python api offline" }`. Respuestas mock incluyen `"_mock": true`.

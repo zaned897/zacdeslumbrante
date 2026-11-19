@@ -7,6 +7,7 @@ import dotenv from 'dotenv';
 import { sourceLine } from './src/server/sourceDates.ts';
 import { ZACATECAS_PLACES } from './src/data/places.ts';
 import { synthesizeKnowledgeResponse } from './src/server/groundingSynthesizer.ts';
+import { deducePlan, planFallbackText, planInstruction } from './src/server/planHints.ts';
 import {
   citation,
   corpusSize,
@@ -70,6 +71,7 @@ MODO BREVE (ACTIVO):
 Responde en 2 o 3 líneas como máximo (unas 60 palabras), sin encabezados ni viñetas, con el dato más útil para la pregunta.
 En este modo no uses las etiquetas [HISTORIA DOCUMENTADA], [LEYENDA CULTURAL] ni [RECOMENDACIÓN PRÁCTICA]; si mencionas una leyenda, dilo en la misma frase («según la leyenda…»).
 Conserva siempre una cita de la fuente en el formato indicado y la línea [LUGARES: …] al final.
+Si el visitante pide un paseo, la frase corta y la línea [PLAN: …] reemplazan a la cita: no hace falta fuente.
 Si hace falta más detalle, el usuario tocará «Ampliar» y recibirá la respuesta completa.`;
 
 /** Respaldo breve con fragmentos: lo más relevante de la mejor fuente, en dos frases y con su cita. */
@@ -209,9 +211,7 @@ METADATOS ESPACIALES PARA EL MAPA:
 Al final de tu respuesta, en una línea separada, incluye los identificadores de lugares de Zacatecas que mencionaste para que el mapa interactivo los enfoque automáticamente:
 [LUGARES: catedral-zacatecas, cerro-de-la-bufa, mina-el-eden, teleferico-zacatecas, museo-rafael-coronel, museo-pedro-coronel, museo-felguerez, museo-francisco-goitia, plaza-armas, teatro-calderon, acueducto-el-cubo, la-quemada, jerez-pueblo-magico, sombrerete-pueblo-magico, guadalupe-pueblo-magico, pinos-pueblo-magico] (solo los que correspondan al tema).
 
-ITINERARIOS:
-Si el usuario solicita un plan o itinerario de viaje, etiquétalo siempre como:
-${language === 'en' ? '"Suggested Itinerary (Open Decision)"' : '"Itinerario Sugerido (Decisión Abierta)"'}.
+${planInstruction(language === 'en' ? 'en' : 'es')}
 ${brief ? BRIEF_INSTRUCTION : ''}
 `.trim();
 
@@ -265,11 +265,15 @@ ${brief ? BRIEF_INSTRUCTION : ''}
       const msg = err instanceof Error ? err.message : String(err);
       if (msg.includes('timed out')) recordGeminiError('timeout', err);
       const isBusy = msg.includes('503') || msg.includes('UNAVAILABLE') || msg.includes('high demand') || msg.includes('timed out');
-      // Con fragmentos reales, cualquier fallo de Gemini (p. ej. llave inválida) cae al respaldo.
-      if (isBusy || hits.length > 0) {
+      // Un paseo (#278) no cae al itinerario improvisado: la línea [PLAN: …] deducida por reglas.
+      const plan = deducePlan(message);
+      // Con fragmentos reales o un paseo, cualquier fallo de Gemini (p. ej. llave inválida) cae al respaldo.
+      if (isBusy || hits.length > 0 || plan) {
         console.warn(`Gemini no disponible (${msg.slice(0, 120)}): respondiendo con el respaldo...`);
         // Con fragmentos reales, el respaldo los muestra tal cual en vez del texto escrito a mano.
-        const synthesizedText = hits.length > 0
+        const synthesizedText = plan
+          ? planFallbackText(plan, language === 'en' ? 'en' : 'es')
+          : hits.length > 0
           ? brief
             ? briefExcerpt(hits[0], language === 'en' ? 'en' : 'es')
             : [
