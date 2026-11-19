@@ -17,6 +17,9 @@ interface PlaceReportProps {
 }
 
 const CROWDS: Crowd[] = ['baja', 'media', 'alta'];
+// Las señales cambian con la hora: un reporte de afluencia vale 45 minutos y el patrón va por franjas.
+// Con la ficha abierta se vuelven a leer cada minuto, y al regresar a la pestaña.
+const SIGNALS_REFRESH_MS = 60_000;
 
 const PlaceReportBody: React.FC<PlaceReportProps> = ({ place, language }) => {
   const t = TRANSLATIONS[language];
@@ -36,7 +39,14 @@ const PlaceReportBody: React.FC<PlaceReportProps> = ({ place, language }) => {
 
   useEffect(() => {
     void refreshSignals();
+    const refreshIfVisible = () => {
+      if (document.visibilityState === 'visible') void refreshSignals();
+    };
+    const timer = window.setInterval(refreshIfVisible, SIGNALS_REFRESH_MS);
+    document.addEventListener('visibilitychange', refreshIfVisible);
     return () => {
+      window.clearInterval(timer);
+      document.removeEventListener('visibilitychange', refreshIfVisible);
       // Al salir de la ficha, lo que siga en camino ya no cuenta.
       lastLoad.current += 1;
     };
