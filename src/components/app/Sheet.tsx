@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useEffectEvent, useRef } from 'react';
 import { X } from 'lucide-react';
 
 interface SheetProps {
@@ -15,10 +15,16 @@ interface SheetProps {
 /** Hoja inferior en celular y diálogo centrado en pantallas anchas. Cierra con Esc o tocando fuera. */
 export const Sheet: React.FC<SheetProps> = ({ open, onClose, title, subtitle, footer, closeLabel, children }) => {
   const panelRef = useRef<HTMLDivElement>(null);
+  // Esc usa el onClose más reciente sin volver a correr el efecto del foco. Si el efecto dependiera
+  // de onClose, cada vez que quien usa la hoja se vuelve a pintar (al escribir en un campo, por
+  // ejemplo) el foco saltaría al panel y se perdería lo que se estaba escribiendo (Codex en #173).
+  const closeOnEscape = useEffectEvent((e: KeyboardEvent) => {
+    if (e.key === 'Escape') onClose();
+  });
 
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
+    const onKey = (e: KeyboardEvent) => closeOnEscape(e);
     window.addEventListener('keydown', onKey);
     const prevFocus = document.activeElement as HTMLElement | null;
     panelRef.current?.focus();
@@ -26,7 +32,7 @@ export const Sheet: React.FC<SheetProps> = ({ open, onClose, title, subtitle, fo
       window.removeEventListener('keydown', onKey);
       prevFocus?.focus?.();
     };
-  }, [open, onClose]);
+  }, [open]);
 
   if (!open) return null;
 
