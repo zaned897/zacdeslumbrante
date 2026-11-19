@@ -71,3 +71,29 @@ class PlanPlace(CamelModel):
 class PlanPlaceFile(CamelModel):
     places: list[PlanPlace]
     mock: bool = Field(alias="_mock")
+
+
+SuggestionKind = Literal["vendor", "place", "event"]
+SuggestionTrigger = Literal["event-today", "promotion", "recommended", "nearby"]
+SuggestionAction = Literal["ask", "add", "dismiss"]
+
+
+class Suggestion(CamelModel):
+    """Una sugerencia puntual de la mascota para este momento (#277)."""
+
+    place_id: str
+    kind: SuggestionKind
+    name: LocalizedText
+    lat: float
+    lng: float
+    line: LocalizedText
+    reason: LocalizedText
+    trigger: SuggestionTrigger
+    actions: list[SuggestionAction] = ["ask", "add", "dismiss"]
+    source: str
+    signal: Literal["pattern", "live"] | None = None
+
+
+class SuggestionResponse(CamelModel):
+    suggestion: Suggestion | None = None
+    mock: bool = Field(default=True, alias="_mock")

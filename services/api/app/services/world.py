@@ -28,6 +28,7 @@ from app.models.nearby import (
 from app.models.reports import REASONS
 from app.models.world import (
     CrowdReport,
+    OpeningHours,
     Promotion,
     Recommendation,
     ReportFile,
@@ -102,9 +103,13 @@ def _clock(moment: datetime) -> str:
     return moment.strftime("%H:%M")
 
 
-def is_open(vendor: Vendor, moment: datetime) -> bool:
+def is_open_hours(hours: list[OpeningHours], moment: datetime) -> bool:
     clock = _clock(moment)
-    return any(moment.weekday() in h.days and h.open <= clock < h.close for h in vendor.hours)
+    return any(moment.weekday() in h.days and h.open <= clock < h.close for h in hours)
+
+
+def is_open(vendor: Vendor, moment: datetime) -> bool:
+    return is_open_hours(vendor.hours, moment)
 
 
 def _slot(target_id: str, moment: datetime) -> CrowdReport | None:
@@ -191,7 +196,7 @@ def signal_phrases(item: NearbyItem, moment: datetime) -> tuple[list[str], list[
         es.append(f"{n} visitantes lo recomiendan" + (f": {_lower(top.text.es)}" if top else ""))
         en.append(f"recommended by {n} visitors" + (f": {_lower(top.text.en)}" if top else ""))
     if item.promotion:
-        until_es, until_en = _until(parse_at(item.promotion.end), moment)
+        until_es, until_en = until_text(parse_at(item.promotion.end), moment)
         es.append(f"promoción vigente (dato del puesto) {until_es}")
         en.append(f"promotion on (vendor's info) {until_en}")
     return es, en
@@ -205,7 +210,7 @@ def _lower(text: str) -> str:
     return text[:1].lower() + text[1:]
 
 
-def _until(end: datetime, moment: datetime) -> tuple[str, str]:
+def until_text(end: datetime, moment: datetime) -> tuple[str, str]:
     """«hasta las 18:00» si termina hoy; si no, «hasta el 30 nov»."""
     if end.date() == moment.date():
         return f"hasta las {end:%H:%M}", f"until {end:%H:%M}"
