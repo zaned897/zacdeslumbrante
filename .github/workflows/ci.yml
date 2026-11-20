@@ -15,6 +15,7 @@ jobs:
       - uses: oven-sh/setup-bun@v2
       - run: bun install --frozen-lockfile
       - run: bun run lint
+      - run: bun run test
 
   python:
     runs-on: ubuntu-latest
