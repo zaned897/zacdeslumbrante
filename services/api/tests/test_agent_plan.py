@@ -1,7 +1,9 @@
 """POST /agent/plan (#165): el agente arma el paseo con reglas simples, sin LLM."""
 
 import itertools
+import json
 import re
+from collections.abc import Iterator
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -9,6 +11,8 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.main import app
+from app.models.events import EventPatch
+from app.services import events, reports
 from app.services.agent import _candidates, open_during, plan_places
 
 client = TestClient(app)
@@ -215,3 +219,137 @@ def test_plan_places_hours_match_the_catalog() -> None:
             assert "Gratuito" in fee or "gratuito" in fee, place.id
         else:
             assert f"${place.fee_mxn} MXN" in fee, place.id
+
+
+# El agente y los eventos del día (#164).
+# Jueves 22 de octubre de 2026: Carrera Panamericana, con banderazo frente a la Catedral.
+PANAMERICANA = "2026-10-22T12:00:00-06:00"
+PANAMERICANA_SOURCE = (
+    "https://www.zacatecas.gob.mx/"
+    "zacatecas-alista-operativo-interinstitucional-para-recibir-la-carrera-panamericana-2026/"
+)
+# Cerca del Jardín Juárez de Guadalupe, donde es la Feria de la Virgen de Guadalupe (1 al 12 dic).
+GUADALUPE = {"lat": 22.7495, "lng": -102.5195}
+FERIA_GUADALUPE = "2026-12-05T10:00:00-06:00"
+
+
+@pytest.fixture
+def clean_world() -> Iterator[None]:
+    events.reset()
+    reports.reset()
+    yield
+    events.reset()
+    reports.reset()
+
+
+def event_stops(body: dict) -> list[dict]:
+    return [s for s in body["stops"] if s["reason"]["es"].startswith("Hoy hay")]
+
+
+@pytest.mark.usefixtures("clean_world")
+def test_event_with_a_place_enters_the_plan_with_its_reason_and_source() -> None:
+    # Criterio 1: con `at` dentro de un evento con lugar, el plan incluye esa parada.
+    body = ask(at=PANAMERICANA)
+    first = body["stops"][0]
+    assert first["placeId"] == "catedral-zacatecas"
+    assert first["reason"]["es"].startswith("Hoy hay Carrera Panamericana · ")
+    assert first["reason"]["en"].startswith("Today: Carrera Panamericana · ")
+    assert first["source"] == PANAMERICANA_SOURCE
+    # Va primero aunque no coincida con lo que se pidió.
+    assert ids(ask(at=PANAMERICANA, interests=["museos"]))[0] == "catedral-zacatecas"
+    # Con hambre, va después de la comida.
+    hungry = ask(at=PANAMERICANA, hungry=True, minutes=120)
+    assert CANDIDATES[ids(hungry)[0]].group == "food"
+    assert ids(hungry)[1] == "catedral-zacatecas"
+
+
+@pytest.mark.usefixtures("clean_world")
+def test_event_follows_the_same_hard_rules() -> None:
+    # Fuera de `avoid` y abierto mientras dura la visita: la Catedral cierra a las 20:30.
+    assert "catedral-zacatecas" not in ids(ask(at=PANAMERICANA, avoid=["catedral-zacatecas"]))
+    assert event_stops(ask(at="2026-10-22T21:00:00-06:00")) == []
+
+
+@pytest.mark.usefixtures("clean_world")
+def test_without_events_the_plan_is_the_same_as_before() -> None:
+    # Criterio 2: lo que respondía main antes de #164, en días sin eventos.
+    cases = json.loads(Path(__file__).with_name("plan_sin_eventos.json").read_text("utf-8"))
+    for case in cases:
+        response = client.post("/agent/plan", json=case["request"])
+        assert response.status_code == 200
+        assert response.json() == case["response"], case["request"]
+
+
+@pytest.mark.usefixtures("clean_world")
+def test_unpublished_or_out_of_date_event_never_enters() -> None:
+    # Criterio 3. Fuera de fecha: el día antes, y el mismo día de otro año (no es anual).
+    for at in ("2026-10-21T12:00:00-06:00", "2027-10-22T12:00:00-06:00"):
+        assert event_stops(ask(at=at)) == []
+    # No publicado.
+    events.update("panamericana-2026", EventPatch(status="pending"))
+    assert event_stops(ask(at=PANAMERICANA)) == []
+
+
+@pytest.mark.usefixtures("clean_world")
+def test_provisional_event_says_so_in_the_reason() -> None:
+    # Criterio 4: la Feria de Guadalupe es `provisional`.
+    body = client.post(
+        "/agent/plan", json={"start": GUADALUPE, "minutes": 120, "at": FERIA_GUADALUPE}
+    ).json()
+    first = body["stops"][0]
+    assert first["placeId"] == "guadalupe-pueblo-magico"
+    assert first["reason"]["es"].startswith(
+        "Hoy hay Feria de la Virgen de Guadalupe (fecha por confirmar) · "
+    )
+    assert "(date to be confirmed)" in first["reason"]["en"]
+    assert first["source"].startswith("https://mexicodailypost.news/")
+    # PROTO: su lugar no está en plan_places.json; la estancia es fija.
+    assert first["stayMin"] == 60
+
+
+@pytest.mark.usefixtures("clean_world")
+def test_event_that_ended_before_arrival_is_not_a_stop() -> None:
+    # Hallazgo de Codex: la feria termina el 12 de diciembre; a las 23:58 se llega el 13.
+    body = client.post(
+        "/agent/plan",
+        json={"start": GUADALUPE, "minutes": 120, "at": "2026-12-12T23:58:00-06:00"},
+    ).json()
+    assert "guadalupe-pueblo-magico" not in ids(body)
+    assert event_stops(body) == []
+
+
+@pytest.mark.usefixtures("clean_world")
+def test_town_feast_only_when_the_walk_starts_in_that_town() -> None:
+    # Desde Plaza de Armas la feria de Guadalupe no es parada, aunque el tiempo alcance.
+    body = ask(at=FERIA_GUADALUPE, minutes=480)
+    assert "guadalupe-pueblo-magico" not in ids(body)
+
+
+@pytest.mark.usefixtures("clean_world")
+@pytest.mark.parametrize(
+    ("at", "es", "en"),
+    [
+        (
+            "2026-11-01T12:00:00-06:00",
+            "Es temporada de Día de Muertos: espera más gente en el centro.",
+            "It's Day of the Dead season: expect more people downtown.",
+        ),
+        ("2026-07-15T12:00:00-06:00", "Es temporada de lluvias.", "It's rainy season."),
+    ],
+)
+def test_season_or_festival_adds_a_note_without_changing_the_order(
+    at: str, es: str, en: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    body = ask(at=at)
+    assert body["notes"][0] == {"es": es, "en": en}
+    # El mismo plan sin eventos: las paradas no cambian, solo la nota.
+    monkeypatch.setattr(events, "active", lambda day, town=None: [])
+    assert ask(at=at)["stops"] == body["stops"]
+
+
+def test_contract_documents_events_in_the_plan() -> None:
+    # Criterio 5: el contrato lo dice.
+    api = (ROOT / "docs/API.md").read_text("utf-8")
+    assert "`placeId` (opcional): dónde es" in api
+    assert "«(fecha por confirmar)»" in api
+    assert "Es temporada de Día de Muertos: espera más gente en el centro." in api

@@ -3,24 +3,29 @@
 El orden sigue docs/design/señales-del-agente.md (#166):
 1. Reglas duras: abierto mientras dura la visita, cabe en el tiempo, respeta el presupuesto
    y `avoid`.
-2. Interés: coincide con lo que pidió el visitante. Con hambre, la primera parada es comida.
-3. Costo de tiempo: caminata + espera + estancia. Gana la que deja más margen.
-4. Desempates: recomendación que coincide con un interés, distancia, promoción vigente.
+2. Evento de hoy (#164): uno publicado que dice dónde es va antes que las demás paradas, aunque
+   no coincida con lo que se pidió. Con hambre, va después de la comida.
+3. Interés: coincide con lo que pidió el visitante. Con hambre, la primera parada es comida.
+4. Costo de tiempo: caminata + espera + estancia. Gana la que deja más margen.
+5. Desempates: recomendación que coincide con un interés, distancia, promoción vigente.
 
-La afluencia no ordena nada: solo entra como espera.
+Las fiestas y temporadas del día dejan una nota y no cambian el orden (#164). La afluencia no
+ordena nada: solo entra como espera.
 """
 
 import json
-from dataclasses import dataclass
-from datetime import datetime, timedelta
+from dataclasses import dataclass, replace
+from datetime import date, datetime, timedelta
 from functools import cache
 from math import ceil
 from pathlib import Path
 
 from app.models.agent import Plan, PlanPlace, PlanPlaceFile, PlanRequest, PlanStop
 from app.models.common import LocalizedText
+from app.models.events import Event
 from app.models.nearby import NearbyItem, Recommendations
 from app.models.world import Mobility, OpeningHours, PriceRange, Vendor
+from app.services import events, towns
 from app.services.world import (
     active_promotion,
     catalog_places,
@@ -44,6 +49,12 @@ HERE_M = 15
 # Espera que se menciona como larga (#166: «Hay espera larga. ¿Te propongo otra opción?»).
 LONG_WAIT_MIN = 15
 PRICE_ORDER: dict[PriceRange, int] = {"$": 1, "$$": 2, "$$$": 3}
+# PROTO: un evento cuyo lugar no está en plan_places.json (la Feria de Guadalupe, en places.json)
+# no tiene horario, estancia ni costo: abre todo el día mientras dura, se queda una hora y se toma
+# como económico (#164).
+EVENT_HOURS = [OpeningHours(days=[0, 1, 2, 3, 4, 5, 6], open="00:00", close="23:59")]
+EVENT_STAY = 60
+EVENT_PRICE: PriceRange = "$"
 # PROTO: tarifa de entrada (MXN, adulto) a rango de precio, para comparar con el presupuesto.
 FEE_RANGES: tuple[tuple[int, PriceRange], ...] = ((50, "$"), (150, "$$"))
 INTEREST_TEXT: dict[str, tuple[str, str]] = {
@@ -79,6 +90,8 @@ class Candidate:
     stay_min: int
     interests: set[str]
     source: str
+    # El evento de hoy en ese lugar (#164); None si es una parada de siempre.
+    event: Event | None = None
 
 
 @dataclass
@@ -147,6 +160,60 @@ def _candidates() -> list[Candidate]:
     return [_vendor_candidate(v) for v in published_vendors()] + places
 
 
+def _start_town(lat: float, lng: float) -> str | None:
+    """El pueblo donde empieza el paseo: el que está más cerca que Plaza de Armas, si hay."""
+    plaza = next(p for p in catalog_places() if p["id"] == "plaza-armas")
+    closest, best = None, distance_m(lat, lng, plaza["lat"], plaza["lng"])
+    for t in towns.list_towns():
+        if (d := distance_m(lat, lng, t.center.lat, t.center.lng)) < best:
+            closest, best = t.id, d
+    return closest
+
+
+def _with_events(candidates: list[Candidate], day: date, town: str | None) -> list[Candidate]:
+    """Los eventos de hoy con lugar se suman como paradas: el lugar del plan, o uno del catálogo.
+
+    Como en /events, la fiesta de un pueblo solo cuenta si el paseo empieza en ese pueblo.
+    El lugar de siempre se queda en la lista: si al llegar el evento ya terminó, sigue siendo
+    una parada normal.
+    """
+    by_id = {c.id: c for c in candidates}
+    catalog = {p["id"]: p for p in catalog_places()}
+    extra: list[Candidate] = []
+    for e in events.active(day, town):
+        if e.place_id is None:
+            continue
+        if e.place_id in by_id:
+            base = by_id[e.place_id]
+            extra.append(replace(base, event=e, source=e.source_url or base.source))
+        elif e.place_id in catalog:
+            place = catalog[e.place_id]
+            extra.append(
+                Candidate(
+                    id=e.place_id,
+                    kind="place",
+                    group="place",
+                    name=LocalizedText.model_validate(place["name"]),
+                    lat=place["lat"],
+                    lng=place["lng"],
+                    hours=EVENT_HOURS,
+                    price=EVENT_PRICE,
+                    stay_min=EVENT_STAY,
+                    interests=set(),
+                    source=e.source_url or "calendario-de-eventos",
+                    event=e,
+                )
+            )
+        # Un lugar que no está en ningún catálogo no se puede ubicar: el evento no es parada.
+    return candidates + extra
+
+
+def _during_event(o: Option) -> bool:
+    """El evento sigue el día en que se llega (un paseo puede pasar de la medianoche)."""
+    event = o.candidate.event
+    return event is None or events.is_active(event, o.arrive.date())
+
+
 def open_during(hours: list[OpeningHours], start: datetime, end: datetime) -> bool:
     """Abierto desde que llega hasta que se va, el mismo día."""
     if end.date() != start.date():
@@ -200,16 +267,27 @@ def _option(
 
 def _reason(o: Option, hungry_stop: bool) -> LocalizedText:
     c = o.candidate
+    es: list[str] = []
+    en: list[str] = []
+    if c.event:
+        # «Hoy hay desfile de Morismas» (#164); la fuente es la del evento.
+        es.append(f"Hoy hay {c.event.name.es}")
+        en.append(f"Today: {c.event.name.en}")
+        if c.event.provisional:
+            es[-1] += " (fecha por confirmar)"
+            en[-1] += " (date to be confirmed)"
     if hungry_stop:
-        why_es, why_en = "Tienes hambre y es comida abierta", "You're hungry and it's open food"
+        es.append("Tienes hambre y es comida abierta")
+        en.append("You're hungry and it's open food")
     elif o.matches:
         texts = [INTEREST_TEXT.get(t, (t, t)) for t in sorted(o.matches)]
-        why_es = "Coincide con lo que pediste: " + ", ".join(es for es, _ in texts)
-        why_en = "Matches what you asked for: " + ", ".join(en for _, en in texts)
-    else:
-        why_es, why_en = "Está abierto y cabe en tu tiempo", "It's open and fits your time"
-    es = [why_es, f"a {o.walk_min} min a pie"]
-    en = [why_en, f"{o.walk_min} min walk"]
+        es.append("Coincide con lo que pediste: " + ", ".join(t_es for t_es, _ in texts))
+        en.append("Matches what you asked for: " + ", ".join(t_en for _, t_en in texts))
+    elif not c.event:
+        es.append("Está abierto y cabe en tu tiempo")
+        en.append("It's open and fits your time")
+    es.append(f"a {o.walk_min} min a pie")
+    en.append(f"{o.walk_min} min walk")
     signals_es, signals_en = signal_phrases(o.item, o.arrive)
     es += signals_es
     en += signals_en
@@ -223,6 +301,8 @@ def _reason(o: Option, hungry_stop: bool) -> LocalizedText:
 
 def _key(o: Option) -> tuple:
     return (
+        # Un evento de hoy va antes que las demás paradas (#164).
+        o.candidate.event is None,
         -len(o.matches),
         o.cost,
         not o.rec_match,
@@ -244,7 +324,9 @@ def plan(request: PlanRequest, moment: datetime) -> Plan:
     budget = PRICE_ORDER[request.budget] if request.budget else 3
     pool = [
         c
-        for c in _candidates()
+        for c in _with_events(
+            _candidates(), moment.date(), _start_town(request.start.lat, request.start.lng)
+        )
         if c.id not in avoid
         and PRICE_ORDER[c.price] <= budget
         and not (
@@ -261,17 +343,20 @@ def plan(request: PlanRequest, moment: datetime) -> Plan:
         options = [
             o
             for o in (_option(c, lat, lng, now, speed, wanted) for c in pool)
-            if o.cost <= left and open_during(o.candidate.hours, o.arrive, o.leave)
+            if o.cost <= left
+            and open_during(o.candidate.hours, o.arrive, o.leave)
+            and _during_event(o)
         ]
         if need_food:
             food = [o for o in options if o.candidate.group == "food"]
             if food:
                 options = food
             elif asked:
-                # Sin comida que quepa, el plan sigue sin ella, pero solo con lo que pidió.
-                options = [o for o in options if o.matches & asked]
+                # Sin comida que quepa, el plan sigue sin ella, pero solo con lo que pidió
+                # o con el evento de hoy.
+                options = [o for o in options if o.matches & asked or o.candidate.event]
         elif wanted:
-            options = [o for o in options if o.matches]
+            options = [o for o in options if o.matches or o.candidate.event]
         if not options:
             break
         best = min(options, key=_key)
@@ -307,8 +392,29 @@ def plan(request: PlanRequest, moment: datetime) -> Plan:
         at=moment.isoformat(),
         stops=stops,
         total_min=request.minutes - left,
-        notes=_notes(request, stops, long_waits, need_food, left),
+        notes=_notes(request, stops, long_waits, need_food, left, _season(moment.date())),
     )
+
+
+def _season(day: date) -> Event | None:
+    """La fiesta o temporada de la capital que cae ese día, si hay (la primera, como en /events)."""
+    return next((e for e in events.active(day) if e.kind in ("festival", "season")), None)
+
+
+def _season_note(e: Event) -> LocalizedText:
+    """«Es temporada de Día de Muertos: espera más gente en el centro» (#164)."""
+    name_es, name_en = e.name.es, e.name.en
+    # «Temporada de lluvias» y «Rainy season» ya dicen que son temporada.
+    if name_es.lower().startswith("temporada de "):
+        name_es = name_es[len("temporada de ") :]
+    if name_en.lower().endswith(" season"):
+        name_en = name_en[: -len(" season")].lower()
+    if e.kind == "festival":
+        return LocalizedText(
+            es=f"Es temporada de {name_es}: espera más gente en el centro.",
+            en=f"It's {name_en} season: expect more people downtown.",
+        )
+    return LocalizedText(es=f"Es temporada de {name_es}.", en=f"It's {name_en} season.")
 
 
 def _notes(
@@ -317,8 +423,10 @@ def _notes(
     long_waits: list[PlanStop],
     missing_food: bool,
     left: int,
+    season: Event | None = None,
 ) -> list[LocalizedText]:
-    notes: list[LocalizedText] = []
+    # La temporada no cambia el orden del plan: solo avisa (#164).
+    notes: list[LocalizedText] = [_season_note(season)] if season else []
     if not stops:
         notes.append(
             LocalizedText(
