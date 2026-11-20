@@ -4,8 +4,8 @@ import type { FreightState, SceneEngine } from '../../types/scene3d';
 import { TRANSLATIONS } from '../../data/i18n';
 import { TrainCard } from './TrainCard';
 
-export function FreightNotice({ engine, language, hidden }: {
-  engine: SceneEngine | null; language: Language; hidden: boolean;
+export function FreightNotice({ engine, language, hidden, inline = false }: {
+  engine: SceneEngine | null; language: Language; hidden: boolean; inline?: boolean;
 }) {
   const t = TRANSLATIONS[language];
   const [state, setState] = useState<FreightState>('unavailable');
@@ -43,7 +43,7 @@ export function FreightNotice({ engine, language, hidden }: {
   if (hidden || state === 'unavailable') return null;
   const button = 'rounded-full bg-[#9A3412] px-3 py-1.5 text-xs font-semibold text-white';
   return (
-    <aside className="absolute left-3 right-3 top-36 z-20 mx-auto max-w-sm text-stone-900">
+    <aside aria-label={t.freightSettings} className={inline ? "text-stone-900" : "absolute left-3 right-3 top-36 z-20 mx-auto max-w-sm text-stone-900"}>
       <details className="rounded-xl border border-stone-200 bg-[#FBF9F5] p-2 text-xs shadow-sm">
         <summary className="cursor-pointer">{t.freightSettings}</summary>
         <p className="my-2">{t.trainModelRandomNote}</p>
@@ -57,9 +57,14 @@ export function FreightNotice({ engine, language, hidden }: {
           setSound(on);
         }} />{t.freightSound}</label>
       </details>
+      {/* La región viva queda montada siempre, para que los lectores de pantalla anuncien el cambio. */}
+      <p role="status" className="sr-only">
+        {state === 'warning' ? t.freightWarning : state === 'parked' ? t.freightParked
+          : state === 'running' || state === 'following' ? t.freightPassing : ''}
+      </p>
       {(state === 'warning' || state === 'running' || state === 'following' || state === 'parked') && (
         <div className="mt-2 rounded-xl border border-stone-200 bg-[#FBF9F5] p-3 shadow-md">
-          <p role="status" className="text-sm font-semibold">{state === 'warning' ? t.freightWarning : state === 'parked' ? t.freightParked : t.freightPassing}</p>
+          <p aria-hidden="true" className="text-sm font-semibold">{state === 'warning' ? t.freightWarning : state === 'parked' ? t.freightParked : t.freightPassing}</p>
           <p className="my-2 text-xs text-stone-600">{t.trainModelRandomNote}</p>
           {state === 'warning' && <button type="button" className={button} onClick={() => engine?.watchFreight?.(false)}>{t.freightWatch}</button>}
           {state === 'running' && <button type="button" className={button} onClick={() => engine?.watchFreight?.(true)}>{t.freightFollow}</button>}

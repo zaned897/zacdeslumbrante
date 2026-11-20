@@ -127,6 +127,8 @@ export interface SceneLayerContext {
  * Mañana: CesiumJS o Three.js, sin tocar los componentes.
  */
 export interface SceneEngine {
+  getCableCabinState?(): CabinState;
+  rideCableCabin?(on: boolean): void;
   getFreightState?(): FreightState;
   setFreightEnabled?(enabled: boolean): void;
   watchFreight?(follow: boolean): void;
@@ -161,6 +163,13 @@ export interface SceneEngine {
   /** Tarjetas de fotos flotantes sobre los lugares (#232). Opcional: Google 3D y Cesium no lo implementan. */
   setFloatingPhotos?(photos: FloatingPhoto[]): void;
   destroy(): void;
+}
+
+/** Estado de las cabinas del teleférico (#263). */
+export interface CabinState {
+  status: 'unavailable' | 'closed' | 'running' | 'reduced';
+  riding: boolean;
+  heightM: number | null;
 }
 
 export type FreightState = 'unavailable' | 'disabled' | 'waiting' | 'warning' | 'running' | 'following' | 'parked';

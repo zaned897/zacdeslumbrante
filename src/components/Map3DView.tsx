@@ -56,10 +56,12 @@ import { VendorFormSheet } from './app/VendorFormSheet';
 import { EMPTY_DRAFT, clearDraft, inCenter, readDraft, saveDraft, type VendorDraft } from '../scene3d/vendorRequest';
 import { recordLegendaryFind, recordPlaceVisit } from '../pet/visits';
 import { resolveMapsApiKey } from '../data/mapsApiKey';
-import { forcedTimeOfDay, zacatecasTimeOfDay } from '../scene3d/timeOfDay';
+import { forcedTimeOfDay, forcedZacatecasDate, zacatecasTimeOfDay } from '../scene3d/timeOfDay';
 import { forcedWeather } from '../scene3d/weather';
 import { FreightNotice } from './map3d/FreightNotice';
 import { ProposePhotoSheet } from './map3d/ProposePhotoSheet';
+import { CableCabinView } from './map3d/CableCabinView';
+import { CableCarCard } from './map3d/CableCarCard';
 
 
 /** Recorridos que tocan hoy: los de temporada solo en su temporada, y primero. */
@@ -683,7 +685,14 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
     <div className="relative h-dvh w-full overflow-hidden bg-stone-900 text-stone-900">
       {/* isolate: las etiquetas CSS2D de three.js traen z-index propio y no deben tapar la UI. */}
       <div ref={containerRef} className="absolute inset-0 isolate" />
-      {engineId === 'three' && status === 'ready' && <FreightNotice engine={engineRef.current} language={language} hidden={Boolean(askPlace || selected || isTouring || isExploring || isStargazing)} />}
+      {/* Avisos del tren y del teleférico: ocultos mientras se marca un puesto (#173), para no tapar el mapa; ocultar la cabina también la baja. */}
+      {engineId === 'three' && status === 'ready' && (
+        <div className="absolute left-3 right-3 top-36 z-20 mx-auto grid max-h-[calc(100%_-_20rem)] max-w-sm gap-2 overflow-y-auto">
+          <FreightNotice inline engine={engineRef.current} language={language} hidden={Boolean(askPlace || selected || isTouring || isExploring || isStargazing || pickingSpot || vendorOpen)} />
+          <CableCabinView engine={engineRef.current} language={language} frameContainer={containerRef.current}
+            hidden={Boolean(askPlace || selected || isTouring || isExploring || isStargazing || pickingSpot || vendorOpen)} />
+        </div>
+      )}
       {season && status === 'ready' && <SeasonOverlay season={season} tintNight={engineId !== 'three'} />}
 
       {/* Chip de la temporada (#68): siempre con "fechas por confirmar" hasta tener el calendario oficial. */}
@@ -1060,12 +1069,19 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
               {selected.note[language]}
             </p>
           )}
+          {/* #264, #275: el teleférico suma horario, cifras y tarifas con fuente, sin repetir título ni horario. */}
+          {selected.id === 'place:teleferico-zacatecas' && (
+            <CableCarCard language={language} showActions={false} embedded className="mt-3"
+              now={forcedZacatecasDate(window.location.search, import.meta.env.DEV) ?? undefined} />
+          )}
           {selectedPlace && (
             <>
-              <p className="mt-2 flex items-center gap-1.5 text-[11px] text-stone-500">
-                <Clock className="w-3.5 h-3.5 shrink-0" />
-                {selectedPlace.schedule}
-              </p>
+              {selected.id !== 'place:teleferico-zacatecas' && (
+                <p className="mt-2 flex items-center gap-1.5 text-[11px] text-stone-500">
+                  <Clock className="w-3.5 h-3.5 shrink-0" />
+                  {selectedPlace.schedule}
+                </p>
+              )}
               <button
                 onClick={() => {
                   setAskPlace(selectedPlace);

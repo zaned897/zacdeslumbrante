@@ -1,6 +1,8 @@
 import type * as THREE from 'three';
 import type { VegetationLayer } from './vegetation';
 import type { RailLayer } from './rail';
+import type { CableCarLayer } from './cableCar';
+import { CableCabins } from './cableCabins';
 import { FreightTrain } from './freightTrain';
 import type { TrenecitoLayer } from './trenecito';
 import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js';
@@ -20,6 +22,9 @@ import type {
 } from '../types/scene3d';
 import { StarSky, skyMoment } from './starSky';
 import { WeatherController } from './weather';
+
+/** Id del lugar del teleférico en `placesLayer` (`place:<id de places.ts>`). */
+const CABLE_CAR_POI_ID = 'place:teleferico-zacatecas';
 
 type Three = typeof THREE;
 
@@ -335,6 +340,8 @@ class Terrain {
     return this.meta.license;
   }
 
+  elevationY(elevationM: number): number { return elevationM - this.origin; }
+
   /** Altura en (x, z) locales, interpolada; fuera de la cuadrícula toma el borde. */
   at(x: number, z: number): number {
     const { lat, lng } = toLatLng(x, z);
@@ -404,6 +411,13 @@ export class ThreeOsmEngine implements SceneEngine {
   private vegetation: VegetationLayer | null = null;
   private vegetationAbort: AbortController | null = null;
   private rail: RailLayer | null = null;
+  private cableCar: CableCarLayer | null = null;
+  private cableCabins: CableCabins | null = null;
+  private cableCarAbort: AbortController | null = null;
+  /** POI del teleférico: tocar el cable, una estación o sus etiquetas abre su tarjeta (#275). */
+  private cableCarPoi: ScenePoi | null = null;
+  /** `destroy()` puede llegar a mitad de `mount()` (StrictMode o salir antes de cargar). */
+  private destroyed = false;
   private freight: FreightTrain | null = null;
   private freightEnabled = true;
   private freightBlocked = false;
@@ -469,6 +483,7 @@ export class ThreeOsmEngine implements SceneEngine {
       import('three/examples/jsm/renderers/CSS2DRenderer.js'),
       import('three/examples/jsm/utils/BufferGeometryUtils.js'),
     ]);
+    if (this.destroyed) return;
     this.T = T;
     this.Label = Label;
     this.container = container;
@@ -520,6 +535,7 @@ export class ThreeOsmEngine implements SceneEngine {
         .then((r) => (r.ok ? (r.json() as Promise<LitStreetsFile>) : null))
         .catch(() => null),
     ]);
+    if (this.destroyed) return;
     this.terrain = terrain;
     // Llanura alrededor de la cuadrícula de relieve (o todo el suelo si no hay relieve).
     const plain = new T.Mesh(
@@ -561,6 +577,7 @@ export class ThreeOsmEngine implements SceneEngine {
 
     if (!response.ok) throw new Error(`${BUILDINGS_URL}: HTTP ${response.status}`);
     const data = (await response.json()) as BuildingsFile;
+    if (this.destroyed) return;
     // La banqueta también se alumbra: un metro más por lado.
     const lights = new StreetLights(
       (litStreets?.streets ?? []).map((s) => ({
@@ -654,7 +671,7 @@ export class ThreeOsmEngine implements SceneEngine {
     }).catch(error => console.warn('[vegetation] No se pudo cargar el módulo.', error));
     const railAbort = new AbortController();
     this.railAbort = railAbort;
-    void this.readyPromise.then(() => import('./rail')).then(async ({ loadRail }) => {
+    const railReady = this.readyPromise.then(() => import('./rail')).then(async ({ loadRail }) => {
       const layer = await loadRail({ T, scene, ground, roads: this.roads, project: toLocal,
         height: (x, z) => terrain?.at(x, z) ?? 0, attribution }, railAbort.signal);
       if (!railAbort.signal.aborted) {
@@ -671,6 +688,36 @@ export class ThreeOsmEngine implements SceneEngine {
         }
       }
     }).catch(error => console.warn('[rail] No se pudo cargar el módulo.', error));
+    // Sin datum de terreno no inventamos una conversión de las cotas publicadas.
+    if (terrain) {
+      const cableCarAbort = new AbortController();
+      this.cableCarAbort = cableCarAbort;
+      // Espera el posible ajuste del relieve de rail antes de comprobar el gálibo.
+      void railReady.then(() => import('./cableCar')).then(async ({ loadCableCar }) => {
+        const layer = await loadCableCar({ T, scene, ground, buildings: this.buildings, project: toLocal,
+          height: (x, z) => this.heightAt(x, z), elevationY: elevation => terrain.elevationY(elevation) }, cableCarAbort.signal);
+        if (!cableCarAbort.signal.aborted) {
+          this.cableCar = layer;
+          layer?.onSelect(() => { if (this.cableCarPoi) this.clickHandler?.(this.cableCarPoi); });
+          layer?.setLabelsVisible(!this.skyView);
+          if (layer) {
+            this.cableCabins = new CableCabins(T, scene, layer, camera, controls,
+              (x, z) => this.heightAt(x, z), window.location.search, import.meta.env.DEV);
+            this.cableCabins.setTimeOfDay(this.seasonLook?.night ? 'night' : this.timeOfDay);
+          }
+          layer?.setLanguage(this.language);
+          layer?.setTimeOfDay(this.seasonLook?.night ? 'night' : this.timeOfDay);
+        }
+      }).catch(error => console.warn('[cableCar] No se pudo cargar el módulo.', error));
+    } else console.warn('[cableCar] Sin relieve para convertir las cotas; se omite el teleférico.');
+  }
+
+  /** Costura para #263: polilíneas y estaciones en metros locales tras la carga opcional. */
+  getCableCarLayer(): CableCarLayer | null { return this.cableCar; }
+  getCableCabinState() { return this.cableCabins?.getState() ?? { status: 'unavailable' as const, riding: false, heightM: null }; }
+  rideCableCabin(on: boolean): void {
+    if (on) this.stop();
+    this.cableCabins?.ride(on);
   }
 
   /** Costura para #246: disponible tras la carga opcional, null si no hay datos válidos. */
@@ -686,6 +733,8 @@ export class ThreeOsmEngine implements SceneEngine {
 
   setPois(pois: ScenePoi[], language: Language): void {
     this.language = language;
+    this.cableCarPoi = pois.find(p => p.id === CABLE_CAR_POI_ID) ?? null;
+    this.cableCar?.setLanguage(language);
     this.starSky?.setLanguage(language);
     const { T, poiGroup } = this;
     if (!T || !poiGroup) return;
@@ -777,10 +826,12 @@ export class ThreeOsmEngine implements SceneEngine {
   }
 
   jumpTo(camera: SceneCamera): void {
+    this.cableCabins?.ride(false);
     this.place(camera);
   }
 
   stop(): void {
+    this.cableCabins?.ride(false);
     this.freight?.stopFollowing();
     const anim = this.animation;
     this.animation = null;
@@ -859,9 +910,15 @@ export class ThreeOsmEngine implements SceneEngine {
   }
 
   destroy(): void {
+    this.destroyed = true;
     this.freight?.dispose();
     this.freight = null;
     this.railAbort?.abort();
+    this.cableCabins?.dispose();
+    this.cableCabins = null;
+    this.cableCarAbort?.abort();
+    this.cableCarAbort = null;
+    this.cableCar = null;
     this.railAbort = null;
     this.rail = null;
     this.trenecito?.dispose();
@@ -1102,6 +1159,7 @@ export class ThreeOsmEngine implements SceneEngine {
       this.skyView = { saved: this.current };
       this.starSky?.setLookingUp(true);
       if (this.poiGroup) this.poiGroup.visible = false;
+      this.cableCar?.setLabelsVisible(false);
       const { x, z } = toLocal(SKY_VIEWPOINT.lat, SKY_VIEWPOINT.lng);
       const eye = new T.Vector3(x, this.heightAt(x, z) + SKY_VIEWPOINT.eyeM, z);
       const alt = (22 * Math.PI) / 180;
@@ -1132,6 +1190,7 @@ export class ThreeOsmEngine implements SceneEngine {
     this.skyView = null;
     this.starSky?.setLookingUp(false);
     if (this.poiGroup) this.poiGroup.visible = true;
+    this.cableCar?.setLabelsVisible(true);
     camera.fov = 35;
     camera.updateProjectionMatrix();
     controls.minDistance = 30;
@@ -1169,6 +1228,8 @@ export class ThreeOsmEngine implements SceneEngine {
     if (!T || !scene || !hemi || !sun) return;
     const time: SceneTimeOfDay = this.seasonLook?.night ? 'night' : this.timeOfDay;
     const night = time === 'night';
+    this.cableCar?.setTimeOfDay(time);
+    this.cableCabins?.setTimeOfDay(time);
     const sky = SKIES[time];
     scene.background = this.skyTexture(T, time);
     if (scene.fog instanceof T.Fog) scene.fog.color.set(sky[sky.length - 1]);
@@ -1312,10 +1373,11 @@ export class ThreeOsmEngine implements SceneEngine {
     const { renderer, labels, scene, camera, controls, clock } = this;
     if (!renderer || !labels || !scene || !camera || !controls || !clock) return;
     if (this.animation && this.animation.step(now)) this.stop();
-    if (!this.animation) controls.update();
+    if (!this.animation && !this.cableCabins?.getState().riding) controls.update();
     this.starSky?.tick(camera, now, new Date());
     const dt = clock.getDelta();
     this.freight?.tick(dt);
+    this.cableCabins?.tick(dt);
     if (this.walkAction) {
       const walking = now - this.lastMoveAt < 600;
       this.walkAction.paused = !walking;
@@ -1531,6 +1593,10 @@ export class ThreeOsmEngine implements SceneEngine {
     const poi = poiHit?.object.userData.poi as ScenePoi | undefined;
     if (poi) {
       this.clickHandler?.(poi);
+      return;
+    }
+    if (this.cableCarPoi && this.cableCar?.pick(ray, camera, pointer, rect)) {
+      this.clickHandler?.(this.cableCarPoi);
       return;
     }
     const groundHit = ray.intersectObject(ground)[0];
