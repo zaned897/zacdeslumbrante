@@ -348,6 +348,7 @@ Alta de un puesto con revisión. Un puesto dado de alta queda **pendiente** y no
 }
 ```
 → `{ "id": "alta-1-tortas-la-solicitud", "status": "pending", "message": { "es": "…", "en": "…" } }`
+- El `id` sale del nombre y mide 80 caracteres o menos: un nombre que no cabe se recorta.
 - `lat`/`lng` deben caer en el Centro Histórico (22.760–22.790, -102.590 a -102.560); si no, 422. `promotion` y `contact` son opcionales.
 - `promotion.start` y `promotion.end` son fecha y hora ISO 8601, con año entre 2000 y 2100; sin zona se toma la de Zacatecas. Una fecha ilegible o fuera de esos años, o un `end` anterior a `start`, responde 422.
 - **Revisión**, con `Authorization: Bearer <ADMIN_TOKEN>` (variable de entorno):
@@ -491,11 +492,11 @@ Un visitante reporta cuánta gente hay en un lugar o lo recomienda. Son dos señ
   "expiresAt": "2026-11-10T09:45:00-06:00"
 }
 ```
-- `placeId`: un lugar del catálogo (`places.json`) o un puesto publicado. Si no existe, 404.
+- `placeId`: un lugar del catálogo (`places.json`) o un puesto publicado, de hasta 80 caracteres. Si no existe, 404.
 - **`kind: "crowd"`:** `value` es `baja`, `media` o `alta`, obligatorio.
   - Vale **45 minutos**. En ese rato `/nearby` y `/agent/plan` lo usan en vez del patrón de la franja, con `signal: "live"`.
   - La espera sale de la afluencia reportada: 3, 10 o 20 minutos.
-  - Si hay varios reportes vigentes, cuenta el más reciente. Un puesto cerrado sigue sin mostrar afluencia.
+  - Si hay varios reportes vigentes, cuenta el de hora `at` más reciente; con la misma hora, el último en llegar. Un puesto cerrado sigue sin mostrar afluencia.
 - **`kind: "recommend"`:** `value` es opcional y es un motivo corto: `comer-rapido`, `economico`, `para-ninos`, `tradicional`, `descanso`, `artesania` o `vista`.
   - Vale **90 días** y suma a `recommendations.count`. No lleva calificación ni estrellas.
   - Se menciona en el `reason` a partir de 3 recomendaciones.

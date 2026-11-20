@@ -6,7 +6,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.main import app
-from app.services import reports
+from app.services import reports, vendor_requests
 
 client = TestClient(app)
 PLAZA = {"lat": 22.7756, "lng": -102.5723}
@@ -19,8 +19,10 @@ NINE = "2026-11-10T09:00:00-06:00"
 @pytest.fixture(autouse=True)
 def clean() -> Iterator[None]:
     reports.reset()
+    vendor_requests.reset()
     yield
     reports.reset()
+    vendor_requests.reset()
 
 
 def report(**body: object) -> dict:
@@ -87,6 +89,16 @@ def test_new_report_changes_what_the_agent_proposes() -> None:
     # Con espera larga en las gorditas, el agente propone otra comida primero.
     assert after[0]["placeId"] != GORDITAS
     assert [s["placeId"] for s in after] != [s["placeId"] for s in before]
+
+
+def test_crowd_reports_with_the_same_time_the_last_one_wins() -> None:
+    # Hallazgo de Codex: con la misma hora `at`, contaba el primer reporte y no el último.
+    report(placeId=GORDITAS, kind="crowd", value="alta", at=NINE)
+    report(placeId=GORDITAS, kind="crowd", value="baja", at=NINE)
+    assert item(GORDITAS, "2026-11-10T09:05:00-06:00")["crowd"] == "baja"
+    # La misma hora escrita en otra zona también empata.
+    report(placeId=GORDITAS, kind="crowd", value="media", at="2026-11-10T15:00:00Z")
+    assert item(GORDITAS, "2026-11-10T09:05:00-06:00")["crowd"] == "media"
 
 
 def test_recommendation_and_crowd_are_kept_apart() -> None:
@@ -160,6 +172,39 @@ def test_without_at_the_report_is_from_now() -> None:
 )
 def test_invalid_reports_are_rejected(body: dict, status: int) -> None:
     assert client.post("/reports", json=body).status_code == status
+
+
+VENDOR = {
+    "kind": "food",
+    "specialty": "Tortas de lomo",
+    "lat": 22.7752,
+    "lng": -102.5727,
+    "hours": [{"days": [0, 1, 2, 3, 4, 5, 6], "open": "08:00", "close": "20:00"}],
+    "priceRange": "$",
+}
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "A" * 80,
+        # «ﬃ» es una sola letra que en el id se vuelve «ffi»: el nombre crece al pasarlo a ASCII.
+        "ﬃ" * 80,
+    ],
+    ids=["ascii", "ligadura"],
+)
+def test_approved_vendor_with_a_long_name_gets_reports(
+    name: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # Hallazgo de Codex: con un nombre de 80 letras el id medía 87 y POST /reports daba 422.
+    monkeypatch.setenv("ADMIN_TOKEN", "token-de-prueba")
+    vendor_id = client.post("/vendors", json={**VENDOR, "name": name}).json()["id"]
+    admin = {"Authorization": "Bearer token-de-prueba"}
+    assert client.post(f"/vendors/{vendor_id}/approve", headers=admin).status_code == 200
+    assert len(vendor_id) <= 80
+    assert (
+        client.post("/reports", json={"placeId": vendor_id, "kind": "recommend"}).status_code == 201
+    )
 
 
 def test_closed_vendor_shows_no_crowd_even_with_a_report() -> None:
