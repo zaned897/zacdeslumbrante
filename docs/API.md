@@ -516,5 +516,40 @@ Un visitante reporta cuánta gente hay en un lugar o lo recomienda. Son dos señ
   - como son anónimos, cada recomendación cuenta como un visitante distinto;
   - `at` lo pone quien llama. Con visitantes reales lo pondría el servidor.
 
+### GET /api/py/agent/suggestion?lat=&lng=&at=&visited=&dismissed=&planStops=&lang=  · mock · dueño: Claude Code (#277)
+Elige **una** sugerencia puntual para este momento y la dice en una línea, con **reglas simples y sin LLM**, para la tarjeta de la mascota (#112), el aviso de oportunidad cercana (#157) y el chat. Las frases siguen `docs/design/señales-del-agente.md` (#166).
+- `lat`, `lng`: obligatorios (mismos límites que `/nearby`; fuera de rango o `NaN` → 422).
+- `at`: opcional, ISO 8601 con año entre 2000 y 2100. Sin zona, hora de Zacatecas; sin él, ahora. Inválido → 422.
+- `visited`, `dismissed`, `planStops`: opcionales, ids separados por coma. Nunca se sugiere un id presente en ninguna de las tres listas.
+- `lang`: opcional (`es` o `en`, por omisión `es`; otro valor → 422). Se acepta en el query y la respuesta siempre trae `es` y `en` en `name`, `line` y `reason`.
+
+```json
+{
+  "_mock": true,
+  "suggestion": {
+    "placeId": "gorditas-la-imaginaria",
+    "kind": "vendor",
+    "name": { "es": "Gorditas La Imaginaria", "en": "Gorditas La Imaginaria" },
+    "lat": 22.776323, "lng": -102.572223,
+    "line": { "es": "Gorditas La Imaginaria está a 81 m y tiene una promoción hasta el 30 nov (dato del puesto). A esta hora suele haber más gente.", "en": "Gorditas La Imaginaria is 81 m away and has a promotion until Nov 30 (vendor's info). It's usually busier at this time." },
+    "reason": { "es": "A 81 m · a esta hora suele haber afluencia alta · espera estimada de 20 min · 4 visitantes lo recomiendan: para comer rápido · promoción vigente (dato del puesto) hasta el 30 nov", "en": "…" },
+    "trigger": "promotion",
+    "actions": ["ask", "add", "dismiss"],
+    "source": "mundo-de-prueba",
+    "signal": "pattern"
+  }
+}
+```
+- Sin eventos vigentes para la zona ni candidatos abiertos y no excluidos en 600 m, responde `200` con `{ "_mock": true, "suggestion": null }`.
+- `lat`/`lng` son `null` cuando el evento no tiene sede publicada.
+- **Prioridad:**
+  1. `event-today`: un evento o fiesta publicada de hoy (`event` o `festival`, no temporadas base `season`) que no esté excluida: los de la capital (`townId: null`) cuentan a ≤ 3000 m de Plaza de Armas; los de un Pueblo Mágico, a ≤ 600 m de su centro. `kind: "event"`, `lat`/`lng` son `null` (sin distancias en metros), `signal: null`, `source`: `sourceUrl` del evento o `"calendario-de-eventos"` (`sourceNote` va solo en `reason`).
+  2. `promotion` (en 600 m): un puesto abierto con promoción vigente que encaje con la hora (comida al mediodía o cena, café por la mañana o tarde, dulces por la tarde, bebidas por la noche, artesanías en horario diurno).
+  3. `recommended` (en 600 m): un puesto o lugar abierto con 3 o más recomendaciones vigentes de visitantes.
+  4. `nearby` (en 600 m): el puesto o lugar abierto no visitado más cercano.
+- Nunca se sugiere un puesto o lugar del catálogo (`plan_places.json`) cerrado a la hora `at`.
+- La afluencia nunca se presenta como prueba de calidad; cuando es alta solo advierte posible espera (`signal: "live"` si viene de un reporte de los últimos 45 min, `"pattern"` si es por franja horaria).
+- PROTO: los eventos de la capital (`townId: null`) cuentan dentro de un radio fijo de 3000 m desde Plaza de Armas; los de un Pueblo Mágico, dentro de 600 m de su `center` en `towns.json`. Las franjas horarias por tipo de puesto son reglas fijas del prototipo.
+
 ## Propuestas pendientes
 (Agrega aquí endpoints nuevos antes de implementarlos: método, ruta, body, respuesta, dueño.)
