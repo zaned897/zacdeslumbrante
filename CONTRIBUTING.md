@@ -40,6 +40,7 @@ Ninguna feature con interfaz se programa antes de que su visual esté aprobado.
 2. **Decisión.** El dueño aprueba o rechaza en la propuesta. Se te responde ahí mismo con la decisión y, si se aprobó, con las issues que salen de ella.
 3. **Se liberan las tareas.** Con el visual aprobado se crean o actualizan las issues (con enlace a la pantalla y la etiqueta `status:ready`) y se cierran las que quedaron obsoletas.
 4. **Código.** Toma una issue `status:ready` (empieza por `good first issue`) y comenta que la tomas. Fork → rama `<nivel>/<issue>-<tema>`, commits convencionales (`feat: eventos mock (#12)`), checks (`bun run lint`; si tocas Python: `uv run ruff check . && uv run ruff format --check . && uv run pytest`) y PR con la plantilla: nivel, `Closes #n`, enlace al visual y capturas.
+   Cada PR de la app recibe su preview: Render comenta en el PR una liga `zacdes-web-pr-<n>.onrender.com` con la app de tu rama. Pégala en «Cómo verlo». La versión estable de `main` está en https://zacdes-web.onrender.com.
 5. **Revisión y merge.** El dueño revisa cada PR a mano y lo fusiona solo con CI en verde. Ni contribuidores ni agentes de IA aprueban o fusionan.
 
 Cambios sin interfaz (backend, datos, docs) saltan los pasos 1 a 3 pero igual nacen de una issue.
@@ -61,4 +62,4 @@ Una vez, en GitHub → **Settings → Rules → Rulesets → New branch ruleset*
 - **Block force pushes** y **Restrict deletions**.
 - En **Bypass list** agrega *Repository admin* en modo *For pull requests only*. Los PRs que abren los agentes salen con tu cuenta y GitHub no deja aprobar un PR propio; así los fusionas tú tras revisarlos, siempre con CI en verde. Los de otras personas necesitan tu aprobación.
 - En **Settings → General** activa **Automatically delete head branches** (evita PRs apilados perdidos).
-- En Render, el Blueprint crea el sitio estático `zacdes-diseno` (previews automáticas, solo para cambios en `docs/design/`). Si Render le da a las previews otra URL que `zacdes-diseno-pr-<n>.onrender.com`, corrige `PREVIEW` en `.github/workflows/diseno-comentario.yml`.
+- En Render, el Blueprint crea el sitio estático `zacdes-diseno` (previews automáticas, solo para cambios en `docs/design/`) y la app `zacdes-web`, también con previews automáticas en cada PR. Revisa en el panel de Render que los previews estén activos para los dos servicios. Si Render le da a las previews otra URL que `zacdes-diseno-pr-<n>.onrender.com`, corrige `PREVIEW` en `.github/workflows/diseno-comentario.yml`.
