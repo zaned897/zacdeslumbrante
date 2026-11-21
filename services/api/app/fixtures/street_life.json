@@ -97,8 +97,8 @@
       },
       "when": { "es": "Suele verse por la tarde", "en": "Usually afternoons" },
       "nearPlaceId": "museo-rafael-coronel",
-      "lat": 22.77985,
-      "lng": -102.57115
+      "lat": 22.78184,
+      "lng": -102.57009
     },
     {
       "id": "tunas-de-la-bufa",
@@ -111,8 +111,8 @@
       },
       "when": { "es": "Suele verse en temporada de tuna, de día", "en": "Usually in prickly-pear season, daytime" },
       "nearPlaceId": "cerro-de-la-bufa",
-      "lat": 22.77355,
-      "lng": -102.56525
+      "lat": 22.77742,
+      "lng": -102.56528
     },
     {
       "id": "textiles-del-teleferico",
@@ -139,8 +139,8 @@
       },
       "when": { "es": "Suele verse temprano y al anochecer", "en": "Usually early morning and at dusk" },
       "nearPlaceId": "acueducto-el-cubo",
-      "lat": 22.76895,
-      "lng": -102.56975
+      "lat": 22.76942,
+      "lng": -102.57641
     }
   ]
 }
