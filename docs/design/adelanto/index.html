@@ -32,6 +32,37 @@
 .tk-btn { font: 700 12.5px var(--f-body); border: 0; border-radius: 999px; padding: 8px 14px; background: rgba(251,249,245,.94); color: #9A3412; cursor: pointer; box-shadow: 0 2px 8px rgba(60,30,10,.18); }
 .tk-btn.pri { background: #9A3412; color: #fff; }
 .tk-btn[aria-pressed="true"] { background: #1C1917; color: #fff; }
+/* Propuesta N · mapa navegable, puntos con jerarquía y filtros (#291–#296) */
+.nv-ctrl { position: absolute; right: 10px; top: 92px; z-index: 11; display: flex; flex-direction: column; gap: 6px; }
+.nv-ctrl span { width: 34px; height: 34px; border-radius: 10px; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.14); display: grid; place-items: center; font: 700 14px var(--f-body); color: #9A3412; }
+.nv-ctrl .nv-gap { height: 2px; box-shadow: none; background: transparent; }
+.nv-compass { position: relative; }
+.nv-compass i { position: absolute; width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-bottom: 11px solid #B91C1C; top: 5px; left: 12px; }
+.nv-compass i + i { border-bottom: 0; border-top: 11px solid #A8A29E; top: 17px; }
+.nv-help { position: absolute; inset: 0; z-index: 13; background: rgba(28,25,23,.55); display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 12px; padding: 24px; color: #fff; }
+.nv-help ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; width: 100%; }
+.nv-help li { display: flex; gap: 10px; align-items: center; background: rgba(255,255,255,.12); border-radius: 12px; padding: 9px 10px; font-size: 12px; }
+.nv-help li b { display: block; font-size: 13px; }
+.nv-help .nv-g { flex: none; width: 34px; height: 34px; border-radius: 50%; background: #fff; color: #9A3412; display: grid; place-items: center; font-size: 16px; }
+.nv-help small { font-size: 10.5px; opacity: .8; }
+.nv-pin { position: absolute; z-index: 9; transform: translate(-50%, -100%); display: flex; flex-direction: column; align-items: center; pointer-events: none; }
+.nv-pin b { background: #fff; color: #1C1917; border-radius: 8px; padding: 3px 7px; font: 700 10.5px var(--f-body); white-space: nowrap; box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+.nv-pin i { width: 14px; height: 14px; border-radius: 50%; background: #9A3412; border: 2px solid #fff; box-shadow: 0 1px 3px rgba(0,0,0,.3); margin-top: 3px; }
+.nv-pin.t1 b { font-size: 12px; padding: 4px 8px; } .nv-pin.t1 i { width: 18px; height: 18px; }
+.nv-pin.t2 b { font-weight: 600; font-size: 10px; } .nv-pin.t2 i { width: 11px; height: 11px; background: #C2410C; }
+.nv-pin.t3 i { width: 7px; height: 7px; border-width: 1.5px; background: #D97706; }
+.nv-pin.dim { opacity: .28; filter: grayscale(1); }
+.nv-pin.sel i { box-shadow: 0 0 0 5px rgba(154,52,18,.3); }
+.nv-pin.cl i { width: 22px; height: 22px; display: grid; place-items: center; font: 700 10px var(--f-body); color: #fff; font-style: normal; }
+.nv-filters { position: absolute; top: 84px; left: 10px; right: 54px; z-index: 11; display: flex; gap: 5px; overflow: hidden; }
+.nv-filters span { flex: none; background: #fff; border-radius: 999px; padding: 5px 9px; font: 600 10.5px var(--f-body); box-shadow: 0 1px 3px rgba(0,0,0,.14); color: #1C1917; }
+.nv-filters span.on { background: #9A3412; color: #fff; }
+.nv-legend { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-top: 8px; }
+.nv-legend > div { border: 1px solid var(--linea); border-radius: 14px; padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; font-size: 13.5px; color: var(--carbon-2); }
+.nv-legend b { color: var(--carbon); }
+.nv-cmp { width: 100%; min-width: 0; border-collapse: collapse; font-size: 13.5px; margin-top: 8px; }
+.nv-cmp th, .nv-cmp td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--linea); vertical-align: top; }
+@media (max-width: 760px) { .nv-cmp { table-layout: fixed; font-size: 12.5px; } .nv-cmp th, .nv-cmp td { padding: 6px 5px; overflow-wrap: anywhere; } }
 .tk-btn:focus-visible { outline: 2px solid var(--terracota); outline-offset: 2px; }
 .tk-attr { position: absolute; right: 8px; bottom: 6px; font-size: 10px; color: #57534E; background: rgba(251,249,245,.8); padding: 2px 6px; border-radius: 4px; max-width: calc(100% - 16px); }
 .tk-off { display: none; position: absolute; inset: 0; place-items: center; text-align: center; padding: 24px; color: #57534E; }
@@ -994,6 +1025,84 @@ figure.wide .tag { margin: 0; }
 
     </section>
 
+
+  <section class="nuevo" id="propuesta-n-tema">
+    <div class="section-head">
+      <span class="eyebrow" data-en="Proposal, waiting for the owner's approval">Propuesta, espera la aprobación del dueño</span>
+      <h2 data-en="A city you can move around, that tells you what to see">Una ciudad que se recorre fácil y te dice qué ver</h2>
+      <p class="lede" data-en="Today the 3D city feels hard: dragging turns the camera instead of moving the map, there is no compass or way back to the center, and its 16 places all look the same. This proposal makes it behave like a map, adds more places with a hierarchy, and lets you filter by what you want to do.">Hoy la ciudad 3D se siente difícil: arrastrar gira la cámara en vez de mover el mapa, no hay brújula ni forma de volver al centro, y sus 16 lugares se ven todos iguales. Esta propuesta la hace comportarse como un mapa, suma lugares con jerarquía y deja filtrar por lo que quieres hacer.</p>
+    </div>
+
+    <div class="block" id="propuesta-n">
+      <div class="block-head">
+        <h3 data-en="Proposal N · Map gestures, on-screen controls, places by importance and filters">Propuesta N · Gestos de mapa, controles en pantalla, lugares por importancia y filtros</h3>
+        <p data-en="Five pieces that work together. One finger moves, two fingers turn; buttons for compass, center, top view and zoom; tapping a place flies to it; the main places always show and the small ones appear as you get closer; and a row of filters leaves only what you are looking for.">Cinco piezas que van juntas. Un dedo mueve y dos dedos giran; botones de brújula, centro, vista de arriba y zoom; tocar un lugar vuela hacia él; los lugares principales siempre se ven y los pequeños aparecen al acercarte; y una fila de filtros deja solo lo que buscas.</p>
+        <div class="chips"><span class="tag prop" data-en="Proposal · Nov 21">Propuesta · 21 nov</span><span class="chip">#291</span><span class="chip">#292</span><span class="chip">#293</span><span class="chip">#295</span><span class="chip">#296</span><span class="chip">#298</span></div>
+      </div>
+
+      <table class="nv-cmp">
+        <tr><th data-en="Gesture">Gesto</th><th data-en="Today">Hoy</th><th data-en="Proposal">Propuesta</th></tr>
+        <tr><td data-en="Drag with one finger or left click">Arrastrar con un dedo o clic izquierdo</td><td data-en="Turns the camera around the city">Gira la cámara alrededor de la ciudad</td><td data-en="Moves the map, like any map app">Mueve el mapa, como cualquier app de mapas</td></tr>
+        <tr><td data-en="Two fingers or right click">Dos dedos o clic derecho</td><td data-en="Moves the map">Mueve el mapa</td><td data-en="Turns and tilts the view">Gira e inclina la vista</td></tr>
+        <tr><td data-en="Pinch or wheel">Pellizco o rueda</td><td data-en="Zooms to the center of the screen">Acerca al centro de la pantalla</td><td data-en="Zooms toward your finger or cursor">Acerca hacia donde está tu dedo o el cursor</td></tr>
+        <tr><td data-en="Moving far away">Alejarse mucho</td><td data-en="You can lose the city (up to 4 km)">Se puede perder la ciudad (hasta 4 km)</td><td data-en="The view stays over the historic center">La vista no sale del Centro Histórico</td></tr>
+      </table>
+
+      <div class="gallery">
+        <figure class="shot"><div class="phone"><div class="screen"><canvas class="city" data-mode="hora" data-hora="dia" data-seed="9" data-zoom="1.15"></canvas><div class="notch"></div><div class="status"><span>10:05</span><span>5G ▮▮▮</span></div>
+          <div class="hdr"><span class="btn-sq"><svg class="ico"><use href="#i-back"/></svg></span><span class="title-pill"><span data-en="3D City">Ciudad 3D</span></span><span class="lang-pill">ES</span></div>
+          <div class="nv-help"><b data-en="Moving around the city">Para moverte por la ciudad</b>
+            <ul>
+              <li><span class="nv-g">☝</span><span><b data-en="Drag with one finger">Arrastra con un dedo</b><span data-en="to move the map">para mover el mapa</span></span></li>
+              <li><span class="nv-g">✌</span><span><b data-en="Two fingers">Dos dedos</b><span data-en="to turn and tilt">para girar e inclinar</span></span></li>
+              <li><span class="nv-g">⤢</span><span><b data-en="Pinch">Pellizca</b><span data-en="to get closer">para acercarte</span></span></li>
+            </ul>
+            <small data-en="Shows only the first time · tap to close">Sale solo la primera vez · toca para cerrar</small></div>
+        </div></div><span class="tag prop" data-en="Proposal · illustration">Propuesta · ilustración</span><figcaption data-en="First visit. A three-second guide with the three gestures. It closes by itself or with a tap and does not come back. #291, #293">Primera visita. Una guía de tres segundos con los tres gestos. Se cierra sola o al tocar, y no vuelve a salir. #291, #293</figcaption></figure>
+
+        <figure class="shot"><div class="phone"><div class="screen"><canvas class="city" data-mode="hora" data-hora="dia" data-seed="9" data-zoom="1.15"></canvas><div class="notch"></div><div class="status"><span>10:06</span><span>5G ▮▮▮</span></div>
+          <div class="hdr"><span class="btn-sq"><svg class="ico"><use href="#i-back"/></svg></span><span class="title-pill"><span data-en="3D City">Ciudad 3D</span></span><span class="lang-pill">ES</span></div>
+          <div class="nv-ctrl"><span class="nv-compass" title="Norte"><i></i><i></i></span><span title="Centro">◎</span><span title="Vista">3D</span><span class="nv-gap"></span><span>+</span><span>−</span></div>
+          <div class="nv-pin t1" style="left:46%;top:44%"><b data-en="Cathedral">Catedral</b><i></i></div>
+          <div class="nv-pin t1" style="left:68%;top:27%"><b>La Bufa</b><i></i></div>
+          <div class="nv-pin t1" style="left:24%;top:33%"><b data-en="Cable car">Teleférico</b><i></i></div>
+          <div class="nv-pin t1" style="left:30%;top:62%"><b data-en="El Edén mine">Mina El Edén</b><i></i></div>
+          <div class="nv-pin t2" style="left:58%;top:56%"><i></i></div><div class="nv-pin t2" style="left:40%;top:52%"><i></i></div><div class="nv-pin t2" style="left:64%;top:41%"><i></i></div><div class="nv-pin t2" style="left:52%;top:68%"><i></i></div><div class="nv-pin t2" style="left:36%;top:44%"><i></i></div>
+        </div></div><span class="tag prop" data-en="Proposal · illustration">Propuesta · ilustración</span><figcaption data-en="From afar. Only the must-sees carry their name; the others are dots and the smallest ones do not show yet. On the right: compass (tap = north up), back to center, 3D / top view, and + and −. #292, #295">De lejos. Solo los imprescindibles llevan nombre; los demás son puntos y los más pequeños todavía no salen. A la derecha: brújula (tocar = norte arriba), volver al centro, vista 3D o de arriba, y + y −. #292, #295</figcaption></figure>
+
+        <figure class="shot"><div class="phone"><div class="screen"><canvas class="city" data-mode="hora" data-hora="dia" data-seed="9" data-zoom="1.9"></canvas><div class="notch"></div><div class="status"><span>10:08</span><span>5G ▮▮▮</span></div>
+          <div class="hdr"><span class="btn-sq"><svg class="ico"><use href="#i-back"/></svg></span><span class="title-pill"><span data-en="3D City">Ciudad 3D</span></span><span class="lang-pill">ES</span></div>
+          <div class="nv-ctrl"><span class="nv-compass"><i></i><i></i></span><span>◎</span><span>3D</span><span class="nv-gap"></span><span>+</span><span>−</span></div>
+          <div class="nv-pin t1 sel" style="left:48%;top:38%"><b data-en="Cathedral">Catedral</b><i></i></div>
+          <div class="nv-pin t2" style="left:26%;top:30%"><b data-en="Plaza de Armas">Plaza de Armas</b><i></i></div>
+          <div class="nv-pin t2" style="left:62%;top:25%"><b data-en="Market">Mercado G. Ortega</b><i></i></div>
+          <div class="nv-pin t2" style="left:62%;top:53%"><b data-en="Calderón Theater">Teatro Calderón</b><i></i></div>
+          <div class="nv-pin t3" style="left:34%;top:46%"><i></i></div><div class="nv-pin t3" style="left:58%;top:47%"><i></i></div><div class="nv-pin t3" style="left:20%;top:44%"><i></i></div><div class="nv-pin t3" style="left:84%;top:40%"><i></i></div>
+          <div class="nv-pin cl" style="left:40%;top:54%"><i>+4</i></div>
+          <div class="sheet card"><div class="sub-stop"><span data-en="Must-see · Monument">Imprescindible · Monumento</span><span>120 m</span></div><h4 data-en="Cathedral Basilica of Zacatecas">Catedral Basílica de Zacatecas</h4><p data-en="Baroque façade in pink cantera stone. The camera flew here when you tapped it.">Fachada barroca de cantera rosa. La cámara voló hasta aquí al tocarla.</p></div>
+        </div></div><span class="tag prop" data-en="Proposal · illustration">Propuesta · ilustración</span><figcaption data-en="Up close. Tapping a place flies the camera to it and opens its card. Places worth a visit now carry their name, the small ones appear as dots, and the ones that overlap are grouped (+4). #293, #295">De cerca. Tocar un lugar acerca la cámara y abre su tarjeta. Los que valen la pena ya llevan nombre, los pequeños salen como punto, y los que se enciman se agrupan (+4). #293, #295</figcaption></figure>
+
+        <figure class="shot"><div class="phone"><div class="screen"><canvas class="city" data-mode="hora" data-hora="dia" data-seed="9" data-zoom="1.15"></canvas><div class="notch"></div><div class="status"><span>10:10</span><span>5G ▮▮▮</span></div>
+          <div class="hdr"><span class="btn-sq"><svg class="ico"><use href="#i-back"/></svg></span><span class="title-pill"><span data-en="3D City">Ciudad 3D</span></span><span class="lang-pill">ES</span></div>
+          <div class="nv-filters"><span data-en="Eat">Comer</span><span class="on" data-en="Museums">Museos</span><span data-en="Lookouts">Miradores</span><span data-en="Churches">Templos</span><span data-en="Today">Hoy</span></div>
+          <div class="nv-ctrl"><span class="nv-compass"><i></i><i></i></span><span>◎</span><span>3D</span></div>
+          <div class="nv-pin t1 dim" style="left:46%;top:46%"><i></i></div><div class="nv-pin t1 dim" style="left:78%;top:34%"><i></i></div><div class="nv-pin t2 dim" style="left:30%;top:62%"><i></i></div>
+          <div class="nv-pin t1" style="left:36%;top:42%"><b data-en="Rafael Coronel">Rafael Coronel</b><i></i></div>
+          <div class="nv-pin t1" style="left:58%;top:52%"><b data-en="Pedro Coronel">Pedro Coronel</b><i></i></div>
+          <div class="nv-pin t2" style="left:68%;top:66%"><b data-en="Felguérez">Felguérez</b><i></i></div>
+          <div class="nv-pin t2" style="left:24%;top:56%"><b data-en="Francisco Goitia">Francisco Goitia</b><i></i></div>
+          <div class="sheet card"><div class="sub-stop"><span data-en="Museums">Museos</span><span data-en="4 in view">4 en vista</span></div><h4 data-en="Museums in the center">Museos del centro</h4><p data-en="Only museums stay on; the rest fade. Tap “Museums” again to see everything.">Solo quedan los museos; lo demás se atenúa. Toca «Museos» otra vez para ver todo.</p></div>
+        </div></div><span class="tag prop" data-en="Proposal · illustration">Propuesta · ilustración</span><figcaption data-en="Filters. A row on top: Eat, Museums, Lookouts, Churches and Today (events of the day). One filter leaves only its places and frames them. #296">Filtros. Una fila arriba: Comer, Museos, Miradores, Templos y Hoy (eventos del día). Un filtro deja solo sus lugares y los encuadra. #296</figcaption></figure>
+      </div>
+
+      <div class="nv-legend">
+        <div><b data-en="Level 1 · Must-see">Nivel 1 · Imprescindible</b><span data-en="8 to 10 places. Always visible, with name and a big marker. E.g. Cathedral, La Bufa, cable car, El Edén mine.">8 a 10 lugares. Siempre visibles, con nombre y marcador grande. P. ej. Catedral, La Bufa, teleférico, Mina El Edén.</span></div>
+        <div><b data-en="Level 2 · Worth a visit">Nivel 2 · Vale la pena</b><span data-en="Museums, theaters, plazas and markets. A dot from afar; the name appears when you get closer.">Museos, teatros, plazas y mercados. Un punto de lejos; el nombre aparece al acercarte.</span></div>
+        <div><b data-en="Level 3 · Neighborhood">Nivel 3 · De barrio</b><span data-en="Alleys, small churches, gardens and lookouts. A small dot only up close; grouped when they overlap.">Callejones, templos pequeños, jardines y miradores. Un punto chico solo de cerca; se agrupan si se enciman.</span></div>
+      </div>
+      <p class="fine" data-en="The drawings are illustrations; the places come from the catalog in #294 (more than 50 real places of the center, each with its source), which Raúl is preparing. Out of this proposal: the agent's walk (#167) and routes with stops (#168). With “reduce motion”, tapping a place jumps without flying.">Los dibujos son ilustraciones; los lugares salen del catálogo de #294 (más de 50 lugares reales del centro, cada uno con su fuente), que prepara Raúl. Fuera de esta propuesta: el paseo del agente (#167) y las rutas con paradas (#168). Con «reducir movimiento», tocar un lugar salta sin volar.</p>
+    </div>
+  </section>
 
   <section class="nuevo" id="propuesta-l-tema">
     <div class="section-head">
