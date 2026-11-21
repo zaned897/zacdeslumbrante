@@ -5,6 +5,7 @@ import type { CableCarLayer } from './cableCar';
 import { CableCabins } from './cableCabins';
 import { FreightTrain } from './freightTrain';
 import type { TrenecitoLayer } from './trenecito';
+import type { MonumentsLayer } from './monuments';
 import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import type { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import type { CSS2DObject, CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
@@ -423,6 +424,8 @@ export class ThreeOsmEngine implements SceneEngine {
   private freightBlocked = false;
   private railAbort: AbortController | null = null;
   private trenecito: TrenecitoLayer | null = null;
+  private monuments: MonumentsLayer | null = null;
+  private monumentsAbort: AbortController | null = null;
   private poiGroup: THREE.Group | null = null;
   private poiLabels: PoiLabel[] = [];
   private labelPoint: THREE.Vector3 | null = null;
@@ -629,6 +632,9 @@ export class ThreeOsmEngine implements SceneEngine {
         scene.add(this.roads);
       }
     }
+    // Primer vértice de cada huella en la malla unida: ahí un monumento (#227) oculta las suyas.
+    const starts = new Int32Array(geometries.length + 1);
+    geometries.forEach((g, i) => (starts[i + 1] = starts[i] + g.getAttribute('position').count));
     const merged = mergeGeometries(geometries, false);
     geometries.forEach((g) => g.dispose());
     if (merged) {
@@ -669,6 +675,18 @@ export class ThreeOsmEngine implements SceneEngine {
         buildings: data.buildings, roads: roads?.roads ?? [] }, vegetationAbort.signal);
       if (!vegetationAbort.signal.aborted) { this.vegetation = layer; layer?.updateSeason(this.seasonLook?.rainy === true); }
     }).catch(error => console.warn('[vegetation] No se pudo cargar el módulo.', error));
+    // Monumentos (#227): el registro se lee después del primer cuadro y cada modelo se pide al acercarse.
+    const buildings = this.buildings;
+    if (buildings) {
+      const monumentsAbort = new AbortController();
+      this.monumentsAbort = monumentsAbort;
+      void this.readyPromise.then(() => import('./monuments')).then(async ({ loadMonuments }) => {
+        const layer = await loadMonuments({ T, scene, buildings, starts, footprints: data.buildings, project: toLocal,
+          height: (x, z) => terrain?.at(x, z) ?? 0 }, monumentsAbort.signal);
+        if (!monumentsAbort.signal.aborted) this.monuments = layer;
+        else layer?.dispose();
+      }).catch(error => console.warn('[monumentos] No se pudo cargar el módulo.', error));
+    }
     const railAbort = new AbortController();
     this.railAbort = railAbort;
     const railReady = this.readyPromise.then(() => import('./rail')).then(async ({ loadRail }) => {
@@ -926,6 +944,10 @@ export class ThreeOsmEngine implements SceneEngine {
     this.vegetationAbort?.abort();
     this.vegetationAbort = null;
     this.vegetation = null;
+    this.monumentsAbort?.abort();
+    this.monumentsAbort = null;
+    this.monuments?.dispose();
+    this.monuments = null;
     this.stop();
     this.renderer?.setAnimationLoop(null);
     this.renderer?.domElement.removeEventListener('click', this.onClick);
@@ -1389,6 +1411,7 @@ export class ThreeOsmEngine implements SceneEngine {
       this.raceParked = true;
     }
     this.trenecito?.tick(now);
+    this.monuments?.tick(camera, now);
     this.weather?.tick(dt, camera, controls.target, this.reducedMotion);
     renderer.render(scene, camera);
     labels.render(scene, camera);
