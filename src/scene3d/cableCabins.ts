@@ -44,6 +44,20 @@ export function cabinProgress(t: number): number {
   if (u > 1 - ramp) return 1 - cabinProgress(1 - u);
   return (slow * ramp + (1 - slow) * ramp / 2 + u - ramp) / area;
 }
+/**
+ * #271: suaviza el tope del avance que sigue la cámara de la cabina de cristal. Fuera de
+ * [min, max] la vista se queda en el borde (la cabina está en el andén); cerca del borde frena
+ * sin saltos (C1), para no cortar de golpe al salir o llegar.
+ */
+export function softClampProgress(p: number, min: number, max: number, k = 0.03): number {
+  if (min > max) return (min + max) / 2;
+  const low = (x: number) => x >= min + k ? x : x <= min - k ? min : min + (x - min + k) ** 2 / (4 * k);
+  const high = (x: number) => x <= max - k ? x : x >= max + k ? max : max - (max + k - x) ** 2 / (4 * k);
+  return Math.min(max, Math.max(min, high(low(p))));
+}
+/** Metros horizontales desde el centro de la estación y altura mínima bajo la cámara para ver la ciudad. */
+export const CABIN_VIEW_CLEAR_M = 30;
+export const CABIN_VIEW_HEIGHT_M = 40;
 export function cabinPhase(seconds: number, index: number, config: CabinConfig): { leg: number; t: number } {
   const half = config.tripSeconds + CABIN_TURN_SECONDS, period = 2 * half;
   const phase = ((seconds + index * period / config.count) % period + period) % period;
@@ -60,6 +74,8 @@ export class CableCabins {
   private readonly bodies: THREE.Group[] = [];
   private readonly lights: THREE.PointLight[] = [];
   private readonly lengths: number[][];
+  /** #271: tramo de cada cable donde la vista por el piso ya no queda dentro de la estación. */
+  private readonly viewBounds: Array<[number, number]>;
   private readonly direction: THREE.Vector3;
   private readonly normal: THREE.Vector3;
   private readonly motion = matchMedia('(prefers-reduced-motion: reduce)');
@@ -92,6 +108,19 @@ export class CableCabins {
       const distances = [0];
       for (let i = 1; i < points.length; i++) distances.push(distances[i - 1] + points[i].distanceTo(points[i - 1]));
       return distances;
+    });
+    const eye = CABIN_FLOOR_Y - 0.3;
+    this.viewBounds = layer.cables.map((points, side) => {
+      const total = this.lengths[side][points.length - 1];
+      const clear = (i: number, station: THREE.Vector3) => {
+        const p = points[i];
+        return Math.hypot(p.x - station.x, p.z - station.z) >= CABIN_VIEW_CLEAR_M
+          && p.y + eye - height(p.x, p.z) >= CABIN_VIEW_HEIGHT_M;
+      };
+      let first = 0, last = points.length - 1;
+      while (first < last && !clear(first, layer.stations[0].position)) first++;
+      while (last > first && !clear(last, layer.stations[1].position)) last--;
+      return [this.lengths[side][first] / total, this.lengths[side][last] / total];
     });
     const box = (parent: THREE.Group, size: [number, number, number], at: [number, number, number], material: THREE.Material) => {
       const mesh = new T.Mesh(this.geometry, material); mesh.scale.set(...size); mesh.position.set(...at); parent.add(mesh);
@@ -146,6 +175,17 @@ export class CableCabins {
     while (i < distances.length - 1 && distances[i] < distance) i++;
     return points[i - 1].clone().lerp(points[i], (distance - distances[i - 1]) / (distances[i] - distances[i - 1]));
   }
+  private viewPoint(phase: { leg: number; t: number }): THREE.Vector3 {
+    const bounds = this.viewBounds;
+    if (phase.leg % 2 === 0) {
+      const side = phase.leg / 2, progress = phase.leg === 0 ? cabinProgress(phase.t) : 1 - cabinProgress(phase.t);
+      return this.sample(side, softClampProgress(progress, bounds[side][0], bounds[side][1]));
+    }
+    // Vuelta: de un cable al otro con arranque y frenado suaves; 1 = en la Bufa, 3 = en el Grillo.
+    const atBufa = phase.leg === 1, from = atBufa ? 0 : 1, to = 1 - from, end = atBufa ? 1 : 0;
+    const s = phase.t * phase.t * (3 - 2 * phase.t);
+    return this.sample(from, bounds[from][end]).lerp(this.sample(to, bounds[to][end]), s);
+  }
   tick(dt: number, now = new Date()): void {
     if (this.disposed) return;
     const { cabinConfig: config } = this.layer;
@@ -185,7 +225,11 @@ export class CableCabins {
     });
     const glass = this.cabins[config.glassIndex];
     glass.updateWorldMatrix(true, true);
-    const floor = this.bodies[config.glassIndex].localToWorld(new this.T.Vector3(0, CABIN_FLOOR_Y, 0));
+    // PROTO #271: en el andén y en la vuelta la vista (y la altura que se anuncia) espera justo
+    // afuera de la estación, en vez de quedar pegada a su piso o a sus muros.
+    const view = this.viewPoint(cabinPhase(reduced ? 0 : this.elapsed, config.glassIndex, config));
+    const floor = this.bodies[config.glassIndex].localToWorld(new this.T.Vector3(0, CABIN_FLOOR_Y, 0))
+      .sub(glass.position).add(view);
     const height = floor.y - this.height(floor.x, floor.z);
     this.state.heightM = Number.isFinite(height) && height >= 0 ? height : null;
     if (this.saved) {
