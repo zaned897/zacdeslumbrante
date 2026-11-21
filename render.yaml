@@ -11,7 +11,9 @@ services:
     startCommand: node_modules/.bin/tsx server.ts
     healthCheckPath: /api/health
     previews:
-      generation: manual # un PR con "[render preview]" en el título obtiene su URL
+      # Cada PR recibe su URL zacdes-web-pr-<n>.onrender.com (#297).
+      # PROTO: los previews usan horas del plan gratis y la API de producción (PY_API_URL).
+      generation: automatic
     envVars:
       - key: NODE_ENV
         value: production
