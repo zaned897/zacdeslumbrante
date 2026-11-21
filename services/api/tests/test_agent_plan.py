@@ -17,7 +17,8 @@ from app.services.agent import _candidates, open_during, plan_places
 
 client = TestClient(app)
 ROOT = Path(__file__).resolve().parents[3]
-PLAZA = {"lat": 22.7756, "lng": -102.5723}
+# Plaza de Armas, con la ubicación de OpenStreetMap (#294).
+PLAZA = {"lat": 22.77617, "lng": -102.5721}
 CANDIDATES = {c.id: c for c in _candidates()}
 DAYS_ES = ("Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo")
 # Martes 10 de noviembre de 2026, hora de Zacatecas.

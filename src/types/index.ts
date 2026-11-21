@@ -40,11 +40,29 @@ export interface ChatMessage {
   question?: string;
 }
 
+/** Qué tan imprescindible es un lugar (#294): 1 imprescindible, 2 vale la pena, 3 de barrio o de paso. */
+export type PlaceTier = 1 | 2 | 3;
+
+/** Lista cerrada de #294: templo, plaza, mirador, mercado y callejón se suman a las de antes. */
+export type PlaceCategory =
+  | 'monument'
+  | 'temple'
+  | 'museum'
+  | 'plaza'
+  | 'viewpoint'
+  | 'market'
+  | 'alley'
+  | 'gastronomy'
+  | 'experience'
+  | 'archaeology'
+  | 'pueblo_magico';
+
 export interface Place {
   id: string;
   name: string;
   nameEs: string;
-  category: 'monument' | 'museum' | 'experience' | 'archaeology' | 'pueblo_magico' | 'gastronomy';
+  category: PlaceCategory;
+  tier: PlaceTier;
   categoryLabel: { es: string; en: string };
   lat: number;
   lng: number;
@@ -58,6 +76,26 @@ export interface Place {
   officialUrl: string;
   puebloMagico?: string;
   color: string;
+}
+
+/**
+ * Punto del mapa del centro sin ficha completa (#294): solo lo que se puede citar. Sin horarios,
+ * precios ni reseñas.
+ */
+export interface MapPoint {
+  id: string;
+  /** Nombre en español, como lo da la fuente. */
+  name: string;
+  category: PlaceCategory;
+  tier: PlaceTier;
+  lat: number;
+  lng: number;
+  /** Liga de donde salió el dato: OpenStreetMap o el SIC. */
+  source: string;
+  /** Lugar de places.ts al que corresponde, cuando tiene ficha. */
+  placeId?: string;
+  /** Aclaración del dato, p. ej. por qué la ubicación no es la del SIC. */
+  note?: string;
 }
 
 export interface ItineraryStop {

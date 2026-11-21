@@ -9,6 +9,10 @@ Fuente de verdad entre backend (Claude Code) y frontend (Antigravity). Tipos en 
 
 ## GET /api/places
 `Place[]`
+- `tier` (#294): 1 imprescindible, 2 vale la pena, 3 de barrio o de paso. PROTO: es criterio del prototipo; el dueño lo ajusta.
+- `category`: `monument | temple | museum | plaza | viewpoint | market | alley | gastronomy | experience | archaeology | pueblo_magico`. Templo, plaza, mirador, mercado y callejón entraron con #294.
+- `lat`/`lng`: desde #294, los lugares del centro que estaban a más de 50 m de su elemento en OpenStreetMap usan la ubicación de OSM.
+- Catálogo del mapa del centro (`src/data/centroPoints.ts`, tipo `MapPoint`, #294): puntos sin ficha, como templos, plazas, callejones, mercados y museos del SIC. Cada uno trae `tier`, `category`, `lat`, `lng` y `source` (OpenStreetMap o la ficha del SIC), y `note` cuando hace falta aclarar el dato. `centroMapPoints()` les suma los lugares con ficha que caen en el terreno de la maqueta. No tiene endpoint.
 
 ## POST /api/chat/stream  (Server-Sent Events)
 Body:
@@ -69,7 +73,7 @@ Recorridos 3D con el formato de `Tour` (`src/types/scene3d.ts`). Fixture en `ser
     "stops": [
       {
         "placeId": "cerro-de-la-bufa",
-        "camera": { "lat": 22.7738, "lng": -102.5649, "altitude": 2610, "range": 900, "tilt": 65, "heading": 250 },
+        "camera": { "lat": 22.77767, "lng": -102.56493, "altitude": 2610, "range": 900, "tilt": 65, "heading": 250 },
         "holdMillis": 2500,
         "caption": { "es": "…", "en": "…" }
       }
@@ -159,7 +163,7 @@ Los 3 lugares no visitados más cercanos (haversine), compatibles con `ScenePoi`
       "id": "recommendation:teatro-calderon",
       "kind": "recommendation",
       "title": { "es": "Teatro Fernando Calderón", "en": "Fernando Calderón Theater" },
-      "lat": 22.7748, "lng": -102.5729,
+      "lat": 22.77512, "lng": -102.5734,
       "placeId": "teatro-calderon",
       "isMock": true,
       "reason": { "es": "A 90 m de ti", "en": "90 m from you" },
