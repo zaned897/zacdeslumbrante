@@ -65,6 +65,8 @@ import { FreightNotice } from './map3d/FreightNotice';
 import { ProposePhotoSheet } from './map3d/ProposePhotoSheet';
 import { PhotoViewer } from './map3d/PhotoViewer';
 import { CableCabinView } from './map3d/CableCabinView';
+import { ReleaseDrop } from './map3d/ReleaseDrop';
+import { useGlassFallback } from '../scene3d/useGlassFallback';
 import { CableCarCard } from './map3d/CableCarCard';
 
 
@@ -694,14 +696,21 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
     }
     return best;
   }, [isExploring, position, placePois, collection]);
+  const glassSolid = useGlassFallback(status === 'ready');
   const photo = photos[photoIndex];
   const stepPhoto = (delta: number) =>
     setPhotoIndex((i) => (i + delta + photos.length) % photos.length);
 
   return (
-    <div className="relative h-dvh w-full overflow-hidden bg-stone-900 text-stone-900">
+    <div
+      className="relative h-dvh w-full overflow-hidden bg-stone-900 text-stone-900"
+      // Vidrio (#308): más opaco de noche y casi sólido si el fps cae de 30.
+      data-scene-tone={timeOfDay === 'night' || isStargazing ? 'dark' : undefined}
+      data-glass={glassSolid ? 'solid' : undefined}
+    >
       {/* isolate: las etiquetas CSS2D de three.js traen z-index propio y no deben tapar la UI. */}
       <div ref={containerRef} className="absolute inset-0 isolate" />
+      {status === 'ready' && <ReleaseDrop target={containerRef.current} />}
       {/* Avisos del tren y del teleférico: ocultos mientras se marca un puesto (#173), para no tapar el mapa; ocultar la cabina también la baja. */}
       {engineId === 'three' && status === 'ready' && (
         <div className={`absolute left-3 right-3 max-md:right-16 top-36 z-20 mx-auto grid max-h-[calc(100%_-_20rem)] max-w-sm gap-2 overflow-y-auto ${cabinRiding ? 'max-md:top-auto max-md:bottom-12' : ''}`}>
@@ -744,7 +753,7 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
 
       {/* Barra superior */}
       <div className="absolute top-0 inset-x-0 z-10 flex items-center justify-between gap-2 p-3 md:p-4 pointer-events-none">
-        <div className="pointer-events-auto flex items-center gap-2 px-3 py-2 bg-[#FBF9F5]/95 border border-stone-200 rounded-lg shadow-sm">
+        <div className="pointer-events-auto flex items-center gap-2 px-3 py-2 glass rounded-full">
           <span className="font-serif font-bold text-sm md:text-base">{t.view3d}</span>
         </div>
         <div className="flex items-center gap-2">
@@ -755,7 +764,7 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
                 setSelected(null);
                 setVendorOpen(true);
               }}
-              className={`pointer-events-auto flex items-center gap-1.5 px-3 py-2 text-xs font-semibold bg-[#FBF9F5]/95 border border-stone-200 rounded-lg shadow-sm hover:bg-white cursor-pointer ${rideHide}`}
+              className={`pointer-events-auto flex items-center gap-1.5 px-3 py-2 text-xs font-semibold glass jelly rounded-full hover:bg-white/70 cursor-pointer ${rideHide}`}
               aria-label={t.vendorFormOpenLabel}
               title={t.vendorFormOpenLabel}
             >
@@ -777,7 +786,7 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
           )}
           <button
             onClick={onToggleLanguage}
-            className="pointer-events-auto flex items-center gap-1.5 px-3 py-2 text-xs font-semibold bg-[#FBF9F5]/95 border border-stone-200 rounded-lg shadow-sm hover:bg-white cursor-pointer"
+            className="pointer-events-auto flex items-center gap-1.5 px-3 py-2 text-xs font-semibold glass jelly rounded-full hover:bg-white/70 cursor-pointer"
             aria-label={t.toggleLanguage}
           >
             <Globe className="w-3.5 h-3.5 text-stone-500" />
@@ -803,7 +812,7 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
 
       {/* La ciudad estilizada es la vista normal (#127): el aviso solo sale si cayó desde Google o no hay llave. */}
       {engineId === 'three' && status === 'ready' && !isExploring && !isStargazing && !pickingSpot && (engineFallback || !apiKey) && (
-        <div className={`absolute top-16 inset-x-3 md:inset-x-auto md:left-4 md:max-w-xs z-10 text-[11px] text-stone-700 bg-[#FBF9F5]/90 border border-stone-200 rounded-lg px-3 py-2 ${rideHide}`}>
+        <div className={`absolute top-16 inset-x-3 md:inset-x-auto md:left-4 md:max-w-xs z-10 text-[11px] text-stone-800 glass rounded-2xl px-3 py-2 ${rideHide}`}>
           {engineFallback ? (
             <>
               {/* Si Google avisó un error de la llave o del proyecto, esa es la causa: después de ese aviso
@@ -825,7 +834,7 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
 
       {/* HUD de exploración */}
       {isExploring && !pickingSpot && (
-        <div className="absolute top-16 inset-x-3 md:inset-x-auto md:left-4 md:w-72 z-10 bg-[#FBF9F5]/95 border border-stone-200 rounded-xl shadow-sm p-3 text-xs">
+        <div className="absolute top-16 inset-x-3 md:inset-x-auto md:left-4 md:w-72 z-10 glass rounded-2xl p-3 text-xs">
           <div className="flex items-center justify-between gap-2">
             <span className="flex items-center gap-1.5 font-semibold text-stone-800">
               <Trophy className="w-4 h-4 text-[#D97706]" />
@@ -1000,7 +1009,7 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
 
       {/* Tarjeta del lugar */}
       {selected && !isTouring && (
-        <div className={`absolute inset-x-3 ${isExploring ? 'bottom-56 md:bottom-24 md:right-48' : 'bottom-20 md:right-4'} md:inset-x-auto md:w-80 z-10 max-h-[62dvh] overflow-y-auto bg-[#FBF9F5] rounded-2xl shadow-lg border border-stone-200 p-4 ${selected.kind === 'vendor' ? 'border-t-4 border-t-[#E4007C]' : ''}`}>
+        <div className={`absolute inset-x-3 ${isExploring ? 'bottom-56 md:bottom-24 md:right-48' : 'bottom-20 md:right-4'} md:inset-x-auto md:w-80 z-10 max-h-[62dvh] overflow-y-auto glass-sheet p-4 ${selected.kind === 'vendor' ? 'border-t-4 border-t-[#E4007C]' : ''}`}>
           {photo && (
             <figure className="-mx-4 -mt-4 mb-3">
               <div className="relative aspect-video overflow-hidden rounded-t-xl bg-stone-200">
@@ -1211,7 +1220,7 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
 
       {/* Hoja del recorrido: elegir uno (#34) o seguir la parada en curso */}
       {status === 'ready' && !isExploring && !isStargazing && !selected && !askPlace && (isTouring ? tourStep : tours.length > 1) && (
-        <div className={`absolute inset-x-3 bottom-20 md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:w-[28rem] z-10 bg-[#FBF9F5] rounded-2xl shadow-lg border border-stone-200 p-3 ${rideHide}`}>
+        <div className={`absolute inset-x-3 bottom-20 md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:w-[28rem] z-10 glass-sheet p-3 ${rideHide}`}>
           {tourStep ? (
             <>
               <div className="flex items-center justify-between gap-2 text-[10px] font-bold uppercase tracking-wider text-[#9A3412]">
@@ -1287,7 +1296,7 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
         <div className="absolute inset-x-0 bottom-0 z-10 flex justify-center gap-2 p-4">
           <button
             onClick={() => setStargazing(false)}
-            className="flex items-center gap-2 px-3.5 py-3 text-sm font-semibold whitespace-nowrap text-stone-800 bg-[#FBF9F5] border border-stone-200 rounded-full shadow-lg hover:bg-white cursor-pointer"
+            className="flex items-center gap-2 px-3.5 py-3 text-sm font-semibold whitespace-nowrap text-stone-800 glass jelly rounded-full hover:bg-white/70 cursor-pointer"
           >
             <Home className="w-4 h-4 text-[#9A3412]" />
             {t.view3dSkyBack}
@@ -1363,7 +1372,7 @@ const MapControls: React.FC<{
   }, [engine]);
   const adjust = engine.adjustView?.bind(engine);
   const button =
-    'w-10 h-10 flex items-center justify-center rounded-xl bg-[#FBF9F5]/95 border border-stone-200 shadow-md text-stone-800 hover:bg-white active:bg-stone-200 cursor-pointer focus-visible:outline-2 focus-visible:outline-[#9A3412]';
+    'w-10 h-10 flex items-center justify-center rounded-2xl glass jelly text-stone-800 hover:bg-white/70 cursor-pointer focus-visible:outline-2 focus-visible:outline-[#9A3412]';
   return (
     <div
       role="toolbar"
@@ -1423,7 +1432,7 @@ const PadButton: React.FC<{
   return (
     <button
       aria-label={label}
-      className={`${className} w-12 h-12 flex items-center justify-center rounded-xl bg-[#FBF9F5]/95 border border-stone-200 shadow-md text-stone-800 active:bg-stone-200 touch-none cursor-pointer`}
+      className={`${className} w-12 h-12 flex items-center justify-center rounded-2xl glass jelly text-stone-800 touch-none cursor-pointer`}
       onPointerDown={() => {
         onAct();
         stop();
