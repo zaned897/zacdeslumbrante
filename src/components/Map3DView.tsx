@@ -69,6 +69,9 @@ import { forcedWeather } from '../scene3d/weather';
 import { FreightNotice } from './map3d/FreightNotice';
 import { ProposePhotoSheet } from './map3d/ProposePhotoSheet';
 import { PhotoViewer } from './map3d/PhotoViewer';
+import { PrizeMoment, PrizeToast } from './map3d/PrizeCelebration';
+import { placedPrizes, type PlacedPrize } from '../data/placePrizes';
+import { awardPrize, wearPrize } from '../pet/prizes';
 import { CableCabinView } from './map3d/CableCabinView';
 import { ReleaseDrop } from './map3d/ReleaseDrop';
 import { useGlassFallback } from '../scene3d/useGlassFallback';
@@ -108,6 +111,8 @@ type Status = 'loading' | 'ready' | 'error';
 
 const FLIGHT_MILLIS = 4500;
 const DISCOVER_RADIUS_M = 40;
+/** Premios al pasar (#313): lugares de `places.ts` y del catálogo con su nivel. */
+const PRIZES = placedPrizes();
 const NEAREST_HINT_M = 200;
 const AVATARS = ['minero', 'danzante', 'visitante'] as const;
 type AvatarId = (typeof AVATARS)[number];
@@ -181,6 +186,8 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
   /** Visor de fotos abierto (#307): las fotos de un lugar y desde cuál empieza. */
   const [viewer, setViewer] = useState<{ placeId: string; photos: PlacePhoto[]; index: number } | null>(null);
   const allPhotosRef = useRef<PlacePhoto[]>([]);
+  /** Premio recién ganado (#313): aviso arriba si es menor, momento a pantalla completa si es mayor. */
+  const [prize, setPrize] = useState<PlacedPrize | null>(null);
   const [askPlace, setAskPlace] = useState<Place | null>(null);
   const [nearby, setNearby] = useState<ScenePoi | null>(null);
   // Puestos ya anunciados en esta visita: el aviso sale una sola vez por puesto.
@@ -600,6 +607,29 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
       }
     }
   }, [position, status, placePois, pois, collection, discover, t, language, meteor, season, raceMissionDone, pickingSpot]);
+
+  // Premio al pasar por un lugar (#313): cuenta una vez por lugar, aunque se reinicie la colección.
+  useEffect(() => {
+    if (!position || status !== 'ready' || !isExploring || pickingSpot || prize) return;
+    for (const p of PRIZES) {
+      if (distanceMeters(position, p) > DISCOVER_RADIUS_M) continue;
+      if (awardPrize(p.id)) {
+        setPrize(p);
+        break;
+      }
+    }
+  }, [position, status, isExploring, pickingSpot, prize]);
+
+  // PROTO: `?premio=<lugar>` muestra ese premio al cargar, para probar la animación sin caminar.
+  useEffect(() => {
+    if (status !== 'ready') return;
+    const id = new URLSearchParams(window.location.search).get('premio');
+    const p = id ? PRIZES.find((x) => x.id === id) : null;
+    if (p) {
+      awardPrize(p.id);
+      setPrize(p);
+    }
+  }, [status]);
 
   useEffect(() => {
     if (!nearby) return;
@@ -1215,6 +1245,16 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
           language={language}
           onClose={() => setViewer(null)}
           onPropose={(placeId) => setProposePlaceId(placeId)}
+        />
+      )}
+      {prize && !prize.major && <PrizeToast key={prize.id} prize={prize} language={language} onDone={() => setPrize(null)} />}
+      {prize?.major && (
+        <PrizeMoment
+          key={prize.id}
+          prize={prize}
+          language={language}
+          onWear={() => wearPrize(prize.id)}
+          onClose={() => setPrize(null)}
         />
       )}
       {proposePlaceId && (

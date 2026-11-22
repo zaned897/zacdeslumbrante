@@ -21,6 +21,24 @@ import {
 import { RESOURCES, rankOf, resourceDef, type ResourceId } from '../../pet/resources';
 import { AnimalSprite, swatchOf } from './AnimalSprite';
 import { PetAdopt } from './PetAdopt';
+import { AccessoryIcon } from './AccessoryIcon';
+import { PLACE_PRIZES } from '../../data/placePrizes';
+import { readPrizes, subscribePrizes, wearPrize, type PrizeLog } from '../../pet/prizes';
+
+/** Premios ganados al pasar por lugares (#313), al día aunque se ganen en otra pestaña. */
+function usePrizes(): PrizeLog {
+  const [log, setLog] = useState<PrizeLog>(readPrizes);
+  useEffect(() => {
+    const update = () => setLog(readPrizes());
+    const off = subscribePrizes(update);
+    window.addEventListener('storage', update);
+    return () => {
+      off();
+      window.removeEventListener('storage', update);
+    };
+  }, []);
+  return log;
+}
 
 const DESIGNS: Design[] = [0, 1, 2, 3];
 // Resaltar primero lo más tradicional; la piedra de río sale en todas partes y no se nombra.
@@ -107,11 +125,15 @@ export const PetScreen: React.FC<PetScreenProps> = ({ language, onGoExplore }) =
 
   const walkTour = useMemo(() => (pet?.walk ? tours.find((x) => x.id === pet.walk?.tourId) : undefined), [pet?.walk, tours]);
 
+  const prizes = usePrizes();
+
   if (!pet) return <PetAdopt language={language} available={available} onAdopt={adopt} />;
 
   const mood = moodOf(pet);
   const tired = isTired(pet);
   const rank = rankOf(pet.inventory);
+  const wonPrizes = PLACE_PRIZES.filter((p) => prizes.won[p.id]);
+  const worn = wonPrizes.find((p) => p.id === prizes.worn) ?? null;
   const nextDef = rank.next ? resourceDef(rank.next) : null;
   const pillColor = resourceDef(rank.legendary ? 'meteorito' : rank.resource).color;
   // "La plata salió de la Mina El Edén; la cantera, de la Catedral y el Calderón."
@@ -154,8 +176,14 @@ export const PetScreen: React.FC<PetScreenProps> = ({ language, onGoExplore }) =
             type="button"
             onClick={cuddle}
             aria-label={t.petCuddle}
-            className="self-center cursor-pointer rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+            className="relative self-center cursor-pointer rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
           >
+            {/* Accesorio puesto (#313), sobre la cabeza. */}
+            {worn && (
+              <span className="pointer-events-none absolute left-1/2 -top-3 z-10 -translate-x-1/2 drop-shadow">
+                <AccessoryIcon id={worn.accessory} size={52} title={worn.name[language]} />
+              </span>
+            )}
             <AnimalSprite
               species={pet.species}
               design={pet.design}
@@ -261,6 +289,41 @@ export const PetScreen: React.FC<PetScreenProps> = ({ language, onGoExplore }) =
             </div>
           )}
           <p className="text-[11px] text-tenue">{sourceNote ? `${sourceNote}.` : t.petSourceEmpty}</p>
+        </section>
+
+        {/* Accesorios ganados al pasar por lugares de la Ciudad 3D (#313). */}
+        <section className="space-y-2">
+          <h2 className="text-[10px] font-extrabold uppercase tracking-wider text-cantera">{t.petAccessoriesTitle}</h2>
+          {wonPrizes.length === 0 ? (
+            <p className="text-xs text-tenue">{t.petAccessoriesEmpty}</p>
+          ) : (
+            <ul className="grid grid-cols-2 gap-1.5">
+              {wonPrizes.map((p) => {
+                const on = p.id === prizes.worn;
+                return (
+                  <li key={p.id}>
+                    <button
+                      type="button"
+                      aria-pressed={on}
+                      onClick={() => wearPrize(on ? null : p.id)}
+                      className={`flex w-full items-center gap-2 rounded-xl border px-2 py-1.5 text-left text-xs font-semibold cursor-pointer ${
+                        on ? 'border-cantera bg-cita text-cantera' : 'border-linea bg-superficie'
+                      }`}
+                    >
+                      <AccessoryIcon id={p.accessory} size={28} />
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate">{p.name[language]}</span>
+                        <small className="block text-[10px] font-medium text-tenue">
+                          {p.rarity === 'legendaria' ? t.prizeLegendary : p.rarity === 'rara' ? t.prizeRare : t.prizeCommon} ·{' '}
+                          {on ? t.petAccessoryWorn : t.petAccessoryWear}
+                        </small>
+                      </span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
         </section>
 
         <p className="relative text-center text-sm bg-superficie border border-linea rounded-2xl px-3 py-2" aria-live="polite">
