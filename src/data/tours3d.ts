@@ -82,7 +82,7 @@ export const TOURS_3D: Tour[] = [
     stops: [
       {
         placeId: 'cerro-de-la-bufa',
-        camera: { lat: 22.7738, lng: -102.5649, altitude: 2610, range: 900, tilt: 65, heading: 250 },
+        camera: { lat: 22.77767, lng: -102.56493, altitude: 2610, range: 900, tilt: 65, heading: 250 },
         holdMillis: 2500,
         caption: {
           es: 'Cerro de la Bufa: el mirador de la ciudad y escenario de la Toma de Zacatecas (1914).',
@@ -100,7 +100,7 @@ export const TOURS_3D: Tour[] = [
       },
       {
         placeId: 'teatro-calderon',
-        camera: { lat: 22.7748, lng: -102.5729, altitude: 2440, range: 300, tilt: 70, heading: 30 },
+        camera: { lat: 22.77512, lng: -102.5734, altitude: 2440, range: 300, tilt: 70, heading: 30 },
         holdMillis: 2500,
         caption: {
           es: 'Teatro Calderón: joya porfiriana de estilo neorrenacentista italiano.',
@@ -118,7 +118,7 @@ export const TOURS_3D: Tour[] = [
       },
       {
         placeId: 'acueducto-el-cubo',
-        camera: { lat: 22.7686, lng: -102.5694, altitude: 2430, range: 400, tilt: 65, heading: 200 },
+        camera: { lat: 22.76907, lng: -102.57606, altitude: 2430, range: 400, tilt: 65, heading: 200 },
         holdMillis: 2500,
         caption: {
           es: 'Acueducto El Cubo: arquería de cantera rosa que llevaba agua a la ciudad.',
@@ -152,7 +152,7 @@ export const TOURS_3D: Tour[] = [
       },
       {
         placeId: 'museo-rafael-coronel',
-        camera: { lat: 22.7801, lng: -102.5714, altitude: 2460, range: 320, tilt: 68, heading: 200 },
+        camera: { lat: 22.78209, lng: -102.57034, altitude: 2460, range: 320, tilt: 68, heading: 200 },
         holdMillis: 2500,
         caption: {
           es: 'Museo Rafael Coronel: en las ruinas del ex-convento franciscano del siglo XVI.',
@@ -161,7 +161,7 @@ export const TOURS_3D: Tour[] = [
       },
       {
         placeId: 'museo-felguerez',
-        camera: { lat: 22.7788, lng: -102.5737, altitude: 2455, range: 320, tilt: 68, heading: 160 },
+        camera: { lat: 22.78064, lng: -102.57258, altitude: 2455, range: 320, tilt: 68, heading: 160 },
         holdMillis: 2500,
         caption: {
           es: 'Museo Manuel Felguérez: arte abstracto en el antiguo Seminario Conciliar y penal del siglo XIX.',
@@ -170,7 +170,7 @@ export const TOURS_3D: Tour[] = [
       },
       {
         placeId: 'museo-pedro-coronel',
-        camera: { lat: 22.7765, lng: -102.5731, altitude: 2445, range: 300, tilt: 70, heading: 180 },
+        camera: { lat: 22.77631, lng: -102.57377, altitude: 2445, range: 300, tilt: 70, heading: 180 },
         holdMillis: 3000,
         caption: {
           es: 'Museo Pedro Coronel: el ex-Colegio Jesuita que guarda la colección que el artista legó a su tierra.',
@@ -186,7 +186,7 @@ export const TOURS_3D: Tour[] = [
     stops: [
       {
         placeId: 'plaza-armas',
-        camera: { lat: 22.7756, lng: -102.5723, altitude: 2440, range: 300, tilt: 70, heading: 180 },
+        camera: { lat: 22.77617, lng: -102.5721, altitude: 2440, range: 300, tilt: 70, heading: 180 },
         holdMillis: 3000,
         caption: {
           es: 'Plaza de Armas: la plaza principal, escenario de conciertos y callejoneadas tradicionales.',
@@ -195,7 +195,7 @@ export const TOURS_3D: Tour[] = [
       },
       {
         placeId: 'teatro-calderon',
-        camera: { lat: 22.7748, lng: -102.5729, altitude: 2440, range: 280, tilt: 70, heading: 30 },
+        camera: { lat: 22.77512, lng: -102.5734, altitude: 2440, range: 280, tilt: 70, heading: 30 },
         holdMillis: 2500,
         caption: {
           es: 'Teatro Calderón: joya porfiriana de estilo neorrenacentista italiano.',
@@ -227,7 +227,7 @@ export const SEASONAL_TOURS_3D: Tour[] = [
     stops: [
       {
         placeId: 'plaza-armas',
-        camera: { lat: 22.7756, lng: -102.5723, altitude: 2440, range: 300, tilt: 70, heading: 180 },
+        camera: { lat: 22.77617, lng: -102.5721, altitude: 2440, range: 300, tilt: 70, heading: 180 },
         holdMillis: 3000,
         caption: {
           es: 'En Día de Muertos el centro se llena de altares y catrinas. Horarios y lugares saldrían del programa oficial del año.',
@@ -245,7 +245,7 @@ export const SEASONAL_TOURS_3D: Tour[] = [
       },
       {
         placeId: 'museo-rafael-coronel',
-        camera: { lat: 22.7801, lng: -102.5714, altitude: 2460, range: 320, tilt: 68, heading: 200 },
+        camera: { lat: 22.78209, lng: -102.57034, altitude: 2460, range: 320, tilt: 68, heading: 200 },
         holdMillis: 3000,
         caption: {
           es: 'Museo Rafael Coronel: su colección de máscaras mexicanas va bien con la temporada.',

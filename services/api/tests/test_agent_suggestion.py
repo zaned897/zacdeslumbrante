@@ -10,7 +10,8 @@ from app.main import app
 from app.services import events, reports
 
 client = TestClient(app)
-PLAZA = {"lat": 22.7756, "lng": -102.5723}
+# Plaza de Armas, con la ubicación de OpenStreetMap (#294).
+PLAZA = {"lat": 22.77617, "lng": -102.5721}
 GUADALUPE = {"lat": 22.7508, "lng": -102.5186}
 # ~5.7 km al noroeste de Plaza de Armas: fuera de la capital (> 3 km) y lejos de los pueblos.
 OUTSIDE_CAPITAL = {"lat": 22.82, "lng": -102.60}

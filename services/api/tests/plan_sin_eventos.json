@@ -2,8 +2,8 @@
  {
   "request": {
    "start": {
-    "lat": 22.7756,
-    "lng": -102.5723
+    "lat": 22.77617,
+    "lng": -102.5721
    },
    "minutes": 60,
    "hungry": true,
@@ -22,12 +22,12 @@
      "lat": 22.776323,
      "lng": -102.572223,
      "reason": {
-      "es": "Tienes hambre y es comida abierta · a 2 min a pie · a esta hora suele haber afluencia alta · espera estimada de 20 min · 4 visitantes lo recomiendan: para comer rápido · promoción vigente (dato del puesto) hasta el 30 nov",
-      "en": "You're hungry and it's open food · 2 min walk · usually busy at this time · estimated wait 20 min · recommended by 4 visitors: for a quick bite · promotion on (vendor's info) until Nov 30"
+      "es": "Tienes hambre y es comida abierta · a 1 min a pie · a esta hora suele haber afluencia alta · espera estimada de 20 min · 4 visitantes lo recomiendan: para comer rápido · promoción vigente (dato del puesto) hasta el 30 nov",
+      "en": "You're hungry and it's open food · 1 min walk · usually busy at this time · estimated wait 20 min · recommended by 4 visitors: for a quick bite · promotion on (vendor's info) until Nov 30"
      },
-     "arriveAt": "2026-11-10T13:32:00-06:00",
+     "arriveAt": "2026-11-10T13:31:00-06:00",
      "stayMin": 15,
-     "walkMin": 2,
+     "walkMin": 1,
      "waitMin": 20,
      "signal": "pattern",
      "source": "mundo-de-prueba"
@@ -45,7 +45,7 @@
       "es": "Está abierto y cabe en tu tiempo · a 1 min a pie · a esta hora suele haber algo de gente · espera estimada de 6 min · 3 visitantes lo recomiendan: bueno para ir con niños · promoción vigente (dato del puesto) hasta el 17 nov",
       "en": "It's open and fits your time · 1 min walk · usually some people at this time · estimated wait 6 min · recommended by 3 visitors: good with kids · promotion on (vendor's info) until Nov 17"
      },
-     "arriveAt": "2026-11-10T14:08:00-06:00",
+     "arriveAt": "2026-11-10T14:07:00-06:00",
      "stayMin": 10,
      "walkMin": 1,
      "waitMin": 6,
@@ -53,7 +53,7 @@
      "source": "mundo-de-prueba"
     }
    ],
-   "totalMin": 54,
+   "totalMin": 53,
    "notes": [
     {
      "es": "Gorditas La Imaginaria: hay espera larga (unos 20 min). ¿Te propongo otra opción cerca? Pide el plan con avoid: [\"gorditas-la-imaginaria\"].",
@@ -66,8 +66,8 @@
  {
   "request": {
    "start": {
-    "lat": 22.7756,
-    "lng": -102.5723
+    "lat": 22.77617,
+    "lng": -102.5721
    },
    "minutes": 120,
    "interests": [
@@ -86,38 +86,18 @@
       "es": "Museo Pedro Coronel",
       "en": "Pedro Coronel Museum"
      },
-     "lat": 22.7765,
-     "lng": -102.5731,
+     "lat": 22.77631,
+     "lng": -102.57377,
      "reason": {
-      "es": "Coincide con lo que pediste: historia, museos · a 3 min a pie · abre hasta las 17:00 (horario del catálogo, confírmalo al llegar)",
-      "en": "Matches what you asked for: history, museums · 3 min walk · open until 17:00 (catalog hours, check when you arrive)"
+      "es": "Coincide con lo que pediste: historia, museos · a 4 min a pie · abre hasta las 17:00 (horario del catálogo, confírmalo al llegar)",
+      "en": "Matches what you asked for: history, museums · 4 min walk · open until 17:00 (catalog hours, check when you arrive)"
      },
-     "arriveAt": "2026-11-10T11:03:00-06:00",
+     "arriveAt": "2026-11-10T11:04:00-06:00",
      "stayMin": 45,
-     "walkMin": 3,
+     "walkMin": 4,
      "waitMin": null,
      "signal": null,
      "source": "https://culturazac.gob.mx/museos/"
-    },
-    {
-     "placeId": "catedral-zacatecas",
-     "kind": "place",
-     "name": {
-      "es": "Catedral Basílica de Zacatecas",
-      "en": "Cathedral Basilica of Zacatecas"
-     },
-     "lat": 22.77543,
-     "lng": -102.57242,
-     "reason": {
-      "es": "Coincide con lo que pediste: historia · a 3 min a pie · a esta hora suele haber algo de gente · espera estimada de 5 min · abre hasta las 20:30 (horario del catálogo, confírmalo al llegar)",
-      "en": "Matches what you asked for: history · 3 min walk · usually some people at this time · estimated wait 5 min · open until 20:30 (catalog hours, check when you arrive)"
-     },
-     "arriveAt": "2026-11-10T11:51:00-06:00",
-     "stayMin": 20,
-     "walkMin": 3,
-     "waitMin": 5,
-     "signal": "pattern",
-     "source": "https://capitaldezacatecas.gob.mx/municipio/servicios-turisticos/atracciones/"
     },
     {
      "placeId": "acueducto-el-cubo",
@@ -126,35 +106,50 @@
       "es": "Acueducto El Cubo y Parque Sierra de Álica",
       "en": "El Cubo Aqueduct & Sierra de Álica Park"
      },
-     "lat": 22.7686,
-     "lng": -102.5694,
+     "lat": 22.76907,
+     "lng": -102.57606,
      "reason": {
       "es": "Coincide con lo que pediste: historia · a 16 min a pie",
       "en": "Matches what you asked for: history · 16 min walk"
      },
-     "arriveAt": "2026-11-10T12:32:00-06:00",
+     "arriveAt": "2026-11-10T12:05:00-06:00",
      "stayMin": 10,
      "walkMin": 16,
      "waitMin": null,
      "signal": null,
      "source": "https://capitaldezacatecas.gob.mx/municipio/servicios-turisticos/atracciones/"
-    }
-   ],
-   "totalMin": 102,
-   "notes": [
+    },
     {
-     "es": "Te quedan unos 18 min libres.",
-     "en": "You have about 18 min to spare."
+     "placeId": "museo-francisco-goitia",
+     "kind": "place",
+     "name": {
+      "es": "Museo Francisco Goitia",
+      "en": "Francisco Goitia Museum"
+     },
+     "lat": 22.77041,
+     "lng": -102.57761,
+     "reason": {
+      "es": "Coincide con lo que pediste: museos · a 5 min a pie · abre hasta las 17:00 (horario del catálogo, confírmalo al llegar)",
+      "en": "Matches what you asked for: museums · 5 min walk · open until 17:00 (catalog hours, check when you arrive)"
+     },
+     "arriveAt": "2026-11-10T12:20:00-06:00",
+     "stayMin": 40,
+     "walkMin": 5,
+     "waitMin": null,
+     "signal": null,
+     "source": "https://culturazac.gob.mx/museos/"
     }
    ],
+   "totalMin": 120,
+   "notes": [],
    "_mock": true
   }
  },
  {
   "request": {
    "start": {
-    "lat": 22.7756,
-    "lng": -102.5723
+    "lat": 22.77617,
+    "lng": -102.5721
    },
    "minutes": 90,
    "budget": "$",
@@ -163,6 +158,26 @@
   "response": {
    "at": "2026-11-14T19:00:00-06:00",
    "stops": [
+    {
+     "placeId": "nieves-de-prueba",
+     "kind": "vendor",
+     "name": {
+      "es": "Nieves de Prueba",
+      "en": "Nieves de Prueba"
+     },
+     "lat": 22.776111,
+     "lng": -102.571952,
+     "reason": {
+      "es": "Está abierto y cabe en tu tiempo · a 1 min a pie · a esta hora suele haber afluencia alta · espera estimada de 15 min · 3 visitantes lo recomiendan: bueno para ir con niños · promoción vigente (dato del puesto) hasta el 17 nov",
+      "en": "It's open and fits your time · 1 min walk · usually busy at this time · estimated wait 15 min · recommended by 3 visitors: good with kids · promotion on (vendor's info) until Nov 17"
+     },
+     "arriveAt": "2026-11-14T19:01:00-06:00",
+     "stayMin": 10,
+     "walkMin": 1,
+     "waitMin": 15,
+     "signal": "pattern",
+     "source": "mundo-de-prueba"
+    },
     {
      "placeId": "antojitos-ficticios",
      "kind": "vendor",
@@ -173,12 +188,12 @@
      "lat": 22.773086,
      "lng": -102.573037,
      "reason": {
-      "es": "Está abierto y cabe en tu tiempo · a 6 min a pie · a esta hora suele haber poca gente · espera estimada de 4 min",
-      "en": "It's open and fits your time · 6 min walk · usually few people at this time · estimated wait 4 min"
+      "es": "Está abierto y cabe en tu tiempo · a 7 min a pie · a esta hora suele haber poca gente · espera estimada de 4 min",
+      "en": "It's open and fits your time · 7 min walk · usually few people at this time · estimated wait 4 min"
      },
-     "arriveAt": "2026-11-14T19:06:00-06:00",
+     "arriveAt": "2026-11-14T19:33:00-06:00",
      "stayMin": 15,
-     "walkMin": 6,
+     "walkMin": 7,
      "waitMin": 4,
      "signal": "pattern",
      "source": "mundo-de-prueba"
@@ -190,50 +205,39 @@
       "es": "Acueducto El Cubo y Parque Sierra de Álica",
       "en": "El Cubo Aqueduct & Sierra de Álica Park"
      },
-     "lat": 22.7686,
-     "lng": -102.5694,
+     "lat": 22.76907,
+     "lng": -102.57606,
      "reason": {
-      "es": "Está abierto y cabe en tu tiempo · a 12 min a pie",
-      "en": "It's open and fits your time · 12 min walk"
+      "es": "Está abierto y cabe en tu tiempo · a 11 min a pie",
+      "en": "It's open and fits your time · 11 min walk"
      },
-     "arriveAt": "2026-11-14T19:37:00-06:00",
+     "arriveAt": "2026-11-14T20:03:00-06:00",
      "stayMin": 10,
-     "walkMin": 12,
+     "walkMin": 11,
      "waitMin": null,
      "signal": null,
      "source": "https://capitaldezacatecas.gob.mx/municipio/servicios-turisticos/atracciones/"
-    },
-    {
-     "placeId": "catedral-zacatecas",
-     "kind": "place",
-     "name": {
-      "es": "Catedral Basílica de Zacatecas",
-      "en": "Cathedral Basilica of Zacatecas"
-     },
-     "lat": 22.77543,
-     "lng": -102.57242,
-     "reason": {
-      "es": "Está abierto y cabe en tu tiempo · a 16 min a pie · a esta hora suele haber algo de gente · espera estimada de 5 min · abre hasta las 20:30 (horario del catálogo, confírmalo al llegar)",
-      "en": "It's open and fits your time · 16 min walk · usually some people at this time · estimated wait 5 min · open until 20:30 (catalog hours, check when you arrive)"
-     },
-     "arriveAt": "2026-11-14T20:03:00-06:00",
-     "stayMin": 20,
-     "walkMin": 16,
-     "waitMin": 5,
-     "signal": "pattern",
-     "source": "https://capitaldezacatecas.gob.mx/municipio/servicios-turisticos/atracciones/"
     }
    ],
-   "totalMin": 88,
-   "notes": [],
+   "totalMin": 73,
+   "notes": [
+    {
+     "es": "Nieves de Prueba: hay espera larga (unos 15 min). ¿Te propongo otra opción cerca? Pide el plan con avoid: [\"nieves-de-prueba\"].",
+     "en": "Nieves de Prueba: long wait (about 15 min). Want another option nearby? Ask again with avoid: [\"nieves-de-prueba\"]."
+    },
+    {
+     "es": "Te quedan unos 17 min libres.",
+     "en": "You have about 17 min to spare."
+    }
+   ],
    "_mock": true
   }
  },
  {
   "request": {
    "start": {
-    "lat": 22.7756,
-    "lng": -102.5723
+    "lat": 22.77617,
+    "lng": -102.5721
    },
    "minutes": 240,
    "at": "2026-06-10T10:00:00-06:00"
@@ -251,12 +255,12 @@
      "lat": 22.774677,
      "lng": -102.573354,
      "reason": {
-      "es": "Está abierto y cabe en tu tiempo · a 3 min a pie · a esta hora suele haber poca gente · espera estimada de 2 min",
-      "en": "It's open and fits your time · 3 min walk · usually few people at this time · estimated wait 2 min"
+      "es": "Está abierto y cabe en tu tiempo · a 4 min a pie · a esta hora suele haber poca gente · espera estimada de 2 min",
+      "en": "It's open and fits your time · 4 min walk · usually few people at this time · estimated wait 2 min"
      },
-     "arriveAt": "2026-06-10T10:03:00-06:00",
+     "arriveAt": "2026-06-10T10:04:00-06:00",
      "stayMin": 10,
-     "walkMin": 3,
+     "walkMin": 4,
      "waitMin": 2,
      "signal": "pattern",
      "source": "mundo-de-prueba"
@@ -274,10 +278,50 @@
       "es": "Está abierto y cabe en tu tiempo · a 5 min a pie · a esta hora suele haber poca gente",
       "en": "It's open and fits your time · 5 min walk · usually few people at this time"
      },
-     "arriveAt": "2026-06-10T10:20:00-06:00",
+     "arriveAt": "2026-06-10T10:21:00-06:00",
      "stayMin": 15,
      "walkMin": 5,
      "waitMin": 0,
+     "signal": "pattern",
+     "source": "mundo-de-prueba"
+    },
+    {
+     "placeId": "acueducto-el-cubo",
+     "kind": "place",
+     "name": {
+      "es": "Acueducto El Cubo y Parque Sierra de Álica",
+      "en": "El Cubo Aqueduct & Sierra de Álica Park"
+     },
+     "lat": 22.76907,
+     "lng": -102.57606,
+     "reason": {
+      "es": "Está abierto y cabe en tu tiempo · a 9 min a pie",
+      "en": "It's open and fits your time · 9 min walk"
+     },
+     "arriveAt": "2026-06-10T10:45:00-06:00",
+     "stayMin": 10,
+     "walkMin": 9,
+     "waitMin": null,
+     "signal": null,
+     "source": "https://capitaldezacatecas.gob.mx/municipio/servicios-turisticos/atracciones/"
+    },
+    {
+     "placeId": "jugos-la-inventada",
+     "kind": "vendor",
+     "name": {
+      "es": "Jugos La Inventada",
+      "en": "Jugos La Inventada"
+     },
+     "lat": 22.77192,
+     "lng": -102.57437,
+     "reason": {
+      "es": "Está abierto y cabe en tu tiempo · a 7 min a pie · a esta hora suele haber algo de gente · espera estimada de 6 min",
+      "en": "It's open and fits your time · 7 min walk · usually some people at this time · estimated wait 6 min"
+     },
+     "arriveAt": "2026-06-10T11:02:00-06:00",
+     "stayMin": 15,
+     "walkMin": 7,
+     "waitMin": 6,
      "signal": "pattern",
      "source": "mundo-de-prueba"
     },
@@ -291,62 +335,22 @@
      "lat": 22.772065,
      "lng": -102.574558,
      "reason": {
-      "es": "Está abierto y cabe en tu tiempo · a 2 min a pie · a esta hora suele haber poca gente · espera estimada de 3 min",
-      "en": "It's open and fits your time · 2 min walk · usually few people at this time · estimated wait 3 min"
+      "es": "Está abierto y cabe en tu tiempo · a 1 min a pie · a esta hora suele haber algo de gente · espera estimada de 10 min",
+      "en": "It's open and fits your time · 1 min walk · usually some people at this time · estimated wait 10 min"
      },
-     "arriveAt": "2026-06-10T10:37:00-06:00",
-     "stayMin": 15,
-     "walkMin": 2,
-     "waitMin": 3,
-     "signal": "pattern",
-     "source": "mundo-de-prueba"
-    },
-    {
-     "placeId": "jugos-la-inventada",
-     "kind": "vendor",
-     "name": {
-      "es": "Jugos La Inventada",
-      "en": "Jugos La Inventada"
-     },
-     "lat": 22.77192,
-     "lng": -102.57437,
-     "reason": {
-      "es": "Está abierto y cabe en tu tiempo · a 1 min a pie · a esta hora suele haber algo de gente · espera estimada de 6 min",
-      "en": "It's open and fits your time · 1 min walk · usually some people at this time · estimated wait 6 min"
-     },
-     "arriveAt": "2026-06-10T10:56:00-06:00",
+     "arriveAt": "2026-06-10T11:24:00-06:00",
      "stayMin": 15,
      "walkMin": 1,
-     "waitMin": 6,
+     "waitMin": 10,
      "signal": "pattern",
      "source": "mundo-de-prueba"
-    },
-    {
-     "placeId": "acueducto-el-cubo",
-     "kind": "place",
-     "name": {
-      "es": "Acueducto El Cubo y Parque Sierra de Álica",
-      "en": "El Cubo Aqueduct & Sierra de Álica Park"
-     },
-     "lat": 22.7686,
-     "lng": -102.5694,
-     "reason": {
-      "es": "Está abierto y cabe en tu tiempo · a 12 min a pie",
-      "en": "It's open and fits your time · 12 min walk"
-     },
-     "arriveAt": "2026-06-10T11:29:00-06:00",
-     "stayMin": 10,
-     "walkMin": 12,
-     "waitMin": null,
-     "signal": null,
-     "source": "https://capitaldezacatecas.gob.mx/municipio/servicios-turisticos/atracciones/"
     }
    ],
-   "totalMin": 99,
+   "totalMin": 109,
    "notes": [
     {
-     "es": "Te quedan unos 141 min libres.",
-     "en": "You have about 141 min to spare."
+     "es": "Te quedan unos 131 min libres.",
+     "en": "You have about 131 min to spare."
     }
    ],
    "_mock": true

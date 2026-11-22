@@ -10,8 +10,8 @@
       {
         "placeId": "cerro-de-la-bufa",
         "camera": {
-          "lat": 22.7738,
-          "lng": -102.5649,
+          "lat": 22.77767,
+          "lng": -102.56493,
           "altitude": 2610,
           "range": 900,
           "tilt": 65,
@@ -42,8 +42,8 @@
       {
         "placeId": "teatro-calderon",
         "camera": {
-          "lat": 22.7748,
-          "lng": -102.5729,
+          "lat": 22.77512,
+          "lng": -102.5734,
           "altitude": 2440,
           "range": 300,
           "tilt": 70,
@@ -74,8 +74,8 @@
       {
         "placeId": "acueducto-el-cubo",
         "camera": {
-          "lat": 22.7686,
-          "lng": -102.5694,
+          "lat": 22.76907,
+          "lng": -102.57606,
           "altitude": 2430,
           "range": 400,
           "tilt": 65,
@@ -132,8 +132,8 @@
       {
         "placeId": "museo-rafael-coronel",
         "camera": {
-          "lat": 22.7801,
-          "lng": -102.5714,
+          "lat": 22.78209,
+          "lng": -102.57034,
           "altitude": 2460,
           "range": 320,
           "tilt": 68,
@@ -148,8 +148,8 @@
       {
         "placeId": "museo-felguerez",
         "camera": {
-          "lat": 22.7788,
-          "lng": -102.5737,
+          "lat": 22.78064,
+          "lng": -102.57258,
           "altitude": 2455,
           "range": 320,
           "tilt": 68,
@@ -164,8 +164,8 @@
       {
         "placeId": "museo-pedro-coronel",
         "camera": {
-          "lat": 22.7765,
-          "lng": -102.5731,
+          "lat": 22.77631,
+          "lng": -102.57377,
           "altitude": 2445,
           "range": 300,
           "tilt": 70,
@@ -190,8 +190,8 @@
       {
         "placeId": "plaza-armas",
         "camera": {
-          "lat": 22.7756,
-          "lng": -102.5723,
+          "lat": 22.77617,
+          "lng": -102.5721,
           "altitude": 2440,
           "range": 300,
           "tilt": 70,
@@ -206,8 +206,8 @@
       {
         "placeId": "teatro-calderon",
         "camera": {
-          "lat": 22.7748,
-          "lng": -102.5729,
+          "lat": 22.77512,
+          "lng": -102.5734,
           "altitude": 2440,
           "range": 280,
           "tilt": 70,
