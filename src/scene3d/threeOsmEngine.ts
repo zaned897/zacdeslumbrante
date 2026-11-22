@@ -10,6 +10,7 @@ import type { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js
 import type { CSS2DObject, CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
 import type { Language } from '../types';
 import type {
+  CabinView,
   FloatingPhoto,
   SceneCamera,
   SceneEngine,
@@ -730,6 +731,7 @@ export class ThreeOsmEngine implements SceneEngine {
     if (on) this.stop();
     this.cableCabins?.ride(on);
   }
+  setCableCabinView(view: CabinView): void { this.cableCabins?.setView(view); }
 
   /** Costura para #246: disponible tras la carga opcional, null si no hay datos válidos. */
   getRailLayer(): RailLayer | null { return this.rail; }
