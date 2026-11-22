@@ -536,7 +536,8 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
   useEffect(() => {
     if (engineId !== 'three' || status !== 'ready') return;
     // Sin tarjetas al mirar el cielo ni al marcar la ubicación de un puesto (#173): no tapan el toque.
-    if (isStargazing || pickingSpot) {
+    // A bordo de la cabina tampoco (#311): los nombres de lo que pasas ya van arriba.
+    if (isStargazing || pickingSpot || cabinRiding) {
       engineRef.current?.setFloatingPhotos?.([]);
       return;
     }
@@ -554,7 +555,7 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
         title: placeName(p.placeId, language) || p.caption[language],
       })),
     );
-  }, [engineId, status, allPhotos, language, isStargazing, pickingSpot]);
+  }, [engineId, status, allPhotos, language, isStargazing, pickingSpot, cabinRiding]);
 
   // Jugador: moverlo, seguirlo con la cámara y descubrir lugares cercanos.
   useEffect(() => {

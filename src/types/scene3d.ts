@@ -132,6 +132,8 @@ export interface SceneLayerContext {
 export interface SceneEngine {
   getCableCabinState?(): CabinState;
   rideCableCabin?(on: boolean): void;
+  /** Cambia la vista a bordo sin bajarse (#311). */
+  setCableCabinView?(view: CabinView): void;
   getFreightState?(): FreightState;
   setFreightEnabled?(enabled: boolean): void;
   watchFreight?(follow: boolean): void;
@@ -175,10 +177,17 @@ export interface SceneEngine {
 }
 
 /** Estado de las cabinas del teleférico (#263). */
+/** Vista a bordo del teleférico (#311): de perfil hacia la ciudad, o desde arriba siguiendo la cabina. */
+export type CabinView = 'side' | 'above';
+
 export interface CabinState {
   status: 'unavailable' | 'closed' | 'running' | 'reduced';
   riding: boolean;
   heightM: number | null;
+  /** Vista elegida a bordo; por defecto de perfil. */
+  view?: CabinView;
+  /** Avance de la cabina propia de 0 (Cerro del Grillo) a 1 (La Bufa); null sin datos. */
+  progress?: number | null;
 }
 
 export type FreightState = 'unavailable' | 'disabled' | 'waiting' | 'warning' | 'running' | 'following' | 'parked';
