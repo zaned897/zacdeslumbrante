@@ -43,6 +43,12 @@ export interface ChatMessage {
 /** Qué tan imprescindible es un lugar (#294): 1 imprescindible, 2 vale la pena, 3 de barrio o de paso. */
 export type PlaceTier = 1 | 2 | 3;
 
+/**
+ * Puntos menores (#312): puesto, referencia (placa, esquina, callejón, escultura) o secreto. Sin
+ * `kind`, el punto se dibuja por su nivel.
+ */
+export type PointKind = 'stand' | 'reference' | 'secret';
+
 /** Lista cerrada de #294: templo, plaza, mirador, mercado y callejón se suman a las de antes. */
 export type PlaceCategory =
   | 'monument'
@@ -96,6 +102,10 @@ export interface MapPoint {
   placeId?: string;
   /** Aclaración del dato, p. ej. por qué la ubicación no es la del SIC. */
   note?: string;
+  /** Clase menor (#312); sin ella cuenta el `tier`. */
+  kind?: PointKind;
+  /** true si el punto no tiene fuente real (#312). */
+  _mock?: boolean;
 }
 
 export interface ItineraryStop {

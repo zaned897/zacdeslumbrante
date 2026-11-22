@@ -32,7 +32,7 @@ export const TrainCard: React.FC<TrainCardProps> = ({
 
   return (
     <div
-      className={`bg-[#FBF9F5] rounded-2xl shadow-lg border border-stone-200 p-4 text-stone-900 ${className}`.trim()}
+      className={`glass-sheet p-4 text-stone-900 ${className}`.trim()}
     >
       <p className="text-[10px] font-bold uppercase tracking-wider text-[#9A3412]">
         {record.subtitle[language]}

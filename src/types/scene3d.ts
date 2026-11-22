@@ -1,5 +1,5 @@
 // Contrato del modo 3D (ver docs/MAPA3D.md). Compartido: cambios con acuerdo.
-import type { Language } from './index';
+import type { Language, PlaceCategory, PlaceTier, PointKind } from './index';
 
 export interface Localized {
   es: string;
@@ -43,6 +43,12 @@ export interface ScenePoi {
   nearbyNotice?: Localized;
   /** true si el dato es de ejemplo. */
   isMock?: boolean;
+  /** Nivel del lugar (#295): con él, el motor dibuja pin, punto mediano o punto chico según la distancia. */
+  tier?: PlaceTier;
+  /** Categoría del catálogo (#294), para el icono del pin de nivel 1. */
+  category?: PlaceCategory;
+  /** Puesto, referencia o secreto (#312): manda sobre `tier` al dibujar el marcador. */
+  pointKind?: PointKind;
 }
 
 /** Jugador en la escena (marcador o avatar). */
@@ -102,7 +108,10 @@ export type SceneTimeOfDay = 'day' | 'dusk' | 'night';
 /** Clima de la escena (#201): soleado, nublado o lluvia. */
 export type SceneWeatherCondition = 'soleado' | 'nublado' | 'lluvia';
 
-/** Tarjeta de foto flotante sobre un lugar en la ciudad 3D (#232), con texto alternativo y crédito ya traducidos. */
+/**
+ * Tarjeta de foto flotante sobre un lugar en la ciudad 3D (#232), con texto alternativo y nombre del
+ * lugar ya traducidos. Sin crédito: autor y licencia viven en el visor de fotos (#307).
+ */
 export interface FloatingPhoto {
   id: string;
   placeId: string;
@@ -112,8 +121,8 @@ export interface FloatingPhoto {
   thumbWidth: number;
   thumbHeight: number;
   alt: string;
-  credit: string;
-  sourceUrl: string;
+  /** Nombre del lugar, el único texto de la tarjeta. */
+  title: string;
 }
 
 /** Lo que sabe la vista al pedir los puntos de una capa. */
@@ -129,6 +138,8 @@ export interface SceneLayerContext {
 export interface SceneEngine {
   getCableCabinState?(): CabinState;
   rideCableCabin?(on: boolean): void;
+  /** Cambia la vista a bordo sin bajarse (#311). */
+  setCableCabinView?(view: CabinView): void;
   getFreightState?(): FreightState;
   setFreightEnabled?(enabled: boolean): void;
   watchFreight?(follow: boolean): void;
@@ -162,6 +173,8 @@ export interface SceneEngine {
   setWeather?(condition: SceneWeatherCondition | null): void;
   /** Tarjetas de fotos flotantes sobre los lugares (#232). Opcional: Google 3D y Cesium no lo implementan. */
   setFloatingPhotos?(photos: FloatingPhoto[]): void;
+  /** Toque en una tarjeta de foto flotante: abre el visor (#307). Opcional, como `setFloatingPhotos`. */
+  onFloatingPhotoClick?(handler: (photo: { id: string; placeId: string }) => void): void;
   /** Rumbo (0 = norte, grados) e inclinación (0 = desde arriba) cada vez que la cámara se mueve (#292). Opcional. */
   onViewChange?(handler: (view: { heading: number; tilt: number }) => void): void;
   /** Ajusta la vista actual sin moverse de lugar: rumbo, inclinación o acercar (factor del alcance). Opcional (#292). */
@@ -170,10 +183,17 @@ export interface SceneEngine {
 }
 
 /** Estado de las cabinas del teleférico (#263). */
+/** Vista a bordo del teleférico (#311): de perfil hacia la ciudad, o desde arriba siguiendo la cabina. */
+export type CabinView = 'side' | 'above';
+
 export interface CabinState {
   status: 'unavailable' | 'closed' | 'running' | 'reduced';
   riding: boolean;
   heightM: number | null;
+  /** Vista elegida a bordo; por defecto de perfil. */
+  view?: CabinView;
+  /** Avance de la cabina propia de 0 (Cerro del Grillo) a 1 (La Bufa); null sin datos. */
+  progress?: number | null;
 }
 
 export type FreightState = 'unavailable' | 'disabled' | 'waiting' | 'warning' | 'running' | 'following' | 'parked';

@@ -10,6 +10,7 @@ import type { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js
 import type { CSS2DObject, CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
 import type { Language } from '../types';
 import type {
+  CabinView,
   FloatingPhoto,
   SceneCamera,
   SceneEngine,
@@ -22,6 +23,8 @@ import type {
 } from '../types/scene3d';
 import { StarSky, skyMoment } from './starSky';
 import { WeatherController } from './weather';
+import { makeTierMarker } from './poiMarkers';
+import { CLUSTER_PX, clusterMarkers, markerClass, markerVisible, nameVisible, type MarkerClass } from './poiTiers';
 
 /** Id del lugar del teleférico en `placesLayer` (`place:<id de places.ts>`). */
 const CABLE_CAR_POI_ID = 'place:teleferico-zacatecas';
@@ -43,6 +46,12 @@ const PHOTO_HEIGHT_M = 70;
 const PHOTO_MAX_PER_PLACE = 3;
 const PHOTO_CHECK_MS = 200;
 const PHOTO_GAP_PX = 8;
+/** Entrada de las tarjetas (#307): retraso entre vecinas y duración, en milisegundos. */
+const PHOTO_STAGGER_MS = 140;
+const PHOTO_POP_MS = 420;
+/** Estado escondido de una tarjeta: chica, 14 px abajo y desenfocada; crece desde su punto. */
+const PHOTO_HIDDEN = { opacity: '0', transform: 'translateY(14px) scale(.55)', filter: 'blur(6px)' } as const;
+const PHOTO_SHOWN = { opacity: '1', transform: 'none', filter: 'none' } as const;
 
 function photoNearDistance(): number {
   if (typeof window === 'undefined') return PHOTO_NEAR_M;
@@ -54,7 +63,10 @@ function photoNearDistance(): number {
 
 interface FloatingPhotoGroup {
   group: THREE.Group;
+  /** Contenedor de cada tarjeta: lo mueve CSS2DRenderer y lleva el ancho y el desplazamiento. */
   cards: HTMLElement[];
+  /** La tarjeta en sí, que crece y se desvanece sin pelear con el `transform` del contenedor. */
+  inners: HTMLElement[];
   shown: boolean;
 }
 
@@ -69,6 +81,17 @@ interface PoiLabel {
   order: number;
   /** Desplazamiento vertical en uso (px): 0 en su lugar, o arriba / abajo para esquivar a otra. */
   dy: number;
+  /** #295, #312: punto con clase. `el` es el marcador entero; `name`, su nombre; `badge`, el «+N». */
+  cls?: MarkerClass;
+  name?: HTMLElement;
+  dot?: HTMLElement;
+  badge?: HTMLElement;
+  /** Píxeles del ancla al centro del nombre (alto del punto más el hueco). */
+  lift?: number;
+  /** Lado del punto en píxeles, medido una vez. */
+  dotPx?: number;
+  markerShown?: boolean;
+  count?: number;
 }
 
 interface BuildingsFile {
@@ -444,6 +467,7 @@ export class ThreeOsmEngine implements SceneEngine {
   private lastPlayerPos: { x: number; z: number } | null = null;
   private clock: THREE.Clock | null = null;
   private clickHandler: ((poi: ScenePoi) => void) | null = null;
+  private photoClickHandler: ((photo: { id: string; placeId: string }) => void) | null = null;
   private groundClickHandler: ((at: { lat: number; lng: number }) => void) | null = null;
   private animation: { step: (now: number) => boolean; resolve: () => void } | null = null;
   private current: SceneCamera | null = null;
@@ -730,6 +754,7 @@ export class ThreeOsmEngine implements SceneEngine {
     if (on) this.stop();
     this.cableCabins?.ride(on);
   }
+  setCableCabinView(view: CabinView): void { this.cableCabins?.setView(view); }
 
   /** Costura para #246: disponible tras la carga opcional, null si no hay datos válidos. */
   getRailLayer(): RailLayer | null { return this.rail; }
@@ -773,20 +798,27 @@ export class ThreeOsmEngine implements SceneEngine {
       const { x, z } = toLocal(first.lat, first.lng);
       const group = new T.Group();
       group.position.set(x, this.heightAt(x, z) + PHOTO_HEIGHT_M, z);
-      const cards = list.map((photo) => {
-        const card = this.makePhotoCard(photo);
-        group.add(new Label(card));
-        return card;
-      });
+      const cards: HTMLElement[] = [];
+      const inners: HTMLElement[] = [];
+      for (const photo of list) {
+        const { holder, card } = this.makePhotoCard(photo);
+        group.add(new Label(holder));
+        cards.push(holder);
+        inners.push(card);
+      }
       this.layoutPhotoCards(cards, compact);
       photoGroup.add(group);
-      this.photoGroups.push({ group, cards, shown: false });
+      this.photoGroups.push({ group, cards, inners, shown: false });
     }
     this.lastPhotoCheckAt = -PHOTO_CHECK_MS;
   }
 
   onPoiClick(handler: (poi: ScenePoi) => void): void {
     this.clickHandler = handler;
+  }
+
+  onFloatingPhotoClick(handler: (photo: { id: string; placeId: string }) => void): void {
+    this.photoClickHandler = handler;
   }
 
   flyTo(camera: SceneCamera, durationMillis: number): Promise<void> {
@@ -1487,25 +1519,44 @@ export class ThreeOsmEngine implements SceneEngine {
     this.photoGroups = [];
   }
 
-  private makePhotoCard(photo: FloatingPhoto): HTMLElement {
-    const figure = document.createElement('figure');
-    Object.assign(figure.style, {
+  /**
+   * Tarjeta flotante (#307): solo la foto y el nombre del lugar; el crédito vive en el visor.
+   * Devuelve el contenedor (lo posiciona CSS2DRenderer) y la tarjeta que se anima por dentro.
+   */
+  private makePhotoCard(photo: FloatingPhoto): { holder: HTMLElement; card: HTMLElement } {
+    const holder = document.createElement('div');
+    Object.assign(holder.style, { pointerEvents: 'none' });
+    const card = document.createElement('button');
+    card.type = 'button';
+    card.setAttribute('aria-label', photo.alt || photo.title);
+    card.tabIndex = -1;
+    Object.assign(card.style, {
+      position: 'relative',
+      display: 'block',
+      width: '100%',
       margin: '0',
+      padding: '0',
       background: '#FBF9F5',
-      border: '1px solid #E7DCCB',
-      borderRadius: '12px',
-      boxShadow: '0 4px 12px rgba(28, 25, 23, 0.14)',
-      overflow: 'hidden',
+      border: '1px solid rgba(255, 255, 255, 0.7)',
+      borderRadius: '14px',
+      boxShadow: '0 8px 20px -8px rgba(28, 25, 23, 0.45)',
+      cursor: 'pointer',
       pointerEvents: 'none',
       visibility: 'hidden',
-      opacity: '0',
-      transition: this.reducedMotion ? 'none' : 'opacity 200ms ease',
+      transformOrigin: '50% 115%',
+      textAlign: 'left',
+      ...(this.reducedMotion ? { opacity: '0' } : PHOTO_HIDDEN),
+    });
+    card.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.photoClickHandler?.({ id: photo.id, placeId: photo.placeId });
     });
     const box = document.createElement('div');
     Object.assign(box.style, {
       width: '100%',
       aspectRatio: '4 / 3',
       overflow: 'hidden',
+      borderRadius: '13px 13px 0 0',
       background: '#E7DCCB',
       pointerEvents: 'none',
     });
@@ -1513,9 +1564,10 @@ export class ThreeOsmEngine implements SceneEngine {
     img.src = photo.thumbUrl;
     img.width = photo.thumbWidth;
     img.height = photo.thumbHeight;
-    img.alt = photo.alt;
+    img.alt = '';
     img.loading = 'lazy';
     img.decoding = 'async';
+    img.referrerPolicy = 'no-referrer';
     Object.assign(img.style, {
       display: 'block',
       width: '100%',
@@ -1524,30 +1576,62 @@ export class ThreeOsmEngine implements SceneEngine {
       pointerEvents: 'none',
     });
     box.appendChild(img);
-    const caption = document.createElement('figcaption');
-    Object.assign(caption.style, {
-      padding: '4px 6px',
-      font: '500 10px "Manrope", sans-serif',
-      lineHeight: '1.25',
-      color: '#57534E',
-      // El crédito completo (autor y licencia) siempre se ve: puede ocupar dos líneas.
-      overflowWrap: 'break-word',
+    const name = document.createElement('span');
+    name.textContent = photo.title;
+    Object.assign(name.style, {
+      display: 'block',
+      padding: '5px 8px 6px',
+      font: '700 11px "Plus Jakarta Sans", sans-serif',
+      lineHeight: '1.2',
+      color: '#1C1917',
+      whiteSpace: 'nowrap',
+      overflow: 'hidden',
+      textOverflow: 'ellipsis',
       pointerEvents: 'none',
     });
-    const link = document.createElement('a');
-    link.href = photo.sourceUrl;
-    link.target = '_blank';
-    link.rel = 'noopener noreferrer';
-    link.textContent = photo.credit;
-    Object.assign(link.style, {
-      color: '#9A3412',
-      textDecoration: 'underline',
-      pointerEvents: 'auto',
+    // Piquito que apunta al lugar, del color de la tarjeta.
+    const tail = document.createElement('i');
+    Object.assign(tail.style, {
+      position: 'absolute',
+      left: '50%',
+      bottom: '-6px',
+      width: '11px',
+      height: '11px',
+      background: '#FBF9F5',
+      transform: 'translateX(-50%) rotate(45deg)',
+      borderRadius: '2px',
+      pointerEvents: 'none',
     });
-    link.addEventListener('click', (e) => e.stopPropagation());
-    caption.appendChild(link);
-    figure.append(box, caption);
-    return figure;
+    card.append(box, name, tail);
+    holder.appendChild(card);
+    return { holder, card };
+  }
+
+  /** Enciende o apaga las tarjetas de un lugar, escalonadas (#307); con movimiento reducido, sin crecer. */
+  private showPhotoCards(inners: HTMLElement[], show: boolean): void {
+    const n = inners.length;
+    inners.forEach((card, i) => {
+      // Entran de izquierda a derecha y salen al revés.
+      const delay = (show ? i : n - 1 - i) * PHOTO_STAGGER_MS;
+      if (this.reducedMotion) {
+        card.style.transition = 'none';
+        card.style.opacity = show ? '1' : '0';
+      } else {
+        const ease = show ? 'cubic-bezier(.2,.9,.25,1.2)' : 'ease-in';
+        const dur = show ? PHOTO_POP_MS : PHOTO_POP_MS * 0.7;
+        card.style.transition = [
+          `opacity ${dur * 0.6}ms ease ${delay}ms`,
+          `transform ${dur}ms ${ease} ${delay}ms`,
+          `filter ${dur}ms ease ${delay}ms`,
+          // Al esconder, `visibility` cambia al final para que se vea la salida.
+          `visibility 0s linear ${show ? delay : delay + dur}ms`,
+        ].join(', ');
+        Object.assign(card.style, show ? PHOTO_SHOWN : PHOTO_HIDDEN);
+      }
+      card.style.visibility = show ? 'visible' : 'hidden';
+      card.style.pointerEvents = show ? 'auto' : 'none';
+      card.tabIndex = show ? 0 : -1;
+    });
   }
 
   private layoutPhotoCards(cards: HTMLElement[], compact: boolean): void {
@@ -1581,10 +1665,7 @@ export class ThreeOsmEngine implements SceneEngine {
       const show = item === nearest;
       if (show === item.shown) continue;
       item.shown = show;
-      for (const card of item.cards) {
-        card.style.visibility = show ? 'visible' : 'hidden';
-        card.style.opacity = show ? '1' : '0';
-      }
+      this.showPhotoCards(item.inners, show);
     }
   }
 
@@ -1601,8 +1682,13 @@ export class ThreeOsmEngine implements SceneEngine {
     const candidates: { label: PoiLabel; x: number; y: number; dist: number }[] = [];
     for (const label of this.poiLabels) {
       if (!label.w) {
-        label.w = label.el.offsetWidth;
-        label.h = label.el.offsetHeight;
+        const box = label.name ?? label.el;
+        label.w = box.offsetWidth;
+        label.h = box.offsetHeight;
+        if (label.dot) {
+          label.dotPx = label.dot.offsetHeight;
+          label.lift = label.dotPx + (label.cls === 1 ? 10 : 3) + label.h / 2;
+        }
       }
       label.obj.getWorldPosition(p);
       const dist = p.distanceTo(camera.position);
@@ -1610,18 +1696,35 @@ export class ThreeOsmEngine implements SceneEngine {
       if (!label.w || p.z > 1 || p.z < -1) continue; // detrás de la cámara o aún sin medir
       candidates.push({ label, x: ((p.x + 1) / 2) * w, y: ((1 - p.y) / 2) * h, dist });
     }
+    // #295: qué marcadores salen según su nivel y distancia, y los que se enciman se agrupan (+N).
+    const player = this.player?.position;
+    const markers = candidates.filter(({ label, dist }) => label.cls && markerVisible(label.cls, dist,
+      player ? Math.hypot(label.obj.position.x - player.x, label.obj.position.z - player.z) : null));
+    const groups = clusterMarkers(markers.map((c) => ({ cls: c.label.cls ?? 3, x: c.x, y: c.y, order: c.label.order })), CLUSTER_PX);
+    const markerCount = new Map<PoiLabel, number>();
+    markers.forEach((c, i) => { if (groups[i].keep) markerCount.set(c.label, groups[i].count); });
+    const named = candidates.filter((c) => !c.label.cls || (markerCount.has(c.label) && nameVisible(c.label.cls, c.dist)));
     const place = LABEL_RANK.place;
-    candidates.sort((a, b) => b.label.rank - a.label.rank || (a.label.rank === place ? a.label.order - b.label.order : a.dist - b.dist));
-    const placed: { l: number; r: number; t: number; b: number }[] = [];
+    named.sort((a, b) => b.label.rank - a.label.rank || (a.label.rank === place ? a.label.order - b.label.order : a.dist - b.dist));
+    // Los marcadores que se ven también cuentan como ocupados: ningún nombre los tapa.
+    const placed: { l: number; r: number; t: number; b: number; owner?: PoiLabel }[] = markers
+      .filter((c) => markerCount.has(c.label))
+      .map(({ label, x, y }) => {
+        const r = (label.dotPx ?? 0) / 2 + 2;
+        return { l: x - r, r: x + r, t: y - 2 * r - 4, b: y, owner: label };
+      });
     const visible = new Set<PoiLabel>();
     const offsets = new Map<PoiLabel, number>();
-    for (const { label, x, y } of candidates) {
+    for (const { label, x, y: anchorY } of named) {
+      // El nombre de un punto con nivel va sobre su marcador y no se mueve.
+      const y = label.cls ? anchorY - (label.lift ?? 0) : anchorY;
       // En su lugar; si choca, un poco más arriba o más abajo; si sigue chocando, se oculta.
-      for (const dy of [0, -(label.h + LABEL_GAP), label.h + LABEL_GAP]) {
+      for (const dy of label.cls ? [0] : [0, -(label.h + LABEL_GAP), label.h + LABEL_GAP]) {
         const box = { l: x - label.w / 2, r: x + label.w / 2, t: y + dy - label.h / 2, b: y + dy + label.h / 2 };
         const inside = box.l >= LABEL_GAP && box.r <= w - LABEL_GAP && box.t >= LABEL_GAP && box.b <= h - LABEL_GAP;
         if (!inside) continue;
-        const clash = placed.some((o) => box.l < o.r + LABEL_GAP && o.l < box.r + LABEL_GAP && box.t < o.b + LABEL_GAP && o.t < box.b + LABEL_GAP);
+        // El nombre de un imprescindible solo esquiva otros nombres, no marcadores.
+        const clash = placed.some((o) => (o.owner ? o.owner !== label && label.cls !== 1 : true) && box.l < o.r + LABEL_GAP && o.l < box.r + LABEL_GAP && box.t < o.b + LABEL_GAP && o.t < box.b + LABEL_GAP);
         if (clash) continue;
         placed.push(box);
         visible.add(label);
@@ -1631,6 +1734,25 @@ export class ThreeOsmEngine implements SceneEngine {
     }
     for (const label of this.poiLabels) {
       const shown = visible.has(label);
+      if (label.cls && label.name && label.badge) {
+        const count = markerCount.get(label);
+        const markerShown = count !== undefined;
+        if (markerShown !== label.markerShown) {
+          label.markerShown = markerShown;
+          label.el.style.visibility = markerShown ? '' : 'hidden';
+          label.el.style.pointerEvents = markerShown ? 'auto' : 'none';
+        }
+        if (shown !== label.shown) {
+          label.shown = shown;
+          label.name.style.visibility = shown ? '' : 'hidden';
+        }
+        if ((count ?? 0) !== label.count) {
+          label.count = count ?? 0;
+          label.badge.textContent = `+${label.count}`;
+          label.badge.style.display = label.count ? '' : 'none';
+        }
+        continue;
+      }
       const dy = offsets.get(label) ?? label.dy;
       if (dy !== label.dy) {
         label.dy = dy;
@@ -1696,6 +1818,27 @@ export class ThreeOsmEngine implements SceneEngine {
     this.poiLabels = [];
     for (const [order, poi] of pois.entries()) {
       const { x, z } = toLocal(poi.lat, poi.lng);
+      const cls = markerClass(poi.tier, poi.pointKind);
+      if (cls) {
+        // #295: marcador HTML por nivel, con el pie en el suelo; sin pin 3D.
+        const marker = makeTierMarker(poi.title[language], cls, { category: poi.category, color: poi.color, icon: poi.icon, reducedMotion: this.reducedMotion });
+        marker.root.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.clickHandler?.(poi);
+        });
+        const obj = new CSS2DObject(marker.root);
+        obj.center.set(0.5, 1);
+        obj.position.set(x, this.heightAt(x, z) + 2, z);
+        group.add(obj);
+        marker.root.style.visibility = 'hidden';
+        marker.root.style.pointerEvents = 'none';
+        marker.name.style.visibility = 'hidden';
+        this.poiLabels.push({
+          el: marker.root, obj, rank: cls === 1 ? LABEL_RANK.place : cls <= 3 ? LABEL_RANK.place - cls / 8 : LABEL_RANK[poi.kind] ?? 0, w: 0, h: 0,
+          shown: false, order, dy: 0, cls, name: marker.name, dot: marker.dot, badge: marker.badge, markerShown: false, count: 0,
+        });
+        continue;
+      }
       const color = new T.Color(poi.color ?? '#9A3412');
       const pin = new T.Group();
       pin.position.set(x, this.heightAt(x, z), z);

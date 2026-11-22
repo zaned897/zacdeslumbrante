@@ -13,6 +13,9 @@ import { ZACATECAS_PLACES } from './places';
  *   con su ficha como fuente. Los que ya tienen ficha en `places.ts` no se repiten.
  * - Sin horarios, precios ni reseñas: lo que no tiene fuente no se pone.
  * - PROTO: el nivel (`tier`) es criterio del prototipo; el dueño lo ajusta.
+ * - PROTO (#312): `kind` también es criterio del prototipo. Referencias: callejones chicos, fuentes y
+ *   esculturas. Secretos: dos callejones reales elegidos como ejemplo; el lugar es real, que sea
+ *   «secreto» no. Puntos nuevos sin fuente irían con `_mock: true`.
  */
 
 /** El terreno de la maqueta: el mismo `bbox` que `public/data/centro-terreno.json`. */
@@ -54,18 +57,18 @@ export const CENTRO_POINTS: MapPoint[] = [
   // Callejones
   { id: 'callejon-de-las-campanas', name: 'Callejón de las Campanas', category: 'alley', tier: 2, lat: 22.77565, lng: -102.57162, source: `${OSM}/way/292473085` },
   { id: 'callejon-del-beso', name: 'Callejón del Beso', category: 'alley', tier: 3, lat: 22.77885, lng: -102.56988, source: `${OSM}/way/810030915` },
-  { id: 'callejon-de-veyna', name: 'Callejón de Veyna', category: 'alley', tier: 3, lat: 22.77612, lng: -102.57279, source: `${OSM}/way/292510889`, note: 'En OSM: «Callejón De Veyna».' },
-  { id: 'callejon-de-la-moneda', name: 'Callejón de la Moneda', category: 'alley', tier: 3, lat: 22.77534, lng: -102.57393, source: `${OSM}/way/292460925` },
-  { id: 'callejon-de-san-agustin', name: 'Callejón de San Agustín', category: 'alley', tier: 3, lat: 22.77466, lng: -102.57438, source: `${OSM}/way/292460927` },
-  { id: 'callejon-del-mono-prieto', name: 'Callejón del Mono Prieto', category: 'alley', tier: 3, lat: 22.77481, lng: -102.5712, source: `${OSM}/way/292821911` },
-  { id: 'callejon-de-nolasco', name: 'Callejón de Nolasco', category: 'alley', tier: 3, lat: 22.7744, lng: -102.57139, source: `${OSM}/way/292283531` },
-  { id: 'callejon-del-trafico', name: 'Callejón del Tráfico', category: 'alley', tier: 3, lat: 22.77234, lng: -102.57376, source: `${OSM}/way/292458965` },
-  { id: 'callejon-de-la-bordadora', name: 'Callejón de la Bordadora', category: 'alley', tier: 3, lat: 22.77295, lng: -102.57388, source: `${OSM}/way/292458968` },
+  { id: 'callejon-de-veyna', name: 'Callejón de Veyna', category: 'alley', tier: 3, lat: 22.77612, lng: -102.57279, source: `${OSM}/way/292510889`, note: 'En OSM: «Callejón De Veyna».', kind: 'reference' },
+  { id: 'callejon-de-la-moneda', name: 'Callejón de la Moneda', category: 'alley', tier: 3, lat: 22.77534, lng: -102.57393, source: `${OSM}/way/292460925`, kind: 'reference' },
+  { id: 'callejon-de-san-agustin', name: 'Callejón de San Agustín', category: 'alley', tier: 3, lat: 22.77466, lng: -102.57438, source: `${OSM}/way/292460927`, kind: 'reference' },
+  { id: 'callejon-del-mono-prieto', name: 'Callejón del Mono Prieto', category: 'alley', tier: 3, lat: 22.77481, lng: -102.5712, source: `${OSM}/way/292821911`, kind: 'secret' },
+  { id: 'callejon-de-nolasco', name: 'Callejón de Nolasco', category: 'alley', tier: 3, lat: 22.7744, lng: -102.57139, source: `${OSM}/way/292283531`, kind: 'reference' },
+  { id: 'callejon-del-trafico', name: 'Callejón del Tráfico', category: 'alley', tier: 3, lat: 22.77234, lng: -102.57376, source: `${OSM}/way/292458965`, kind: 'reference' },
+  { id: 'callejon-de-la-bordadora', name: 'Callejón de la Bordadora', category: 'alley', tier: 3, lat: 22.77295, lng: -102.57388, source: `${OSM}/way/292458968`, kind: 'secret' },
 
   // Monumentos y fuentes
-  { id: 'indio-triste', name: 'Indio Triste', category: 'monument', tier: 3, lat: 22.77869, lng: -102.57156, source: `${OSM}/node/5321632581` },
-  { id: 'fuente-de-los-faroles', name: 'Fuente de los Faroles', category: 'monument', tier: 3, lat: 22.77326, lng: -102.5728, source: `${OSM}/node/2960113286` },
-  { id: 'fuente-de-los-conquistadores', name: 'Fuente de los Conquistadores', category: 'monument', tier: 3, lat: 22.78006, lng: -102.57123, source: `${OSM}/way/566153212` },
+  { id: 'indio-triste', name: 'Indio Triste', category: 'monument', tier: 3, lat: 22.77869, lng: -102.57156, source: `${OSM}/node/5321632581`, kind: 'reference' },
+  { id: 'fuente-de-los-faroles', name: 'Fuente de los Faroles', category: 'monument', tier: 3, lat: 22.77326, lng: -102.5728, source: `${OSM}/node/2960113286`, kind: 'reference' },
+  { id: 'fuente-de-los-conquistadores', name: 'Fuente de los Conquistadores', category: 'monument', tier: 3, lat: 22.78006, lng: -102.57123, source: `${OSM}/way/566153212`, kind: 'reference' },
 
   // Espacios culturales
   { id: 'ciudadela-del-arte', name: 'Ciudadela del Arte', category: 'experience', tier: 3, lat: 22.77482, lng: -102.57413, source: `${OSM}/way/556497352` },
