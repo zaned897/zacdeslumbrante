@@ -153,6 +153,12 @@ function footprintArea(corners: Array<{ x: number; z: number }>): number {
 // Mirador para ver el cielo: la cima del Cerro de la Bufa, sobre la ciudad y lejos de sus luces.
 // Unos metros arriba del suelo para no quedar dentro del santuario.
 const SKY_VIEWPOINT = { lat: 22.7738, lng: -102.5649, eyeM: 8, headingDeg: 225 };
+// Navegación tipo mapa (#291): el centro de la vista no sale de la caja del relieve
+// (bbox de centro-terreno.json) y la cámara no se aleja más de lo que pide la vista inicial.
+const MAP_BOUNDS = { south: 22.756, north: 22.794, west: -102.596, east: -102.548 };
+const MAP_MIN_DISTANCE_M = 30;
+const MAP_MAX_DISTANCE_M = 2500;
+const MAP_MAX_POLAR = Math.PI / 2.1;
 // PROTO: avatar exagerado (estilo juego) para verse a la distancia de cámara habitual.
 const AVATAR_SCALE = 8;
 
@@ -561,10 +567,9 @@ export class ThreeOsmEngine implements SceneEngine {
     this.camera = camera;
     const controls = new Orbit(camera, renderer.domElement);
     controls.enableDamping = true;
-    controls.maxPolarAngle = Math.PI / 2.1;
-    controls.minDistance = 30;
-    controls.maxDistance = 4000;
+    this.useMapControls(T, controls);
     controls.addEventListener('start', () => this.stop());
+    controls.addEventListener('change', () => this.keepInCity());
     this.controls = controls;
 
     this.resize();
@@ -1182,6 +1187,9 @@ export class ThreeOsmEngine implements SceneEngine {
       controls.enablePan = false;
       controls.enableZoom = false;
       controls.rotateSpeed = -0.35;
+      // Mirando el cielo, arrastrar con un dedo o clic izquierdo gira la cabeza.
+      controls.mouseButtons = { LEFT: T.MOUSE.ROTATE, MIDDLE: T.MOUSE.DOLLY, RIGHT: T.MOUSE.ROTATE };
+      controls.touches = { ONE: T.TOUCH.ROTATE, TWO: T.TOUCH.DOLLY_ROTATE };
       camera.lookAt(controls.target);
       controls.update();
       return;
@@ -1193,14 +1201,42 @@ export class ThreeOsmEngine implements SceneEngine {
     this.cableCar?.setLabelsVisible(true);
     camera.fov = 35;
     camera.updateProjectionMatrix();
-    controls.minDistance = 30;
-    controls.maxDistance = 4000;
     controls.minPolarAngle = 0;
-    controls.maxPolarAngle = Math.PI / 2.1;
     controls.enablePan = true;
     controls.enableZoom = true;
     controls.rotateSpeed = 1;
+    this.useMapControls(T, controls);
     if (saved) this.place(saved);
+  }
+
+  /**
+   * Esquema de mapa (#291): un dedo o clic izquierdo mueve el mapa sobre el suelo; dos dedos o
+   * clic derecho giran e inclinan; rueda y pellizco acercan hacia el cursor o los dedos.
+   */
+  private useMapControls(T: Three, controls: OrbitControls): void {
+    controls.mouseButtons = { LEFT: T.MOUSE.PAN, MIDDLE: T.MOUSE.DOLLY, RIGHT: T.MOUSE.ROTATE };
+    controls.touches = { ONE: T.TOUCH.PAN, TWO: T.TOUCH.DOLLY_ROTATE };
+    controls.screenSpacePanning = false;
+    controls.zoomToCursor = true;
+    controls.minDistance = MAP_MIN_DISTANCE_M;
+    controls.maxDistance = MAP_MAX_DISTANCE_M;
+    controls.maxPolarAngle = MAP_MAX_POLAR;
+  }
+
+  /** El centro de la vista no sale de la caja del relieve; la cámara se corre con él. */
+  private keepInCity(): void {
+    const { camera, controls } = this;
+    if (!camera || !controls || this.skyView || this.cableCabins?.getState().riding) return;
+    const nw = toLocal(MAP_BOUNDS.north, MAP_BOUNDS.west);
+    const se = toLocal(MAP_BOUNDS.south, MAP_BOUNDS.east);
+    const t = controls.target;
+    const dx = Math.min(Math.max(t.x, nw.x), se.x) - t.x;
+    const dz = Math.min(Math.max(t.z, nw.z), se.z) - t.z;
+    if (!dx && !dz) return;
+    t.x += dx;
+    t.z += dz;
+    camera.position.x += dx;
+    camera.position.z += dz;
   }
 
   /** Degradado vertical del cielo; se crea una vez por hora y se reutiliza. */
