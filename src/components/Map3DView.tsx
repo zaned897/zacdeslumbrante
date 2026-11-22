@@ -63,6 +63,7 @@ import { forcedTimeOfDay, forcedZacatecasDate, zacatecasTimeOfDay } from '../sce
 import { forcedWeather } from '../scene3d/weather';
 import { FreightNotice } from './map3d/FreightNotice';
 import { ProposePhotoSheet } from './map3d/ProposePhotoSheet';
+import { PhotoViewer } from './map3d/PhotoViewer';
 import { CableCabinView } from './map3d/CableCabinView';
 import { CableCarCard } from './map3d/CableCarCard';
 
@@ -168,6 +169,9 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
   const [photoIndex, setPhotoIndex] = useState(0);
   const [allPhotos, setAllPhotos] = useState<PlacePhoto[]>([]);
   const [proposePlaceId, setProposePlaceId] = useState<string | null>(null);
+  /** Visor de fotos abierto (#307): las fotos de un lugar y desde cuál empieza. */
+  const [viewer, setViewer] = useState<{ placeId: string; photos: PlacePhoto[]; index: number } | null>(null);
+  const allPhotosRef = useRef<PlacePhoto[]>([]);
   const [askPlace, setAskPlace] = useState<Place | null>(null);
   const [nearby, setNearby] = useState<ScenePoi | null>(null);
   // Puestos ya anunciados en esta visita: el aviso sale una sola vez por puesto.
@@ -371,6 +375,11 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
         // Mientras se marca la ubicación de un puesto (#173), el toque elige el lugar en vez de abrir fichas o mover al avatar.
         engine.onPoiClick((poi) => (pickSpotRef.current ? pickSpotRef.current(poi) : setSelected(poi)));
         engine.onGroundClick((at) => (pickSpotRef.current ? pickSpotRef.current(at) : teleportRef.current?.(at)));
+        engine.onFloatingPhotoClick?.(({ id, placeId }) => {
+          const list = allPhotosRef.current.filter((p) => p.placeId === placeId);
+          if (!list.length) return;
+          setViewer({ placeId, photos: list, index: Math.max(0, list.findIndex((p) => p.id === id)) });
+        });
         setStatus('ready');
       })
       .catch((err: unknown) => {
@@ -500,7 +509,10 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
     if (engineId !== 'three' || status !== 'ready') return;
     const controller = new AbortController();
     void loadAllPhotos(controller.signal).then((list) => {
-      if (!controller.signal.aborted) setAllPhotos(list);
+      if (!controller.signal.aborted) {
+        allPhotosRef.current = list;
+        setAllPhotos(list);
+      }
     });
     return () => controller.abort();
   }, [engineId, status]);
@@ -522,12 +534,11 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
         thumbWidth: p.thumbWidth,
         thumbHeight: p.thumbHeight,
         alt: p.caption[language],
-        // La licencia no se parte en dos líneas («CC BY-SA 4.0» completa).
-        credit: t.view3dPhotoBy.replace('{author}', p.author).replace('{license}', p.license.replace(/ /g, ' ').replace(/-/g, '‑')),
-        sourceUrl: p.sourceUrl,
+        // Solo el nombre del lugar: autor y licencia van en el visor (#307).
+        title: placeName(p.placeId, language) || p.caption[language],
       })),
     );
-  }, [engineId, status, allPhotos, language, t.view3dPhotoBy, isStargazing, pickingSpot]);
+  }, [engineId, status, allPhotos, language, isStargazing, pickingSpot]);
 
   // Jugador: moverlo, seguirlo con la cámara y descubrir lugares cercanos.
   useEffect(() => {
@@ -993,17 +1004,24 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
           {photo && (
             <figure className="-mx-4 -mt-4 mb-3">
               <div className="relative aspect-video overflow-hidden rounded-t-xl bg-stone-200">
-                <img
-                  key={photo.id}
-                  src={photo.url}
-                  alt={photo.caption[language]}
-                  loading="lazy"
-                  referrerPolicy="no-referrer"
-                  onError={(e) => {
-                    e.currentTarget.style.visibility = 'hidden';
-                  }}
-                  className="h-full w-full object-cover"
-                />
+                <button
+                  type="button"
+                  onClick={() => selected.placeId && setViewer({ placeId: selected.placeId, photos, index: photoIndex })}
+                  aria-label={t.view3dViewerOpen}
+                  className="block h-full w-full cursor-zoom-in"
+                >
+                  <img
+                    key={photo.id}
+                    src={photo.url}
+                    alt={photo.caption[language]}
+                    loading="lazy"
+                    referrerPolicy="no-referrer"
+                    onError={(e) => {
+                      e.currentTarget.style.visibility = 'hidden';
+                    }}
+                    className="h-full w-full object-cover"
+                  />
+                </button>
                 {photos.length > 1 && (
                   <>
                     <button
@@ -1117,6 +1135,16 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
         </div>
       )}
 
+      {viewer && (
+        <PhotoViewer
+          photos={viewer.photos}
+          startIndex={viewer.index}
+          placeName={placeName(viewer.placeId, language)}
+          language={language}
+          onClose={() => setViewer(null)}
+          onPropose={(placeId) => setProposePlaceId(placeId)}
+        />
+      )}
       {proposePlaceId && (
         <ProposePhotoSheet
           placeId={proposePlaceId}

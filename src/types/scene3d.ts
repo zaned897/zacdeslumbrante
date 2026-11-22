@@ -102,7 +102,10 @@ export type SceneTimeOfDay = 'day' | 'dusk' | 'night';
 /** Clima de la escena (#201): soleado, nublado o lluvia. */
 export type SceneWeatherCondition = 'soleado' | 'nublado' | 'lluvia';
 
-/** Tarjeta de foto flotante sobre un lugar en la ciudad 3D (#232), con texto alternativo y crédito ya traducidos. */
+/**
+ * Tarjeta de foto flotante sobre un lugar en la ciudad 3D (#232), con texto alternativo y nombre del
+ * lugar ya traducidos. Sin crédito: autor y licencia viven en el visor de fotos (#307).
+ */
 export interface FloatingPhoto {
   id: string;
   placeId: string;
@@ -112,8 +115,8 @@ export interface FloatingPhoto {
   thumbWidth: number;
   thumbHeight: number;
   alt: string;
-  credit: string;
-  sourceUrl: string;
+  /** Nombre del lugar, el único texto de la tarjeta. */
+  title: string;
 }
 
 /** Lo que sabe la vista al pedir los puntos de una capa. */
@@ -162,6 +165,8 @@ export interface SceneEngine {
   setWeather?(condition: SceneWeatherCondition | null): void;
   /** Tarjetas de fotos flotantes sobre los lugares (#232). Opcional: Google 3D y Cesium no lo implementan. */
   setFloatingPhotos?(photos: FloatingPhoto[]): void;
+  /** Toque en una tarjeta de foto flotante: abre el visor (#307). Opcional, como `setFloatingPhotos`. */
+  onFloatingPhotoClick?(handler: (photo: { id: string; placeId: string }) => void): void;
   /** Rumbo (0 = norte, grados) e inclinación (0 = desde arriba) cada vez que la cámara se mueve (#292). Opcional. */
   onViewChange?(handler: (view: { heading: number; tilt: number }) => void): void;
   /** Ajusta la vista actual sin moverse de lugar: rumbo, inclinación o acercar (factor del alcance). Opcional (#292). */
