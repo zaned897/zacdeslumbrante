@@ -7,9 +7,11 @@ import { TRANSLATIONS } from '../../data/i18n';
 // En móvil (#272), a bordo los avisos se vuelven una barra chica y el texto de la simulación se va tras INTRO_MS.
 const INTRO_MS = 4000;
 
-export function CableCabinView({ engine, language, hidden, frameContainer, onRidingChange }: {
+export function CableCabinView({ engine, language, hidden, frameContainer, onRidingChange, boardButton = true }: {
   engine: SceneEngine | null; language: Language; hidden: boolean; frameContainer: HTMLElement | null;
   onRidingChange?: (riding: boolean) => void;
+  /** false: el aviso solo sale a bordo; para subir se usa el menú radial (#310). */
+  boardButton?: boolean;
 }) {
   const t = TRANSLATIONS[language];
   const [state, setState] = useState<CabinState>({ status: 'unavailable', riding: false, heightM: null });
@@ -34,7 +36,7 @@ export function CableCabinView({ engine, language, hidden, frameContainer, onRid
     window.addEventListener('keydown', escape);
     return () => window.removeEventListener('keydown', escape);
   }, [engine, state.riding]);
-  if (hidden || state.status === 'unavailable') return null;
+  if (hidden || state.status === 'unavailable' || (!boardButton && !state.riding)) return null;
   const mobileIntro = state.riding && !showIntro ? 'max-md:hidden' : '';
   return <>
     <aside aria-label={t.telefericoTitle} className={`glass rounded-2xl p-2 text-xs text-stone-900 ${state.riding ? 'max-md:flex max-md:flex-wrap max-md:items-center max-md:gap-x-3 max-md:gap-y-1 max-md:bg-[#FBF9F5]/90' : ''}`}>
