@@ -175,6 +175,8 @@ export interface SceneEngine {
   setFloatingPhotos?(photos: FloatingPhoto[]): void;
   /** Toque en una tarjeta de foto flotante: abre el visor (#307). Opcional, como `setFloatingPhotos`. */
   onFloatingPhotoClick?(handler: (photo: { id: string; placeId: string }) => void): void;
+  /** Fotos de los lugares cercanos y en cuadro (#309), al cambiar; en celular se cuentan en un chip. */
+  onNearbyPhotos?(handler: (photos: { id: string; placeId: string }[]) => void): void;
   /** Rumbo (0 = norte, grados) e inclinación (0 = desde arriba) cada vez que la cámara se mueve (#292). Opcional. */
   onViewChange?(handler: (view: { heading: number; tilt: number }) => void): void;
   /** Ajusta la vista actual sin moverse de lugar: rumbo, inclinación o acercar (factor del alcance). Opcional (#292). */

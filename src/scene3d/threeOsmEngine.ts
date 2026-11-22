@@ -24,7 +24,7 @@ import type {
 import { StarSky, skyMoment } from './starSky';
 import { WeatherController } from './weather';
 import { makeTierMarker } from './poiMarkers';
-import { CLUSTER_PX, clusterMarkers, markerClass, markerVisible, nameVisible, type MarkerClass } from './poiTiers';
+import { CLUSTER_PX, clusterMarkers, labelBudget, markerClass, markerVisible, nameVisible, type MarkerClass } from './poiTiers';
 
 /** Id del lugar del teleférico en `placesLayer` (`place:<id de places.ts>`). */
 const CABLE_CAR_POI_ID = 'place:teleferico-zacatecas';
@@ -68,6 +68,11 @@ interface FloatingPhotoGroup {
   /** La tarjeta en sí, que crece y se desvanece sin pelear con el `transform` del contenedor. */
   inners: HTMLElement[];
   shown: boolean;
+  /** Medidas de la primera tarjeta en px, tomadas una vez (#309). */
+  boxW?: number;
+  boxH?: number;
+  /** Todas las fotos del lugar, también las que no caben como tarjeta (#309: «N fotos cerca»). */
+  photos: { id: string; placeId: string }[];
 }
 
 interface PoiLabel {
@@ -468,6 +473,9 @@ export class ThreeOsmEngine implements SceneEngine {
   private clock: THREE.Clock | null = null;
   private clickHandler: ((poi: ScenePoi) => void) | null = null;
   private photoClickHandler: ((photo: { id: string; placeId: string }) => void) | null = null;
+  private nearbyPhotosHandler: ((photos: { id: string; placeId: string }[]) => void) | null = null;
+  private nearbyPhotosKey: string | null = null;
+  private photoList: FloatingPhoto[] = [];
   private groundClickHandler: ((at: { lat: number; lng: number }) => void) | null = null;
   private animation: { step: (now: number) => boolean; resolve: () => void } | null = null;
   private current: SceneCamera | null = null;
@@ -784,8 +792,13 @@ export class ThreeOsmEngine implements SceneEngine {
       return;
     }
     this.clearFloatingPhotos();
+    this.photoList = photos;
     const byPlace = new Map<string, FloatingPhoto[]>();
+    const allByPlace = new Map<string, { id: string; placeId: string }[]>();
     for (const photo of photos) {
+      const all = allByPlace.get(photo.placeId);
+      if (!all) allByPlace.set(photo.placeId, [{ id: photo.id, placeId: photo.placeId }]);
+      else all.push({ id: photo.id, placeId: photo.placeId });
       const list = byPlace.get(photo.placeId);
       if (!list) byPlace.set(photo.placeId, [photo]);
       else if (list.length < PHOTO_MAX_PER_PLACE) list.push(photo);
@@ -808,7 +821,7 @@ export class ThreeOsmEngine implements SceneEngine {
       }
       this.layoutPhotoCards(cards, compact);
       photoGroup.add(group);
-      this.photoGroups.push({ group, cards, inners, shown: false });
+      this.photoGroups.push({ group, cards, inners, shown: false, photos: allByPlace.get(first.placeId) ?? [] });
     }
     this.lastPhotoCheckAt = -PHOTO_CHECK_MS;
   }
@@ -819,6 +832,11 @@ export class ThreeOsmEngine implements SceneEngine {
 
   onFloatingPhotoClick(handler: (photo: { id: string; placeId: string }) => void): void {
     this.photoClickHandler = handler;
+  }
+
+  onNearbyPhotos(handler: (photos: { id: string; placeId: string }[]) => void): void {
+    this.nearbyPhotosHandler = handler;
+    this.nearbyPhotosKey = null;
   }
 
   flyTo(camera: SceneCamera, durationMillis: number): Promise<void> {
@@ -1638,7 +1656,8 @@ export class ThreeOsmEngine implements SceneEngine {
     const cardW = compact ? 108 : 148;
     const step = cardW + PHOTO_GAP_PX;
     cards.forEach((card, i) => {
-      const dx = (i - (cards.length - 1) / 2) * step;
+      // En celular solo se ve la primera (#309): va centrada.
+      const dx = compact ? 0 : (i - (cards.length - 1) / 2) * step;
       card.style.width = `${cardW}px`;
       card.style.marginLeft = dx ? `${dx}px` : '0px';
     });
@@ -1651,21 +1670,31 @@ export class ThreeOsmEngine implements SceneEngine {
     // Solo el lugar más cercano dentro del umbral: los del centro están a 100–300 m y sus tarjetas se enciman.
     let nearest: FloatingPhotoGroup | null = null;
     let nearestDist = this.photoNearM;
+    const nearby: { id: string; placeId: string }[] = [];
     if (!this.skyView) {
       for (const item of this.photoGroups) {
         const dist = camera.position.distanceTo(item.group.position);
-        if (dist >= nearestDist) continue;
+        if (dist >= this.photoNearM) continue;
         p.copy(item.group.position).project(camera);
         if (p.z < -1 || p.z > 1 || Math.abs(p.x) > 1 || Math.abs(p.y) > 1) continue; // fuera de cuadro
+        nearby.push(...item.photos);
+        if (dist >= nearestDist) continue;
         nearest = item;
         nearestDist = dist;
       }
     }
+    // En celular (#309) solo sale la primera tarjeta del lugar más cercano; las demás van al chip.
+    const compact = Boolean(this.photoCompact);
     for (const item of this.photoGroups) {
       const show = item === nearest;
       if (show === item.shown) continue;
       item.shown = show;
-      this.showPhotoCards(item.inners, show);
+      this.showPhotoCards(compact && show ? item.inners.slice(0, 1) : item.inners, show);
+    }
+    const key = nearby.map((n) => n.id).join('|');
+    if (key !== this.nearbyPhotosKey) {
+      this.nearbyPhotosKey = key;
+      this.nearbyPhotosHandler?.(nearby);
     }
   }
 
@@ -1713,9 +1742,23 @@ export class ThreeOsmEngine implements SceneEngine {
         const r = (label.dotPx ?? 0) / 2 + 2;
         return { l: x - r, r: x + r, t: y - 2 * r - 4, b: y, owner: label };
       });
+    // En celular la única tarjeta de foto que sale (#309) también ocupa: ningún nombre queda debajo.
+    const photoCard = this.photoCompact ? this.photoGroups.find((g) => g.shown) : undefined;
+    if (photoCard?.inners[0]) {
+      photoCard.boxW ??= photoCard.inners[0].offsetWidth;
+      photoCard.boxH ??= photoCard.inners[0].offsetHeight;
+      p.copy(photoCard.group.position).project(camera);
+      if (p.z <= 1 && p.z >= -1 && photoCard.boxW) {
+        const cx = ((p.x + 1) / 2) * w, cy = ((1 - p.y) / 2) * h;
+        placed.push({ l: cx - photoCard.boxW / 2, r: cx + photoCard.boxW / 2, t: cy - photoCard.boxH / 2, b: cy + photoCard.boxH / 2 });
+      }
+    }
     const visible = new Set<PoiLabel>();
     const offsets = new Map<PoiLabel, number>();
+    // Presupuesto de nombres por tamaño de pantalla (#309): ya ordenados, gana el de más nivel.
+    const budget = labelBudget(w);
     for (const { label, x, y: anchorY } of named) {
+      if (visible.size >= budget) break;
       // El nombre de un punto con nivel va sobre su marcador y no se mueve.
       const y = label.cls ? anchorY - (label.lift ?? 0) : anchorY;
       // En su lugar; si choca, un poco más arriba o más abajo; si sigue chocando, se oculta.
@@ -1776,8 +1819,8 @@ export class ThreeOsmEngine implements SceneEngine {
     camera.updateProjectionMatrix();
     const compact = w < 640;
     if (compact !== this.photoCompact && this.photoGroups.length) {
-      this.photoCompact = compact;
-      for (const item of this.photoGroups) this.layoutPhotoCards(item.cards, compact);
+      // Cambia cuántas tarjetas salen (#309): se rehacen con el ancho nuevo.
+      this.setFloatingPhotos(this.photoList);
     }
   }
 

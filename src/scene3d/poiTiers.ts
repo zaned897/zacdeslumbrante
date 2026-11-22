@@ -73,3 +73,15 @@ export function clusterMarkers(items: ScreenMarker[], px = CLUSTER_PX): { keep: 
   }
   return out;
 }
+
+/** Presupuesto de nombres en pantalla (#309): lo demás queda como punto. */
+export const LABEL_BUDGET_PHONE = 5;
+export const LABEL_BUDGET_TABLET = 8;
+export const LABEL_BUDGET_DESKTOP = 12;
+
+/** Cuántos nombres caben según el ancho de la vista (px): celular < 640, tableta < 1024. */
+export function labelBudget(widthPx: number): number {
+  if (widthPx < 640) return LABEL_BUDGET_PHONE;
+  if (widthPx < 1024) return LABEL_BUDGET_TABLET;
+  return LABEL_BUDGET_DESKTOP;
+}
