@@ -1,5 +1,5 @@
 // Contrato del modo 3D (ver docs/MAPA3D.md). Compartido: cambios con acuerdo.
-import type { Language } from './index';
+import type { Language, PlaceCategory, PlaceTier } from './index';
 
 export interface Localized {
   es: string;
@@ -43,6 +43,10 @@ export interface ScenePoi {
   nearbyNotice?: Localized;
   /** true si el dato es de ejemplo. */
   isMock?: boolean;
+  /** Nivel del lugar (#295): con él, el motor dibuja pin, punto mediano o punto chico según la distancia. */
+  tier?: PlaceTier;
+  /** Categoría del catálogo (#294), para el icono del pin de nivel 1. */
+  category?: PlaceCategory;
 }
 
 /** Jugador en la escena (marcador o avatar). */
