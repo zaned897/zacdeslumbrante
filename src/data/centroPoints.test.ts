@@ -121,3 +121,22 @@ describe('qué hacer 4: los museos de #85 dentro de la maqueta', () => {
     }
   });
 });
+
+describe('#312: clases menores', () => {
+  const KINDS = ['stand', 'reference', 'secret'];
+  test('kind, si viene, es puesto, referencia o secreto', () => {
+    for (const p of CENTRO_POINTS) if (p.kind) assert.ok(KINDS.includes(p.kind), `${p.id}: kind ${p.kind}`);
+  });
+  test('hay referencias y secretos, y los secretos son de barrio', () => {
+    assert.ok(CENTRO_POINTS.some((p) => p.kind === 'reference'));
+    const secrets = CENTRO_POINTS.filter((p) => p.kind === 'secret');
+    assert.ok(secrets.length > 0);
+    for (const p of secrets) assert.equal(p.tier, 3, p.id);
+  });
+  test('un punto sin fuente de OSM o SIC va marcado _mock', () => {
+    for (const p of CENTRO_POINTS) {
+      const real = OSM_URL.test(p.source) || SIC_URL.test(p.source);
+      assert.ok(real || p._mock === true, `${p.id}: sin fuente real y sin _mock`);
+    }
+  });
+});

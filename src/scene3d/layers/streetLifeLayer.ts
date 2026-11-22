@@ -69,6 +69,8 @@ export const streetLifeLayer: SceneLayer = {
       lat: s.lat,
       lng: s.lng,
       color: STREET_COLOR,
+      // #312: se dibuja como puesto (cuadro verde con el icono de lo que vende).
+      pointKind: 'stand' as const,
       isMock: true,
     }));
   },

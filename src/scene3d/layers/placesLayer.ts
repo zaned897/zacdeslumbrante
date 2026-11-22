@@ -23,6 +23,8 @@ export const placesLayer: SceneLayer = {
       lat: p.lat,
       lng: p.lng,
       color: p.color,
+      tier: p.tier,
+      category: p.category,
     }));
   },
 };
