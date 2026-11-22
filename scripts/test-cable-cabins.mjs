@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { test } from 'node:test';
-import { cabinProgress, cabinPhase, cabinsOpen, parseCabinConfig, CABIN_TURN_SECONDS } from '../src/scene3d/cableCabins.ts';
+import { cabinProgress, cabinPhase, cabinsOpen, parseCabinConfig, softClampProgress, CABIN_TURN_SECONDS } from '../src/scene3d/cableCabins.ts';
 import { forcedClockMinutes, forcedMinutes, forcedZacatecasDate, zacatecasMinutes, zacatecasWeekday } from '../src/scene3d/timeOfDay.ts';
 const data = JSON.parse(await readFile(new URL('../public/data/teleferico.json', import.meta.url), 'utf8'));
 const config = parseCabinConfig(data);
@@ -53,4 +53,16 @@ test('seven equal temporal intervals, trip duration, continuous turnaround and s
   const departure = cabinProgress(.01), cruise = cabinProgress(.51) - cabinProgress(.5);
   assert.ok(departure < cruise / 5);
   assert.ok(Math.abs(cabinProgress(.15 - 1e-8) - cabinProgress(.15 + 1e-8)) < 1e-6);
+});
+test('#271: glass-floor view waits outside the stations without jumps', () => {
+  const [min, max] = [0.12, 0.88];
+  assert.equal(softClampProgress(0, min, max), min); assert.equal(softClampProgress(1, min, max), max);
+  assert.equal(softClampProgress(0.5, min, max), 0.5);
+  let previous = softClampProgress(0, min, max);
+  for (let i = 1; i <= 10000; i++) {
+    const next = softClampProgress(i / 10000, min, max);
+    assert.ok(next >= min && next <= max && next >= previous && next - previous <= 1e-4 + 1e-12);
+    previous = next;
+  }
+  assert.equal(softClampProgress(0.3, 0.6, 0.4), 0.5);
 });

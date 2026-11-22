@@ -1,4 +1,67 @@
 import type { SceneCamera, Tour, TourStop } from '../types/scene3d';
+import { ZACATECAS_PLACES } from './places';
+import { loadTeleferico } from './teleferico';
+
+const CABLE_CAR_PLACE_ID = 'teleferico-zacatecas';
+const M_PER_DEG_LAT = 110_540;
+
+interface CableCarStation {
+  lat: number;
+  lng: number;
+  elevationM: number;
+}
+
+/**
+ * Encuadre del teleférico (#273) calculado desde las estaciones de `teleferico.json` (#261).
+ * Mira la línea casi de punta desde detrás de El Grillo: así las dos estaciones y el cable caben
+ * también en un celular vertical, donde el campo horizontal ronda los 16°.
+ * PROTO: inclinación, sesgo y margen elegidos a ojo con capturas de escritorio y móvil.
+ */
+export function cableCarCamera(stations: readonly CableCarStation[], lengthM: number): SceneCamera {
+  const [from, to] = stations;
+  const ok = (s: CableCarStation | undefined): s is CableCarStation =>
+    !!s && [s.lat, s.lng, s.elevationM].every((v) => typeof v === 'number' && Number.isFinite(v));
+  if (!ok(from) || !ok(to) || !(lengthM > 0)) throw new Error('El teleférico necesita dos estaciones y su longitud para encuadrarse');
+  const east = (to.lng - from.lng) * M_PER_DEG_LAT * Math.cos((from.lat * Math.PI) / 180);
+  const north = (to.lat - from.lat) * M_PER_DEG_LAT;
+  const bearing = (Math.atan2(east, north) * 180) / Math.PI;
+  return {
+    lat: (from.lat + to.lat) / 2,
+    lng: (from.lng + to.lng) / 2,
+    altitude: Math.round((from.elevationM + to.elevationM) / 2),
+    range: Math.round(lengthM * 2),
+    tilt: 60,
+    heading: Math.round((bearing + 8 + 360) % 360),
+  };
+}
+
+// Sin teleferico.json (o antes de que llegue) la parada mira la estación del Grillo, el pin del lugar.
+const cableCarPlace = ZACATECAS_PLACES.find((p) => p.id === CABLE_CAR_PLACE_ID);
+if (!cableCarPlace) throw new Error(`Falta el lugar ${CABLE_CAR_PLACE_ID} en places.ts`);
+const CABLE_CAR_FALLBACK_CAMERA: SceneCamera = {
+  lat: cableCarPlace.lat,
+  lng: cableCarPlace.lng,
+  altitude: 2490,
+  range: 650,
+  tilt: 60,
+  heading: 90,
+};
+
+/** La parada del teleférico usa el encuadre de los datos, venga el recorrido de la API o de aquí. */
+function withCableCarCamera(tour: Tour, camera: SceneCamera): Tour {
+  if (!tour.stops.some((s) => s.placeId === CABLE_CAR_PLACE_ID)) return tour;
+  return { ...tour, stops: tour.stops.map((s) => (s.placeId === CABLE_CAR_PLACE_ID ? { ...s, camera } : s)) };
+}
+
+async function loadCableCarCamera(): Promise<SceneCamera | null> {
+  try {
+    const data = await loadTeleferico();
+    return cableCarCamera(data.stations, data.line.lengthM);
+  } catch (error) {
+    console.warn('[tours3d] Sin teleferico.json; la parada del teleférico mira la estación del Grillo.', error);
+    return null;
+  }
+}
 
 // Vista inicial: el centro histórico desde el suroeste, con la Bufa al fondo.
 export const ZACATECAS_3D_HOME: SceneCamera = {
@@ -79,8 +142,8 @@ export const TOURS_3D: Tour[] = [
         },
       },
       {
-        placeId: 'teleferico-zacatecas',
-        camera: { lat: 22.7782, lng: -102.5775, altitude: 2500, range: 650, tilt: 60, heading: 120 },
+        placeId: CABLE_CAR_PLACE_ID,
+        camera: CABLE_CAR_FALLBACK_CAMERA,
         holdMillis: 2500,
         caption: {
           es: 'Teleférico: une el Cerro del Grillo con el Cerro de la Bufa en unos 2 minutos sobre el centro.',
@@ -220,15 +283,21 @@ function isTour(v: unknown): v is Tour {
 /**
  * Recorridos desde la API Python (`GET /api/py/tours`, #27).
  * Si Python no está corriendo o responde algo inválido, usa TOURS_3D.
+ * La parada del teleférico se encuadra con `teleferico.json` en ambos casos (#273).
  */
 export async function loadTours(): Promise<Tour[]> {
+  const [base, camera] = await Promise.all([loadBaseTours(), loadCableCarCamera()]);
+  const framed = camera ? base.map((tour) => withCableCarCamera(tour, camera)) : base;
+  return [...framed, ...SEASONAL_TOURS_3D];
+}
+
+async function loadBaseTours(): Promise<Tour[]> {
   try {
     const res = await fetch('/api/py/tours', { signal: AbortSignal.timeout(3000) });
-    if (!res.ok) return [...TOURS_3D, ...SEASONAL_TOURS_3D];
+    if (!res.ok) return TOURS_3D;
     const data: unknown = await res.json();
-    const base = Array.isArray(data) && data.length > 0 && data.every(isTour) ? data : TOURS_3D;
-    return [...base, ...SEASONAL_TOURS_3D];
+    return Array.isArray(data) && data.length > 0 && data.every(isTour) ? data : TOURS_3D;
   } catch {
-    return [...TOURS_3D, ...SEASONAL_TOURS_3D];
+    return TOURS_3D;
   }
 }

@@ -11,6 +11,7 @@ Closes #
 ```bash
 bun run dev      # y si toca Python: bun run dev:py
 ```
+Preview: <!-- liga zacdes-web-pr-<n>.onrender.com que Render comenta en este PR -->
 <!-- URL o curl concreto -->
 
 ## Evidencia
