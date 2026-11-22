@@ -37,7 +37,7 @@ export function CableCabinView({ engine, language, hidden, frameContainer, onRid
   if (hidden || state.status === 'unavailable') return null;
   const mobileIntro = state.riding && !showIntro ? 'max-md:hidden' : '';
   return <>
-    <aside aria-label={t.telefericoTitle} className={`rounded-xl border border-stone-200 bg-[#FBF9F5] p-2 text-xs text-stone-900 shadow-sm ${state.riding ? 'max-md:flex max-md:flex-wrap max-md:items-center max-md:gap-x-3 max-md:gap-y-1 max-md:bg-[#FBF9F5]/90' : ''}`}>
+    <aside aria-label={t.telefericoTitle} className={`glass rounded-2xl p-2 text-xs text-stone-900 ${state.riding ? 'max-md:flex max-md:flex-wrap max-md:items-center max-md:gap-x-3 max-md:gap-y-1 max-md:bg-[#FBF9F5]/90' : ''}`}>
       <p role="status" className={`font-semibold max-md:basis-full max-md:order-last ${mobileIntro}`}>{state.status === 'closed' ? t.cabinClosed : state.status === 'reduced' ? t.cabinReduced : t.cabinRunning}</p>
       <p className={`my-1 text-stone-600 max-md:basis-full max-md:order-last ${state.riding ? 'max-md:my-0' : ''} ${mobileIntro}`}>{t.cabinSimulation}</p>
       <button type="button" aria-pressed={state.riding} disabled={!state.riding && state.status !== 'running'}

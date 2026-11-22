@@ -120,7 +120,7 @@ export const CableCarCard: React.FC<CableCarCardProps> = ({
   if (!data) {
     return (
       <div
-        className={`bg-[#FBF9F5] rounded-2xl shadow-lg border border-stone-200 p-4 text-stone-900 ${className}`.trim()}
+        className={`glass-sheet p-4 text-stone-900 ${className}`.trim()}
       >
         <p className="text-xs text-stone-600">{t.telefericoLoading}</p>
       </div>
@@ -143,7 +143,7 @@ export const CableCarCard: React.FC<CableCarCardProps> = ({
     queryTarget,
   )}`;
 
-  const frame = embedded ? 'text-stone-900' : 'bg-[#FBF9F5] rounded-2xl shadow-lg border border-stone-200 p-4 text-stone-900';
+  const frame = embedded ? 'text-stone-900' : 'glass-sheet p-4 text-stone-900';
   return (
     <div className={`${frame} ${className}`.trim()}>
       {!embedded && (<>

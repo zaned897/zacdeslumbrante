@@ -123,3 +123,91 @@
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(120, 113, 108, 0.45);
 }
+
+/*
+ * Vidrio esmerilado de la ciudad 3D (#308, Propuesta O2): paneles que dejan ver la ciudad
+ * desenfocada detrás. `.glass-sheet` es la misma superficie con las esquinas de una hoja.
+ * Respaldo opaco con la misma forma si el sistema pide menos transparencia o si el fps cae
+ * (Map3DView pone `data-glass="solid"` en el contenedor de la vista).
+ */
+.glass,
+.glass-sheet {
+  background-color: rgba(255, 255, 255, 0.42);
+  -webkit-backdrop-filter: blur(16px) saturate(1.8);
+  backdrop-filter: blur(16px) saturate(1.8);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.18),
+    0 8px 24px -10px rgba(40, 20, 5, 0.45);
+  color: #1c1917;
+}
+.glass-sheet {
+  border-radius: 26px;
+}
+/* De noche la ciudad es casi negra: más blanco para que el texto oscuro siga en AA. */
+[data-scene-tone="dark"] :is(.glass, .glass-sheet) {
+  background-color: rgba(255, 255, 255, 0.72);
+}
+[data-glass="solid"] :is(.glass, .glass-sheet) {
+  background-color: rgba(251, 249, 245, 0.97);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+@media (prefers-reduced-transparency: reduce) {
+  :is(.glass, .glass-sheet) {
+    background-color: rgba(251, 249, 245, 0.97);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+/* Gelatina: los controles se estiran un poco al apretar y regresan con rebote al soltar. */
+.jelly {
+  transition: transform 380ms cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+.jelly:active {
+  transform: scale(1.06, 0.94);
+  transition-duration: 90ms;
+}
+
+/* Gota tipo lente donde se levantó el dedo tras arrastrar el mapa (#308). */
+.drop-lens {
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  margin: -60px 0 0 -60px;
+  pointer-events: none;
+}
+.drop-lens i {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2.5px solid rgba(255, 255, 255, 0.95);
+  background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.08) 45%, rgba(255, 255, 255, 0) 70%);
+  -webkit-backdrop-filter: blur(1.5px) saturate(1.9) brightness(1.08);
+  backdrop-filter: blur(1.5px) saturate(1.9) brightness(1.08);
+  box-shadow: inset 0 0 18px rgba(255, 255, 255, 0.55), 0 0 14px rgba(255, 255, 255, 0.35);
+  animation: drop-lens 0.6s cubic-bezier(0.2, 0.8, 0.3, 1) both;
+}
+.drop-lens i + i {
+  animation-delay: 0.08s;
+  border-width: 1px;
+  box-shadow: none;
+  background: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+.drop-lens i + i + i {
+  animation-delay: 0.16s;
+}
+@keyframes drop-lens {
+  0% { transform: scale(0.12); opacity: 0; }
+  12% { opacity: 1; }
+  55% { opacity: 0.85; }
+  100% { transform: scale(1.15); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .jelly:active { transform: none; }
+  .drop-lens { display: none; }
+}
