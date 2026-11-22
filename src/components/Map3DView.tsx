@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   ArrowDown,
   ArrowUp,
+  CableCar,
   Camera,
   Check,
   ChevronLeft,
@@ -10,19 +11,23 @@ import {
   Footprints,
   Globe,
   Home,
+  Landmark,
   Layers,
   LocateFixed,
   Minus,
   Navigation2,
+  Pickaxe,
   Plus,
   MapPin,
   MessageCircle,
   Play,
   RotateCcw,
   RotateCw,
+  Route,
   Sparkles,
   Square,
   Store,
+  TrainFront,
   Trophy,
   X,
 } from 'lucide-react';
@@ -65,6 +70,8 @@ import { FreightNotice } from './map3d/FreightNotice';
 import { ProposePhotoSheet } from './map3d/ProposePhotoSheet';
 import { CableCabinView } from './map3d/CableCabinView';
 import { CableCarCard } from './map3d/CableCarCard';
+import { RadialMenu, type RadialNode } from './map3d/RadialMenu';
+import { CableRideCard, CollectionCard } from './map3d/MenuCards';
 
 
 /** Recorridos que tocan hoy: los de temporada solo en su temporada, y primero. */
@@ -683,6 +690,88 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
     }
     return best;
   }, [isExploring, position, placePois, collection]);
+  /** Abre la ficha de un lugar del catálogo y acerca la cámara (Mina El Edén desde el menú). */
+  const openPlace = (placeId: string) => {
+    const poi = placePois.find((p) => p.placeId === placeId);
+    if (!poi) return;
+    setSelected(poi);
+    void engineRef.current?.flyTo(
+      { lat: poi.lat, lng: poi.lng, altitude: ZACATECAS_3D_HOME.altitude, range: 700, tilt: 55, heading: ZACATECAS_3D_HOME.heading },
+      2000,
+    );
+  };
+
+  const menuItems: RadialNode[] = [
+    {
+      id: 'attractions',
+      label: t.menuAttractions,
+      icon: Landmark,
+      children: [
+        {
+          id: 'cable',
+          label: t.menuCable,
+          icon: CableCar,
+          card: (close) => <CableRideCard engine={engineRef.current} language={language} onDone={close} />,
+        },
+        {
+          id: 'train',
+          label: t.menuTrain,
+          icon: TrainFront,
+          card: () =>
+            engineRef.current?.getFreightState?.() && engineRef.current.getFreightState() !== 'unavailable' ? (
+              <FreightNotice inline notices={false} engine={engineRef.current} language={language} hidden={false} />
+            ) : (
+              <p className="text-xs text-stone-600">{t.menuTrainNone}</p>
+            ),
+        },
+        { id: 'mine', label: placeName('mina-el-eden', language), icon: Pickaxe, action: () => openPlace('mina-el-eden') },
+      ],
+    },
+    {
+      id: 'sky',
+      label: t.menuSky,
+      icon: Sparkles,
+      disabled: !canStargaze,
+      hint: canStargaze ? undefined : t.menuSkyHint,
+      action: () => {
+        setSelected(null);
+        setStargazing(true);
+      },
+    },
+    {
+      id: 'stand',
+      label: t.vendorFormOpen,
+      icon: Store,
+      action: () => {
+        setSelected(null);
+        setVendorOpen(true);
+      },
+    },
+    {
+      id: 'walk',
+      label: t.menuWalk,
+      icon: Footprints,
+      children: [
+        ...tours.map((x) => ({
+          id: `tour-${x.id}`,
+          label: x.title[language],
+          icon: Route,
+          action: () => {
+            setTourId(x.id);
+            void playTour(x);
+          },
+        })),
+        { id: 'on-foot', label: t.menuOnFoot, icon: Footprints, action: toggleExplore },
+      ],
+    },
+    {
+      id: 'collection',
+      label: t.view3dCollection,
+      icon: Trophy,
+      card: () => <CollectionCard found={discoveredCount} total={placePois.length} onReset={reset} language={language} />,
+    },
+  ];
+
   const photo = photos[photoIndex];
   const stepPhoto = (delta: number) =>
     setPhotoIndex((i) => (i + delta + photos.length) % photos.length);
@@ -695,9 +784,9 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
       {engineId === 'three' && status === 'ready' && (
         <div className={`absolute left-3 right-3 max-md:right-16 top-36 z-20 mx-auto grid max-h-[calc(100%_-_20rem)] max-w-sm gap-2 overflow-y-auto ${cabinRiding ? 'max-md:top-auto max-md:bottom-12' : ''}`}>
           <div className={`contents ${rideHide}`}>
-            <FreightNotice inline engine={engineRef.current} language={language} hidden={Boolean(askPlace || selected || isTouring || isExploring || isStargazing || pickingSpot || vendorOpen)} />
+            <FreightNotice inline settings={false} engine={engineRef.current} language={language} hidden={Boolean(askPlace || selected || isTouring || isExploring || isStargazing || pickingSpot || vendorOpen)} />
           </div>
-          <CableCabinView engine={engineRef.current} language={language} frameContainer={containerRef.current} onRidingChange={setCabinRiding}
+          <CableCabinView boardButton={false} engine={engineRef.current} language={language} frameContainer={containerRef.current} onRidingChange={setCabinRiding}
             hidden={Boolean(askPlace || selected || isTouring || isExploring || isStargazing || pickingSpot || vendorOpen)} />
         </div>
       )}
@@ -737,33 +826,7 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
           <span className="font-serif font-bold text-sm md:text-base">{t.view3d}</span>
         </div>
         <div className="flex items-center gap-2">
-          {/* Dar de alta un puesto (#173) */}
-          {status === 'ready' && !isTouring && !pickingSpot && !isStargazing && (
-            <button
-              onClick={() => {
-                setSelected(null);
-                setVendorOpen(true);
-              }}
-              className={`pointer-events-auto flex items-center gap-1.5 px-3 py-2 text-xs font-semibold bg-[#FBF9F5]/95 border border-stone-200 rounded-lg shadow-sm hover:bg-white cursor-pointer ${rideHide}`}
-              aria-label={t.vendorFormOpenLabel}
-              title={t.vendorFormOpenLabel}
-            >
-              <Store className="w-3.5 h-3.5 text-[#E4007C]" />
-              {t.vendorFormOpen}
-            </button>
-          )}
-          {canStargaze && !isTouring && !isExploring && !isStargazing && !pickingSpot && (
-            <button
-              onClick={() => {
-                setSelected(null);
-                setStargazing(true);
-              }}
-              className="pointer-events-auto flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-white bg-[#1B2347] border border-[#4C4F8A] rounded-lg shadow-sm hover:bg-[#262F5C] cursor-pointer"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-[#FCD9A0]" />
-              {t.view3dSky}
-            </button>
-          )}
+          {/* Tu puesto y Mirar el cielo viven en el menú radial (#310). */}
           <button
             onClick={onToggleLanguage}
             className="pointer-events-auto flex items-center gap-1.5 px-3 py-2 text-xs font-semibold bg-[#FBF9F5]/95 border border-stone-200 rounded-lg shadow-sm hover:bg-white cursor-pointer"
@@ -1182,7 +1245,7 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
       )}
 
       {/* Hoja del recorrido: elegir uno (#34) o seguir la parada en curso */}
-      {status === 'ready' && !isExploring && !isStargazing && !selected && !askPlace && (isTouring ? tourStep : tours.length > 1) && (
+      {status === 'ready' && !isExploring && !isStargazing && !selected && !askPlace && isTouring && tourStep && (
         <div className={`absolute inset-x-3 bottom-20 md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:w-[28rem] z-10 bg-[#FBF9F5] rounded-2xl shadow-lg border border-stone-200 p-3 ${rideHide}`}>
           {tourStep ? (
             <>
@@ -1254,6 +1317,14 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
         />
       )}
 
+      {/* Menú radial (#310): las acciones sueltas en un solo botón; los controles de #292 se quedan al costado. */}
+      {status === 'ready' && !isTouring && !isExploring && !isStargazing && !pickingSpot && !cabinRiding && !askPlace && !vendorOpen && (
+        <RadialMenu
+          items={menuItems}
+          labels={{ open: t.menuOpen, close: t.menuClose, menu: t.menuLabel, back: t.menuTrail }}
+        />
+      )}
+
       {/* Controles */}
       {status === 'ready' && isStargazing && (
         <div className="absolute inset-x-0 bottom-0 z-10 flex justify-center gap-2 p-4">
@@ -1276,30 +1347,15 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
               <Square className="w-4 h-4" />
               {t.view3dStop}
             </button>
-          ) : isExploring ? null : (
-            tour && (
-              <button
-                onClick={() => void playTour(tour)}
-                className="flex items-center gap-2 px-3.5 py-3 text-sm font-semibold whitespace-nowrap text-white bg-[#9A3412] rounded-full shadow-lg hover:bg-[#78350F] cursor-pointer"
-              >
-                <Play className="w-4 h-4" />
-                {t.view3dTour}
-              </button>
-            )
-          )}
-          {!isTouring && (
+          ) : isExploring ? (
             <button
               onClick={toggleExplore}
-              className={`flex items-center gap-2 px-3.5 py-3 text-sm font-semibold whitespace-nowrap rounded-full shadow-lg cursor-pointer ${
-                isExploring
-                  ? 'text-white bg-stone-800 hover:bg-stone-700'
-                  : 'text-white bg-[#2563EB] hover:bg-[#1D4ED8]'
-              }`}
+              className="flex items-center gap-2 px-3.5 py-3 text-sm font-semibold whitespace-nowrap rounded-full shadow-lg cursor-pointer text-white bg-stone-800 hover:bg-stone-700"
             >
               <Footprints className="w-4 h-4" />
-              {isExploring ? t.view3dExploreStop : t.view3dExplore}
+              {t.view3dExploreStop}
             </button>
-          )}
+          ) : null}
         </div>
       )}
     </div>
