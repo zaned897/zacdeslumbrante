@@ -948,6 +948,367 @@ figure.wide .tag { margin: 0; }
     </div>
   </section>
 
+  <section class="nuevo" id="propuesta-o-tema">
+<style>
+/* Propuesta O · pulido visual y premios (solo diseño) */
+.po-glass { background: rgba(255,255,255,.30); -webkit-backdrop-filter: blur(16px) saturate(1.8); backdrop-filter: blur(16px) saturate(1.8); border: 1px solid rgba(255,255,255,.6); box-shadow: inset 0 1px 0 rgba(255,255,255,.85), inset 0 -1px 0 rgba(255,255,255,.18), 0 8px 24px -10px rgba(40,20,5,.45); }
+.po-glass.dk { background: rgba(28,25,23,.32); border-color: rgba(255,255,255,.28); color: #fff; }
+.po-solid { background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.18); }
+.po-hdr { position: absolute; top: 40px; left: 12px; right: 12px; z-index: 10; display: flex; justify-content: space-between; align-items: center; }
+.po-hdr > span { height: 32px; min-width: 32px; border-radius: 999px; display: grid; place-items: center; padding: 0 12px; font: 700 12px var(--f-body); color: #1C1917; }
+.po-ctrl { position: absolute; right: 10px; top: 92px; z-index: 11; display: flex; flex-direction: column; border-radius: 18px; overflow: hidden; }
+.po-ctrl span { width: 36px; height: 34px; display: grid; place-items: center; font: 700 13px var(--f-body); color: #7C2D12; }
+.po-ctrl span + span { border-top: 1px solid rgba(255,255,255,.45); }
+.po-sheet { position: absolute; left: 10px; right: 10px; bottom: 14px; z-index: 12; border-radius: 26px; padding: 14px; display: flex; flex-direction: column; gap: 6px; }
+.po-sheet h4 { margin: 0; font: 700 15px var(--f-display); color: #1C1917; }
+.po-sheet p { margin: 0; font-size: 11px; color: #292524; }
+.po-sheet .k { font: 600 10px var(--f-body); letter-spacing: .06em; text-transform: uppercase; color: #7C2D12; }
+.po-grab { width: 36px; height: 4px; border-radius: 4px; background: rgba(28,25,23,.25); align-self: center; margin-top: -4px; }
+
+/* 1 · Fotos que entran */
+.po-card { position: absolute; z-index: 9; width: 92px; border-radius: 14px; overflow: hidden; transform-origin: 50% 115%; animation: po-pop 4.8s cubic-bezier(.2,.9,.25,1.2) infinite both; }
+.po-card svg { display: block; width: 100%; height: 64px; }
+.po-card b { display: block; padding: 5px 7px 6px; font: 700 10px var(--f-body); color: #1C1917; }
+.po-card::after { content: ""; position: absolute; left: 50%; bottom: -7px; width: 12px; height: 12px; background: inherit; transform: translateX(-50%) rotate(45deg); }
+.po-card.d2 { animation-delay: .14s; } .po-card.d3 { animation-delay: .28s; }
+@keyframes po-pop { 0% { opacity: 0; transform: translateY(14px) scale(.55); filter: blur(6px); } 9% { opacity: 1; transform: none; filter: none; } 80% { opacity: 1; transform: none; filter: none; } 90%, 100% { opacity: 0; transform: translateY(10px) scale(.6); filter: blur(4px); } }
+.po-frames { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; max-width: 520px; margin: 4px auto 0; }
+.po-frames > div { border: 1px solid var(--linea); border-radius: 12px; padding: 10px 6px 8px; display: flex; flex-direction: column; align-items: center; gap: 6px; font: 500 11px var(--f-mono); color: var(--carbon-2); text-align: center; }
+.po-frames i { display: block; width: 40px; height: 30px; border-radius: 8px; background: linear-gradient(160deg, #F0B79A, #9A3412); }
+.po-viewer { position: absolute; inset: 0; background: #0C0A09; z-index: 8; }
+.po-viewer svg.ph { position: absolute; left: 0; right: 0; top: 150px; width: 100%; height: 250px; }
+.po-viewer .top { position: absolute; top: 40px; left: 12px; right: 12px; display: flex; justify-content: space-between; align-items: center; color: #fff; font: 600 12px var(--f-body); z-index: 3; }
+.po-viewer .top span { height: 32px; min-width: 32px; padding: 0 10px; border-radius: 999px; display: grid; place-items: center; }
+.po-viewer .cap { position: absolute; left: 14px; right: 14px; text-align: center; top: 404px; color: #E7E5E4; font-size: 11.5px; z-index: 3; display: flex; justify-content: space-between; gap: 8px; align-items: center; }
+.po-viewer .po-dots { position: absolute; left: 0; right: 0; top: 120px; display: flex; justify-content: center; gap: 5px; z-index: 3; }
+.po-viewer .po-dots i { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,.35); } .po-viewer .po-dots i.on { background: #fff; }
+.po-credit { position: absolute; left: 10px; right: 10px; bottom: 14px; z-index: 4; border-radius: 24px; padding: 14px; display: flex; flex-direction: column; gap: 7px; color: #fff; font-size: 11.5px; }
+.po-credit b { font-size: 13px; }
+.po-credit .ln { display: flex; justify-content: space-between; gap: 8px; border-top: 1px solid rgba(255,255,255,.18); padding-top: 7px; }
+.po-credit .ln span:first-child { opacity: .7; }
+
+/* 2 · Vidrio y gota */
+.po-drop { position: absolute; z-index: 9; width: 120px; height: 120px; margin: -60px 0 0 -60px; pointer-events: none; }
+.po-drop i { position: absolute; inset: 0; border-radius: 50%; border: 2.5px solid rgba(255,255,255,.95); background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.55), rgba(255,255,255,.08) 45%, rgba(255,255,255,0) 70%); -webkit-backdrop-filter: blur(1.5px) saturate(1.9) brightness(1.08); backdrop-filter: blur(1.5px) saturate(1.9) brightness(1.08); box-shadow: inset 0 0 18px rgba(255,255,255,.55), inset 8px -10px 18px rgba(255,255,255,.25); animation: po-drop 2.6s cubic-bezier(.2,.7,.2,1) infinite; }
+.po-drop i + i { animation-delay: .22s; border-width: 1px; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+.po-drop i + i + i { animation-delay: .44s; }
+@keyframes po-drop { 0% { transform: scale(.12); opacity: 0; } 8% { opacity: 1; } 55% { opacity: .85; } 100% { transform: scale(1.15); opacity: 0; } }
+.po-finger { position: absolute; z-index: 10; width: 26px; height: 26px; margin: -13px 0 0 -13px; border-radius: 50%; background: rgba(255,255,255,.55); border: 1.5px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,.3); animation: po-lift 2.6s ease-out infinite; }
+@keyframes po-lift { 0%, 6% { transform: scale(1); opacity: 1; } 22%, 100% { transform: scale(.4); opacity: 0; } }
+.po-trail { position: absolute; z-index: 9; height: 2px; background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.9)); border-radius: 2px; transform-origin: right center; }
+.po-stretch { animation: po-squish 2.6s ease-in-out infinite; transform-origin: 50% 0; }
+@keyframes po-squish { 0%, 100% { transform: none; } 10% { transform: scale(1.06, .94); } 18% { transform: scale(.97, 1.03); } 26% { transform: none; } }
+
+/* 3 · Menos letreros */
+.po-lbl { position: absolute; z-index: 9; transform: translate(-50%, -100%); background: #fff; color: #1C1917; border-radius: 7px; padding: 2px 6px; font: 700 9.5px var(--f-body); white-space: nowrap; box-shadow: 0 1px 3px rgba(0,0,0,.25); }
+.po-lbl.ph { width: 46px; height: 34px; padding: 0; border: 2px solid #fff; background: linear-gradient(160deg, #F0B79A, #9A3412); }
+.po-lbl.bd { background: #F59E0B; color: #fff; border-radius: 999px; }
+.po-chiprow { position: absolute; left: 12px; bottom: 118px; z-index: 11; display: flex; gap: 6px; }
+.po-chiprow span { border-radius: 999px; padding: 6px 10px; font: 600 10.5px var(--f-body); color: #1C1917; display: flex; gap: 5px; align-items: center; }
+.po-budget { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-top: 8px; }
+.po-budget > div { border: 1px solid var(--linea); border-radius: 14px; padding: 12px 14px; font-size: 13.5px; color: var(--carbon-2); display: flex; flex-direction: column; gap: 4px; }
+.po-budget b { color: var(--carbon); }
+
+/* 4 · Menú radial y teleférico */
+.po-fab { position: absolute; right: 16px; bottom: 24px; z-index: 14; width: 54px; height: 54px; border-radius: 50%; display: grid; place-items: center; color: #fff; background: radial-gradient(circle at 35% 30%, #F59E6B, #9A3412 70%); box-shadow: 0 8px 20px -6px rgba(154,52,18,.7), inset 0 1px 0 rgba(255,255,255,.5); font: 700 22px var(--f-body); }
+.po-fab.open { background: radial-gradient(circle at 35% 30%, #57534E, #1C1917 70%); }
+.po-scrim { position: absolute; inset: 0; z-index: 12; background: rgba(28,25,23,.28); -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px); }
+.po-rad { position: absolute; z-index: 13; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 3px; animation: po-fan .5s cubic-bezier(.2,.9,.3,1.3) both; }
+.po-rad span { width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; color: #7C2D12; }
+.po-rad span svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.po-rad b { font: 700 9.5px var(--f-body); color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.6); white-space: nowrap; }
+.po-rad.on span { background: #9A3412; color: #fff; border-color: #9A3412; }
+.po-rad.sm span { width: 38px; height: 38px; }
+@keyframes po-fan { from { opacity: 0; transform: translate(calc(-50% + var(--dx, 0px)), calc(-50% + var(--dy, 0px))) scale(.3); } }
+.po-crumb { position: absolute; top: 84px; left: 12px; z-index: 13; display: flex; gap: 4px; align-items: center; font: 600 10.5px var(--f-body); color: #fff; }
+.po-crumb span { border-radius: 999px; padding: 5px 9px; }
+.po-go { display: flex; gap: 8px; align-items: center; }
+.po-go .bt { flex: 1; border-radius: 999px; padding: 9px; text-align: center; font: 700 12px var(--f-body); background: #9A3412; color: #fff; }
+.po-go .bt.alt { flex: none; background: rgba(255,255,255,.6); color: #1C1917; padding: 9px 12px; }
+.po-cab svg.sc { position: absolute; inset: 0; width: 100%; height: 100%; }
+.po-near { position: absolute; z-index: 9; display: flex; align-items: center; gap: 5px; border-radius: 999px; padding: 4px 9px 4px 4px; font: 700 9.5px var(--f-body); color: #1C1917; animation: po-in 4.8s ease-out infinite both; }
+.po-near i { width: 16px; height: 16px; border-radius: 50%; background: #9A3412; display: block; }
+.po-near small { font-weight: 500; color: #57534E; }
+.po-near.n2 { animation-delay: .9s; } .po-near.n3 { animation-delay: 1.8s; }
+@keyframes po-in { 0% { opacity: 0; transform: translateY(8px) scale(.8); } 8%, 82% { opacity: 1; transform: none; } 100% { opacity: 0; } }
+.po-prog { position: absolute; left: 14px; right: 14px; top: 84px; z-index: 11; border-radius: 999px; padding: 7px 12px; display: flex; flex-direction: column; gap: 5px; font: 600 10px var(--f-body); color: #1C1917; }
+.po-prog .bar { height: 4px; border-radius: 4px; background: rgba(28,25,23,.15); position: relative; overflow: hidden; }
+.po-prog .bar i { position: absolute; left: 0; top: 0; bottom: 0; width: 42%; background: #9A3412; border-radius: 4px; }
+.po-prog .row { display: flex; justify-content: space-between; }
+.po-seg { display: flex; border-radius: 999px; padding: 3px; gap: 2px; }
+.po-seg span { flex: 1; text-align: center; border-radius: 999px; padding: 6px 4px; font: 600 10.5px var(--f-body); color: #1C1917; }
+.po-seg span.on { background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.18); }
+.po-seg span.off { text-decoration: line-through; opacity: .5; }
+
+/* 5 · Clases de puntos y premios */
+.po-m { position: absolute; z-index: 9; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.po-m b { font: 700 9.5px var(--f-body); background: #fff; color: #1C1917; border-radius: 7px; padding: 2px 6px; white-space: nowrap; box-shadow: 0 1px 3px rgba(0,0,0,.22); }
+.po-m .c1 { width: 30px; height: 30px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); background: #9A3412; border: 2.5px solid #fff; box-shadow: 0 2px 5px rgba(0,0,0,.35); display: grid; place-items: center; }
+.po-m .c1 svg { transform: rotate(45deg); width: 15px; height: 15px; stroke: #fff; fill: none; stroke-width: 2; }
+.po-m .c2 { width: 16px; height: 16px; border-radius: 50%; background: #C2410C; border: 2px solid #fff; box-shadow: 0 1px 3px rgba(0,0,0,.3); }
+.po-m .c3 { width: 8px; height: 8px; border-radius: 50%; background: #D97706; border: 1.5px solid #fff; }
+.po-m .c4 { width: 20px; height: 20px; border-radius: 6px; background: #15803D; border: 2px solid #fff; display: grid; place-items: center; box-shadow: 0 1px 3px rgba(0,0,0,.3); }
+.po-m .c4 svg { width: 12px; height: 12px; stroke: #fff; fill: none; stroke-width: 2; }
+.po-m .c5 { width: 11px; height: 11px; transform: rotate(45deg); background: #0E7490; border: 1.5px solid #fff; }
+.po-m .c6 { width: 22px; height: 22px; border-radius: 50%; background: conic-gradient(from 0deg, #F472B6, #A78BFA, #22D3EE, #FDE047, #F472B6); display: grid; place-items: center; color: #fff; font: 800 12px var(--f-body); box-shadow: 0 0 12px rgba(167,139,250,.9); animation: po-spin 3s linear infinite; }
+.po-m .c6 span { animation: po-spin 3s linear infinite reverse; display: block; }
+@keyframes po-spin { to { transform: rotate(360deg); } }
+.po-me { position: absolute; z-index: 10; width: 18px; height: 18px; margin: -9px 0 0 -9px; border-radius: 50%; background: #2563EB; border: 3px solid #fff; box-shadow: 0 0 0 8px rgba(37,99,235,.22); }
+.po-classes { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; margin-top: 8px; }
+.po-classes > div { border: 1px solid var(--linea); border-radius: 14px; padding: 12px 14px; display: grid; grid-template-columns: 34px 1fr; gap: 4px 10px; align-items: start; align-content: start; font-size: 13px; color: var(--carbon-2); }
+.po-classes .po-m { position: static; transform: none; grid-row: 1 / 3; justify-self: center; margin-top: 4px; }
+.po-classes b { color: var(--carbon); }
+.po-prize { position: absolute; inset: 0; z-index: 12; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; color: #fff; text-align: center; padding: 30px 20px; background: #120B1F; }
+.po-prize .aura { position: absolute; left: 50%; top: 42%; width: 520px; height: 520px; margin: -260px 0 0 -260px; border-radius: 50%; background: conic-gradient(from 0deg, #FF4D8D, #FF8A3D, #FFE14D, #3DFFB5, #3DC9FF, #8B5CFF, #FF4D8D); filter: blur(44px) saturate(1.4); opacity: .85; animation: po-spin 6s linear infinite; }
+.po-prize .ring { position: relative; width: 150px; height: 150px; border-radius: 50%; padding: 4px; background: conic-gradient(from 0deg, #FF4D8D, #FFE14D, #3DFFB5, #3DC9FF, #8B5CFF, #FF4D8D); animation: po-spin 2.4s linear infinite; box-shadow: 0 0 40px rgba(255,255,255,.45); }
+.po-prize .ring > div { width: 100%; height: 100%; border-radius: 50%; background: radial-gradient(circle at 50% 35%, #3B2A55, #140D22); display: grid; place-items: center; animation: po-spin 2.4s linear infinite reverse; }
+.po-prize .ring svg { width: 110px; height: 110px; }
+.po-prize .k { position: relative; font: 700 10px var(--f-body); letter-spacing: .14em; text-transform: uppercase; padding: 4px 10px; border-radius: 999px; background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.35); }
+.po-prize h4 { position: relative; margin: 0; font: 700 22px var(--f-display); background: linear-gradient(90deg, #FFE14D, #FF8AD8, #8BE9FF); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.po-prize p { position: relative; margin: 0; font-size: 11.5px; color: rgba(255,255,255,.85); max-width: 220px; }
+.po-prize .bt { position: relative; margin-top: 6px; border-radius: 999px; padding: 10px 18px; font: 700 12px var(--f-body); color: #120B1F; background: linear-gradient(90deg, #FFE14D, #FF8AD8, #8BE9FF); }
+.po-prize .spark { position: absolute; width: 6px; height: 6px; border-radius: 50%; background: #fff; box-shadow: 0 0 10px #fff, 0 0 20px #FF8AD8; animation: po-tw 1.6s ease-in-out infinite; }
+@keyframes po-tw { 0%, 100% { opacity: .2; transform: scale(.6); } 50% { opacity: 1; transform: scale(1.2); } }
+.po-toast { position: absolute; left: 12px; right: 12px; top: 84px; z-index: 13; border-radius: 20px; padding: 2px; background: conic-gradient(from var(--a, 0deg), #FF4D8D, #FFE14D, #3DFFB5, #3DC9FF, #8B5CFF, #FF4D8D); box-shadow: 0 10px 30px -8px rgba(139,92,255,.7); animation: po-toast 4s cubic-bezier(.2,.9,.3,1.2) infinite both; }
+.po-toast > div { border-radius: 18px; background: rgba(20,13,34,.82); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); color: #fff; padding: 9px 12px; display: grid; grid-template-columns: 40px 1fr; gap: 10px; align-items: center; font-size: 11px; }
+.po-toast b { display: block; font-size: 12.5px; }
+.po-toast svg { width: 40px; height: 40px; }
+@keyframes po-toast { 0% { opacity: 0; transform: translateY(-16px) scale(.92); } 6%, 94% { opacity: 1; transform: none; } 100% { opacity: 0; transform: translateY(-10px); } }
+.po-burst { position: absolute; z-index: 11; width: 90px; height: 90px; margin: -45px 0 0 -45px; border-radius: 50%; background: radial-gradient(circle, rgba(255,225,77,.0) 30%, rgba(255,138,216,.65) 45%, rgba(61,201,255,.0) 62%); animation: po-burst 4s ease-out infinite; }
+@keyframes po-burst { 0% { transform: scale(.2); opacity: 0; } 6% { opacity: 1; } 30%, 100% { transform: scale(2.2); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .po-card, .po-drop i, .po-finger, .po-stretch, .po-rad, .po-near, .po-m .c6, .po-m .c6 span, .po-prize .aura, .po-prize .ring, .po-prize .ring > div, .po-prize .spark, .po-toast, .po-burst { animation: none !important; }
+  .po-drop i + i, .po-drop i + i + i, .po-burst, .po-finger { opacity: 0; }
+}
+</style>
+    <div class="section-head">
+      <span class="eyebrow" data-en="Approved, ready for code">Aprobada, lista para código</span>
+      <h2 data-en="Proposal O · Polish for the 3D city: photos, glass, fewer labels, one menu and prizes">Propuesta O · Pulido de la ciudad 3D: fotos, vidrio, menos letreros, un solo menú y premios</h2>
+      <p class="lede" data-en="Five pieces on top of the approved Proposal N. Building photos appear with an animation and their credits move to a simple photo viewer; panels become frosted glass and releasing the map leaves a drop; the phone shows fewer labels; the loose buttons go into one radial menu, where Attractions → Cable car → Ride opens a side view of the city; and the center fills with small places of six kinds, with a prize for the mascot when you pass by.">Cinco piezas encima de la Propuesta N aprobada. Las fotos de los edificios salen con animación y sus créditos pasan a un visor de fotos sencillo; los paneles se vuelven vidrio esmerilado y al soltar el mapa queda una gota; el celular muestra menos letreros; los botones sueltos se juntan en un menú radial, donde Atracciones → Teleférico → Subir abre una vista de perfil de la ciudad; y el centro se llena de puntos menores de seis clases, con un premio para la mascota al pasar.</p>
+      <div class="chips"><span class="tag real" data-en="Approved · Nov 22">Aprobada · 22 nov</span><span class="chip">#307</span><span class="chip">#308</span><span class="chip">#309</span><span class="chip">#310</span><span class="chip">#311</span><span class="chip">#312</span><span class="chip">#313</span><span class="chip">#298</span></div>
+    </div>
+
+    <!-- O1 · Fotos -->
+    <div class="block" id="propuesta-o1">
+      <div class="block-head">
+        <h3 data-en="O1 · Photos that come in, credits in a viewer">O1 · Fotos que entran, créditos en un visor</h3>
+        <p data-en="Today each floating photo carries its credit line, and they pop in at once. The card now grows out of its pin, with a soft blur and a small delay between neighbors, and shows only the place's name. Tapping it opens a full-screen viewer: swipe for the next one, pinch to zoom, drag down to close. The author, license and source live behind a “Credits” button, so the license is still one tap away.">Hoy cada foto flotante lleva su línea de crédito y aparecen todas de golpe. Ahora la tarjeta crece desde su punto, con un desenfoque suave y un pequeño retraso entre vecinas, y solo dice el nombre del lugar. Al tocarla se abre un visor a pantalla completa: deslizar para la siguiente, pellizcar para acercar, arrastrar hacia abajo para cerrar. Autor, licencia y fuente quedan detrás de un botón «Créditos», así la licencia sigue a un toque.</p>
+        <div class="chips"><span class="chip">#307</span></div>
+      </div>
+      <div class="gallery">
+        <figure class="shot"><div class="phone"><div class="screen"><canvas class="city" data-mode="hora" data-hora="tarde" data-seed="9" data-zoom="1.7"></canvas><div class="notch"></div><div class="status"><span>17:40</span><span>5G ▮▮▮</span></div>
+          <div class="po-hdr"><span class="po-glass"><svg class="ico"><use href="#i-back"/></svg></span><span class="po-glass" data-en="3D City">Ciudad 3D</span><span class="po-glass">ES</span></div>
+          <div class="po-card po-solid" style="left:16%;top:30%"><svg viewBox="0 0 92 64" aria-hidden="true"><rect width="92" height="64" fill="#F4C9A8"/><rect x="26" y="20" width="40" height="44" fill="#C9826B"/><rect x="18" y="12" width="10" height="52" fill="#B5654D"/><rect x="64" y="12" width="10" height="52" fill="#B5654D"/><path d="M40 64V48a6 6 0 0 1 12 0v16z" fill="#6E2A14"/><circle cx="46" cy="32" r="5" fill="#9A3412"/></svg><b data-en="Cathedral">Catedral</b></div>
+          <div class="po-card po-solid d2" style="left:52%;top:22%"><svg viewBox="0 0 92 64" aria-hidden="true"><rect width="92" height="64" fill="#CFE0EE"/><rect x="10" y="26" width="72" height="38" fill="#D8C3A5"/><path d="M6 28h80l-8-10H14z" fill="#9A3412"/><g fill="#7C5A3A"><rect x="18" y="36" width="8" height="14"/><rect x="34" y="36" width="8" height="14"/><rect x="50" y="36" width="8" height="14"/><rect x="66" y="36" width="8" height="14"/></g></svg><b data-en="González Ortega Market">Mercado G. Ortega</b></div>
+          <div class="po-card po-solid d3" style="left:40%;top:52%"><svg viewBox="0 0 92 64" aria-hidden="true"><rect width="92" height="64" fill="#F6D9B8"/><rect x="20" y="22" width="52" height="42" fill="#BE7259"/><path d="M20 22l26-12 26 12z" fill="#9A3412"/><rect x="62" y="6" width="10" height="20" fill="#B5654D"/><path d="M40 64V50a6 6 0 0 1 12 0v14z" fill="#6E2A14"/></svg><b>Santo Domingo</b></div>
+        </div></div><span class="tag prop" data-en="Proposal · illustration">Propuesta · ilustración</span><figcaption data-en="Cards grow out of their place one after another (140 ms apart) and leave the same way when you move off. No credit line on the card.">Las tarjetas crecen desde su lugar una tras otra (140 ms entre cada una) y se van igual al alejarte. Sin línea de crédito en la tarjeta.</figcaption></figure>
+
+        <figure class="shot"><div class="phone"><div class="screen"><div class="po-viewer">
+          <div class="notch"></div><div class="status" style="color:#fff"><span>17:41</span><span>5G ▮▮▮</span></div>
+          <div class="top"><span class="po-glass dk"><svg class="ico"><use href="#i-x"/></svg></span><span>2 / 4</span><span class="po-glass dk" data-en="Share">Compartir</span></div>
+          <div class="po-dots"><i></i><i class="on"></i><i></i><i></i></div>
+          <svg class="ph" viewBox="0 0 300 250" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><linearGradient id="po-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F3B98A"/><stop offset="1" stop-color="#FBEBD8"/></linearGradient></defs><rect width="300" height="250" fill="url(#po-sky)"/><rect x="90" y="80" width="120" height="170" fill="#C9826B"/><rect x="60" y="40" width="40" height="210" fill="#B5654D"/><rect x="200" y="40" width="40" height="210" fill="#B5654D"/><path d="M60 40q20-30 40 0zM200 40q20-30 40 0z" fill="#9A3412"/><circle cx="150" cy="120" r="18" fill="#9A3412"/><circle cx="150" cy="120" r="10" fill="#F2B04C"/><path d="M128 250v-50a22 22 0 0 1 44 0v50z" fill="#6E2A14"/><g fill="#B5654D"><rect x="104" y="150" width="12" height="30"/><rect x="184" y="150" width="12" height="30"/></g></svg>
+          <div class="cap"><span data-en="Cathedral Basilica · baroque façade">Catedral Basílica · fachada barroca</span></div>
+          <div class="po-credit po-glass dk"><div class="po-grab" style="background:rgba(255,255,255,.4)"></div><b data-en="Credits">Créditos</b>
+            <div class="ln"><span data-en="Photo">Foto</span><span><i data-en="author's name">nombre del autor</i></span></div>
+            <div class="ln"><span data-en="License">Licencia</span><span>CC BY-SA 4.0</span></div>
+            <div class="ln"><span data-en="Source">Fuente</span><span style="text-decoration:underline">Wikimedia Commons ↗</span></div>
+            <div class="ln"><span data-en="Got a better one?">¿Tienes una mejor?</span><span style="text-decoration:underline" data-en="Suggest a photo">Proponer foto</span></div>
+          </div>
+        </div></div></div><span class="tag prop" data-en="Proposal · illustration">Propuesta · ilustración</span><figcaption data-en="Simple viewer. Swipe, pinch, drag down to close. “Credits” opens a glass sheet with author, license and source, taken from the same photo data the map uses today; the button “Suggest a photo” that exists today moves here.">Visor sencillo. Deslizar, pellizcar, arrastrar hacia abajo para cerrar. «Créditos» abre una hoja de vidrio con autor, licencia y fuente, sacados de los mismos datos de fotos que usa hoy el mapa; el botón «Proponer foto» que ya existe se muda aquí.</figcaption></figure>
+      </div>
+      <div class="po-frames" aria-hidden="true">
+        <div><i style="transform:scale(.55) translateY(10px);filter:blur(3px);opacity:.3"></i>0 ms</div>
+        <div><i style="transform:scale(.85) translateY(4px);filter:blur(1.5px);opacity:.75"></i>120 ms</div>
+        <div><i style="transform:scale(1.05)"></i>240 ms</div>
+        <div><i></i>320 ms</div>
+      </div>
+      <p class="fine" data-en="Licenses such as CC BY-SA ask for credit next to the work or in a place where it can be found easily; a credits sheet one tap away from the photo meets that, and the viewer always has it. With “reduce motion” the cards appear without growing.">Licencias como CC BY-SA piden el crédito junto a la obra o en un lugar donde se encuentre fácil; una hoja de créditos a un toque de la foto lo cumple, y el visor siempre la tiene. Con «reducir movimiento» las tarjetas aparecen sin crecer.</p>
+    </div>
+
+    <!-- O2 · Vidrio y gota -->
+    <div class="block" id="propuesta-o2">
+      <div class="block-head">
+        <h3 data-en="O2 · Frosted glass and a drop when you release the map">O2 · Vidrio esmerilado y una gota al soltar el mapa</h3>
+        <p data-en="Header, controls, cards and sheets turn into frosted glass: a blur of the city behind, more color saturation, a light edge on top and a soft shadow, like the glass of recent iPhones. When you drag the map and let go, a clear drop forms where your finger left, ripples and fades while the map glides to a stop; the buttons stretch a little and come back, like jelly.">Encabezado, controles, tarjetas y hojas pasan a vidrio esmerilado: la ciudad desenfocada detrás, más saturación, un borde de luz arriba y una sombra suave, como el vidrio de los iPhone recientes. Al arrastrar el mapa y soltar, se forma una gota transparente donde se levantó el dedo, hace ondas y se desvanece mientras el mapa se desliza hasta detenerse; los botones se estiran un poco y regresan, como gelatina.</p>
+        <div class="chips"><span class="chip">#308</span></div>
+      </div>
+      <div class="gallery">
+        <figure class="shot"><div class="phone"><div class="screen"><canvas class="city" data-mode="hora" data-hora="dia" data-seed="9" data-zoom="1.9"></canvas><div class="notch"></div><div class="status"><span>10:08</span><span>5G ▮▮▮</span></div>
+          <div class="po-hdr"><span class="po-solid"><svg class="ico"><use href="#i-back"/></svg></span><span class="po-solid" data-en="3D City">Ciudad 3D</span><span class="po-solid">ES</span></div>
+          <div class="po-ctrl po-solid"><span>N</span><span>◎</span><span>3D</span></div>
+          <div class="po-sheet po-solid" style="border-radius:16px"><span class="k" data-en="Must-see · Monument">Imprescindible · Monumento</span><h4 data-en="Cathedral Basilica of Zacatecas">Catedral Basílica de Zacatecas</h4><p data-en="Solid white panels cover the city.">Paneles blancos sólidos tapan la ciudad.</p></div>
+        </div></div><span class="tag ill" data-en="Today · illustration">Hoy · ilustración</span><figcaption data-en="Today: solid white panels with square corners.">Hoy: paneles blancos sólidos y esquinas rectas.</figcaption></figure>
+
+        <figure class="shot"><div class="phone"><div class="screen"><canvas class="city" data-mode="hora" data-hora="dia" data-seed="9" data-zoom="1.9"></canvas><div class="notch"></div><div class="status"><span>10:08</span><span>5G ▮▮▮</span></div>
+          <div class="po-hdr"><span class="po-glass"><svg class="ico"><use href="#i-back"/></svg></span><span class="po-glass" data-en="3D City">Ciudad 3D</span><span class="po-glass">ES</span></div>
+          <div class="po-ctrl po-glass"><span>N</span><span>◎</span><span>3D</span></div>
+          <div class="po-sheet po-glass"><div class="po-grab"></div><span class="k" data-en="Must-see · Monument">Imprescindible · Monumento</span><h4 data-en="Cathedral Basilica of Zacatecas">Catedral Basílica de Zacatecas</h4><p data-en="The city shows through the panel, blurred. Round corners that follow the phone's.">La ciudad se ve a través del panel, desenfocada. Esquinas redondas que siguen las del teléfono.</p></div>
+        </div></div><span class="tag prop" data-en="Proposal · illustration">Propuesta · ilustración</span><figcaption data-en="Glass: 16 px blur, saturation 1.8, light top edge, round corners that follow the screen. Text stays dark on light glass for contrast.">Vidrio: desenfoque de 16 px, saturación 1.8, borde de luz arriba, esquinas que siguen la pantalla. El texto sigue oscuro sobre vidrio claro para el contraste.</figcaption></figure>
+
+        <figure class="shot"><div class="phone"><div class="screen"><canvas class="city" data-mode="hora" data-hora="dia" data-seed="9" data-zoom="1.5"></canvas><div class="notch"></div><div class="status"><span>10:09</span><span>5G ▮▮▮</span></div>
+          <div class="po-hdr"><span class="po-glass"><svg class="ico"><use href="#i-back"/></svg></span><span class="po-glass" data-en="3D City">Ciudad 3D</span><span class="po-glass">ES</span></div>
+          <div class="po-ctrl po-glass po-stretch"><span>N</span><span>◎</span><span>3D</span></div>
+          <div class="po-trail" style="left:18%;top:62%;width:34%;transform:rotate(-18deg)"></div>
+          <div class="po-drop" style="left:52%;top:55%"><i></i><i></i><i></i></div>
+          <div class="po-finger" style="left:52%;top:55%"></div>
+        </div></div><span class="tag prop" data-en="Proposal · illustration">Propuesta · ilustración</span><figcaption data-en="Releasing the drag: a lens-like drop where the finger left (it magnifies and brightens what is under it), two rings that open and fade in about 0.6 s, and the controls stretch and settle.">Al soltar: una gota como lente donde se levantó el dedo (aumenta y aviva lo que hay debajo), dos anillos que se abren y desvanecen en unos 0.6 s, y los controles se estiran y se acomodan.</figcaption></figure>
+      </div>
+      <p class="fine" data-en="Glass over a live 3D map costs on mid-range phones. If frames drop below 30 fps (#295 measures with ?stats=1), or the phone asks to “reduce transparency”, panels fall back to almost-solid white with the same shape. The drop is drawn on top as a separate layer, not in the 3D scene. With “reduce motion”: no drop, no jelly.">El vidrio sobre un mapa 3D en vivo cuesta en celulares de gama media. Si baja de 30 fps (#295 mide con ?stats=1), o el teléfono pide «reducir transparencia», los paneles vuelven a un blanco casi sólido con la misma forma. La gota se dibuja encima como capa aparte, no dentro de la escena 3D. Con «reducir movimiento»: sin gota ni gelatina.</p>
+    </div>
+
+    <!-- O3 · Menos letreros -->
+    <div class="block" id="propuesta-o3">
+      <div class="block-head">
+        <h3 data-en="O3 · Fewer labels on the phone">O3 · Menos letreros en el celular</h3>
+        <p data-en="On a phone the names, photo cards and badges pile up and the city disappears. Proposal N already orders places by level (#295); this adds a label budget per screen size, groups photos into one button and leaves badges for when they matter.">En el celular se enciman nombres, tarjetas de fotos y avisos, y la ciudad desaparece. La Propuesta N ya ordena los lugares por nivel (#295); esto agrega un presupuesto de letreros por tamaño de pantalla, junta las fotos en un solo botón y deja los avisos para cuando importan.</p>
+        <div class="chips"><span class="chip">#309</span><span class="chip">#295</span></div>
+      </div>
+      <div class="gallery">
+        <figure class="shot"><div class="phone"><div class="screen"><canvas class="city" data-mode="hora" data-hora="dia" data-seed="9" data-zoom="1.3"></canvas><div class="notch"></div><div class="status"><span>12:20</span><span>5G ▮▮▮</span></div>
+          <div class="po-hdr"><span class="po-solid"><svg class="ico"><use href="#i-back"/></svg></span><span class="po-solid" data-en="3D City">Ciudad 3D</span><span class="po-solid">ES</span></div>
+          <span class="po-lbl" style="left:30%;top:28%" data-en="Cable car">Teleférico</span><span class="po-lbl ph" style="left:44%;top:30%"></span><span class="po-lbl" style="left:64%;top:26%">La Bufa</span><span class="po-lbl bd" style="left:78%;top:31%" data-en="New!">¡Nuevo!</span>
+          <span class="po-lbl" style="left:42%;top:38%" data-en="Cathedral">Catedral</span><span class="po-lbl ph" style="left:58%;top:40%"></span><span class="po-lbl" style="left:26%;top:43%">Santo Domingo</span><span class="po-lbl" style="left:70%;top:46%" data-en="Market">Mercado</span>
+          <span class="po-lbl" style="left:36%;top:51%" data-en="Calderón Theater">Teatro Calderón</span><span class="po-lbl ph" style="left:22%;top:56%"></span><span class="po-lbl bd" style="left:52%;top:55%" data-en="Mission today">Misión de hoy</span><span class="po-lbl" style="left:74%;top:58%">Indio Triste</span>
+          <span class="po-lbl" style="left:46%;top:64%" data-en="El Edén mine">Mina El Edén</span><span class="po-lbl" style="left:28%;top:69%">Callejón del Beso</span><span class="po-lbl ph" style="left:66%;top:70%"></span><span class="po-lbl" style="left:50%;top:76%">Plazuela Goitia</span>
+          <span class="po-lbl bd" style="left:24%;top:81%" data-en="Your stand">Tu puesto</span><span class="po-lbl bd" style="left:60%;top:84%" data-en="Look at the sky">Mirar el cielo</span>
+        </div></div><span class="tag ill" data-en="Today · illustration">Hoy · ilustración</span><figcaption data-en="What it feels like today on a phone: about 15 names, photo cards and badges competing for the same space.">Cómo se siente hoy en el celular: unos 15 nombres, fotos y avisos peleando por el mismo espacio.</figcaption></figure>
+
+        <figure class="shot"><div class="phone"><div class="screen"><canvas class="city" data-mode="hora" data-hora="dia" data-seed="9" data-zoom="1.3"></canvas><div class="notch"></div><div class="status"><span>12:20</span><span>5G ▮▮▮</span></div>
+          <div class="po-hdr"><span class="po-glass"><svg class="ico"><use href="#i-back"/></svg></span><span class="po-glass" data-en="3D City">Ciudad 3D</span><span class="po-glass">ES</span></div>
+          <div class="po-ctrl po-glass"><span>N</span><span>◎</span><span>3D</span></div>
+          <div class="po-m" style="left:30%;top:28%"><b data-en="Cable car">Teleférico</b><span class="c2"></span></div>
+          <div class="po-m" style="left:64%;top:26%"><b>La Bufa</b><span class="c2"></span></div>
+          <div class="po-m" style="left:44%;top:40%"><b data-en="Cathedral">Catedral</b><span class="c2"></span></div>
+          <div class="po-m" style="left:46%;top:64%"><b data-en="El Edén mine">Mina El Edén</b><span class="c2"></span></div>
+          <div class="po-m" style="left:26%;top:45%"><span class="c3"></span></div><div class="po-m" style="left:70%;top:47%"><span class="c3"></span></div><div class="po-m" style="left:36%;top:53%"><span class="c3"></span></div><div class="po-m" style="left:74%;top:58%"><span class="c3"></span></div><div class="po-m" style="left:28%;top:69%"><span class="c3"></span></div><div class="po-m" style="left:58%;top:72%"><span class="c3"></span></div>
+          <div class="po-chiprow"><span class="po-glass">📷 <span data-en="4 photos nearby">4 fotos cerca</span></span><span class="po-glass">✦ <span data-en="Mission">Misión</span></span></div>
+          <div class="po-fab">✦</div>
+        </div></div><span class="tag prop" data-en="Proposal · illustration">Propuesta · ilustración</span><figcaption data-en="Same view: four names, the rest dots. Photos become one “4 photos nearby” button; the mission is a small chip; the loose buttons go into the menu of O4.">La misma vista: cuatro nombres, lo demás puntos. Las fotos se vuelven un botón «4 fotos cerca»; la misión es un chip chico; los botones sueltos se van al menú de O4.</figcaption></figure>
+      </div>
+      <div class="po-budget">
+        <div><b data-en="Label budget">Presupuesto de letreros</b><span data-en="Phone: at most 5 names on screen. Tablet: 8. Desktop: 12. The rest stay as dots, and the highest level wins when two collide.">Celular: máximo 5 nombres en pantalla. Tableta: 8. Escritorio: 12. Lo demás queda como punto, y gana el nivel más alto cuando dos chocan.</span></div>
+        <div><b data-en="Photos on demand">Fotos a pedido</b><span data-en="On a phone, floating photo cards show only for the selected place or the closest one; the rest are counted in “photos nearby”, which opens the viewer of O1.">En el celular, las tarjetas de foto flotantes solo salen para el lugar elegido o el más cercano; las demás se cuentan en «fotos cerca», que abre el visor de O1.</span></div>
+        <div><b data-en="Badges that earn their place">Avisos que se ganan el lugar</b><span data-en="“New”, “Mission today” and similar become chips at the edge, never on top of the city, and go away after you see them once.">«Nuevo», «Misión de hoy» y parecidos pasan a chips en el borde, nunca encima de la ciudad, y se van después de verlos una vez.</span></div>
+      </div>
+    </div>
+
+    <!-- O4 · Menú radial y teleférico -->
+    <div class="block" id="propuesta-o4">
+      <div class="block-head">
+        <h3 data-en="O4 · One radial menu, and a cable car you can actually look out of">O4 · Un solo menú radial, y un teleférico desde el que sí se ve la ciudad</h3>
+        <p data-en="The loose buttons (your stand, look at the sky, tour, collection) go into one button at the bottom right. Tapping it fans out a ring of options; some open a second ring. Example: Attractions → Cable car → Ride. Inside the cabin, the view is now a side view of the city with the buildings you pass being named, or a view from above that follows the cabin. The glass-floor view looking down goes away.">Los botones sueltos (tu puesto, mirar el cielo, paseo, colección) se juntan en un botón abajo a la derecha. Al tocarlo se abre un anillo de opciones; algunas abren un segundo anillo. Ejemplo: Atracciones → Teleférico → Subir. Dentro de la cabina, la vista pasa a ser de perfil a la ciudad, nombrando los edificios por los que pasas, o desde arriba siguiendo a la cabina. La vista al suelo con piso de cristal se quita.</p>
+        <div class="chips"><span class="chip">#310</span><span class="chip">#311</span><span class="chip">#259</span></div>
+      </div>
+      <div class="gallery">
+        <figure class="shot"><div class="phone"><div class="screen"><canvas class="city" data-mode="hora" data-hora="dia" data-seed="9" data-zoom="1.3"></canvas><div class="notch"></div><div class="status"><span>12:30</span><span>5G ▮▮▮</span></div>
+          <div class="po-hdr"><span class="po-glass"><svg class="ico"><use href="#i-back"/></svg></span><span class="po-glass" data-en="3D City">Ciudad 3D</span><span class="po-glass">ES</span></div>
+          <div class="po-scrim"></div>
+          <div class="po-rad" style="left:84.8%;top:67.2%;--dx:0px;--dy:90px"><span class="po-glass"><svg><use href="#i-landmark"/></svg></span><b data-en="Attractions">Atracciones</b></div>
+          <div class="po-rad" style="left:64.4%;top:69%;--dx:40px;--dy:80px;animation-delay:.04s"><span class="po-glass"><svg><use href="#i-spark"/></svg></span><b data-en="Sky">Cielo</b></div>
+          <div class="po-rad" style="left:47.2%;top:74.4%;--dx:70px;--dy:60px;animation-delay:.08s"><span class="po-glass"><svg><use href="#i-pin"/></svg></span><b data-en="Your stand">Tu puesto</b></div>
+          <div class="po-rad" style="left:35.6%;top:82.3%;--dx:100px;--dy:40px;animation-delay:.12s"><span class="po-glass"><svg><use href="#i-route"/></svg></span><b data-en="Tour">Paseo</b></div>
+          <div class="po-rad" style="left:31.6%;top:91.7%;--dx:120px;--dy:0px;animation-delay:.16s"><span class="po-glass"><svg><use href="#i-paw"/></svg></span><b data-en="Collection">Colección</b></div>
+          <div class="po-fab open">✕</div>
+        </div></div><span class="tag prop" data-en="Proposal · illustration">Propuesta · ilustración</span><figcaption data-en="First ring: Attractions, Sky, Your stand, Tour and Collection. They fan out from the button; the city dims a little behind. Compass, center, 3D and zoom from Proposal N stay on the side, because you use them all the time.">Primer anillo: Atracciones, Cielo, Tu puesto, Paseo y Colección. Salen en abanico desde el botón; la ciudad se atenúa un poco detrás. Brújula, centro, 3D y zoom de la Propuesta N se quedan al costado, porque se usan todo el tiempo.</figcaption></figure>
+
+        <figure class="shot"><div class="phone"><div class="screen"><canvas class="city" data-mode="hora" data-hora="dia" data-seed="9" data-zoom="1.3"></canvas><div class="notch"></div><div class="status"><span>12:30</span><span>5G ▮▮▮</span></div>
+          <div class="po-hdr"><span class="po-glass"><svg class="ico"><use href="#i-back"/></svg></span><span class="po-glass" data-en="3D City">Ciudad 3D</span><span class="po-glass">ES</span></div>
+          <div class="po-scrim"></div>
+          <div class="po-crumb"><span class="po-glass dk" data-en="Attractions">Atracciones</span>›<span class="po-glass dk" data-en="Cable car">Teleférico</span></div>
+          <div class="po-rad on" style="left:84.8%;top:67.2%"><span class="po-glass"><svg><use href="#i-landmark"/></svg></span><b data-en="Attractions">Atracciones</b></div>
+          <div class="po-rad sm on" style="left:67.9%;top:53.7%;--dx:40px;--dy:40px"><span class="po-glass"><svg><use href="#i-mountain"/></svg></span><b data-en="Cable car">Teleférico</b></div>
+          <div class="po-rad sm" style="left:54.2%;top:60.6%;--dx:60px;--dy:20px;animation-delay:.05s"><span class="po-glass"><svg><use href="#i-route"/></svg></span><b data-en="Train">Tren</b></div>
+          <div class="po-rad sm" style="left:51.6%;top:69.9%;--dx:60px;--dy:-10px;animation-delay:.1s"><span class="po-glass"><svg><use href="#i-pickaxe"/></svg></span><b data-en="El Edén mine">Mina El Edén</b></div>
+          <div class="po-sheet po-glass" style="z-index:14;right:84px"><span class="k" data-en="Cable car · Grillo ↔ Bufa">Teleférico · Grillo ↔ Bufa</span><h4 style="font-size:13px" data-en="645 m · about 2 min">645 m · unos 2 min</h4><div class="po-go"><span class="bt" data-en="Ride">Subir</span></div></div>
+          <div class="po-fab open">✕</div>
+        </div></div><span class="tag prop" data-en="Proposal · illustration">Propuesta · ilustración</span><figcaption data-en="Second ring: Attractions opens Cable car, Train and El Edén mine. Picking Cable car shows a small card with the real line data (645 m, 130 s trip, public/data/teleferico.json) and the “Ride” button. The trail on top lets you go back one step.">Segundo anillo: Atracciones abre Teleférico, Tren y Mina El Edén. Al elegir Teleférico sale una tarjeta chica con los datos reales de la línea (645 m, 130 s de recorrido, public/data/teleferico.json) y el botón «Subir». El rastro de arriba deja regresar un paso.</figcaption></figure>
+
+        <figure class="shot"><div class="phone"><div class="screen po-cab">
+          <svg class="sc" viewBox="0 0 282 612" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+            <defs><linearGradient id="po-cabsky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8FC1E8"/><stop offset=".6" stop-color="#E9F1F6"/><stop offset="1" stop-color="#F6E7D3"/></linearGradient></defs>
+            <rect width="282" height="612" fill="url(#po-cabsky)"/>
+            <path d="M-10 330 Q30 300 60 310 L80 300 L90 330 Z" fill="#B7A08A"/>
+            <path d="M190 330 L220 220 Q236 196 252 220 L300 330 Z" fill="#A88D76"/>
+            <path d="M228 222 h16 v-10 h-16z" fill="#9A3412"/>
+            <path d="M0 360 Q140 330 282 350 V612 H0z" fill="#D9C3A2"/>
+            <g fill="#C9826B"><rect x="0" y="372" width="26" height="40"/><rect x="30" y="380" width="22" height="32"/><rect x="118" y="378" width="30" height="34"/><rect x="152" y="384" width="20" height="28"/><rect x="200" y="380" width="26" height="32"/><rect x="230" y="376" width="24" height="36"/><rect x="256" y="382" width="26" height="30"/></g>
+            <g fill="#BE7259"><rect x="58" y="352" width="44" height="60"/><rect x="54" y="328" width="12" height="40"/><path d="M54 328q6-12 12 0z"/><rect x="176" y="362" width="20" height="50"/></g>
+            <path d="M62 352 l18-10 l18 10z" fill="#9A3412"/>
+            <g fill="#E7D8BF"><rect x="0" y="412" width="282" height="200"/></g>
+            <g fill="#CDB8A0" opacity=".8"><rect x="10" y="430" width="40" height="22"/><rect x="60" y="440" width="54" height="26"/><rect x="128" y="432" width="36" height="22"/><rect x="176" y="446" width="48" height="24"/><rect x="232" y="436" width="40" height="22"/></g>
+            <path d="M40 300 L250 214" stroke="#44403C" stroke-width="1.2"/>
+            <path d="M40 306 L250 220" stroke="#44403C" stroke-width=".8"/>
+            <g transform="translate(140 258)"><path d="M0 -10 V2" stroke="#44403C" stroke-width="1.5"/><rect x="-14" y="2" width="28" height="22" rx="6" fill="#B91C1C"/><rect x="-10" y="6" width="20" height="9" rx="2" fill="#E0F2FE"/></g>
+          </svg>
+          <div class="notch"></div><div class="status"><span>12:33</span><span>5G ▮▮▮</span></div>
+          <div class="po-hdr"><span class="po-glass"><svg class="ico"><use href="#i-x"/></svg></span><span class="po-glass" data-en="Cable car">Teleférico</span><span class="po-glass">ES</span></div>
+          <div class="po-prog po-glass"><div class="row"><span>Cerro del Grillo</span><span>La Bufa</span></div><div class="bar"><i></i></div></div>
+          <div class="po-near po-glass" style="left:8%;top:52%"><i></i><span>Santo Domingo <small data-en="· 220 m south">· 220 m al sur</small></span></div>
+          <div class="po-near po-glass n2" style="left:40%;top:46%"><i style="background:#D97706"></i><span>Indio Triste <small data-en="· below">· abajo</small></span></div>
+          <div class="po-near po-glass n3" style="left:30%;top:58%"><i style="background:#0E7490"></i><span>Callejón del Beso <small data-en="· next">· sigue</small></span></div>
+          <div class="po-sheet po-glass"><div class="po-seg po-glass"><span class="on" data-en="Side">Perfil</span><span data-en="From above">Desde arriba</span><span class="off" data-en="Glass floor">Piso de cristal</span></div><p data-en="Simulated ride; it does not show live positions.">Recorrido simulado; no muestra posiciones en vivo.</p></div>
+        </div></div><span class="tag prop" data-en="Proposal · illustration">Propuesta · ilustración</span><figcaption data-en="Side view (default): the camera rides beside the cabin looking at the city, and names appear as you pass them, in the real order along the line: Santo Domingo, Indio Triste, El Jardincito, Capilla del Santo Cristo, Callejón del Beso (catalog #294). “From above” follows the cabin from about 60 m higher, with the same names. The glass floor is removed.">Vista de perfil (por defecto): la cámara va junto a la cabina mirando a la ciudad, y los nombres aparecen al pasar, en el orden real a lo largo de la línea: Santo Domingo, Indio Triste, El Jardincito, Capilla del Santo Cristo, Callejón del Beso (catálogo #294). «Desde arriba» sigue a la cabina unos 60 m más alto, con los mismos nombres. El piso de cristal se quita.</figcaption></figure>
+      </div>
+      <p class="fine" data-en="Contradicts Proposal L (#259), which approved the glass-floor cabin as the main view; this proposal replaces it. The order of places comes from measuring the catalog points against the line between both stations; Santo Domingo is the closest must-see. On desktop the same menu opens with a click and keyboard (arrows and Enter).">Contradice la Propuesta L (#259), que aprobó la cabina de piso de cristal como vista principal; esta propuesta la reemplaza. El orden de los lugares sale de medir los puntos del catálogo contra la línea entre las dos estaciones; Santo Domingo es el imprescindible más cercano. En escritorio el mismo menú se abre con clic y con teclado (flechas y Enter).</p>
+    </div>
+
+    <!-- O5 · Puntos menores y premios -->
+    <div class="block" id="propuesta-o5">
+      <div class="block-head">
+        <h3 data-en="O5 · Six kinds of places, and a prize when you pass by">O5 · Seis clases de puntos, y un premio al pasar</h3>
+        <p data-en="Proposal N has three levels by importance. Here the center gets small places too: food stands, references (plaques, corners, alleys) and secrets that only show up close. Each kind has its own shape, so you can tell them apart without reading. Passing by a place gives the mascot something: a big, bright moment for the main attractions and a small toast for the minor ones, both with a vivid moving gradient.">La Propuesta N tiene tres niveles por importancia. Aquí el centro también gana puntos menores: puestos de comida, referencias (placas, esquinas, callejones) y secretos que solo aparecen de cerca. Cada clase tiene su forma, así se distinguen sin leer. Al pasar por un lugar la mascota gana algo: un momento grande y brillante en las atracciones principales y un aviso chico en las menores, ambos con un degradado vivo en movimiento.</p>
+        <div class="chips"><span class="chip">#312</span><span class="chip">#313</span><span class="chip">#222</span></div>
+      </div>
+      <div class="gallery">
+        <figure class="shot"><div class="phone"><div class="screen"><canvas class="city" data-mode="hora" data-hora="dia" data-seed="9" data-zoom="2.2"></canvas><div class="notch"></div><div class="status"><span>13:05</span><span>5G ▮▮▮</span></div>
+          <div class="po-hdr"><span class="po-glass"><svg class="ico"><use href="#i-back"/></svg></span><span class="po-glass" data-en="3D City">Ciudad 3D</span><span class="po-glass">ES</span></div>
+          <div class="po-m" style="left:50%;top:30%"><b data-en="Cathedral">Catedral</b><span class="c1"><svg viewBox="0 0 24 24"><use href="#i-church"/></svg></span></div>
+          <div class="po-m" style="left:24%;top:42%"><b data-en="Market">Mercado</b><span class="c2"></span></div>
+          <div class="po-m" style="left:76%;top:44%"><span class="c2"></span></div>
+          <div class="po-m" style="left:36%;top:56%"><span class="c3"></span></div><div class="po-m" style="left:66%;top:58%"><span class="c3"></span></div>
+          <div class="po-m" style="left:58%;top:48%"><b data-en="Corn stand">Elotes</b><span class="c4"><svg viewBox="0 0 24 24"><use href="#i-corn"/></svg></span></div>
+          <div class="po-m" style="left:20%;top:62%"><span class="c4"><svg viewBox="0 0 24 24"><use href="#i-candy"/></svg></span></div>
+          <div class="po-m" style="left:80%;top:64%"><span class="c5"></span></div><div class="po-m" style="left:44%;top:70%"><span class="c5"></span></div>
+          <div class="po-m" style="left:30%;top:74%"><span class="c6"><span>?</span></span></div>
+          <div class="po-me" style="left:46%;top:62%"></div>
+          <div class="po-fab">✦</div>
+        </div></div><span class="tag prop" data-en="Proposal · illustration">Propuesta · ilustración</span><figcaption data-en="Walking up close: a big pin for the must-see, medium and small dots, green squares for stands, thin blue diamonds for references and a shimmering “?” for a secret nearby.">Caminando de cerca: pin grande para el imprescindible, puntos medianos y chicos, cuadros verdes para puestos, rombos azules delgados para referencias y un «?» brillante para un secreto cercano.</figcaption></figure>
+
+        <figure class="shot"><div class="phone"><div class="screen"><canvas class="city" data-mode="hora" data-hora="dia" data-seed="9" data-zoom="2.2"></canvas><div class="notch"></div><div class="status"><span>13:07</span><span>5G ▮▮▮</span></div>
+          <div class="po-hdr"><span class="po-glass"><svg class="ico"><use href="#i-back"/></svg></span><span class="po-glass" data-en="3D City">Ciudad 3D</span><span class="po-glass">ES</span></div>
+          <div class="po-toast"><div><svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="22" r="12" fill="#A8A29E"/><circle cx="11" cy="12" r="6" fill="#A8A29E"/><circle cx="29" cy="12" r="6" fill="#A8A29E"/><circle cx="11" cy="12" r="3" fill="#F9A8D4"/><circle cx="29" cy="12" r="3" fill="#F9A8D4"/><path d="M8 30 q12 8 24 0 l-3 6 q-9 4 -18 0z" fill="#DC2626"/><circle cx="16" cy="21" r="1.6" fill="#1C1917"/><circle cx="24" cy="21" r="1.6" fill="#1C1917"/></svg><div><b data-en="Red neckerchief · common">Paliacate rojo · común</b><span data-en="For passing by Callejón del Beso. It's in your collection.">Por pasar por el Callejón del Beso. Ya está en tu colección.</span></div></div></div>
+          <div class="po-burst" style="left:30%;top:66%"></div>
+          <div class="po-m" style="left:30%;top:66%"><b>Callejón del Beso</b><span class="c5"></span></div>
+          <div class="po-me" style="left:34%;top:70%"></div>
+          <div class="po-m" style="left:50%;top:32%"><span class="c1"><svg viewBox="0 0 24 24"><use href="#i-church"/></svg></span></div>
+          <div class="po-m" style="left:64%;top:52%"><span class="c4"><svg viewBox="0 0 24 24"><use href="#i-corn"/></svg></span></div>
+          <div class="po-fab">✦</div>
+        </div></div><span class="tag prop" data-en="Proposal · illustration">Propuesta · ilustración</span><figcaption data-en="Minor place: a ring of color bursts from the point and a toast with a moving gradient edge drops from the top for 3 s. The walk is not interrupted.">Punto menor: un anillo de color sale del punto y un aviso con borde de degradado en movimiento baja desde arriba por 3 s. No interrumpe el paseo.</figcaption></figure>
+
+        <figure class="shot"><div class="phone"><div class="screen"><div class="po-prize">
+          <div class="aura"></div>
+          <span class="spark" style="left:18%;top:22%"></span><span class="spark" style="left:80%;top:30%;animation-delay:.4s"></span><span class="spark" style="left:26%;top:70%;animation-delay:.8s"></span><span class="spark" style="left:74%;top:76%;animation-delay:1.1s"></span><span class="spark" style="left:60%;top:16%;animation-delay:.6s"></span>
+          <span class="k" data-en="Legendary · El Edén mine">Legendario · Mina El Edén</span>
+          <div class="ring"><div><svg viewBox="0 0 110 110" aria-hidden="true"><circle cx="55" cy="66" r="30" fill="#A8A29E"/><circle cx="31" cy="46" r="13" fill="#A8A29E"/><circle cx="79" cy="46" r="13" fill="#A8A29E"/><circle cx="31" cy="46" r="7" fill="#F9A8D4"/><circle cx="79" cy="46" r="7" fill="#F9A8D4"/><path d="M28 48 Q55 14 82 48 Z" fill="#F59E0B"/><rect x="24" y="46" width="62" height="7" rx="3.5" fill="#D97706"/><circle cx="55" cy="34" r="7" fill="#FEF3C7"/><circle cx="55" cy="34" r="4" fill="#FFFBEB"/><circle cx="45" cy="66" r="3" fill="#1C1917"/><circle cx="65" cy="66" r="3" fill="#1C1917"/><ellipse cx="55" cy="75" rx="4" ry="3" fill="#F472B6"/></svg></div></div>
+          <h4 data-en="Miner's helmet">Casco de minero</h4>
+          <p data-en="For visiting El Edén mine. Your mascot can wear it from now on.">Por visitar la Mina El Edén. Tu mascota ya lo puede usar.</p>
+          <span class="bt" data-en="Put it on">Ponérselo</span>
+        </div></div></div><span class="tag prop" data-en="Proposal · illustration">Propuesta · ilustración</span><figcaption data-en="Main attraction: a full-screen moment for 2–3 s. A slow aura of vivid colors, a rainbow ring around the mascot wearing the new accessory, sparkles and the name in gradient letters. “Put it on” or a tap closes it.">Atracción principal: un momento a pantalla completa de 2 a 3 s. Un aura lenta de colores vivos, un anillo arcoíris alrededor de la mascota con el accesorio nuevo, destellos y el nombre en letras de degradado. «Ponérselo» o un toque lo cierra.</figcaption></figure>
+      </div>
+
+      <div class="po-classes">
+        <div><span class="po-m"><span class="c1"><svg viewBox="0 0 24 24"><use href="#i-church"/></svg></span></span><b data-en="1 · Must-see">1 · Imprescindible</b><span data-en="Big pin with icon and name, always. Legendary prize.">Pin grande con icono y nombre, siempre. Premio legendario.</span></div>
+        <div><span class="po-m"><span class="c2"></span></span><b data-en="2 · Worth a visit">2 · Vale la pena</b><span data-en="Medium dot; name when you get closer. Rare prize.">Punto mediano; nombre al acercarte. Premio raro.</span></div>
+        <div><span class="po-m"><span class="c3"></span></span><b data-en="3 · Neighborhood">3 · De barrio</b><span data-en="Small dot, only up close. Common prize.">Punto chico, solo de cerca. Premio común.</span></div>
+        <div><span class="po-m"><span class="c4"><svg viewBox="0 0 24 24"><use href="#i-corn"/></svg></span></span><b data-en="4 · Stand">4 · Puesto</b><span data-en="Green square with what they sell. Street life of #234 and #235. Common prize.">Cuadro verde con lo que venden. Vida de calle de #234 y #235. Premio común.</span></div>
+        <div><span class="po-m"><span class="c5"></span></span><b data-en="5 · Reference">5 · Referencia</b><span data-en="Thin diamond: plaques, corners, alleys, sculptures. Name only when selected. Common prize.">Rombo delgado: placas, esquinas, callejones, esculturas. Nombre solo al elegirlo. Premio común.</span></div>
+        <div><span class="po-m"><span class="c6"><span>?</span></span></span><b data-en="6 · Secret">6 · Secreto</b><span data-en="Hidden until you are about 40 m away; then a shimmering “?”. Random prize, can be rare.">Oculto hasta unos 40 m; entonces un «?» brillante. Premio al azar, puede ser raro.</span></div>
+      </div>
+      <p class="fine" data-en="Levels 1 to 3 are the ones of Proposal N (#295); 4 to 6 are new kinds and need fields in the catalog of #294 (kind: stand, reference, secret). The prize rarities reuse common, rare and legendary from the treasure design (#222). Accessories are cosmetic. A prize counts once per place. Which accessory goes with which place is a list to agree on; the helmet and the neckerchief are examples. With “reduce motion”: no aura or spin, the same card stays still.">Los niveles 1 a 3 son los de la Propuesta N (#295); 4 a 6 son clases nuevas y piden campos en el catálogo de #294 (kind: puesto, referencia, secreto). Las rarezas reusan común, rara y legendaria del diseño de tesoros (#222). Los accesorios son cosméticos. Un premio cuenta una vez por lugar. Qué accesorio va con qué lugar es una lista por acordar; el casco y el paliacate son ejemplos. Con «reducir movimiento»: sin aura ni giros, la misma tarjeta queda quieta.</p>
+    </div>
+  </section>
+
   <section class="nuevo" id="propuesta-j">
     <div class="section-head">
       <span class="eyebrow" data-en="Proposal, waiting for the owner's approval">Propuesta, espera la aprobación del dueño</span>
