@@ -1,10 +1,23 @@
-import type { PlaceCategory, PlaceTier } from '../types';
+import type { PlaceCategory } from '../types';
+import type { MarkerClass } from './poiTiers';
 
 /**
- * Marcadores por nivel (#295), como en el adelanto: nivel 1 pin grande con icono de su categoría y
- * nombre; nivel 2 punto mediano; nivel 3 punto chico. Colores con los tokens del proyecto.
+ * Marcadores por clase, como en el adelanto (#295, #312): 1 pin grande con icono de su categoría y
+ * nombre; 2 punto mediano; 3 punto chico; 4 puesto, cuadro verde con lo que vende; 5 referencia,
+ * rombo delgado; 6 secreto, un «?» con brillo de colores. Colores con los tokens del proyecto.
  */
-const TIER_COLOR: Record<PlaceTier, string> = { 1: '#9A3412', 2: '#C2410C', 3: '#D97706' };
+const CLASS_COLOR: Record<MarkerClass, string> = { 1: '#9A3412', 2: '#C2410C', 3: '#D97706', 4: '#15803D', 5: '#0E7490', 6: '#A78BFA' };
+const DOT_STYLE: Record<MarkerClass, Partial<CSSStyleDeclaration>> = {
+  1: { width: '28px', height: '28px', borderRadius: '50% 50% 50% 0', transform: 'rotate(-45deg)', border: '2px solid #fff', boxShadow: '0 2px 5px rgba(0,0,0,.35)' },
+  2: { width: '16px', height: '16px', borderRadius: '50%', border: '2px solid #fff', boxShadow: '0 1px 3px rgba(0,0,0,.3)' },
+  3: { width: '9px', height: '9px', borderRadius: '50%', border: '1.5px solid #fff', boxShadow: '0 1px 2px rgba(0,0,0,.3)' },
+  4: { width: '20px', height: '20px', borderRadius: '6px', border: '2px solid #fff', boxShadow: '0 1px 3px rgba(0,0,0,.3)', font: '11px/1 sans-serif' },
+  5: { width: '10px', height: '10px', transform: 'rotate(45deg)', border: '1.5px solid #fff', boxShadow: '0 1px 2px rgba(0,0,0,.3)' },
+  6: {
+    width: '22px', height: '22px', borderRadius: '50%', color: '#fff', font: '800 12px "Plus Jakarta Sans", sans-serif',
+    background: 'conic-gradient(from 0deg, #F472B6, #A78BFA, #22D3EE, #FDE047, #F472B6)', boxShadow: '0 0 12px rgba(167,139,250,.9)',
+  },
+};
 
 /** Trazos de 24×24 por categoría; los que no tienen uno usan la estrella. */
 const ICONS: Partial<Record<PlaceCategory, string>> = {
@@ -26,19 +39,28 @@ export interface TierMarker {
   badge: HTMLElement;
 }
 
-export function makeTierMarker(title: string, tier: PlaceTier, category: PlaceCategory | undefined, color?: string): TierMarker {
+export interface MarkerOptions {
+  category?: PlaceCategory;
+  /** Color propio (p. ej. gris si aún no se descubre); solo en las clases 1 a 3. */
+  color?: string;
+  /** Glifo de lo que vende un puesto (clase 4). */
+  icon?: string;
+  reducedMotion?: boolean;
+}
+
+export function makeTierMarker(title: string, cls: MarkerClass, options: MarkerOptions = {}): TierMarker {
   const root = document.createElement('button');
   root.type = 'button';
   root.setAttribute('aria-label', title);
   Object.assign(root.style, { pointerEvents: 'auto', background: 'none', border: 'none', padding: '0', cursor: 'pointer' });
   // CSS2DRenderer reescribe `display` del elemento raíz en cada cuadro: el acomodo va en un hijo.
   const column = document.createElement('span');
-  Object.assign(column.style, { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: tier === 1 ? '6px' : '3px' });
+  Object.assign(column.style, { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: cls === 1 ? '6px' : '3px' });
 
   const name = document.createElement('b');
   name.textContent = title;
   Object.assign(name.style, {
-    font: `700 ${tier === 1 ? 12 : 11}px "Plus Jakarta Sans", sans-serif`,
+    font: `700 ${cls === 1 ? 12 : 11}px "Plus Jakarta Sans", sans-serif`,
     color: '#1C1917',
     background: '#fff',
     borderRadius: '7px',
@@ -48,40 +70,47 @@ export function makeTierMarker(title: string, tier: PlaceTier, category: PlaceCa
   });
 
   const dot = document.createElement('span');
-  const fill = color ?? TIER_COLOR[tier];
-  const size = tier === 1 ? 28 : tier === 2 ? 16 : 9;
   Object.assign(dot.style, {
     position: 'relative',
-    width: `${size}px`,
-    height: `${size}px`,
-    background: fill,
-    border: `${tier === 3 ? 1.5 : 2}px solid #fff`,
-    borderRadius: tier === 1 ? '50% 50% 50% 0' : '50%',
-    transform: tier === 1 ? 'rotate(-45deg)' : '',
-    boxShadow: tier === 3 ? '0 1px 2px rgba(0,0,0,.3)' : '0 2px 5px rgba(0,0,0,.35)',
     display: 'grid',
     placeItems: 'center',
+    background: (cls <= 3 && options.color) || CLASS_COLOR[cls],
+    ...DOT_STYLE[cls],
   });
-  if (tier === 1) {
+  if (cls === 1) {
     const ns = 'http://www.w3.org/2000/svg';
     const svg = document.createElementNS(ns, 'svg');
     svg.setAttribute('viewBox', '0 0 24 24');
     svg.setAttribute('aria-hidden', 'true');
     Object.assign(svg.style, { width: '14px', height: '14px', transform: 'rotate(45deg)', fill: 'none', stroke: '#fff', strokeWidth: '2', strokeLinecap: 'round', strokeLinejoin: 'round' });
     const path = document.createElementNS(ns, 'path');
-    path.setAttribute('d', (category && ICONS[category]) || STAR);
+    path.setAttribute('d', (options.category && ICONS[options.category]) || STAR);
     svg.append(path);
     dot.append(svg);
+  } else if (cls === 4) {
+    dot.textContent = options.icon ?? '';
+  } else if (cls === 6) {
+    const mark = document.createElement('span');
+    mark.textContent = '?';
+    mark.setAttribute('aria-hidden', 'true');
+    dot.append(mark);
+    // El brillo gira; el «?» gira al revés para quedarse derecho. Con movimiento reducido, quieto.
+    if (!options.reducedMotion && typeof dot.animate === 'function') {
+      const spin = { duration: 3000, iterations: Infinity };
+      dot.animate([{ transform: 'rotate(0deg)' }, { transform: 'rotate(360deg)' }], spin);
+      mark.animate([{ transform: 'rotate(0deg)' }, { transform: 'rotate(-360deg)' }], spin);
+    }
   }
 
   // «+N»: cuántos puntos se agruparon en este (#295).
+  const size = cls === 1 ? 28 : cls === 4 ? 20 : cls === 2 ? 16 : 10;
   const badge = document.createElement('i');
   Object.assign(badge.style, {
     display: 'none',
     position: 'absolute',
-    top: tier === 1 ? '-10px' : '-11px',
-    left: tier === 1 ? '18px' : `${size - 4}px`,
-    transform: tier === 1 ? 'rotate(45deg)' : '',
+    top: cls === 1 ? '-10px' : '-11px',
+    left: cls === 1 ? '18px' : `${size - 4}px`,
+    transform: cls === 1 || cls === 5 ? 'rotate(45deg)' : '',
     minWidth: '18px',
     padding: '1px 4px',
     borderRadius: '999px',

@@ -1,6 +1,6 @@
 import { CENTRO_POINTS } from '../../data/centroPoints';
 import { TRANSLATIONS } from '../../data/i18n';
-import type { PlaceCategory, PlaceTier } from '../../types';
+import type { PlaceCategory, PlaceTier, PointKind } from '../../types';
 import type { Localized, SceneLayer } from '../../types/scene3d';
 
 type Key = keyof typeof TRANSLATIONS.es;
@@ -10,6 +10,7 @@ const CATEGORY_KEY: Record<PlaceCategory, Key> = {
   experience: 'pointCatExperience', archaeology: 'pointCatArchaeology', pueblo_magico: 'pointCatPuebloMagico',
 };
 const TIER_KEY: Record<PlaceTier, Key> = { 1: 'pointTier1', 2: 'pointTier2', 3: 'pointTier3' };
+const KIND_KEY: Record<PointKind, Key> = { stand: 'pointKindStand', reference: 'pointKindReference', secret: 'pointKindSecret' };
 const both = (f: (t: typeof TRANSLATIONS.es) => string): Localized => ({ es: f(TRANSLATIONS.es), en: f(TRANSLATIONS.en) });
 
 /**
@@ -25,13 +26,15 @@ export const centroPointsLayer: SceneLayer = {
       id: `point:${p.id}`,
       kind: 'place' as const,
       title: { es: p.name, en: p.name },
-      subtitle: both((t) => `${t[TIER_KEY[p.tier]]} · ${t[CATEGORY_KEY[p.category]]}`),
+      subtitle: both((t) => `${t[p.kind ? KIND_KEY[p.kind] : TIER_KEY[p.tier]]} · ${t[CATEGORY_KEY[p.category]]}`),
       note: both((t) => t.pointSource.replace('{source}', p.source.includes('openstreetmap') ? 'OpenStreetMap' : 'SIC')),
       lat: p.lat,
       lng: p.lng,
       placeId: p.placeId,
       tier: p.tier,
       category: p.category,
+      pointKind: p.kind,
+      isMock: p._mock,
     }));
   },
 };

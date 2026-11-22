@@ -1,5 +1,5 @@
 // Contrato del modo 3D (ver docs/MAPA3D.md). Compartido: cambios con acuerdo.
-import type { Language, PlaceCategory, PlaceTier } from './index';
+import type { Language, PlaceCategory, PlaceTier, PointKind } from './index';
 
 export interface Localized {
   es: string;
@@ -47,6 +47,8 @@ export interface ScenePoi {
   tier?: PlaceTier;
   /** Categoría del catálogo (#294), para el icono del pin de nivel 1. */
   category?: PlaceCategory;
+  /** Puesto, referencia o secreto (#312): manda sobre `tier` al dibujar el marcador. */
+  pointKind?: PointKind;
 }
 
 /** Jugador en la escena (marcador o avatar). */

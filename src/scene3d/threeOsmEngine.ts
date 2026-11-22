@@ -8,7 +8,7 @@ import type { TrenecitoLayer } from './trenecito';
 import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import type { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import type { CSS2DObject, CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
-import type { Language, PlaceTier } from '../types';
+import type { Language } from '../types';
 import type {
   FloatingPhoto,
   SceneCamera,
@@ -23,7 +23,7 @@ import type {
 import { StarSky, skyMoment } from './starSky';
 import { WeatherController } from './weather';
 import { makeTierMarker } from './poiMarkers';
-import { CLUSTER_PX, clusterMarkers, markerVisible, nameVisible } from './poiTiers';
+import { CLUSTER_PX, clusterMarkers, markerClass, markerVisible, nameVisible, type MarkerClass } from './poiTiers';
 
 /** Id del lugar del teleférico en `placesLayer` (`place:<id de places.ts>`). */
 const CABLE_CAR_POI_ID = 'place:teleferico-zacatecas';
@@ -71,8 +71,8 @@ interface PoiLabel {
   order: number;
   /** Desplazamiento vertical en uso (px): 0 en su lugar, o arriba / abajo para esquivar a otra. */
   dy: number;
-  /** #295: punto con nivel. `el` es el marcador entero; `name`, su nombre; `badge`, el «+N». */
-  tier?: PlaceTier;
+  /** #295, #312: punto con clase. `el` es el marcador entero; `name`, su nombre; `badge`, el «+N». */
+  cls?: MarkerClass;
   name?: HTMLElement;
   dot?: HTMLElement;
   badge?: HTMLElement;
@@ -1619,7 +1619,7 @@ export class ThreeOsmEngine implements SceneEngine {
         label.h = box.offsetHeight;
         if (label.dot) {
           label.dotPx = label.dot.offsetHeight;
-          label.lift = label.dotPx + (label.tier === 1 ? 10 : 3) + label.h / 2;
+          label.lift = label.dotPx + (label.cls === 1 ? 10 : 3) + label.h / 2;
         }
       }
       label.obj.getWorldPosition(p);
@@ -1629,11 +1629,13 @@ export class ThreeOsmEngine implements SceneEngine {
       candidates.push({ label, x: ((p.x + 1) / 2) * w, y: ((1 - p.y) / 2) * h, dist });
     }
     // #295: qué marcadores salen según su nivel y distancia, y los que se enciman se agrupan (+N).
-    const markers = candidates.filter((c) => c.label.tier && markerVisible(c.label.tier, c.dist));
-    const groups = clusterMarkers(markers.map((c) => ({ tier: c.label.tier ?? 3, x: c.x, y: c.y, order: c.label.order })), CLUSTER_PX);
+    const player = this.player?.position;
+    const markers = candidates.filter(({ label, dist }) => label.cls && markerVisible(label.cls, dist,
+      player ? Math.hypot(label.obj.position.x - player.x, label.obj.position.z - player.z) : null));
+    const groups = clusterMarkers(markers.map((c) => ({ cls: c.label.cls ?? 3, x: c.x, y: c.y, order: c.label.order })), CLUSTER_PX);
     const markerCount = new Map<PoiLabel, number>();
     markers.forEach((c, i) => { if (groups[i].keep) markerCount.set(c.label, groups[i].count); });
-    const named = candidates.filter((c) => !c.label.tier || (markerCount.has(c.label) && nameVisible(c.label.tier, c.dist)));
+    const named = candidates.filter((c) => !c.label.cls || (markerCount.has(c.label) && nameVisible(c.label.cls, c.dist)));
     const place = LABEL_RANK.place;
     named.sort((a, b) => b.label.rank - a.label.rank || (a.label.rank === place ? a.label.order - b.label.order : a.dist - b.dist));
     // Los marcadores que se ven también cuentan como ocupados: ningún nombre los tapa.
@@ -1647,14 +1649,14 @@ export class ThreeOsmEngine implements SceneEngine {
     const offsets = new Map<PoiLabel, number>();
     for (const { label, x, y: anchorY } of named) {
       // El nombre de un punto con nivel va sobre su marcador y no se mueve.
-      const y = label.tier ? anchorY - (label.lift ?? 0) : anchorY;
+      const y = label.cls ? anchorY - (label.lift ?? 0) : anchorY;
       // En su lugar; si choca, un poco más arriba o más abajo; si sigue chocando, se oculta.
-      for (const dy of label.tier ? [0] : [0, -(label.h + LABEL_GAP), label.h + LABEL_GAP]) {
+      for (const dy of label.cls ? [0] : [0, -(label.h + LABEL_GAP), label.h + LABEL_GAP]) {
         const box = { l: x - label.w / 2, r: x + label.w / 2, t: y + dy - label.h / 2, b: y + dy + label.h / 2 };
         const inside = box.l >= LABEL_GAP && box.r <= w - LABEL_GAP && box.t >= LABEL_GAP && box.b <= h - LABEL_GAP;
         if (!inside) continue;
         // El nombre de un imprescindible solo esquiva otros nombres, no marcadores.
-        const clash = placed.some((o) => (o.owner ? o.owner !== label && label.tier !== 1 : true) && box.l < o.r + LABEL_GAP && o.l < box.r + LABEL_GAP && box.t < o.b + LABEL_GAP && o.t < box.b + LABEL_GAP);
+        const clash = placed.some((o) => (o.owner ? o.owner !== label && label.cls !== 1 : true) && box.l < o.r + LABEL_GAP && o.l < box.r + LABEL_GAP && box.t < o.b + LABEL_GAP && o.t < box.b + LABEL_GAP);
         if (clash) continue;
         placed.push(box);
         visible.add(label);
@@ -1664,7 +1666,7 @@ export class ThreeOsmEngine implements SceneEngine {
     }
     for (const label of this.poiLabels) {
       const shown = visible.has(label);
-      if (label.tier && label.name && label.badge) {
+      if (label.cls && label.name && label.badge) {
         const count = markerCount.get(label);
         const markerShown = count !== undefined;
         if (markerShown !== label.markerShown) {
@@ -1748,9 +1750,10 @@ export class ThreeOsmEngine implements SceneEngine {
     this.poiLabels = [];
     for (const [order, poi] of pois.entries()) {
       const { x, z } = toLocal(poi.lat, poi.lng);
-      if (poi.tier) {
+      const cls = markerClass(poi.tier, poi.pointKind);
+      if (cls) {
         // #295: marcador HTML por nivel, con el pie en el suelo; sin pin 3D.
-        const marker = makeTierMarker(poi.title[language], poi.tier, poi.category, poi.color);
+        const marker = makeTierMarker(poi.title[language], cls, { category: poi.category, color: poi.color, icon: poi.icon, reducedMotion: this.reducedMotion });
         marker.root.addEventListener('click', (e) => {
           e.stopPropagation();
           this.clickHandler?.(poi);
@@ -1763,8 +1766,8 @@ export class ThreeOsmEngine implements SceneEngine {
         marker.root.style.pointerEvents = 'none';
         marker.name.style.visibility = 'hidden';
         this.poiLabels.push({
-          el: marker.root, obj, rank: poi.tier === 1 ? LABEL_RANK.place : LABEL_RANK.place - poi.tier / 4, w: 0, h: 0,
-          shown: false, order, dy: 0, tier: poi.tier, name: marker.name, dot: marker.dot, badge: marker.badge, markerShown: false, count: 0,
+          el: marker.root, obj, rank: cls === 1 ? LABEL_RANK.place : cls <= 3 ? LABEL_RANK.place - cls / 8 : LABEL_RANK[poi.kind] ?? 0, w: 0, h: 0,
+          shown: false, order, dy: 0, cls, name: marker.name, dot: marker.dot, badge: marker.badge, markerShown: false, count: 0,
         });
         continue;
       }
