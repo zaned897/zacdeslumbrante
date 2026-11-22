@@ -49,6 +49,63 @@ Límites conocidos, que abren issues:
 
 **Un motor**: clase nueva que implemente `SceneEngine`, elegida en `Map3DView` (p. ej. por `?engine=cesium`).
 
+**Un monumento**: ver la sección siguiente.
+
+## Cómo aportar un monumento
+
+Un monumento cambia sus huellas extruidas por un modelo `.glb` cuando la cámara se acerca (#227).
+
+- La ciudad sale primero con las huellas.
+- El modelo se pide solo con el monumento en cuadro y la cámara a menos de 800 m (`MONUMENT_NEAR_M` en `src/scene3d/monuments.ts`). Mientras la cámara siga cerca, el modelo reemplaza las huellas.
+- Al alejarse a más de 880 m vuelven las huellas.
+- Sin `public/data/monumentos.json`, la ciudad se ve igual.
+
+Se aporta un monumento por PR:
+
+1. **Modélalo** en Blender u otro programa:
+   - 1 unidad = 1 m, el norte hacia +Y y el piso en Z = 0;
+   - el origen va donde lo pondrá `position`, por lo general el centro de su huella;
+   - sin texturas: el color va en los materiales, con la paleta de la maqueta (cantera `#C98B78`, caliza `#E7DCC9`).
+
+   Exporta glTF binario (`.glb`) con «+Y Up». La fuente de Blender no se sube: `*.blend` está en `.gitignore`.
+2. **Comprímelo con Meshopt.** El motor aún no lee Draco ni texturas KTX2.
+   ```bash
+   npx @gltf-transform/cli optimize mi-monumento.glb public/models/monumentos/<id>.glb --compress meshopt --palette false
+   ```
+   Con `--palette false` los colores se quedan en los materiales en vez de pasar a una textura. `npx @gltf-transform/cli inspect <archivo>` muestra los triángulos de cada malla (columna `glPrimitives`).
+3. **Revisa el presupuesto:** 300 KB y 20 mil triángulos por modelo. El mismo chequeo corre en CI y falla si un modelo se pasa.
+   ```bash
+   node scripts/check-monumentos.mjs
+   ```
+4. **Regístralo** en `public/data/monumentos.json`. Así va la Catedral de prueba:
+   ```json
+   {
+     "id": "catedral",
+     "buildingIds": [8821, 8826, 8827],
+     "model": "/models/monumentos/catedral-prueba.glb",
+     "position": { "lat": 22.775586, "lng": -102.572145 },
+     "rotation": 22.1,
+     "scale": 1,
+     "license": "CC0 1.0; medidas de las huellas de Overture Maps y OpenStreetMap (ODbL 1.0)",
+     "author": "Modelo de prueba de zacdeslumbrante (scripts/gen-monumento-prueba.mjs)"
+   }
+   ```
+   - **`buildingIds`:** el lugar de cada huella que reemplaza en `buildings` de `public/data/centro-edificios.json`.
+     - Para encontrarlas, `node scripts/check-monumentos.mjs --huellas <lat> <lng>` lista las huellas a menos de 80 m, de la más cercana a la más lejana.
+     - Si se regenera `centro-edificios.json`, esos números cambian. El chequeo avisa si una huella queda a más de 100 m del monumento, pero una huella vecina no la nota: revisa la lista a mano.
+   - **`position`:** dónde va el origen del modelo. Su base se asienta en la esquina más baja de sus huellas, como cada huella en pendiente.
+   - **`rotation`:** grados en sentido horario vistos desde arriba. Con 0, el norte del modelo apunta al norte.
+   - **`scale`:** 1 si el modelo está en metros.
+   - **`license` y `author`:** obligatorios, con licencia libre.
+5. **Pruébalo:**
+   - corre `./scripts/dev.sh`, abre `http://localhost:3000/#3d` y acércate;
+   - en la pestaña Red de DevTools, el `.glb`, `GLTFLoader` y el decodificador de Meshopt no aparecen hasta que te acercas.
+
+Notas:
+- Sin Git LFS mientras cada modelo respete el tope.
+- La Catedral de prueba es un bloque con dos torres y una cúpula del tamaño de sus huellas. Sus alturas van a ojo (`PROTO:`), la genera `scripts/gen-monumento-prueba.mjs` y la reemplaza #228.
+- `PROTO:` de noche el modelo no recibe el alumbrado de las calles que pintan las huellas; lo ilumina la luz de luna de la escena.
+
 ## Mecánicas de juego (plan)
 
 1. Recorrido animado de cámara (hecho en el mock).
