@@ -11,6 +11,10 @@ coverage/
 .claude/skills
 __pycache__/
 
+# Fuentes de Blender de los monumentos (#227): solo se sube el .glb
+*.blend
+*.blend1
+
 # Delegaciones a Codex/agy (tools/agentes/delegar.py)
 .claude/worktrees/
 .claude/delegaciones/

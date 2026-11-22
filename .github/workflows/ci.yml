@@ -38,3 +38,12 @@ jobs:
         run: uv run ruff format --check .
       - if: steps.has-api.outputs.present == 'true'
         run: uv run pytest || test $? -eq 5   # 5 = sin tests (válido en sketch/mock)
+
+  # Monumentos de la ciudad 3D (#227): cada .glb de public/models/monumentos/ cabe en 300 KB y
+  # 20 mil triángulos, y public/data/monumentos.json apunta a modelos y huellas que existen.
+  modelos:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: node scripts/check-monumentos.mjs
+      - run: node --test scripts/check-monumentos.test.mjs

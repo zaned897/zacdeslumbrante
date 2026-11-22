@@ -1,0 +1,15 @@
+{
+  "_mock": true,
+  "monuments": [
+    {
+      "id": "catedral",
+      "buildingIds": [8821, 8826, 8827],
+      "model": "/models/monumentos/catedral-prueba.glb",
+      "position": { "lat": 22.775586, "lng": -102.572145 },
+      "rotation": 22.1,
+      "scale": 1,
+      "license": "CC0 1.0; medidas de las huellas de Overture Maps y OpenStreetMap (ODbL 1.0)",
+      "author": "Modelo de prueba de zacdeslumbrante (scripts/gen-monumento-prueba.mjs)"
+    }
+  ]
+}
