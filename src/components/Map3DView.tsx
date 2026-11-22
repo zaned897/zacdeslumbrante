@@ -12,6 +12,9 @@ import {
   Home,
   Layers,
   LocateFixed,
+  Minus,
+  Navigation2,
+  Plus,
   MapPin,
   MessageCircle,
   Play,
@@ -690,7 +693,7 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
       <div ref={containerRef} className="absolute inset-0 isolate" />
       {/* Avisos del tren y del teleférico: ocultos mientras se marca un puesto (#173), para no tapar el mapa; ocultar la cabina también la baja. */}
       {engineId === 'three' && status === 'ready' && (
-        <div className={`absolute left-3 right-3 top-36 z-20 mx-auto grid max-h-[calc(100%_-_20rem)] max-w-sm gap-2 overflow-y-auto ${cabinRiding ? 'max-md:top-auto max-md:bottom-12' : ''}`}>
+        <div className={`absolute left-3 right-3 max-md:right-16 top-36 z-20 mx-auto grid max-h-[calc(100%_-_20rem)] max-w-sm gap-2 overflow-y-auto ${cabinRiding ? 'max-md:top-auto max-md:bottom-12' : ''}`}>
           <div className={`contents ${rideHide}`}>
             <FreightNotice inline engine={engineRef.current} language={language} hidden={Boolean(askPlace || selected || isTouring || isExploring || isStargazing || pickingSpot || vendorOpen)} />
           </div>
@@ -1241,6 +1244,16 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
         </div>
       )}
 
+      {/* Controles del mapa (#292): brújula, volver al centro, vista 3D o de arriba, + y −. */}
+      {status === 'ready' && !isStargazing && !isExploring && !isTouring && !pickingSpot && engineRef.current && (
+        <MapControls
+          engine={engineRef.current}
+          onCenter={goHome}
+          t={t}
+          className={`${rideHide} ${selected || askPlace ? 'max-md:hidden' : ''}`}
+        />
+      )}
+
       {/* Controles */}
       {status === 'ready' && isStargazing && (
         <div className="absolute inset-x-0 bottom-0 z-10 flex justify-center gap-2 p-4">
@@ -1287,15 +1300,80 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
               {isExploring ? t.view3dExploreStop : t.view3dExplore}
             </button>
           )}
-          <button
-            onClick={goHome}
-            className="flex items-center gap-2 px-3.5 py-3 text-sm font-semibold whitespace-nowrap text-stone-800 bg-[#FBF9F5] border border-stone-200 rounded-full shadow-lg hover:bg-white cursor-pointer"
-            aria-label={t.view3dHome}
-          >
-            <Home className="w-4 h-4 text-[#9A3412]" />
-            <span className="hidden sm:inline">{t.view3dHome}</span>
-          </button>
         </div>
+      )}
+    </div>
+  );
+};
+
+/** Inclinación por debajo de la cual la vista cuenta como «desde arriba» (grados). */
+const TOP_VIEW_MAX_TILT = 20;
+/** Inclinación de la vista 3D al salir de la vista de arriba, y de la vista de arriba (casi cenital, conserva el rumbo). */
+const TILTED_VIEW_DEG = 55;
+const TOP_VIEW_DEG = 2;
+const ZOOM_STEP = 0.6;
+
+/**
+ * Pila de controles a la derecha (#292). Lleva su propio estado para que el giro de la cámara,
+ * que llega en cada cuadro, no vuelva a pintar todo Map3DView.
+ */
+const MapControls: React.FC<{
+  engine: SceneEngine;
+  onCenter: () => void;
+  t: (typeof TRANSLATIONS)[Language];
+  className: string;
+}> = ({ engine, onCenter, t, className }) => {
+  const [heading, setHeading] = useState(0);
+  const [tilted, setTilted] = useState(true);
+  useEffect(() => {
+    if (!engine.onViewChange) return;
+    engine.onViewChange((view) => {
+      setHeading(Math.round(view.heading));
+      setTilted(view.tilt >= TOP_VIEW_MAX_TILT);
+    });
+    return () => engine.onViewChange?.(() => {});
+  }, [engine]);
+  const adjust = engine.adjustView?.bind(engine);
+  const button =
+    'w-10 h-10 flex items-center justify-center rounded-xl bg-[#FBF9F5]/95 border border-stone-200 shadow-md text-stone-800 hover:bg-white active:bg-stone-200 cursor-pointer focus-visible:outline-2 focus-visible:outline-[#9A3412]';
+  return (
+    <div
+      role="toolbar"
+      aria-orientation="vertical"
+      aria-label={t.view3dMapControls}
+      className={`absolute right-3 md:right-4 top-1/2 -translate-y-1/2 z-10 flex flex-col gap-1.5 select-none ${className}`}
+    >
+      {adjust && (
+        <button className={button} onClick={() => void adjust({ heading: 0 })} aria-label={t.view3dCompass} title={t.view3dCompass}>
+          {/* La aguja apunta al norte: gira al revés que la cámara. */}
+          <Navigation2
+            className="w-5 h-5 text-[#9A3412] fill-[#9A3412] transition-transform duration-75"
+            style={{ transform: `rotate(${-heading}deg)` }}
+            aria-hidden="true"
+          />
+        </button>
+      )}
+      <button className={button} onClick={onCenter} aria-label={t.view3dCenter} title={t.view3dCenter}>
+        <LocateFixed className="w-5 h-5" aria-hidden="true" />
+      </button>
+      {adjust && (
+        <>
+          <button
+            className={`${button} text-xs font-extrabold ${tilted ? '!bg-[#9A3412] !text-white !border-[#9A3412]' : ''}`}
+            onClick={() => void adjust({ tilt: tilted ? TOP_VIEW_DEG : TILTED_VIEW_DEG })}
+            aria-pressed={tilted}
+            aria-label={t.view3dTilt}
+            title={t.view3dTilt}
+          >
+            3D
+          </button>
+          <button className={button} onClick={() => void adjust({ rangeFactor: ZOOM_STEP })} aria-label={t.view3dZoomIn} title={t.view3dZoomIn}>
+            <Plus className="w-5 h-5" aria-hidden="true" />
+          </button>
+          <button className={button} onClick={() => void adjust({ rangeFactor: 1 / ZOOM_STEP })} aria-label={t.view3dZoomOut} title={t.view3dZoomOut}>
+            <Minus className="w-5 h-5" aria-hidden="true" />
+          </button>
+        </>
       )}
     </div>
   );

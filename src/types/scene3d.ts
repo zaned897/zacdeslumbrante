@@ -162,6 +162,10 @@ export interface SceneEngine {
   setWeather?(condition: SceneWeatherCondition | null): void;
   /** Tarjetas de fotos flotantes sobre los lugares (#232). Opcional: Google 3D y Cesium no lo implementan. */
   setFloatingPhotos?(photos: FloatingPhoto[]): void;
+  /** Rumbo (0 = norte, grados) e inclinación (0 = desde arriba) cada vez que la cámara se mueve (#292). Opcional. */
+  onViewChange?(handler: (view: { heading: number; tilt: number }) => void): void;
+  /** Ajusta la vista actual sin moverse de lugar: rumbo, inclinación o acercar (factor del alcance). Opcional (#292). */
+  adjustView?(change: { heading?: number; tilt?: number; rangeFactor?: number }): Promise<void>;
   destroy(): void;
 }
 

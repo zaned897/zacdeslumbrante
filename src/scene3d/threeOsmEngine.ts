@@ -159,6 +159,8 @@ const MAP_BOUNDS = { south: 22.756, north: 22.794, west: -102.596, east: -102.54
 const MAP_MIN_DISTANCE_M = 30;
 const MAP_MAX_DISTANCE_M = 2500;
 const MAP_MAX_POLAR = Math.PI / 2.1;
+/** Lo que tarda la cámara en girar al norte, inclinarse o acercar con los botones (#292). */
+const VIEW_ADJUST_MILLIS = 600;
 // PROTO: avatar exagerado (estilo juego) para verse a la distancia de cámara habitual.
 const AVATAR_SCALE = 8;
 
@@ -445,6 +447,7 @@ export class ThreeOsmEngine implements SceneEngine {
   private groundClickHandler: ((at: { lat: number; lng: number }) => void) | null = null;
   private animation: { step: (now: number) => boolean; resolve: () => void } | null = null;
   private current: SceneCamera | null = null;
+  private viewHandler: ((view: { heading: number; tilt: number }) => void) | null = null;
   private readyPromise: Promise<void> = Promise.resolve();
   private hemi: THREE.HemisphereLight | null = null;
   private sun: THREE.DirectionalLight | null = null;
@@ -569,7 +572,10 @@ export class ThreeOsmEngine implements SceneEngine {
     controls.enableDamping = true;
     this.useMapControls(T, controls);
     controls.addEventListener('start', () => this.stop());
-    controls.addEventListener('change', () => this.keepInCity());
+    controls.addEventListener('change', () => {
+      this.keepInCity();
+      this.emitView();
+    });
     this.controls = controls;
 
     this.resize();
@@ -841,6 +847,44 @@ export class ThreeOsmEngine implements SceneEngine {
     const anim = this.animation;
     this.animation = null;
     anim?.resolve();
+  }
+
+  onViewChange(handler: (view: { heading: number; tilt: number }) => void): void {
+    this.viewHandler = handler;
+    this.emitView();
+  }
+
+  /** Brújula, vista de arriba y zoom (#292): parte de donde el usuario dejó la cámara, no del último vuelo. */
+  adjustView(change: { heading?: number; tilt?: number; rangeFactor?: number }): Promise<void> {
+    const now = this.readCamera();
+    if (!now || this.skyView) return Promise.resolve();
+    this.current = now;
+    const range = Math.min(Math.max(now.range * (change.rangeFactor ?? 1), MAP_MIN_DISTANCE_M), MAP_MAX_DISTANCE_M);
+    const reduced = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    return this.flyTo(
+      { ...now, heading: change.heading ?? now.heading, tilt: change.tilt ?? now.tilt, range },
+      reduced ? 0 : VIEW_ADJUST_MILLIS,
+    );
+  }
+
+  /** La vista tal como está, leída de la cámara y del objetivo de la órbita. */
+  private readCamera(): SceneCamera | null {
+    const { camera, controls } = this;
+    if (!camera || !controls) return null;
+    const t = controls.target;
+    const p = camera.position;
+    const range = Math.max(p.distanceTo(t), 1);
+    const { lat, lng } = toLatLng(t.x, t.z);
+    const tilt = (Math.acos(Math.min(Math.max((p.y - t.y) / range, -1), 1)) * 180) / Math.PI;
+    // Inverso de place(): la cámara queda detrás del centro; rumbo 0 = mirando al norte (−z).
+    const heading = ((Math.atan2(t.x - p.x, p.z - t.z) * 180) / Math.PI + 360) % 360;
+    return { lat, lng, altitude: this.current?.altitude ?? 0, range, tilt, heading };
+  }
+
+  private emitView(): void {
+    if (!this.viewHandler || this.skyView) return;
+    const view = this.readCamera();
+    if (view) this.viewHandler({ heading: view.heading, tilt: view.tilt });
   }
 
   onGroundClick(handler: (at: { lat: number; lng: number }) => void): void {
