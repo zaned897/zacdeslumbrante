@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { clusterMarkers, markerClass, markerVisible, nameVisible, SECRET_NEAR_M, TIER2_NAME_M, TIER3_SHOW_M } from '../scene3d/poiTiers';
+import { clusterMarkers, labelBudget, markerClass, markerVisible, nameVisible, SECRET_NEAR_M, TIER2_NAME_M, TIER3_SHOW_M } from '../scene3d/poiTiers';
 
 test('#295: de lejos solo el nivel 1 lleva nombre y el nivel 3 no sale', () => {
   const far = TIER2_NAME_M + 1;
@@ -64,4 +64,10 @@ test('#312: un secreto nunca se agrupa y un puesto gana a un punto de barrio', (
   ], 22);
   assert.deepEqual(out.map((o) => o.keep), [false, true, true]);
   assert.equal(out[1].count, 1);
+});
+
+test('#309: presupuesto de nombres por pantalla: 5 celular, 8 tableta, 12 escritorio', () => {
+  assert.equal(labelBudget(375), 5);
+  assert.equal(labelBudget(768), 8);
+  assert.equal(labelBudget(1440), 12);
 });

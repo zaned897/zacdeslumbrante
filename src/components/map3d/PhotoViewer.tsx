@@ -13,6 +13,8 @@ export interface PhotoViewerProps {
   photos: PlacePhoto[];
   startIndex: number;
   placeName: string;
+  /** Con fotos de varios lugares («N fotos cerca», #309), el nombre de cada una. */
+  placeNameOf?: (photo: PlacePhoto) => string;
   language: Language;
   onClose: () => void;
   /** Abre «Proponer una foto» para el lugar. */
@@ -39,7 +41,7 @@ const prefersReducedMotion = () =>
  * acercar, arrastrar hacia abajo o ✕ para cerrar. Los créditos (autor, licencia, fuente) están a un
  * toque en «Créditos». Es un `<dialog>` modal: Esc lo cierra y queda debajo de «Proponer una foto».
  */
-export const PhotoViewer: React.FC<PhotoViewerProps> = ({ photos, startIndex, placeName, language, onClose, onPropose }) => {
+export const PhotoViewer: React.FC<PhotoViewerProps> = ({ photos, startIndex, placeName, placeNameOf, language, onClose, onPropose }) => {
   const t = TRANSLATIONS[language];
   const titleId = useId();
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -175,7 +177,7 @@ export const PhotoViewer: React.FC<PhotoViewerProps> = ({ photos, startIndex, pl
           <X className="h-5 w-5" />
         </button>
         <div className="min-w-0 text-center">
-          <h2 id={titleId} className="truncate text-sm font-bold">{placeName}</h2>
+          <h2 id={titleId} className="truncate text-sm font-bold">{photo && placeNameOf ? placeNameOf(photo) : placeName}</h2>
           <p className="text-xs text-white/75" aria-live="polite">
             {t.view3dViewerCount.replace('{n}', String(index + 1)).replace('{total}', String(photos.length))}
           </p>

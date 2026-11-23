@@ -116,6 +116,7 @@ Notas:
    - Vida de calle (hecho, #40): `streetLifeLayer` pinta en rosa mexicano puestos, artesanos y la callejoneada desde `GET /api/py/street-life`. Sin `placeId`, así que en Explorar no se ponen en gris ni cuentan para la colección.
    - Puntos del centro (hecho, #295): `centroPointsLayer` pinta el catálogo de `src/data/centroPoints.ts`. Todo `ScenePoi` con `tier` se dibuja por nivel (`poiTiers.ts`, `poiMarkers.ts`): nivel 1 pin con icono y nombre siempre, nivel 2 punto con nombre al acercarse, nivel 3 punto chico solo de cerca; los que se enciman se agrupan en el de más nivel (+N).
    - Clases menores (#312): con `pointKind` el punto es puesto (cuadro verde, la vida de calle), referencia (rombo, sin nombre) o secreto (un «?» que solo sale a menos de 40 m del avatar).
+   - Menos letreros (#309): máximo 5 nombres en celular, 8 en tableta y 12 en escritorio (`labelBudget` en `poiTiers.ts`). En celular sale una sola tarjeta de foto y las demás se cuentan en el chip «N fotos cerca» (`onNearbyPhotos`), que abre el visor. Los avisos (temporada, misión, ciudad estilizada) son chips del borde inferior que no vuelven tras verlos (`NoticeChips`, `zacatecas_seen_notices_v1`).
 6. Desde la tarjeta de un lugar, abrir el chat RAG con ese lugar como contexto.
 
 Detalle y orden en las épicas de GitHub: #7 (Ciudad 3D), #8 (modo juego) y #9 (contenido enchufable).
