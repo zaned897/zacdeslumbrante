@@ -30,15 +30,27 @@ test('resolución: tope de 2, ?dpr la fija y los escalones solo bajan', () => {
   assert.equal(nextPixelRatio(1), null);
 });
 
-test('resolución: con fps bajo dos segundos seguidos baja un escalón; a 60 fps no cambia', () => {
-  const run = (frameMs: number, seconds: number, search = '') => {
+test('resolución: tras 4 s de gracia, con fps bajo dos segundos seguidos baja un escalón; a 60 fps no cambia', () => {
+  // fpsAt: fps según el pixel ratio actual (simula una GPU que mejora al bajar nitidez, o un tope fijo).
+  const run = (fpsAt: (ratio: number) => number, seconds: number, search = '') => {
     const applied: number[] = [];
-    const r = new AdaptiveResolution(2, search, (v) => applied.push(v), () => true);
-    for (let t = 0; t <= seconds * 1000; t += frameMs) r.frame(t);
+    let ratio = 2;
+    const r = new AdaptiveResolution(2, search, (v) => { ratio = v; applied.push(v); }, () => true);
+    for (let t = 0; t <= seconds * 1000; t += 1000 / fpsAt(ratio)) r.frame(t);
     return applied;
   };
-  assert.deepEqual(run(1000 / 60, 10), []);
-  assert.deepEqual(run(1000 / 30, 3.5), [1.5]);
-  assert.deepEqual(run(1000 / 20, 30), [1.5, 1.25, 1]);
-  assert.deepEqual(run(1000 / 20, 30, '?dpr=2'), []);
+  const gpuBound = (ratio: number) => (20 * 4) / (ratio * ratio); // 20 fps a 2×, 80 fps a 1×
+  assert.deepEqual(run(() => 60, 10), []);
+  assert.deepEqual(run(() => 30, 3.5), [], 'durante la gracia de arranque no mide');
+  assert.deepEqual(run(gpuBound, 7), [1.5]);
+  assert.deepEqual(run(gpuBound, 30), [1.5, 1.25], 'a 1.25× ya va a 51 fps: se queda ahí');
+  assert.deepEqual(run((r) => Math.min(gpuBound(r), 40), 30), [1.5, 1.25, 1, 1.25], 'en 1× ya no gana: regresa');
+  assert.deepEqual(run(gpuBound, 30, '?dpr=2'), []);
+});
+
+test('resolución: si bajar un escalón no sube el fps (rAF topado a 30 Hz), regresa y deja de ajustar', () => {
+  const applied: number[] = [];
+  const r = new AdaptiveResolution(2, '', (v) => applied.push(v), () => true);
+  for (let t = 0; t <= 30_000; t += 1000 / 30) r.frame(t);
+  assert.deepEqual(applied, [1.5, 2]);
 });
