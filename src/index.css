@@ -149,6 +149,17 @@
 [data-scene-tone="dark"] :is(.glass, .glass-sheet) {
   background-color: rgba(255, 255, 255, 0.72);
 }
+/* Tarjeta de edificio: el mismo vidrio con un tinte cálido algo más oscuro (#327). */
+.glass-sheet.glass-tinted {
+  background-color: rgba(176, 166, 156, 0.5);
+  /* Fondo más oscuro: los grises del texto bajan un tono para seguir en AA. */
+  --color-stone-500: #57534e;
+  --color-stone-600: #44403c;
+  --color-stone-700: #292524;
+}
+[data-scene-tone="dark"] .glass-sheet.glass-tinted {
+  background-color: rgba(214, 207, 198, 0.76);
+}
 /* En pantallas táctiles el desenfoque cuesta más por cuadro: radio menor, mismo look (#308). */
 @media (pointer: coarse) {
   :is(.glass, .glass-sheet) {
@@ -156,13 +167,13 @@
     backdrop-filter: blur(10px) saturate(1.8);
   }
 }
-[data-glass="solid"] :is(.glass, .glass-sheet) {
+[data-glass="solid"] :is(.glass, .glass-sheet, [data-scene-tone] .glass-tinted) {
   background-color: rgba(251, 249, 245, 0.97);
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
 }
 @media (prefers-reduced-transparency: reduce) {
-  :is(.glass, .glass-sheet) {
+  :is(.glass, .glass-sheet, [data-scene-tone] .glass-sheet.glass-tinted) {
     background-color: rgba(251, 249, 245, 0.97);
     -webkit-backdrop-filter: none;
     backdrop-filter: none;

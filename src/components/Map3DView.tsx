@@ -1127,7 +1127,7 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
 
       {/* Tarjeta del lugar */}
       {selected && !isTouring && (
-        <div className={`absolute inset-x-3 ${isExploring ? 'bottom-56 md:bottom-24 md:right-48' : 'bottom-20 md:right-4'} md:inset-x-auto md:w-80 z-10 max-h-[62dvh] overflow-y-auto glass-sheet p-4 ${selected.kind === 'vendor' ? 'border-t-4 border-t-[#E4007C]' : ''}`}>
+        <div className={`absolute inset-x-3 ${isExploring ? 'bottom-56 md:bottom-24 md:right-48' : 'bottom-20 md:right-4'} md:inset-x-auto md:w-80 z-10 max-h-[62dvh] overflow-y-auto glass-sheet glass-tinted p-4 ${selected.kind === 'vendor' ? 'border-t-4 border-t-[#E4007C]' : ''}`}>
           {photo && (
             <figure className="-mx-4 -mt-4 mb-3">
               <div className="relative aspect-video overflow-hidden rounded-t-xl bg-stone-200">
