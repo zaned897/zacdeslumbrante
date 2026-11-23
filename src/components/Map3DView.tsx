@@ -77,6 +77,7 @@ import { ReleaseDrop } from './map3d/ReleaseDrop';
 import { useGlassFallback } from '../scene3d/useGlassFallback';
 import { CableCarCard } from './map3d/CableCarCard';
 import { RadialMenu, type RadialNode } from './map3d/RadialMenu';
+import { NoticeChips, useIsPhone, type Notice } from './map3d/NoticeChips';
 import { CableRideCard, CollectionCard } from './map3d/MenuCards';
 
 
@@ -186,6 +187,9 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
   /** Visor de fotos abierto (#307): las fotos de un lugar y desde cuál empieza. */
   const [viewer, setViewer] = useState<{ placeId: string; photos: PlacePhoto[]; index: number } | null>(null);
   const allPhotosRef = useRef<PlacePhoto[]>([]);
+  /** Fotos de los lugares cerca y en cuadro (#309): en celular se cuentan en el chip «N fotos cerca». */
+  const [nearbyPhotoIds, setNearbyPhotoIds] = useState<string[]>([]);
+  const isPhone = useIsPhone();
   /** Premio recién ganado (#313): aviso arriba si es menor, momento a pantalla completa si es mayor. */
   const [prize, setPrize] = useState<PlacedPrize | null>(null);
   const [askPlace, setAskPlace] = useState<Place | null>(null);
@@ -396,6 +400,7 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
           if (!list.length) return;
           setViewer({ placeId, photos: list, index: Math.max(0, list.findIndex((p) => p.id === id)) });
         });
+        engine.onNearbyPhotos?.((list) => setNearbyPhotoIds(list.map((p) => p.id)));
         setStatus('ready');
       })
       .catch((err: unknown) => {
@@ -817,6 +822,43 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
     },
   ];
 
+  const nearbyPhotos = useMemo(() => {
+    const ids = new Set(nearbyPhotoIds);
+    return allPhotos.filter((p) => ids.has(p.id));
+  }, [nearbyPhotoIds, allPhotos]);
+  // Avisos que antes iban encima de la ciudad (#309). El id cambia con la temporada para que una nueva sí salga.
+  const notices = useMemo<Notice[]>(() => {
+    const list: Notice[] = [];
+    if (season?.race && !raceMissionDone) {
+      list.push({
+        id: `mision-${season.id}`, icon: '🏁', label: t.noticeMission, accent: '#DC2626',
+        body: (
+          <>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[#DC2626]">{t.view3dMissionToday}</p>
+            <p className="mt-1">{PANAMERICANA_TEXT.mission[language]}</p>
+            <a href={PANAMERICANA_SOURCE_URL} target="_blank" rel="noreferrer" className="mt-1 inline-block text-[10px] text-stone-500 underline">
+              {t.view3dSource}: Gobierno de Zacatecas
+            </a>
+          </>
+        ),
+      });
+    }
+    if (season && !isExploring) {
+      list.push({
+        id: `temporada-${season.id}`, icon: '✦', label: season.name[language], accent: season.accent,
+        body: (
+          <p>
+            <b>{season.name[language]}</b> · {season.dateLabel[language]}
+            {season.provisional && <span className="text-stone-500"> ({t.view3dSeasonUnconfirmed})</span>}
+          </p>
+        ),
+      });
+    }
+    if (engineId === 'three' && !apiKey && !engineFallback && !isExploring) {
+      list.push({ id: 'ciudad-estilizada', icon: 'ⓘ', label: t.noticeStylized, accent: '#78716C', body: <p>{t.view3dNoKeyBody}</p> });
+    }
+    return list;
+  }, [season, raceMissionDone, isExploring, engineId, apiKey, engineFallback, language, t]);
   const photo = photos[photoIndex];
   const stepPhoto = (delta: number) =>
     setPhotoIndex((i) => (i + delta + photos.length) % photos.length);
@@ -843,32 +885,16 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
       )}
       {season && status === 'ready' && <SeasonOverlay season={season} tintNight={engineId !== 'three'} />}
 
-      {/* Chip de la temporada (#68): siempre con "fechas por confirmar" hasta tener el calendario oficial. */}
-      {season && status === 'ready' && !isExploring && (
-        <div className={`absolute top-[7.5rem] md:top-28 inset-x-0 z-10 flex justify-center px-3 pointer-events-none ${rideHide}`}>
-          <p
-            className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-extrabold text-white rounded-full shadow-lg whitespace-nowrap"
-            style={{ background: season.accent }}
-          >
-            {season.name[language]} · {season.dateLabel[language]}
-            {season.provisional && <span className="font-semibold opacity-85">({t.view3dSeasonUnconfirmed})</span>}
-          </p>
-        </div>
-      )}
-
-      {/* Misión de hoy en la Carrera Panamericana (#87) */}
-      {season?.race && status === 'ready' && !raceMissionDone && !selected && !(isExploring && nearby) && (
-        <div
-          className={`absolute ${isExploring ? 'bottom-52 md:bottom-24' : 'top-[10rem] md:top-40'} inset-x-3 md:inset-x-auto md:left-4 md:w-80 z-10 bg-[#FBF9F5] border-l-4 border-[#DC2626] rounded-xl shadow-lg p-3 ${rideHide}`}
-        >
-          <div className="flex items-center justify-between gap-2">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-[#DC2626]">🏁 {t.view3dMissionToday}</p>
-          </div>
-          <p className="mt-1 text-[11px] leading-snug text-stone-700">{PANAMERICANA_TEXT.mission[language]}</p>
-          <a href={PANAMERICANA_SOURCE_URL} target="_blank" rel="noreferrer" className="mt-1 inline-block text-[10px] text-stone-500 underline">
-            {t.view3dSource}: Gobierno de Zacatecas
-          </a>
-        </div>
+      {/* Avisos en chips del borde inferior (#309): temporada, misión y ciudad estilizada; en celular, las fotos cerca. */}
+      {status === 'ready' && !selected && !askPlace && !isTouring && !isStargazing && !pickingSpot && !vendorOpen && !cabinRiding && (
+        <NoticeChips
+          notices={notices}
+          photoCount={isPhone && !isExploring ? nearbyPhotos.length : 0}
+          photoLabel={t.noticePhotosNearby}
+          onOpenPhotos={() => nearbyPhotos[0] && setViewer({ placeId: nearbyPhotos[0].placeId, photos: nearbyPhotos, index: 0 })}
+          closeLabel={t.view3dClose}
+          className={isExploring ? 'bottom-52 md:bottom-24' : ''}
+        />
       )}
 
       {/* Barra superior */}
@@ -905,7 +931,7 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
       )}
 
       {/* La ciudad estilizada es la vista normal (#127): el aviso solo sale si cayó desde Google o no hay llave. */}
-      {engineId === 'three' && status === 'ready' && !isExploring && !isStargazing && !pickingSpot && (engineFallback || !apiKey) && (
+      {engineId === 'three' && status === 'ready' && !isExploring && !isStargazing && !pickingSpot && engineFallback && (
         <div className={`absolute top-16 inset-x-3 md:inset-x-auto md:left-4 md:max-w-xs z-10 text-[11px] text-stone-800 glass rounded-2xl px-3 py-2 ${rideHide}`}>
           {engineFallback ? (
             <>
@@ -918,9 +944,7 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
                 </span>
               )}
             </>
-          ) : (
-            t.view3dNoKeyBody
-          )}
+          ) : null}
         </div>
       )}
 
@@ -1243,6 +1267,7 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
           photos={viewer.photos}
           startIndex={viewer.index}
           placeName={placeName(viewer.placeId, language)}
+          placeNameOf={(p) => placeName(p.placeId, language)}
           language={language}
           onClose={() => setViewer(null)}
           onPropose={(placeId) => setProposePlaceId(placeId)}
