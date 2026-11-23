@@ -9,14 +9,20 @@ const DUSK_FROM = 17 * 60 + 30;
 const NIGHT_FROM = 19 * 60 + 30;
 const DAY_FROM = 6 * 60 + 30;
 
+// Crear un Intl.DateTimeFormat cuesta ~0.1 ms y el teleférico y el trenecito preguntan la hora en
+// cada cuadro: los formateadores se crean una vez.
+let minutesFormat: Intl.DateTimeFormat | null = null;
+let weekdayFormat: Intl.DateTimeFormat | null = null;
+
 /** Minutos desde la medianoche en Zacatecas. */
 export function zacatecasMinutes(now: Date): number {
-  const parts = new Intl.DateTimeFormat('en-US', {
+  minutesFormat ??= new Intl.DateTimeFormat('en-US', {
     timeZone: ZACATECAS_TZ,
     hour: '2-digit',
     minute: '2-digit',
     hourCycle: 'h23',
-  }).formatToParts(now);
+  });
+  const parts = minutesFormat.formatToParts(now);
   const get = (type: string) => Number(parts.find((p) => p.type === type)?.value ?? 0);
   return get('hour') * 60 + get('minute');
 }
@@ -30,7 +36,8 @@ export function forcedMinutes(search: string, development: boolean): number | nu
 }
 
 export function zacatecasWeekday(now: Date): number {
-  const day = new Intl.DateTimeFormat('en-US', { timeZone: ZACATECAS_TZ, weekday: 'short' }).format(now);
+  weekdayFormat ??= new Intl.DateTimeFormat('en-US', { timeZone: ZACATECAS_TZ, weekday: 'short' });
+  const day = weekdayFormat.format(now);
   return ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(day);
 }
 
