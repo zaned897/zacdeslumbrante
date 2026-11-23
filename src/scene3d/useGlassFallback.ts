@@ -5,6 +5,11 @@ export const GLASS_MIN_FPS = 30;
 /** Ventana de medición y cuántas ventanas bajas seguidas hacen falta para cambiar. */
 const WINDOW_MS = 1000;
 const LOW_WINDOWS = 3;
+/**
+ * Al arrancar llegan vegetación, relieve y modelos (igual que en `adaptiveResolution`): ese tirón
+ * no cuenta. Sin esta gracia un celular que luego va a 60 se quedaba opaco toda la sesión.
+ */
+export const GLASS_STARTUP_GRACE_MS = 4000;
 
 /**
  * Mide el fps como el medidor de `?stats=1` y avisa cuando cae de 30 durante unos segundos:
@@ -18,10 +23,14 @@ export function useGlassFallback(active: boolean): boolean {
   useEffect(() => {
     if (!active || solid || forced !== null) return;
     let frames = 0;
-    let last = performance.now();
+    let last = performance.now() + GLASS_STARTUP_GRACE_MS;
     let low = 0;
     let id = 0;
     const tick = (now: number) => {
+      if (now < last) {
+        id = requestAnimationFrame(tick);
+        return;
+      }
       frames++;
       const span = now - last;
       if (span >= WINDOW_MS) {
