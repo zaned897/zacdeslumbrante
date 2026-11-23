@@ -243,7 +243,7 @@ function build(options: Options, data: CableCarFile): CableCarLayer {
       mesh.instanceMatrix.needsUpdate = true; mesh.computeBoundingSphere(); lamps.add(mesh);
     }
     const stationLights = stations.map(station => {
-      const light = new T.PointLight('#FFC27A', 0, 140, 1.4);
+      const light = new T.PointLight('#FFC27A', 0, 140, 1.4); light.visible = false;
       light.position.copy(station.position).add(new T.Vector3(0, 30, 0)); group.add(light); lights.push(light); return light;
     });
     const setTimeOfDay = (time: SceneTimeOfDay) => {
@@ -254,7 +254,9 @@ function build(options: Options, data: CableCarFile): CableCarLayer {
       roof.emissive.set(night ? '#5A1A08' : '#000000');
       cableMat.emissive.set(night ? '#6B4A2A' : '#000000');
       lamps.visible = night || dusk;
-      stationLights.forEach(light => { light.intensity = night ? 900 : dusk ? 250 : 0; });
+      // Apagada = fuera de la escena: three.js mete cada luz visible en el shader de todo lo que
+      // tiene iluminación, aunque su intensidad sea 0 (rendimiento: de día no cuestan nada).
+      stationLights.forEach(light => { light.intensity = night ? 900 : dusk ? 250 : 0; light.visible = light.intensity > 0; });
     };
     const onRay = new T.Vector3(), onSegment = new T.Vector3(), screen = new T.Vector3();
     const pick: CableCarLayer['pick'] = (ray, camera, pointer, size) => {

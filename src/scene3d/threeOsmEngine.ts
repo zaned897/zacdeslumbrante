@@ -25,6 +25,9 @@ import type {
 import { StarSky, skyMoment } from './starSky';
 import { WeatherController } from './weather';
 import { makeTierMarker } from './poiMarkers';
+import { TiledMesh } from './tiles';
+import { AdaptiveResolution, initialPixelRatio } from './adaptiveResolution';
+import { isStatsEnabled, publishRenderStats } from './SceneStats';
 import { CLUSTER_PX, clusterMarkers, labelBudget, markerClass, markerVisible, nameVisible, type MarkerClass } from './poiTiers';
 
 /** Id del lugar del teleférico en `placesLayer` (`place:<id de places.ts>`). */
@@ -46,6 +49,10 @@ const PHOTO_NEAR_M = 650;
 const PHOTO_HEIGHT_M = 70;
 const PHOTO_MAX_PER_PLACE = 3;
 const PHOTO_CHECK_MS = 200;
+/** Mosaicos por lado para el recorte por cámara (8×8: ~50 % menos triángulos en la vista inicial). */
+const TILE_GRID = 8;
+/** Con la cámara quieta, cada cuánto se recolocan las etiquetas HTML. */
+const LABEL_IDLE_MS = 250;
 const PHOTO_GAP_PX = 8;
 /** Entrada de las tarjetas (#307): retraso entre vecinas y duración, en milisegundos. */
 const PHOTO_STAGGER_MS = 140;
@@ -488,6 +495,14 @@ export class ThreeOsmEngine implements SceneEngine {
   private sun: THREE.DirectionalLight | null = null;
   private buildings: THREE.Mesh | null = null;
   private roads: THREE.Mesh | null = null;
+  /** Relieve, edificios y calles partidos en mosaicos para que la cámara recorte lo que no ve. */
+  private tiled: TiledMesh[] = [];
+  private resolution: AdaptiveResolution | null = null;
+  /** Las etiquetas HTML solo se recolocan si la cámara se movió (o cada LABEL_IDLE_MS). */
+  private labelCamera: THREE.Matrix4 | null = null;
+  private labelsAt = -Infinity;
+  private shadowKey = '';
+  private readonly stats = isStatsEnabled();
   // Día y noche se crean una vez y solo se intercambian (#129).
   private looks: {
     day: { building: THREE.Material; road: THREE.Material };
@@ -534,7 +549,9 @@ export class ThreeOsmEngine implements SceneEngine {
     this.clock = new T.Clock();
 
     const renderer = new T.WebGLRenderer({ antialias: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setPixelRatio(initialPixelRatio(window.devicePixelRatio, window.location.search));
+    // La sombra solo depende del sol y de los edificios: se recalcula cuando cambian (tick).
+    renderer.shadowMap.autoUpdate = false;
     renderer.domElement.style.display = 'block';
     container.appendChild(renderer.domElement);
     this.renderer = renderer;
@@ -589,7 +606,10 @@ export class ThreeOsmEngine implements SceneEngine {
     plain.position.y = terrain ? -90 : 0;
     scene.add(plain);
     const ground = terrain ? terrain.mesh(T) : plain;
-    if (terrain) scene.add(ground);
+    if (terrain) {
+      scene.add(ground);
+      this.tile(T, scene, ground);
+    }
     this.ground = ground;
 
     this.poiGroup = new T.Group();
@@ -615,6 +635,10 @@ export class ThreeOsmEngine implements SceneEngine {
 
     this.resize();
     this.resizeObserver = new ResizeObserver(() => this.resize());
+    this.resolution = new AdaptiveResolution(renderer.getPixelRatio(), window.location.search, (ratio) => {
+      renderer.setPixelRatio(ratio);
+      this.resize();
+    });
     this.resizeObserver.observe(container);
 
     this.jumpTo(initial);
@@ -673,6 +697,7 @@ export class ThreeOsmEngine implements SceneEngine {
       if (streets) {
         this.roads = new T.Mesh(streets, this.looks.day.road);
         scene.add(this.roads);
+        this.tile(T, scene, this.roads);
       }
     }
     // Primer vértice de cada huella en la malla unida: ahí un monumento (#227) oculta las suyas.
@@ -683,6 +708,7 @@ export class ThreeOsmEngine implements SceneEngine {
     if (merged) {
       this.buildings = new T.Mesh(merged, this.looks.day.building);
       scene.add(this.buildings);
+      this.tile(T, scene, this.buildings);
     }
     this.nightLights = this.makeNightLights(T, lights.lines, windows);
     scene.add(this.nightLights);
@@ -716,7 +742,10 @@ export class ThreeOsmEngine implements SceneEngine {
     void this.readyPromise.then(() => import('./vegetation')).then(async ({ loadVegetation }) => {
       const layer = await loadVegetation({ T, scene, project: toLocal, height: terrain ? (x, z) => terrain.at(x, z) : null,
         buildings: data.buildings, roads: roads?.roads ?? [] }, vegetationAbort.signal);
-      if (!vegetationAbort.signal.aborted) { this.vegetation = layer; layer?.updateSeason(this.seasonLook?.rainy === true); }
+      if (!vegetationAbort.signal.aborted) {
+        this.vegetation = layer; layer?.updateSeason(this.seasonLook?.rainy === true);
+        if (layer) void this.warmLightShaders();
+      }
     }).catch(error => console.warn('[vegetation] No se pudo cargar el módulo.', error));
     // Monumentos (#227): el registro se lee después del primer cuadro y cada modelo se pide al acercarse.
     const buildings = this.buildings;
@@ -768,6 +797,7 @@ export class ThreeOsmEngine implements SceneEngine {
           }
           layer?.setLanguage(this.language);
           layer?.setTimeOfDay(this.seasonLook?.night ? 'night' : this.timeOfDay);
+          if (layer) void this.warmLightShaders();
         }
       }).catch(error => console.warn('[cableCar] No se pudo cargar el módulo.', error));
     } else console.warn('[cableCar] Sin relieve para convertir las cotas; se omite el teleférico.');
@@ -1026,6 +1056,30 @@ export class ThreeOsmEngine implements SceneEngine {
     scene.add(this.route);
   }
 
+
+  /**
+   * Las luces apagadas salen del shader (rendimiento de día), pero el número de luces es parte del
+   * programa: al pasar a atardecer/noche se recompilaría todo y la escena daría un tirón. Aquí se
+   * compila de antemano la variante con luces, sin cambiar lo que se ve (intensidad intacta).
+   */
+  private async warmLightShaders(): Promise<void> {
+    const { renderer, scene, camera } = this;
+    if (!renderer || !scene || !camera || this.destroyed) return;
+    const lights: THREE.PointLight[] = [];
+    scene.traverse((o) => { if ((o as THREE.PointLight).isPointLight && !o.visible) lights.push(o as THREE.PointLight); });
+    if (lights.length === 0) return;
+    this.resolution?.hold(performance.now(), 3000);
+    lights.forEach((l) => (l.visible = true));
+    try {
+      await renderer.compileAsync(scene, camera);
+    } catch (error) {
+      console.warn('[scene3d] No se pudieron precompilar los shaders con luces.', error);
+    } finally {
+      // setTimeOfDay pudo cambiar la intensidad mientras tanto: se respeta la regla «apagada = fuera».
+      lights.forEach((l) => (l.visible = l.intensity > 0));
+    }
+  }
+
   destroy(): void {
     this.destroyed = true;
     this.freight?.dispose();
@@ -1047,6 +1101,9 @@ export class ThreeOsmEngine implements SceneEngine {
     this.monumentsAbort = null;
     this.monuments?.dispose();
     this.monuments = null;
+    this.tiled.forEach((t) => t.dispose());
+    this.tiled = [];
+    this.resolution = null;
     this.stop();
     this.renderer?.setAnimationLoop(null);
     this.renderer?.domElement.removeEventListener('click', this.onClick);
@@ -1521,6 +1578,33 @@ export class ThreeOsmEngine implements SceneEngine {
     return this.rail?.heightAt(x, z) ?? this.terrain?.at(x, z) ?? 0;
   }
 
+  /** Parte `mesh` en mosaicos (ver tiles.ts); la malla original sigue siendo la de referencia. */
+  private tile(T: Three, scene: THREE.Scene, mesh: THREE.Mesh): void {
+    const tiled = new TiledMesh(T, mesh, TILE_GRID);
+    scene.add(tiled.group);
+    this.tiled.push(tiled);
+  }
+
+  /** Con `autoUpdate` apagado, la sombra se vuelve a dibujar solo si cambió algo que la proyecta. */
+  private updateShadowMap(renderer: THREE.WebGLRenderer): void {
+    const { sun, buildings, scene } = this;
+    if (!renderer.shadowMap.enabled || !sun || !scene) {
+      this.shadowKey = '';
+      return;
+    }
+    let casters = 0;
+    scene.traverseVisible((o) => {
+      if (o.castShadow) casters++;
+    });
+    const p = sun.position;
+    const version = (buildings?.geometry.getAttribute('position') as THREE.BufferAttribute | undefined)?.version ?? 0;
+    const key = `${p.x},${p.y},${p.z}|${sun.shadow.radius}|${version}|${casters}`;
+    if (key !== this.shadowKey) {
+      this.shadowKey = key;
+      renderer.shadowMap.needsUpdate = true;
+    }
+  }
+
   private tick(now: number): void {
     const { renderer, labels, scene, camera, controls, clock } = this;
     if (!renderer || !labels || !scene || !camera || !controls || !clock) return;
@@ -1543,9 +1627,24 @@ export class ThreeOsmEngine implements SceneEngine {
     this.trenecito?.tick(now);
     this.monuments?.tick(camera, now);
     this.weather?.tick(dt, camera, controls.target, this.reducedMotion);
-    renderer.render(scene, camera);
-    labels.render(scene, camera);
-    this.declutterLabels(camera);
+    this.updateShadowMap(renderer);
+    this.tiled.forEach((t) => t.beforeRender());
+    try {
+      renderer.render(scene, camera);
+    } finally {
+      this.tiled.forEach((t) => t.afterRender());
+    }
+    // CSS2DRenderer reescribe el transform de cada etiqueta en cada cuadro aunque nada se mueva:
+    // con la cámara quieta basta recolocarlas de vez en cuando (estrellas, etiquetas nuevas).
+    const still = this.labelCamera?.equals(camera.matrixWorld) ?? false;
+    if (!still || now - this.labelsAt >= LABEL_IDLE_MS) {
+      (this.labelCamera ??= camera.matrixWorld.clone()).copy(camera.matrixWorld);
+      this.labelsAt = now;
+      labels.render(scene, camera);
+      this.declutterLabels(camera);
+    }
+    this.resolution?.frame(now);
+    if (this.stats) publishRenderStats(renderer.info.render, renderer.getPixelRatio(), this.tiled.reduce((n, t) => n + t.count, 0));
     if (this.photoGroups.length && now - this.lastPhotoCheckAt >= PHOTO_CHECK_MS) {
       this.lastPhotoCheckAt = now;
       this.updateFloatingPhotos(camera);
@@ -1838,6 +1937,7 @@ export class ThreeOsmEngine implements SceneEngine {
     const h = container.clientHeight || 1;
     renderer.setSize(w, h);
     labels.setSize(w, h);
+    this.labelsAt = -Infinity;
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
     const compact = w < 640;

@@ -1,4 +1,5 @@
 import type * as THREE from 'three';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import type { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import type { CableCarLayer } from './cableCar';
 import type { CabinState, CabinView, SceneTimeOfDay } from '../types/scene3d';
@@ -81,7 +82,7 @@ export function cabinPhase(seconds: number, index: number, config: CabinConfig):
 
 export class CableCabins {
   private readonly group: THREE.Group;
-  private readonly geometry: THREE.BoxGeometry;
+  private readonly geometries: THREE.BufferGeometry[] = [];
   private readonly materials: THREE.MeshLambertMaterial[];
   private readonly cabins: THREE.Group[] = [];
   private readonly bodies: THREE.Group[] = [];
@@ -120,7 +121,6 @@ export class CableCabins {
     const skip = development ? Number(new URLSearchParams(search).get('cabina')) : NaN;
     if (Number.isFinite(skip) && skip > 0) this.elapsed = skip;
     this.group = new T.Group(); this.group.name = 'cable-cabins'; this.group.userData = { _mock: true };
-    this.geometry = new T.BoxGeometry(1, 1, 1);
     this.materials = ['#9A3412', '#F5EFE6', '#57534E', '#86B8C4'].map(color => new T.MeshLambertMaterial({ color }));
     const [clay, cream, steel, glass] = this.materials;
     glass.transparent = true; glass.opacity = 0.3; glass.depthWrite = false;
@@ -146,26 +146,38 @@ export class CableCabins {
       while (last > first && !clear(last, layer.stations[1].position)) last--;
       return [this.lengths[side][first] / total, this.lengths[side][last] / total];
     });
-    const box = (parent: THREE.Group, size: [number, number, number], at: [number, number, number], material: THREE.Material) => {
-      const mesh = new T.Mesh(this.geometry, material); mesh.scale.set(...size); mesh.position.set(...at); parent.add(mesh);
+    // Rendimiento: las 15 piezas de una cabina se unen en una malla por material (4 draw calls por
+    // cabina en vez de 15). Todas las cabinas son iguales (#311), así que comparten las 4 geometrías.
+    const parts = new Map<THREE.Material, THREE.BufferGeometry[]>();
+    const box = (size: [number, number, number], at: [number, number, number], material: THREE.Material) => {
+      const list = parts.get(material) ?? [];
+      list.push(new T.BoxGeometry(1, 1, 1).scale(...size).translate(...at)); parts.set(material, list);
     };
+    box([0.18, 2.4, 0.18], [0, -1.2, 0], steel);
+    box([3.3, 0.25, 3.3], [0, -2.5, 0], cream);
+    // #311: ya no hay piso de cristal; todas las cabinas son iguales.
+    box([3, 0.2, 3], [0, CABIN_FLOOR_Y, 0], clay);
+    for (const x of [-1.5, 1.5]) {
+      box([0.12, 2.5, 3], [x, -3.85, 0], glass);
+      box([0.18, 0.65, 3], [x, -4.7, 0], clay);
+      for (const z of [-1.5, 1.5]) box([0.15, 2.6, 0.15], [x, -3.85, z], cream);
+    }
+    for (const z of [-1.5, 1.5]) {
+      box([3, 2.5, 0.12], [0, -3.85, z], glass);
+      box([3, 0.65, 0.18], [0, -4.7, z], clay);
+    }
+    const pieces = [...parts].map(([material, list]) => {
+      const geometry = mergeGeometries(list);
+      list.forEach(g => g.dispose());
+      if (!geometry) throw new Error('Teleférico: no se pudieron unir las piezas de la cabina');
+      this.geometries.push(geometry);
+      return { geometry, material };
+    });
     for (let i = 0; i < layer.cabinConfig.count; i++) {
       const cabin = new T.Group(), body = new T.Group(); cabin.add(body); this.group.add(cabin);
       this.cabins.push(cabin); this.bodies.push(body);
-      box(body, [0.18, 2.4, 0.18], [0, -1.2, 0], steel);
-      box(body, [3.3, 0.25, 3.3], [0, -2.5, 0], cream);
-      // #311: ya no hay piso de cristal; todas las cabinas son iguales.
-      box(body, [3, 0.2, 3], [0, CABIN_FLOOR_Y, 0], clay);
-      for (const x of [-1.5, 1.5]) {
-        box(body, [0.12, 2.5, 3], [x, -3.85, 0], glass);
-        box(body, [0.18, 0.65, 3], [x, -4.7, 0], clay);
-        for (const z of [-1.5, 1.5]) box(body, [0.15, 2.6, 0.15], [x, -3.85, z], cream);
-      }
-      for (const z of [-1.5, 1.5]) {
-        box(body, [3, 2.5, 0.12], [0, -3.85, z], glass);
-        box(body, [3, 0.65, 0.18], [0, -4.7, z], clay);
-      }
-      const light = new T.PointLight('#FFD08A', 0, 12, 2); light.position.y = -3.3; body.add(light); this.lights.push(light);
+      for (const { geometry, material } of pieces) body.add(new T.Mesh(geometry, material));
+      const light = new T.PointLight('#FFD08A', 0, 12, 2); light.visible = false; light.position.y = -3.3; body.add(light); this.lights.push(light);
     }
     scene.add(this.group); this.tick(0);
   }
@@ -176,7 +188,8 @@ export class CableCabins {
   setTimeOfDay(time: SceneTimeOfDay): void {
     const glow = time === 'night' ? 1 : time === 'dusk' ? 0.4 : 0;
     this.materials[3].emissive.set('#FFD08A'); this.materials[3].emissiveIntensity = glow;
-    this.lights.forEach(light => { light.intensity = glow * 12; });
+    // Con intensidad 0 la luz sale de la escena: si no, cada material con luz la sigue calculando.
+    this.lights.forEach(light => { light.intensity = glow * 12; light.visible = glow > 0; });
   }
   ride(on: boolean): void {
     if (!on) {
@@ -292,7 +305,7 @@ export class CableCabins {
   dispose(): void {
     if (this.disposed) return;
     this.ride(false); this.disposed = true; this.group.removeFromParent();
-    this.geometry.dispose(); this.materials.forEach(material => material.dispose());
+    this.geometries.forEach(g => g.dispose()); this.materials.forEach(material => material.dispose());
     this.lights.forEach(light => light.dispose());
   }
 }

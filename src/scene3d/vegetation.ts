@@ -1,4 +1,5 @@
 import type * as THREE from 'three';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
 type Point = [number, number];
 type Local = { x: number; z: number };
@@ -64,6 +65,17 @@ function inside(p: Local, ring: Local[]): boolean {
     if ((a.z > p.z) !== (b.z > p.z) && p.x < (b.x - a.x) * (p.z - a.z) / (b.z - a.z) + a.x) yes = !yes;
   }
   return yes;
+}
+
+/** Lado de la celda de recorte de la vegetación (la zona con plantas mide ~2.4 × 2.1 km). */
+const CELL_M = 1000;
+
+/** Une piezas del mismo color en una geometría y libera las piezas. */
+function merge(parts: THREE.BufferGeometry[]): THREE.BufferGeometry {
+  const merged = mergeGeometries(parts);
+  parts.forEach(g => g.dispose());
+  if (!merged) throw new Error('Vegetación: no se pudieron unir las piezas');
+  return merged;
 }
 
 function build(options: Options, data: VegetationFile): VegetationLayer {
@@ -175,32 +187,40 @@ function build(options: Options, data: VegetationFile): VegetationLayer {
   const batch = (geometry: THREE.BufferGeometry, color: string, points: Local[], scrub = false, size = 1.6) => {
     if (!points.length) { geometry.dispose(); return; }
     const material = new T.MeshLambertMaterial({ color });
-    const mesh = new T.InstancedMesh(geometry, material, points.length);
-    meshes.push(mesh);
     if (scrub) seasonal.push({ material, dry: color });
+    // Rendimiento: un InstancedMesh por celda de CELL_M, no uno para toda la ciudad, para que la
+    // cámara recorte las celdas que no ve. Giro y tamaño siguen el índice global: se ve igual.
+    const byCell = new Map<string, number[]>();
     points.forEach((p, i) => {
-      dummy.position.set(p.x, height?.(p.x, p.z) ?? 0, p.z);
-      dummy.rotation.set(0, i * 2.4, 0);
-      dummy.scale.setScalar(size * (0.85 + ((i * 37) % 10) / 33));
-      dummy.updateMatrix(); mesh.setMatrixAt(i, dummy.matrix);
+      const key = `${Math.floor(p.x / CELL_M)},${Math.floor(p.z / CELL_M)}`;
+      const list = byCell.get(key);
+      if (list) list.push(i); else byCell.set(key, [i]);
     });
-    mesh.instanceMatrix.needsUpdate = true;
-    mesh.computeBoundingSphere();
-    group.add(mesh);
+    for (const ids of byCell.values()) {
+      const mesh = new T.InstancedMesh(geometry, material, ids.length);
+      meshes.push(mesh);
+      ids.forEach((i, slot) => {
+        const p = points[i];
+        dummy.position.set(p.x, height?.(p.x, p.z) ?? 0, p.z);
+        dummy.rotation.set(0, i * 2.4, 0);
+        dummy.scale.setScalar(size * (0.85 + ((i * 37) % 10) / 33));
+        dummy.updateMatrix(); mesh.setMatrixAt(slot, dummy.matrix);
+      });
+      mesh.instanceMatrix.needsUpdate = true;
+      mesh.computeBoundingSphere();
+      group.add(mesh);
+    }
   };
   try {
     for (const species of SPECIES) {
       const points = spots.get(species) ?? [];
+      // Las pencas de un nopal y las hojas de un maguey van en una sola malla: menos draw calls.
       if (species === 'nopal') {
-        for (const [x, y, scale] of [[0, 1.4, 1], [-0.8, 2.3, 0.7], [0.8, 2.7, 0.8]]) {
-          batch(new T.IcosahedronGeometry(1, 0).scale(0.8 * scale, 1.4 * scale, 0.3)
-            .translate(x, y, 0), '#7F9A52', points, true, 2.6);
-        }
+        batch(merge([[0, 1.4, 1], [-0.8, 2.3, 0.7], [0.8, 2.7, 0.8]].map(([x, y, scale]) =>
+          new T.IcosahedronGeometry(1, 0).scale(0.8 * scale, 1.4 * scale, 0.3).translate(x, y, 0))), '#7F9A52', points, true, 2.6);
       } else if (species === 'maguey') {
-        for (let leaf = 0; leaf < 6; leaf++) {
-          batch(new T.ConeGeometry(0.5, 3, 3).translate(0, 1.5, 0).rotateZ(0.85)
-            .rotateY(leaf * Math.PI / 3), '#7C9A76', points, true, 2.6);
-        }
+        batch(merge(Array.from({ length: 6 }, (_, leaf) => new T.ConeGeometry(0.5, 3, 3).translate(0, 1.5, 0)
+          .rotateZ(0.85).rotateY(leaf * Math.PI / 3))), '#7C9A76', points, true, 2.6);
       } else {
         const [radius, tall, color] = {
           pirul: [3.5, 8, '#6A9150'], mezquite: [3, 5, '#86934F'], huizache: [2, 3.5, '#9A9852'],
