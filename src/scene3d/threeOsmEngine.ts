@@ -742,7 +742,10 @@ export class ThreeOsmEngine implements SceneEngine {
     void this.readyPromise.then(() => import('./vegetation')).then(async ({ loadVegetation }) => {
       const layer = await loadVegetation({ T, scene, project: toLocal, height: terrain ? (x, z) => terrain.at(x, z) : null,
         buildings: data.buildings, roads: roads?.roads ?? [] }, vegetationAbort.signal);
-      if (!vegetationAbort.signal.aborted) { this.vegetation = layer; layer?.updateSeason(this.seasonLook?.rainy === true); }
+      if (!vegetationAbort.signal.aborted) {
+        this.vegetation = layer; layer?.updateSeason(this.seasonLook?.rainy === true);
+        if (layer) void this.warmLightShaders();
+      }
     }).catch(error => console.warn('[vegetation] No se pudo cargar el módulo.', error));
     // Monumentos (#227): el registro se lee después del primer cuadro y cada modelo se pide al acercarse.
     const buildings = this.buildings;
@@ -794,6 +797,7 @@ export class ThreeOsmEngine implements SceneEngine {
           }
           layer?.setLanguage(this.language);
           layer?.setTimeOfDay(this.seasonLook?.night ? 'night' : this.timeOfDay);
+          if (layer) void this.warmLightShaders();
         }
       }).catch(error => console.warn('[cableCar] No se pudo cargar el módulo.', error));
     } else console.warn('[cableCar] Sin relieve para convertir las cotas; se omite el teleférico.');
@@ -1050,6 +1054,30 @@ export class ThreeOsmEngine implements SceneEngine {
       new T.MeshBasicMaterial({ color: COLORS.route }),
     );
     scene.add(this.route);
+  }
+
+
+  /**
+   * Las luces apagadas salen del shader (rendimiento de día), pero el número de luces es parte del
+   * programa: al pasar a atardecer/noche se recompilaría todo y la escena daría un tirón. Aquí se
+   * compila de antemano la variante con luces, sin cambiar lo que se ve (intensidad intacta).
+   */
+  private async warmLightShaders(): Promise<void> {
+    const { renderer, scene, camera } = this;
+    if (!renderer || !scene || !camera || this.destroyed) return;
+    const lights: THREE.PointLight[] = [];
+    scene.traverse((o) => { if ((o as THREE.PointLight).isPointLight && !o.visible) lights.push(o as THREE.PointLight); });
+    if (lights.length === 0) return;
+    this.resolution?.hold(performance.now(), 3000);
+    lights.forEach((l) => (l.visible = true));
+    try {
+      await renderer.compileAsync(scene, camera);
+    } catch (error) {
+      console.warn('[scene3d] No se pudieron precompilar los shaders con luces.', error);
+    } finally {
+      // setTimeOfDay pudo cambiar la intensidad mientras tanto: se respeta la regla «apagada = fuera».
+      lights.forEach((l) => (l.visible = l.intensity > 0));
+    }
   }
 
   destroy(): void {

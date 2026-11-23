@@ -4,6 +4,9 @@
  * detrás en cada cuadro. Si el fps se queda bajo, se baja un escalón de pixel ratio; nunca se sube
  * en la misma sesión, para no parpadear. En equipos que ya van a 60 no cambia nada.
  *
+ * Si bajar un escalón no mejora el fps, el cuello no son los píxeles (p. ej. ahorro de batería que
+ * topa requestAnimationFrame a 30 Hz): se regresa al escalón anterior y se deja de ajustar.
+ *
  * `?dpr=1.5` fija el pixel ratio (pruebas y capturas) y apaga el ajuste automático.
  */
 
@@ -17,6 +20,10 @@ const WINDOW_MS = 1000;
 const LOW_WINDOWS = 2;
 /** Tras un cambio se espera a que el navegador se acomode antes de volver a medir. */
 const SETTLE_MS = 1500;
+/** Al arrancar llegan vegetación, relieve y modelos: no se mide hasta que pase esto. */
+const STARTUP_GRACE_MS = 4000;
+/** Un escalón abajo debe subir el fps al menos esto; si no, se revierte. */
+const MIN_GAIN = 1.1;
 
 function forcedRatio(search: string): number | null {
   const raw = new URLSearchParams(search).get('dpr');
@@ -38,8 +45,10 @@ export class AdaptiveResolution {
   private frames = 0;
   private windowStart = -1;
   private low = 0;
-  private settleUntil = 0;
-  private readonly enabled: boolean;
+  private settleUntil = -1;
+  private enabled: boolean;
+  /** Tras bajar un escalón: fps de antes y ratio anterior, para revertir si no sirvió. */
+  private pending: { fps: number; ratio: number } | null = null;
 
   constructor(
     private ratio: number,
@@ -50,9 +59,18 @@ export class AdaptiveResolution {
     this.enabled = forcedRatio(search) === null;
   }
 
+  /** Pausa la medición, p. ej. mientras se compilan shaders o carga una capa pesada. */
+  hold(now: number, ms: number): void {
+    this.settleUntil = Math.max(this.settleUntil, now + ms);
+    this.windowStart = -1;
+    this.low = 0;
+  }
+
   /** Llamar una vez por cuadro con el tiempo de requestAnimationFrame. */
   frame(now: number): void {
-    if (!this.enabled || now < this.settleUntil) return;
+    if (!this.enabled) return;
+    if (this.settleUntil < 0) this.settleUntil = now + STARTUP_GRACE_MS;
+    if (now < this.settleUntil) return;
     if (this.windowStart < 0) {
       this.windowStart = now;
       this.frames = 0;
@@ -64,11 +82,23 @@ export class AdaptiveResolution {
     // Una pestaña oculta frena los cuadros: eso no cuenta como lentitud.
     if (this.visible() && span < WINDOW_MS * 2) {
       const fps = (this.frames * 1000) / span;
+      if (this.pending) {
+        const { fps: before, ratio } = this.pending;
+        this.pending = null;
+        if (fps < before * MIN_GAIN) {
+          // Bajar nitidez no ayudó: se regresa y no se vuelve a intentar en esta sesión.
+          this.ratio = ratio;
+          this.apply(ratio);
+          this.enabled = false;
+          return;
+        }
+      }
       this.low = fps < TARGET_FPS ? this.low + 1 : 0;
       if (this.low >= LOW_WINDOWS) {
         this.low = 0;
         const next = nextPixelRatio(this.ratio);
         if (next !== null) {
+          this.pending = { fps, ratio: this.ratio };
           this.ratio = next;
           this.apply(next);
           this.settleUntil = now + SETTLE_MS;
