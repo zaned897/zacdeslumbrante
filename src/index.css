@@ -149,6 +149,13 @@
 [data-scene-tone="dark"] :is(.glass, .glass-sheet) {
   background-color: rgba(255, 255, 255, 0.72);
 }
+/* En pantallas táctiles el desenfoque cuesta más por cuadro: radio menor, mismo look (#308). */
+@media (pointer: coarse) {
+  :is(.glass, .glass-sheet) {
+    -webkit-backdrop-filter: blur(10px) saturate(1.8);
+    backdrop-filter: blur(10px) saturate(1.8);
+  }
+}
 [data-glass="solid"] :is(.glass, .glass-sheet) {
   background-color: rgba(251, 249, 245, 0.97);
   -webkit-backdrop-filter: none;
