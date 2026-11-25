@@ -23,8 +23,10 @@ for c in git node bun uv gh claude codex agy; do
 done
 
 echo "Skills compartidas (.agents/skills):"
-[ -L .claude/skills ] || link ../.agents/skills .claude/skills
-ok "Claude Code → .claude/skills"
+# Copia versionada (no symlink): Claude Code en la nube la lee del repo y en Windows no se rompe.
+[ -L .claude/skills ] && rm .claude/skills
+python tools/agentes/sincronizar-skills.py >/dev/null 2>&1 || python3 tools/agentes/sincronizar-skills.py >/dev/null
+ok "Claude Code → .claude/skills (copia; tras editar .agents/skills corre tools/agentes/sincronizar-skills.py)"
 ok "Codex → .agents/skills (lo lee directo)"
 if [ "${1:-}" = "--antigravity" ]; then
   AG="$HOME/.gemini/antigravity-cli/skills"; mkdir -p "$AG"
@@ -50,7 +52,7 @@ echo "Recordatorios scout/radar:"
 node toolbox/hooks/scout-hint.mjs "prueba" >/dev/null && ok "scout-hint.mjs ejecuta"
 
 echo "gitignore:"
-for l in ".claude/.scout-state.json" ".claude/settings.local.json" ".claude/skills"; do
+for l in ".claude/.scout-state.json" ".claude/settings.local.json"; do
   grep -qxF "$l" .gitignore || echo "$l" >> .gitignore
 done
 ok "estado local y enlaces ignorados"

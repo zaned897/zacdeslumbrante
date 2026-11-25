@@ -8,7 +8,6 @@ coverage/
 !.env.example
 .claude/.scout-state.json
 .claude/settings.local.json
-.claude/skills
 __pycache__/
 
 # Fuentes de Blender de los monumentos (#227): solo se sube el .glb

@@ -73,9 +73,8 @@ if run 4; then head_ 4 "Suite"
     [ -f "$f" ] && pass "$f" || fail "falta $f" "descomprime la suite en la raíz"; done
   n=$(ls .agents/skills/*/SKILL.md 2>/dev/null | wc -l | tr -d ' ')
   [ "$n" -ge 8 ] && pass "$n skills en .agents/skills" || fail "solo $n skills" "descomprime la suite completa"
-  if [ -L .claude/skills ] && [ -f .claude/skills/scout/SKILL.md ]; then pass "Claude Code ve las skills (symlink)"
-  elif [ -f .claude/skills/scout/SKILL.md ]; then warn "skills copiadas, no enlazadas: activa Modo de desarrollador y corre suite-init.sh"
-  else fail "Claude Code no ve las skills" "./scripts/suite-init.sh"; fi
+  if python3 tools/agentes/sincronizar-skills.py --check >/dev/null 2>&1 || python tools/agentes/sincronizar-skills.py --check >/dev/null 2>&1; then pass "Claude Code ve las skills (copia al día)"
+  else fail "Claude Code no ve las skills o están desfasadas" "python tools/agentes/sincronizar-skills.py"; fi
   nx=$(git ls-files -s scripts/*.sh .githooks/* toolbox/hooks/*.mjs 2>/dev/null | grep -c '^100644')
   [ "$nx" = 0 ] && pass "scripts ejecutables en git (Linux/macOS de contribuidores)" || fail "$nx scripts sin permiso de ejecución en git" "./scripts/suite-init.sh y luego commit"
   [ "$(git config core.hooksPath)" = ".githooks" ] && pass "git hooks activos" || fail "git hooks inactivos" "./scripts/suite-init.sh"
