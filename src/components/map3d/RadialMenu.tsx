@@ -1,6 +1,6 @@
 import React, { useEffect, useId, useRef, useState } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
-import { ChevronRight, LayoutGrid, X, type LucideIcon } from 'lucide-react';
+import { ChevronRight, X, type LucideIcon } from 'lucide-react';
 
 /** Una opción del menú: abre otro anillo (`children`), muestra una tarjeta (`card`) o hace algo (`action`). */
 export interface RadialNode {
@@ -32,6 +32,20 @@ function fan(n: number, radius: number, from: number, to: number): Array<{ dx: n
     return { dx: Math.round(radius * Math.cos(rad)), dy: Math.round(-radius * Math.sin(rad)) };
   });
 }
+
+/**
+ * Ícono del botón (#330, Propuesta P1): puntos sobre un arco que abre hacia arriba y a la izquierda,
+ * como el abanico del menú. Lucide no trae uno igual.
+ */
+const FanIcon: React.FC<{ className?: string }> = ({ className }) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.9} className={className} aria-hidden="true">
+    <path d="M18.5 7.5A11 11 0 0 0 7.5 18.5" strokeWidth={1.5} opacity={0.55} />
+    <circle cx="18.5" cy="18.5" r="2.6" fill="currentColor" />
+    <circle cx="18.5" cy="4.5" r="2.5" />
+    <circle cx="8.6" cy="8.6" r="2.5" />
+    <circle cx="4.5" cy="18.5" r="2.5" />
+  </svg>
+);
 
 export interface RadialMenuProps {
   items: RadialNode[];
@@ -222,13 +236,13 @@ export const RadialMenu: React.FC<RadialMenuProps> = ({ items, labels, className
           aria-controls={open ? menuId : undefined}
           aria-label={open ? labels.close : labels.open}
           onClick={() => (open ? close() : setOpen(true))}
-          className={`relative grid h-14 w-14 place-items-center rounded-full text-white shadow-[0_8px_20px_-6px_rgba(154,52,18,.7),inset_0_1px_0_rgba(255,255,255,.5)] cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${
+          className={`jelly relative grid h-14 w-14 place-items-center rounded-full cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${
             open
-              ? 'bg-[radial-gradient(circle_at_35%_30%,#57534E,#1C1917_70%)]'
-              : 'bg-[radial-gradient(circle_at_35%_30%,#F59E6B,#9A3412_70%)]'
+              ? 'border border-white/30 bg-stone-900/45 text-white shadow-[0_8px_24px_-10px_rgba(40,20,5,.45)] backdrop-blur-md'
+              : 'glass text-stone-900'
           }`}
         >
-          {open ? <X className="h-6 w-6" aria-hidden="true" /> : <LayoutGrid className="h-6 w-6" aria-hidden="true" />}
+          {open ? <X className="h-6 w-6" aria-hidden="true" /> : <FanIcon className="h-6 w-6" />}
         </button>
       </div>
     </>

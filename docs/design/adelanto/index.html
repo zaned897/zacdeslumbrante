@@ -1309,6 +1309,140 @@ figure.wide .tag { margin: 0; }
     </div>
   </section>
 
+  <section class="nuevo" id="propuesta-p-tema">
+<style>
+/* Propuesta P · botón del menú radial (solo diseño) */
+.pp-strip { position: relative; border-radius: 22px; overflow: hidden; min-height: 150px; border: 1px solid var(--linea); }
+.pp-strip canvas.city { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.pp-strip .pp-scrim { position: absolute; inset: 0; background: rgba(28,25,23,.28); }
+.pp-row { position: relative; z-index: 2; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 4px; padding: 22px 8px 14px; align-items: end; }
+.pp-cell { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.pp-cell > b { font: 700 10.5px var(--f-body); color: #1C1917; background: rgba(255,255,255,.78); border-radius: 999px; padding: 2px 8px; white-space: nowrap; }
+.pp-strip.night .pp-cell > b { background: rgba(28,25,23,.7); color: #F2ECE1; }
+.pp-lbl { font: 700 11px var(--f-mono); color: var(--carbon-2); margin: 0 0 6px 4px; display: block; }
+.pp-b { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; flex: none; }
+.pp-b svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+/* Hoy */
+.pp-hoy { color: #fff; background: radial-gradient(circle at 35% 30%, #F59E6B, #9A3412 70%); box-shadow: 0 8px 20px -6px rgba(154,52,18,.7), inset 0 1px 0 rgba(255,255,255,.5); }
+.pp-hoy.open { background: radial-gradient(circle at 35% 30%, #57534E, #1C1917 70%); }
+/* P1 · Vidrio */
+.pp-v { color: #1C1917; background: rgba(255,255,255,.34); -webkit-backdrop-filter: blur(14px) saturate(1.8); backdrop-filter: blur(14px) saturate(1.8); border: 1px solid rgba(255,255,255,.65); box-shadow: inset 0 1px 0 rgba(255,255,255,.9), inset 0 -1px 0 rgba(255,255,255,.2), 0 6px 16px -8px rgba(40,20,5,.4); }
+.night .pp-v { color: #F7F4EE; background: rgba(255,255,255,.18); border-color: rgba(255,255,255,.4); }
+.pp-v.open { color: #fff; background: rgba(28,25,23,.42); border-color: rgba(255,255,255,.3); }
+/* P2 · Cantera mate */
+.pp-c { color: #F7F4EE; background: #9A3412; box-shadow: 0 0 0 2px rgba(247,244,238,.85), 0 2px 6px rgba(28,25,23,.28); }
+.pp-c.open { background: #1C1917; }
+/* P3 · Ficha de maqueta */
+.pp-f { border-radius: 16px; color: #9A3412; background: #F7F4EE; border: 1px solid #E2D9CB; box-shadow: 0 4px 0 #C9AE8C, 0 5px 0 rgba(28,25,23,.18); }
+.night .pp-f { background: #EFE8DC; }
+.pp-f.open { transform: translateY(3px); box-shadow: 0 1px 0 #C9AE8C, 0 2px 0 rgba(28,25,23,.18); color: #1C1917; }
+/* P4 · Píldora con nombre */
+.pp-p { width: auto; height: 40px; border-radius: 999px; padding: 0 12px 0 9px; gap: 5px; display: flex; align-items: center; font: 700 11.5px var(--f-body); }
+.pp-p svg { width: 18px; height: 18px; }
+/* P5 · Vidrio con canto de cantera */
+.pp-k { color: #9A3412; background: rgba(255,255,255,.4); -webkit-backdrop-filter: blur(14px) saturate(1.8); backdrop-filter: blur(14px) saturate(1.8); border: 2px solid #9A3412; box-shadow: inset 0 1px 0 rgba(255,255,255,.9), 0 6px 16px -8px rgba(40,20,5,.4); }
+.night .pp-k { color: #F59E6B; border-color: #F0926A; background: rgba(255,255,255,.16); }
+.pp-k.open { color: #fff; background: #9A3412; border-color: rgba(255,255,255,.7); }
+.pp-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; }
+.pp-list > div { border: 1px solid var(--linea); border-radius: 16px; padding: 14px; display: flex; gap: 12px; align-items: flex-start; background: var(--papel); }
+.pp-list > div.rec { border-color: var(--cantera); box-shadow: 0 0 0 1px var(--cantera); }
+.pp-list .pp-sw { flex: none; width: 64px; height: 64px; border-radius: 14px; display: grid; place-items: center; position: relative; overflow: hidden; background: linear-gradient(135deg, #E9DCC6, #C9826B); }
+.pp-list .pp-sw .pp-b { transform: scale(.8); }
+.pp-list b { color: var(--carbon); display: block; margin-bottom: 2px; }
+.pp-list p { margin: 0; font-size: 13.5px; color: var(--carbon-2); }
+.pp-list .pp-pick { display: inline-block; margin-top: 6px; font: 700 11px var(--f-mono); color: var(--cantera); }
+.pp-icons { display: flex; flex-wrap: wrap; gap: 14px; }
+.pp-icons > div { display: flex; align-items: center; gap: 10px; border: 1px solid var(--linea); border-radius: 14px; padding: 10px 14px 10px 10px; background: var(--papel); font-size: 13.5px; color: var(--carbon-2); }
+.pp-icons .pp-b { width: 40px; height: 40px; border-radius: 12px; background: var(--caliza-2); color: var(--cantera); }
+.pp-icons .pp-b svg { width: 22px; height: 22px; }
+.pp-icons b { color: var(--carbon); display: block; }
+@media (max-width: 560px) {
+  .pp-row { grid-template-columns: repeat(3, minmax(0, 1fr)); row-gap: 18px; }
+}
+</style>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="pp-grid" viewBox="0 0 24 24"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></symbol>
+  <symbol id="pp-fan" viewBox="0 0 24 24"><path d="M18.5 7.5 A11 11 0 0 0 7.5 18.5" stroke-width="1.5" opacity=".55"/><circle cx="18.5" cy="18.5" r="2.6" fill="currentColor"/><circle cx="18.5" cy="4.5" r="2.5"/><circle cx="8.6" cy="8.6" r="2.5"/><circle cx="4.5" cy="18.5" r="2.5"/></symbol>
+  <symbol id="pp-rose" viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="1.5"/><rect x="5" y="5" width="14" height="14" rx="1.5" transform="rotate(45 12 12)"/><circle cx="12" cy="12" r="2.6"/></symbol>
+  <symbol id="pp-x" viewBox="0 0 24 24"><path d="M6 6 L18 18 M18 6 L6 18"/></symbol>
+</svg>
+    <div class="section-head">
+      <span class="eyebrow" data-en="Approved, being coded">Aprobada, en código</span>
+      <h2 data-en="Proposal P · A new look for the radial menu button">Propuesta P · Otra cara para el botón del menú radial</h2>
+      <p class="lede" data-en="Today the button of the radial menu (#310) is an orange ball with a gradient, a warm glow underneath and a grid of four squares. It does not match the frosted glass of the panels (#327) or the flat, matte look of the model city, and the grid says “apps” more than “options that fan out”. Here are five other ways to draw it, in daylight, at night and open, side by side with today's.">Hoy el botón del menú radial (#310) es una bola naranja con degradado, un resplandor cálido debajo y una cuadrícula de cuatro cuadros. No combina con el vidrio de los paneles (#327) ni con el acabado mate de la maqueta, y la cuadrícula dice «aplicaciones» más que «opciones que se abren en abanico». Aquí van cinco formas de dibujarlo, de día, de noche y abierto, junto a la de hoy.</p>
+      <div class="chips"><span class="tag real" data-en="Approved · Nov 26 · option P1">Aprobada · 26 nov · opción P1</span><span class="chip wip">#330</span><span class="chip">#310</span><span class="chip">#327</span></div>
+    </div>
+
+    <div class="block" id="propuesta-p">
+      <div class="block-head">
+        <h3 data-en="P · Today and five options, on the same piece of city">P · Hoy y cinco opciones, sobre el mismo pedazo de ciudad</h3>
+        <p data-en="Each column is the button at its real size (52–56 px), bottom right of the 3D city. Only the button changes: the ring of options keeps its glass circles from O4.">Cada columna es el botón a su tamaño real (52–56 px), abajo a la derecha de la ciudad 3D. Solo cambia el botón: el anillo de opciones sigue con sus círculos de vidrio de O4.</p>
+      </div>
+
+      <div>
+        <span class="pp-lbl" data-en="Daytime · closed">De día · cerrado</span>
+        <div class="pp-strip"><canvas class="city" data-mode="hora" data-hora="dia" data-seed="9" data-zoom="1.6"></canvas>
+          <div class="pp-row">
+            <div class="pp-cell"><span class="pp-b pp-hoy"><svg><use href="#pp-grid"/></svg></span><b data-en="Today">Hoy</b></div>
+            <div class="pp-cell"><span class="pp-b pp-v"><svg><use href="#pp-fan"/></svg></span><b>P1</b></div>
+            <div class="pp-cell"><span class="pp-b pp-c"><svg><use href="#pp-rose"/></svg></span><b>P2</b></div>
+            <div class="pp-cell"><span class="pp-b pp-f"><svg><use href="#pp-fan"/></svg></span><b>P3</b></div>
+            <div class="pp-cell"><span class="pp-b pp-v pp-p"><svg><use href="#pp-fan"/></svg><span data-en="Explore">Explorar</span></span><b>P4</b></div>
+            <div class="pp-cell"><span class="pp-b pp-k"><svg><use href="#pp-fan"/></svg></span><b>P5</b></div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <span class="pp-lbl" data-en="Night · closed">De noche · cerrado</span>
+        <div class="pp-strip night"><canvas class="city" data-mode="hora" data-hora="noche" data-seed="9" data-zoom="1.6"></canvas>
+          <div class="pp-row">
+            <div class="pp-cell"><span class="pp-b pp-hoy"><svg><use href="#pp-grid"/></svg></span><b data-en="Today">Hoy</b></div>
+            <div class="pp-cell"><span class="pp-b pp-v"><svg><use href="#pp-fan"/></svg></span><b>P1</b></div>
+            <div class="pp-cell"><span class="pp-b pp-c"><svg><use href="#pp-rose"/></svg></span><b>P2</b></div>
+            <div class="pp-cell"><span class="pp-b pp-f"><svg><use href="#pp-fan"/></svg></span><b>P3</b></div>
+            <div class="pp-cell"><span class="pp-b pp-v pp-p"><svg><use href="#pp-fan"/></svg><span data-en="Explore">Explorar</span></span><b>P4</b></div>
+            <div class="pp-cell"><span class="pp-b pp-k"><svg><use href="#pp-fan"/></svg></span><b>P5</b></div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <span class="pp-lbl" data-en="Open (the city dims behind)">Abierto (la ciudad se atenúa detrás)</span>
+        <div class="pp-strip"><canvas class="city" data-mode="hora" data-hora="dia" data-seed="9" data-zoom="1.6"></canvas><div class="pp-scrim"></div>
+          <div class="pp-row">
+            <div class="pp-cell"><span class="pp-b pp-hoy open"><svg><use href="#pp-x"/></svg></span><b data-en="Today">Hoy</b></div>
+            <div class="pp-cell"><span class="pp-b pp-v open"><svg><use href="#pp-x"/></svg></span><b>P1</b></div>
+            <div class="pp-cell"><span class="pp-b pp-c open"><svg><use href="#pp-x"/></svg></span><b>P2</b></div>
+            <div class="pp-cell"><span class="pp-b pp-f open"><svg><use href="#pp-x"/></svg></span><b>P3</b></div>
+            <div class="pp-cell"><span class="pp-b pp-v pp-p open"><svg><use href="#pp-x"/></svg><span data-en="Close">Cerrar</span></span><b>P4</b></div>
+            <div class="pp-cell"><span class="pp-b pp-k open"><svg><use href="#pp-x"/></svg></span><b>P5</b></div>
+          </div>
+        </div>
+        <span class="tag prop" style="margin-top:10px;display:inline-block" data-en="Proposal · illustration (the “Today” column redraws the current button)">Propuesta · ilustración (la columna «Hoy» redibuja el botón actual)</span>
+      </div>
+
+      <div class="pp-list">
+        <div class="rec"><span class="pp-sw"><span class="pp-b pp-v"><svg><use href="#pp-fan"/></svg></span></span><div><b data-en="P1 · Glass">P1 · Vidrio</b><p data-en="The same frosted glass as the header, the building card and the ring itself. Dark icon, no color, a short soft shadow. Open, it turns into smoked glass with a white ✕. The quietest option: the city stays in front.">El mismo vidrio esmerilado del encabezado, la tarjeta del edificio y el propio anillo. Ícono oscuro, sin color, sombra corta y suave. Abierto se vuelve vidrio ahumado con ✕ blanca. La opción más discreta: la ciudad queda al frente.</p><span class="pp-pick" data-en="Chosen by the owner · #330">Elegida por el dueño · #330</span></div></div>
+        <div><span class="pp-sw"><span class="pp-b pp-c"><svg><use href="#pp-rose"/></svg></span></span><div><b data-en="P2 · Matte cantera">P2 · Cantera mate</b><p data-en="Flat cantera rosa, no gradient or glow, with a thin limestone edge so it stands out from the red roofs. Icon: a rosette like the ones carved on the cathedral. Open, it turns colonial charcoal.">Cantera rosa plana, sin degradado ni resplandor, con un canto fino de caliza para separarlo de los techos rojos. Ícono: un rosetón como los labrados de la catedral. Abierto pasa a carbón colonial.</p></div></div>
+        <div><span class="pp-sw"><span class="pp-b pp-f"><svg><use href="#pp-fan"/></svg></span></span><div><b data-en="P3 · Model tile">P3 · Ficha de maqueta</b><p data-en="A rounded limestone square with a solid lower edge, like a block cut from the model. No blurred shadow. When you press it, it sinks a few pixels and stays down while the menu is open.">Un cuadro redondeado de caliza con canto sólido abajo, como un bloque recortado de la maqueta. Sin sombra difusa. Al tocarlo se hunde unos píxeles y se queda hundido mientras el menú está abierto.</p></div></div>
+        <div><span class="pp-sw"><span class="pp-b pp-v pp-p" style="transform:scale(.62)"><svg><use href="#pp-fan"/></svg><span data-en="Explore">Explorar</span></span></span><div><b data-en="P4 · Pill with a name">P4 · Píldora con nombre</b><p data-en="Glass like P1, but says “Explore” next to the icon, so first-time visitors know what it is. It is wider and covers a bit more of the city; it could shrink to a circle after the first use.">Vidrio como P1, pero dice «Explorar» junto al ícono, para que quien llega por primera vez sepa qué es. Es más ancha y tapa un poco más de ciudad; podría encogerse a círculo después del primer uso.</p></div></div>
+        <div><span class="pp-sw"><span class="pp-b pp-k"><svg><use href="#pp-fan"/></svg></span></span><div><b data-en="P5 · Glass with a cantera rim">P5 · Vidrio con canto de cantera</b><p data-en="Glass inside a cantera ring with a cantera icon: it keeps the brand color without the orange ball. Open, the ring fills in solid cantera with a white ✕.">Vidrio dentro de un aro de cantera e ícono de cantera: conserva el color de la marca sin la bola naranja. Abierto, el aro se rellena de cantera sólida con ✕ blanca.</p></div></div>
+      </div>
+
+      <div>
+        <span class="pp-lbl" data-en="Icon (goes with any shape)">Ícono (va con cualquier forma)</span>
+        <div class="pp-icons">
+          <div><span class="pp-b"><svg><use href="#pp-grid"/></svg></span><span><b data-en="Grid (today)">Cuadrícula (hoy)</b><span data-en="Reads as “apps”.">Se lee como «aplicaciones».</span></span></div>
+          <div><span class="pp-b"><svg><use href="#pp-fan"/></svg></span><span><b data-en="Fan">Abanico</b><span data-en="Dots on an arc, opening up and to the left, like the menu.">Puntos en un arco que abre hacia arriba y a la izquierda, como el menú.</span></span></div>
+          <div><span class="pp-b"><svg><use href="#pp-rose"/></svg></span><span><b data-en="Rosette">Rosetón</b><span data-en="Eight points, after the carved cantera rosettes.">Ocho puntas, por los rosetones labrados en cantera.</span></span></div>
+        </div>
+      </div>
+
+      <p class="fine" data-en="Only the look of the button changes: same place, size, keyboard and screen reader behavior as #310. The fan and rosette are drawn for this proposal; in code they would be a small SVG component, since lucide has no exact match. P1 and P4 depend on the glass of #327 and fall back to solid limestone where the phone does not blur.">Solo cambia el aspecto del botón: mismo lugar, tamaño, teclado y lector de pantalla que en #310. El abanico y el rosetón se dibujaron para esta propuesta; en código serían un SVG chico propio, porque lucide no trae uno igual. P1 y P4 dependen del vidrio de #327 y caen a caliza sólida donde el celular no difumina.</p>
+    </div>
+  </section>
+
   <section class="nuevo" id="propuesta-j">
     <div class="section-head">
       <span class="eyebrow" data-en="Proposal, waiting for the owner's approval">Propuesta, espera la aprobación del dueño</span>
