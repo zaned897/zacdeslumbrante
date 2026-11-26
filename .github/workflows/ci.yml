@@ -17,6 +17,13 @@ jobs:
       - run: bun run lint
       - run: bun run test
 
+  skills:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # .claude/skills es copia versionada de .agents/skills: Claude Code en la nube solo ve lo que está en git.
+      - run: python3 tools/agentes/sincronizar-skills.py --check
+
   python:
     runs-on: ubuntu-latest
     defaults:

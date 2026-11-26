@@ -15,6 +15,8 @@ Cada issue y cada PR tiene uno:
 Entrega exactamente el nivel de la issue. ¿Se te ocurre el siguiente paso? Propónlo en el PR o en una issue nueva.
 
 ## Correr el proyecto
+¿Primera vez y no programas? Empieza por [`ONBOARDING.md`](ONBOARDING.md).
+
 Requisitos: [Bun](https://bun.sh), [uv](https://docs.astral.sh/uv/), Node 20+.
 ```bash
 git clone https://github.com/<tu-usuario>/zacdeslumbrante.git && cd zacdeslumbrante

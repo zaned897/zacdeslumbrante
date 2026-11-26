@@ -7,7 +7,7 @@ archivos del repo, no por un servicio aparte:
 | Pieza | Para qué |
 |---|---|
 | `AGENTS.md` | Reglas comunes. Lo leen Codex y Antigravity; Claude lo carga desde `CLAUDE.md` con `@AGENTS.md` |
-| `.agents/skills/delegar/` | La skill que explica cuándo y cómo delegar (`.claude/skills` la enlaza con `scripts/suite-init.sh`) |
+| `.agents/skills/delegar/` | La skill que explica cuándo y cómo delegar (`.claude/skills` es su copia: `python tools/agentes/sincronizar-skills.py`) |
 | `tools/agentes/delegar.py` | Claude le pasa una tarea a `codex` o `agy` en un worktree aparte, o pide revisión |
 | `tools/agentes/preambulo.md` | Lo único propio del proyecto: el contexto que recibe el otro agente |
 | `.claude/settings.json` | Hook `Stop` que pide revisión a Codex si `CODEX_REVIEW=1` |
