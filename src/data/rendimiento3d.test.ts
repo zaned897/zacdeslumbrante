@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { assignTiles, tileIndices } from '../scene3d/tiles';
 import { AdaptiveResolution, initialPixelRatio, nextPixelRatio } from '../scene3d/adaptiveResolution';
+import { GlassFallback } from '../scene3d/useGlassFallback';
 
 // Dos triángulos indexados: uno en la esquina oeste y otro en la este de una franja de 100 m.
 const positions = [0, 0, 0, 10, 0, 0, 0, 0, 10, 90, 0, 0, 100, 0, 0, 100, 0, 10];
@@ -53,4 +54,19 @@ test('resolución: si bajar un escalón no sube el fps (rAF topado a 30 Hz), reg
   const r = new AdaptiveResolution(2, '', (v) => applied.push(v), () => true);
   for (let t = 0; t <= 30_000; t += 1000 / 30) r.frame(t);
   assert.deepEqual(applied, [1.5, 2]);
+});
+
+test('vidrio: con fps bajo pasa a opaco; si eso no sube el fps (rAF topado a 30 Hz) regresa y deja de medir (#332)', () => {
+  // fpsAt: fps según haya vidrio o no.
+  const run = (fpsAt: (solid: boolean) => number, seconds: number) => {
+    const applied: boolean[] = [];
+    let solid = false;
+    const g = new GlassFallback((v) => { solid = v; applied.push(v); }, () => true);
+    for (let t = 0; t <= seconds * 1000; t += 1000 / fpsAt(solid)) g.frame(t);
+    return { applied, active: g.active };
+  };
+  assert.deepEqual(run(() => 60, 20).applied, []);
+  assert.deepEqual(run(() => 20, 3.5).applied, [], 'durante la gracia de arranque no mide');
+  assert.deepEqual(run(() => 29, 30), { applied: [true, false], active: false }, 'topado a 30 Hz: vuelve el vidrio');
+  assert.deepEqual(run((solid) => (solid ? 45 : 24), 30), { applied: [true], active: false }, 'el vidrio sí costaba: se queda opaco');
 });
