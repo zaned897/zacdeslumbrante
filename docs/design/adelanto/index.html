@@ -1569,6 +1569,234 @@ figure.wide .tag { margin: 0; }
 
   
 
+  <section class="nuevo" id="propuesta-r-tema">
+<style>
+/* Propuesta R · tren y teleférico a pedido, y recorrido desde la cabina (solo diseño) */
+.pr-card { position: absolute; left: 10px; right: 84px; bottom: 14px; z-index: 14; border-radius: 24px; padding: 12px 12px 6px; display: flex; flex-direction: column; color: #1C1917; }
+.pr-card .k { font: 600 9.5px var(--f-body); letter-spacing: .06em; text-transform: uppercase; color: #7C2D12; margin-bottom: 2px; }
+.pr-row { display: flex; flex-direction: column; gap: 5px; padding: 8px 0; }
+.pr-row + .pr-row { border-top: 1px solid rgba(28,25,23,.12); }
+.pr-row b { font: 700 11.5px/1.2 var(--f-display); }
+.pr-row small { font-size: 9.5px; color: #44403C; line-height: 1.3; }
+.pr-st { align-self: flex-start; font: 700 8.5px var(--f-body); border-radius: 999px; padding: 2px 7px; display: inline-flex; gap: 4px; align-items: center; white-space: nowrap; }
+.pr-st::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.pr-st.ok { color: #166534; background: rgba(220,252,231,.85); }
+.pr-st.off { color: #57534E; background: rgba(231,229,228,.85); }
+.pr-st.sim { color: #92400E; background: rgba(254,243,199,.9); }
+.pr-bt { display: flex; gap: 5px; align-items: center; justify-content: center; border-radius: 999px; padding: 7px 10px; font: 700 10.5px var(--f-body); background: #9A3412; color: #fff; white-space: nowrap; }
+.pr-bt .ico { width: 13px; height: 13px; }
+.pr-bt.alt { background: rgba(255,255,255,.7); color: #7C2D12; border: 1px solid rgba(154,52,18,.35); }
+.pr-bt.off { background: rgba(245,239,230,.72); color: #57534E; border: 1px dashed #A8A29E; }
+.pr-bts { display: flex; gap: 6px; } .pr-bts .pr-bt { flex: 1; }
+.pr-chip { position: absolute; top: 84px; left: 50%; transform: translateX(-50%); z-index: 12; display: flex; gap: 8px; align-items: center; border-radius: 999px; padding: 5px 12px 5px 5px; font: 700 10.5px var(--f-body); white-space: nowrap; }
+.pr-chip .n { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: #9A3412; color: #fff; font: 800 12px var(--f-body); box-shadow: 0 0 0 3px rgba(154,52,18,.25); animation: pr-beat 1s ease-in-out infinite; }
+@keyframes pr-beat { 50% { box-shadow: 0 0 0 7px rgba(154,52,18,.08); } }
+.pr-chip small { display: block; font-weight: 500; font-size: 9px; color: #57534E; }
+.po-glass.dk .pr-chip small, .pr-chip.po-glass.dk small { color: #E7E5E4; }
+.pr-ov { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 4; pointer-events: none; }
+.pr-move { animation: pr-roll 6s linear infinite; }
+@keyframes pr-roll { from { transform: translate(-60px, 30px); } to { transform: translate(60px, -30px); } }
+.pr-cabin { animation: pr-glide 6s ease-in-out infinite alternate; }
+@keyframes pr-glide { from { transform: translate(0, 0); } to { transform: translate(70px, -36px); } }
+.pr-sheet { position: absolute; left: 10px; right: 10px; bottom: 14px; z-index: 12; border-radius: 26px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; color: #1C1917; }
+.pr-sheet .k { font: 600 9.5px var(--f-body); letter-spacing: .06em; text-transform: uppercase; color: #7C2D12; display: flex; justify-content: space-between; }
+.pr-sheet h4 { margin: 0; font: 700 15px/1.15 var(--f-display); }
+.pr-sheet p { margin: 0; font-size: 10.5px; color: #292524; }
+.pr-sheet .fine2 { font-size: 9px; color: #57534E; }
+.pr-steps { display: flex; gap: 4px; }
+.pr-steps i { flex: 1; height: 4px; border-radius: 4px; background: rgba(28,25,23,.15); }
+.pr-steps i.done { background: #9A3412; } .pr-steps i.now { background: linear-gradient(90deg, #9A3412 55%, rgba(28,25,23,.15) 55%); }
+.pr-ctl { display: flex; gap: 6px; align-items: center; }
+.pr-ctl .r { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: rgba(255,255,255,.7); color: #7C2D12; flex: none; }
+.pr-ctl .r .ico { width: 14px; height: 14px; }
+.pr-ctl .pr-bt { margin-left: auto; }
+/* Ventana de la cabina: marco oscuro, parteluz y un reflejo, encima de la ciudad */
+.pr-win { position: absolute; inset: 0; z-index: 6; pointer-events: none; border: 14px solid rgba(28,25,23,.88); border-top-width: 64px; border-radius: 34px; box-shadow: inset 0 0 0 2px rgba(255,255,255,.25); }
+.pr-win::before { content: ""; position: absolute; top: -2px; bottom: -2px; left: 50%; width: 6px; transform: translateX(-50%); background: rgba(28,25,23,.85); }
+.pr-win::after { content: ""; position: absolute; inset: 0; background: linear-gradient(115deg, rgba(255,255,255,.22) 0 18%, transparent 18% 30%, rgba(255,255,255,.12) 30% 34%, transparent 34%); }
+.pr-tilt canvas.city { transform: scale(1.25) rotate(-6deg); }
+.pr-name { position: absolute; z-index: 8; transform: translate(-50%, -100%); display: flex; flex-direction: column; align-items: center; }
+.pr-name span { background: #fff; color: #1C1917; border-radius: 8px; padding: 3px 8px; font: 700 10px var(--f-body); white-space: nowrap; box-shadow: 0 2px 6px rgba(0,0,0,.3); }
+.pr-name i { width: 2px; height: 16px; background: #fff; }
+.pr-name.on span { background: #9A3412; color: #fff; }
+.pr-name.on i { background: #9A3412; }
+.pr-flow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 13.5px; color: var(--carbon-2); }
+.pr-flow span { border: 1px solid var(--linea); background: var(--papel); border-radius: 999px; padding: 4px 12px; font-weight: 600; color: var(--carbon); }
+.pr-flow span.on { border-color: var(--cantera); color: var(--cantera); }
+.pr-rules { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; }
+.pr-rules > div { border: 1px solid var(--linea); border-radius: 16px; padding: 14px; background: var(--papel); display: flex; flex-direction: column; gap: 4px; font-size: 13.5px; color: var(--carbon-2); }
+.pr-rules b { color: var(--carbon); }
+.pr-rules a { word-break: break-word; }
+@media (prefers-reduced-motion: reduce) { .pr-move, .pr-cabin, .pr-chip .n { animation: none !important; } }
+</style>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="pr-train" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="13" rx="3"/><path d="M5 10h14M9 20l-2 2M15 20l2 2M8 16v1M16 16v1"/><circle cx="9" cy="13" r=".6" fill="currentColor"/><circle cx="15" cy="13" r=".6" fill="currentColor"/></symbol>
+  <symbol id="pr-cable" viewBox="0 0 24 24"><path d="M2 5l20-3M12 3.5V8"/><rect x="6" y="8" width="12" height="11" rx="2.5"/><path d="M6 13h12M10 8v5M14 8v5"/></symbol>
+  <symbol id="pr-bolt" viewBox="0 0 24 24"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></symbol>
+  <symbol id="pr-next" viewBox="0 0 24 24"><path d="M5 5l9 7-9 7zM18 5v14"/></symbol>
+  <symbol id="pr-out" viewBox="0 0 24 24"><path d="M10 4H5v16h5M14 8l4 4-4 4M18 12H9"/></symbol>
+</svg>
+    <div class="section-head">
+      <span class="eyebrow" data-en="Proposal, waiting for the owner's approval">Propuesta, espera la aprobación del dueño</span>
+      <h2 data-en="Proposal R · Call the train and the cable car from the menu, and a city tour from the cabin">Propuesta R · Pedir el tren y el teleférico desde la rueda, y un recorrido por la ciudad desde la cabina</h2>
+      <p class="lede" data-en="Today the train shows up at random every 3 to 7 minutes and the cable car keeps its own rhythm, so you may wait without knowing when they come. With this proposal, from the radial menu you ask them to come now, but only during their operating hours. And when you board the cable car, a fixed virtual tour over the center starts, with six stops; it does not follow the cable.">Hoy el tren sale al azar cada 3 a 7 minutos y el teleférico lleva su propio ritmo, así que puedes esperar sin saber cuándo llegan. Con esta propuesta, desde la rueda les pides que pasen ahora, pero solo en su horario de operación. Y al subir al teleférico arranca un recorrido virtual fijo sobre el centro, con seis paradas; no sigue el cable.</p>
+      <div class="pr-flow"><span data-en="Radial menu">Rueda</span>›<span data-en="Attractions">Atracciones</span>›<span class="on" data-en="Train">Tren</span><span data-en="or">o</span><span class="on" data-en="Cable car">Teleférico</span>›<span data-en="Come now / Ride">Que pase ahora / Subir</span></div>
+      <div class="chips"><span class="chip">#310</span><span class="chip">#311</span><span class="chip">#246</span><span class="chip">#247</span><span class="chip">#261</span><span class="chip falta" data-en="P1 Glass button">botón P1 Vidrio</span></div>
+    </div>
+
+    <!-- R1 · Tren a pedido -->
+    <div class="block" id="propuesta-r1">
+      <div class="block-head">
+        <h3 data-en="R1 · Ask the train to come now">R1 · Pedir que el tren pase ahora</h3>
+        <p data-en="Attractions › Train opens a small card with the two trains in the city. Each one has a “Come now” button that only lights up when it can run. The camera goes to the tracks, a countdown tells you how long it takes, and when it passes you can follow it, as today.">Atracciones › Tren abre una tarjeta chica con los dos trenes de la ciudad. Cada uno trae un botón «Que pase ahora» que solo se enciende cuando puede correr. La cámara va a la vía, una cuenta regresiva dice cuánto falta y, cuando pasa, puedes seguirlo como hoy.</p>
+      </div>
+      <div class="gallery">
+        <figure class="shot"><div class="phone"><div class="screen"><canvas class="city" data-mode="hora" data-hora="dia" data-seed="9" data-zoom="1.3"></canvas><div class="notch"></div><div class="status"><span>12:30</span><span>5G ▮▮▮</span></div>
+          <div class="po-hdr"><span class="po-glass"><svg class="ico"><use href="#i-back"/></svg></span><span class="po-glass" data-en="3D City">Ciudad 3D</span><span class="po-glass">ES</span></div>
+          <div class="po-scrim"></div>
+          <div class="po-crumb"><span class="po-glass dk" data-en="Attractions">Atracciones</span>›<span class="po-glass dk" data-en="Train">Tren</span></div>
+          <div class="po-rad on" style="left:84.8%;top:67.2%"><span class="po-glass"><svg><use href="#i-landmark"/></svg></span><b data-en="Attractions">Atracciones</b></div>
+          <div class="po-rad sm" style="left:58%;top:41%"><span class="po-glass"><svg><use href="#pr-cable"/></svg></span><b data-en="Cable car">Teleférico</b></div>
+          <div class="po-rad sm on" style="left:32%;top:48%"><span class="po-glass"><svg><use href="#pr-train"/></svg></span><b data-en="Train">Tren</b></div>
+          <div class="po-rad sm" style="left:84.8%;top:47%"><span class="po-glass"><svg><use href="#i-pickaxe"/></svg></span><b data-en="El Edén mine">Mina El Edén</b></div>
+          <div class="pr-card po-glass">
+            <span class="k" data-en="Trains in the city">Trenes en la ciudad</span>
+            <div class="pr-row"><b data-en="Freight train · Line A">Tren de carga · Línea A</b><span class="pr-st sim" data-en="Model · no schedule">Maqueta · sin horario</span><span class="pr-bt"><svg class="ico"><use href="#pr-bolt"/></svg><span data-en="Come now">Que pase ahora</span></span></div>
+            <div class="pr-row"><b data-en="La Encantada park train">Trenecito de La Encantada</b><span class="pr-st ok" data-en="Open · Wed–Sun 11–18">Abierto · mié a dom 11 a 18</span><span class="pr-bt"><svg class="ico"><use href="#pr-bolt"/></svg><span data-en="Leave now">Que salga ahora</span></span></div>
+          </div>
+          <div class="po-fab open">✕</div>
+        </div></div><span class="tag prop" data-en="Proposal · illustration">Propuesta · ilustración</span><figcaption data-en="Saturday 12:30. Both buttons are on: the freight train is a model with no real schedule (it says so), and the park train is inside its hours (Wednesday to Sunday, 11:00 to 18:00, from src/data/trains.ts, still to be confirmed).">Sábado 12:30. Los dos botones están encendidos: el de carga es de maqueta y no tiene horario real (lo dice), y el trenecito está dentro de su horario (miércoles a domingo, 11:00 a 18:00, de src/data/trains.ts, aún por confirmar).</figcaption></figure>
+
+        <figure class="shot"><div class="phone"><div class="screen"><canvas class="city" data-mode="hora" data-hora="dia" data-seed="4" data-zoom="1.6"></canvas><div class="notch"></div><div class="status"><span>12:30</span><span>5G ▮▮▮</span></div>
+          <svg class="pr-ov" viewBox="0 0 282 612" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+            <path d="M-20 420 L310 255" stroke="#57534E" stroke-width="7" opacity=".55"/>
+            <path d="M-20 420 L310 255" stroke="#E7E5E4" stroke-width="2" stroke-dasharray="3 5"/>
+            <g class="pr-move"><g transform="translate(90 330) rotate(-26.6)">
+              <rect x="0" y="-7" width="34" height="14" rx="3" fill="#B65D43"/><rect x="24" y="-9" width="12" height="18" rx="2" fill="#302B28"/>
+              <rect x="-38" y="-7" width="34" height="14" rx="2" fill="#B65D43"/><rect x="-76" y="-7" width="34" height="14" rx="2" fill="#D5C5AD"/><rect x="-114" y="-7" width="34" height="14" rx="2" fill="#B65D43"/>
+              <circle cx="40" cy="-14" r="5" fill="#E7E5E4" opacity=".8"/><circle cx="34" cy="-22" r="7" fill="#E7E5E4" opacity=".55"/>
+            </g></g>
+          </svg>
+          <div class="po-hdr"><span class="po-glass"><svg class="ico"><use href="#i-back"/></svg></span><span class="po-glass" data-en="3D City">Ciudad 3D</span><span class="po-glass">ES</span></div>
+          <div class="pr-chip po-glass"><span class="n">8</span><span><span data-en="The train arrives in 8 s">El tren llega en 8 s</span><small data-en="Line A · simulated, not live">Línea A · simulado, no en vivo</small></span></div>
+          <div class="pr-sheet po-glass" style="right:80px"><span class="k"><span data-en="Freight train · Line A">Tren de carga · Línea A</span><span data-en="Model">Maqueta</span></span><p data-en="The camera waits at the tracks. When it goes by you can follow it or let it pass.">La cámara espera junto a la vía. Cuando pase, puedes seguirlo o dejarlo ir.</p><div class="pr-bts"><span class="pr-bt alt" data-en="Watch from here">Ver desde aquí</span><span class="pr-bt" data-en="Follow the train">Seguir al tren</span></div></div>
+          <div class="po-fab">✦</div>
+        </div></div><span class="tag prop" data-en="Proposal · illustration">Propuesta · ilustración</span><figcaption data-en="After “Come now”: the menu closes, the camera flies to the longest stretch of Line A and a 10 s countdown starts (the whistle sounds only if you turned it on). “Follow the train” is today's follow mode. The button rests 2 minutes after each pass so it is not called back to back.">Después de «Que pase ahora»: el menú se cierra, la cámara vuela al tramo más largo de la Línea A y arranca una cuenta de 10 s (el silbato solo suena si lo activaste). «Seguir al tren» es el modo de seguir de hoy. El botón descansa 2 minutos tras cada pasada para que no se pida en cadena.</figcaption></figure>
+
+        <figure class="shot"><div class="phone"><div class="screen"><canvas class="city" data-mode="hora" data-hora="noche" data-seed="9" data-zoom="1.3"></canvas><div class="notch"></div><div class="status light"><span>19:40</span><span>5G ▮▮▮</span></div>
+          <div class="po-hdr"><span class="po-glass dk"><svg class="ico"><use href="#i-back"/></svg></span><span class="po-glass dk" data-en="3D City">Ciudad 3D</span><span class="po-glass dk">ES</span></div>
+          <div class="po-scrim"></div>
+          <div class="po-crumb"><span class="po-glass dk" data-en="Attractions">Atracciones</span>›<span class="po-glass dk" data-en="Train">Tren</span></div>
+          <div class="po-rad on" style="left:84.8%;top:67.2%"><span class="po-glass dk"><svg><use href="#i-landmark"/></svg></span><b data-en="Attractions">Atracciones</b></div>
+          <div class="po-rad sm" style="left:58%;top:41%"><span class="po-glass dk"><svg><use href="#pr-cable"/></svg></span><b data-en="Cable car">Teleférico</b></div>
+          <div class="po-rad sm on" style="left:32%;top:48%"><span class="po-glass dk"><svg><use href="#pr-train"/></svg></span><b data-en="Train">Tren</b></div>
+          <div class="po-rad sm" style="left:84.8%;top:47%"><span class="po-glass dk"><svg><use href="#i-pickaxe"/></svg></span><b data-en="El Edén mine">Mina El Edén</b></div>
+          <div class="pr-card po-glass">
+            <span class="k" data-en="Trains in the city">Trenes en la ciudad</span>
+            <div class="pr-row"><b data-en="Freight train · Line A">Tren de carga · Línea A</b><span class="pr-st sim" data-en="Model · no schedule">Maqueta · sin horario</span><span class="pr-bt"><svg class="ico"><use href="#pr-bolt"/></svg><span data-en="Come now">Que pase ahora</span></span></div>
+            <div class="pr-row"><b data-en="La Encantada park train">Trenecito de La Encantada</b><span class="pr-st off" data-en="Closed · opens Wed at 11:00">Cerrado · abre el mié a las 11:00</span><span class="pr-bt off" data-en="Outside its hours">Fuera de horario</span></div>
+          </div>
+          <div class="po-fab open">✕</div>
+        </div></div><span class="tag prop" data-en="Proposal · illustration">Propuesta · ilustración</span><figcaption data-en="Tuesday 19:40. The park train is closed: its button turns off and says when it opens next (the hint is read by screen readers too). The freight train can still be called, because it is a model and says so.">Martes 19:40. El trenecito está cerrado: su botón se apaga y dice cuándo vuelve a abrir (el lector de pantalla también lo lee). El de carga sí se puede pedir, porque es de maqueta y lo dice.</figcaption></figure>
+      </div>
+    </div>
+
+    <!-- R2 · Teleférico a pedido -->
+    <div class="block" id="propuesta-r2">
+      <div class="block-head">
+        <h3 data-en="R2 · Ask a cable car cabin to leave now">R2 · Pedir que salga una cabina del teleférico</h3>
+        <p data-en="The cable car card gains a second button. “Send a cabin” frames the line from the side and a cabin leaves El Grillo right away, without waiting on the platform. “Ride” is still there and now starts the tour of R3. Outside its hours both turn off.">La tarjeta del teleférico gana un segundo botón. «Que pase una cabina» encuadra la línea de perfil y una cabina sale del Grillo en ese momento, sin esperar en el andén. «Subir» sigue ahí y ahora arranca el recorrido de R3. Fuera de horario los dos se apagan.</p>
+      </div>
+      <div class="gallery">
+        <figure class="shot"><div class="phone"><div class="screen"><canvas class="city" data-mode="hora" data-hora="dia" data-seed="9" data-zoom="1.3"></canvas><div class="notch"></div><div class="status"><span>12:30</span><span>5G ▮▮▮</span></div>
+          <div class="po-hdr"><span class="po-glass"><svg class="ico"><use href="#i-back"/></svg></span><span class="po-glass" data-en="3D City">Ciudad 3D</span><span class="po-glass">ES</span></div>
+          <div class="po-scrim"></div>
+          <div class="po-crumb"><span class="po-glass dk" data-en="Attractions">Atracciones</span>›<span class="po-glass dk" data-en="Cable car">Teleférico</span></div>
+          <div class="po-rad on" style="left:84.8%;top:67.2%"><span class="po-glass"><svg><use href="#i-landmark"/></svg></span><b data-en="Attractions">Atracciones</b></div>
+          <div class="po-rad sm on" style="left:58%;top:41%"><span class="po-glass"><svg><use href="#pr-cable"/></svg></span><b data-en="Cable car">Teleférico</b></div>
+          <div class="po-rad sm" style="left:32%;top:48%"><span class="po-glass"><svg><use href="#pr-train"/></svg></span><b data-en="Train">Tren</b></div>
+          <div class="po-rad sm" style="left:84.8%;top:47%"><span class="po-glass"><svg><use href="#i-pickaxe"/></svg></span><b data-en="El Edén mine">Mina El Edén</b></div>
+          <div class="pr-card po-glass">
+            <span class="k" data-en="Cable car · Grillo ↔ Bufa">Teleférico · Grillo ↔ Bufa</span>
+            <div class="pr-row"><b data-en="645 m · about 2 min">645 m · unos 2 min</b><span class="pr-st ok" data-en="Open today · 10:00 to 18:00">Abierto hoy · 10:00 a 18:00</span>
+              <span class="pr-bt alt"><svg class="ico"><use href="#pr-bolt"/></svg><span data-en="Send a cabin">Que pase una cabina</span></span>
+              <span class="pr-bt"><svg class="ico"><use href="#pr-cable"/></svg><span data-en="Ride and tour">Subir y recorrer</span></span></div>
+          </div>
+          <div class="po-fab open">✕</div>
+        </div></div><span class="tag prop" data-en="Proposal · illustration">Propuesta · ilustración</span><figcaption data-en="Open hours: the two actions side by side. Line data from public/data/teleferico.json (645 m, 130 s); the hours (every day, 10:00 to 18:00) are marked “to verify” in src/data/teleferico.ts, source ADN40.">En horario: las dos acciones juntas. Datos de la línea de public/data/teleferico.json (645 m, 130 s); el horario (todos los días, 10:00 a 18:00) está marcado «por verificar» en src/data/teleferico.ts, fuente ADN40.</figcaption></figure>
+
+        <figure class="shot"><div class="phone"><div class="screen"><canvas class="city" data-mode="hora" data-hora="dia" data-seed="7" data-zoom="1.2"></canvas><div class="notch"></div><div class="status"><span>12:31</span><span>5G ▮▮▮</span></div>
+          <svg class="pr-ov" viewBox="0 0 282 612" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+            <path d="M-10 330 L40 300 L56 330 Z" fill="#A88D76" opacity=".9"/>
+            <path d="M200 260 L236 160 Q248 140 262 160 L300 260 Z" fill="#A88D76" opacity=".9"/>
+            <rect x="238" y="152" width="18" height="10" fill="#9A3412"/>
+            <path d="M30 304 L248 160" stroke="#44403C" stroke-width="1.3"/><path d="M30 312 L248 168" stroke="#44403C" stroke-width=".8"/>
+            <g class="pr-cabin"><g transform="translate(80 271)"><path d="M0 -10 V2" stroke="#44403C" stroke-width="1.5"/><rect x="-14" y="2" width="28" height="22" rx="6" fill="#B91C1C"/><rect x="-10" y="6" width="20" height="9" rx="2" fill="#E0F2FE"/></g></g>
+          </svg>
+          <div class="po-hdr"><span class="po-glass"><svg class="ico"><use href="#i-back"/></svg></span><span class="po-glass" data-en="3D City">Ciudad 3D</span><span class="po-glass">ES</span></div>
+          <div class="pr-chip po-glass"><span class="n">3</span><span><span data-en="A cabin leaves El Grillo in 3 s">Sale una cabina del Grillo en 3 s</span><small data-en="Simulated ride, not live">Recorrido simulado, no en vivo</small></span></div>
+          <div class="pr-sheet po-glass" style="right:80px"><span class="k"><span data-en="Cable car">Teleférico</span><span>Grillo → Bufa</span></span><p data-en="Watch it cross the center. Want to go inside?">Mírala cruzar el centro. ¿Quieres ir adentro?</p><div class="pr-bts"><span class="pr-bt alt" data-en="Just watch">Solo mirar</span><span class="pr-bt" data-en="Ride">Subir</span></div></div>
+          <div class="po-fab">✦</div>
+        </div></div><span class="tag prop" data-en="Proposal · illustration">Propuesta · ilustración</span><figcaption data-en="After “Send a cabin”: side view of the whole line with both stations, a 3 s countdown and the cabin leaving. The rest of the cabins keep their rhythm; only the one you called skips its wait.">Tras «Que pase una cabina»: vista de perfil de toda la línea con las dos estaciones, cuenta de 3 s y la cabina saliendo. Las demás cabinas siguen su ritmo; solo la que pediste se salta su espera.</figcaption></figure>
+
+        <figure class="shot"><div class="phone"><div class="screen"><canvas class="city" data-mode="hora" data-hora="noche" data-seed="9" data-zoom="1.3"></canvas><div class="notch"></div><div class="status light"><span>19:40</span><span>5G ▮▮▮</span></div>
+          <div class="po-hdr"><span class="po-glass dk"><svg class="ico"><use href="#i-back"/></svg></span><span class="po-glass dk" data-en="3D City">Ciudad 3D</span><span class="po-glass dk">ES</span></div>
+          <div class="po-scrim"></div>
+          <div class="po-crumb"><span class="po-glass dk" data-en="Attractions">Atracciones</span>›<span class="po-glass dk" data-en="Cable car">Teleférico</span></div>
+          <div class="po-rad on" style="left:84.8%;top:67.2%"><span class="po-glass dk"><svg><use href="#i-landmark"/></svg></span><b data-en="Attractions">Atracciones</b></div>
+          <div class="po-rad sm on" style="left:58%;top:41%"><span class="po-glass dk"><svg><use href="#pr-cable"/></svg></span><b data-en="Cable car">Teleférico</b></div>
+          <div class="po-rad sm" style="left:32%;top:48%"><span class="po-glass dk"><svg><use href="#pr-train"/></svg></span><b data-en="Train">Tren</b></div>
+          <div class="po-rad sm" style="left:84.8%;top:47%"><span class="po-glass dk"><svg><use href="#i-pickaxe"/></svg></span><b data-en="El Edén mine">Mina El Edén</b></div>
+          <div class="pr-card po-glass">
+            <span class="k" data-en="Cable car · Grillo ↔ Bufa">Teleférico · Grillo ↔ Bufa</span>
+            <div class="pr-row"><b data-en="645 m · about 2 min">645 m · unos 2 min</b><span class="pr-st off" data-en="Closed · opens tomorrow at 10:00">Cerrado · abre mañana a las 10:00</span>
+              <span class="pr-bt off" data-en="Send a cabin">Que pase una cabina</span>
+              <span class="pr-bt off" data-en="Ride and tour">Subir y recorrer</span></div>
+          </div>
+          <div class="po-fab open">✕</div>
+        </div></div><span class="tag prop" data-en="Proposal · illustration">Propuesta · ilustración</span><figcaption data-en="Outside its hours: the cabins stay at El Grillo as today, both buttons turn off and the status says when it opens. With reduced motion turned on, the cabins do not move, so the buttons turn off too and explain why.">Fuera de horario: las cabinas se quedan en el Grillo como hoy, los dos botones se apagan y el estado dice cuándo abre. Con movimiento reducido activado las cabinas no se mueven, así que los botones también se apagan y lo explican.</figcaption></figure>
+      </div>
+    </div>
+
+    <!-- R3 · Recorrido desde la cabina -->
+    <div class="block" id="propuesta-r3">
+      <div class="block-head">
+        <h3 data-en="R3 · Boarding starts a virtual tour over the city">R3 · Subir a la cabina arranca un recorrido virtual por la ciudad</h3>
+        <p data-en="When you board, the view goes inside the cabin window and a fixed tour of about 2 minutes starts. The camera does not follow the cable: it glides over the center from El Grillo to La Bufa and stops briefly at six places of the catalog, each one named. You can pause, skip a stop or get off at any time.">Al subir, la vista se va a la ventana de la cabina y arranca un recorrido fijo de unos 2 minutos. La cámara no sigue el cable: planea sobre el centro del Grillo a La Bufa y se detiene un momento en seis lugares del catálogo, cada uno con su nombre. Puedes pausar, saltar una parada o bajarte cuando quieras.</p>
+      </div>
+      <div class="gallery">
+        <figure class="shot"><div class="phone"><div class="screen pr-tilt"><canvas class="city" data-mode="hora" data-hora="dia" data-seed="4" data-zoom="1.6"></canvas><div class="pr-win"></div><div class="notch"></div><div class="status light"><span>12:33</span><span>5G ▮▮▮</span></div>
+          <div class="po-hdr" style="z-index:12"><span class="po-glass dk"><svg class="ico"><use href="#i-x"/></svg></span><span class="po-glass dk" data-en="Cable car · tour">Teleférico · recorrido</span><span class="po-glass dk">ES</span></div>
+          <div class="pr-name on" style="left:56%;top:40%"><span data-en="Pedro Coronel Museum">Museo Pedro Coronel</span><i></i></div>
+          <div class="pr-name" style="left:30%;top:52%"><span data-en="Calderón Theater">Teatro Calderón</span><i></i></div>
+          <div class="pr-sheet po-glass"><span class="k"><span data-en="Stop 2 of 6">Parada 2 de 6</span><span>0:38 / 2:10</span></span><div class="pr-steps"><i class="done"></i><i class="now"></i><i></i><i></i><i></i><i></i></div><h4 data-en="Pedro Coronel Museum">Museo Pedro Coronel</h4><p data-en="Former Jesuit college next to Santo Domingo, with the painter's world art collection.">Antiguo colegio jesuita junto a Santo Domingo, con la colección de arte del mundo del pintor.</p>
+            <div class="pr-ctl"><span class="r"><svg class="ico"><use href="#i-pause"/></svg></span><span class="r"><svg class="ico"><use href="#pr-next"/></svg></span><span class="pr-bt alt"><svg class="ico"><use href="#pr-out"/></svg><span data-en="Get off">Bajar</span></span></div></div>
+        </div></div><span class="tag prop" data-en="Proposal · illustration">Propuesta · ilustración</span><figcaption data-en="Inside the cabin: the window frame stays on screen so you feel on board; the stop gets a cantera label and the next one shows in white. The text of each stop comes from src/data/places.ts (here, the Pedro Coronel Museum's).">Dentro de la cabina: el marco de la ventana se queda en pantalla para sentirte a bordo; la parada lleva letrero de cantera y la siguiente se ve en blanco. El texto de cada parada sale de src/data/places.ts (aquí, el del Museo Pedro Coronel).</figcaption></figure>
+
+        <figure class="shot"><div class="phone"><div class="screen pr-tilt"><canvas class="city" data-mode="hora" data-hora="dia" data-seed="9" data-zoom="1.9"></canvas><div class="pr-win"></div><div class="notch"></div><div class="status light"><span>12:34</span><span>5G ▮▮▮</span></div>
+          <div class="po-hdr" style="z-index:12"><span class="po-glass dk"><svg class="ico"><use href="#i-x"/></svg></span><span class="po-glass dk" data-en="Cable car · tour">Teleférico · recorrido</span><span class="po-glass dk">ES</span></div>
+          <div class="pr-name on" style="left:48%;top:44%"><span data-en="Cathedral">Catedral Basílica</span><i></i></div>
+          <div class="pr-name" style="left:22%;top:30%"><span data-en="Plaza de Armas">Plaza de Armas</span><i></i></div>
+          <div class="pr-sheet po-glass"><span class="k"><span data-en="Stop 4 of 6">Parada 4 de 6</span><span>1:20 / 2:10</span></span><div class="pr-steps"><i class="done"></i><i class="done"></i><i class="done"></i><i class="now"></i><i></i><i></i></div><h4 data-en="Cathedral Basilica of Zacatecas">Catedral Basílica de Zacatecas</h4><p data-en="Carved in pink cantera between 1730 and 1760; its façade is an altarpiece in stone.">Labrada en cantera rosa entre 1730 y 1760; su fachada es un retablo en piedra.</p>
+            <div class="pr-ctl"><span class="r"><svg class="ico"><use href="#i-pause"/></svg></span><span class="r"><svg class="ico"><use href="#pr-next"/></svg></span><span class="pr-bt alt"><svg class="ico"><use href="#pr-out"/></svg><span data-en="Get off">Bajar</span></span></div></div>
+        </div></div><span class="tag prop" data-en="Proposal · illustration">Propuesta · ilustración</span><figcaption data-en="Proposed order, west to east: El Grillo station, Pedro Coronel Museum, Calderón Theater, Cathedral, Plaza de Armas, and arrival at Cerro de la Bufa. All six are already in the catalog with coordinates; the route is a fixed camera path, not the real cable.">Orden propuesto, de poniente a oriente: estación del Grillo, Museo Pedro Coronel, Teatro Calderón, Catedral, Plaza de Armas y llegada al Cerro de la Bufa. Los seis ya están en el catálogo con coordenadas; la ruta es un camino fijo de cámara, no el cable real.</figcaption></figure>
+
+        <figure class="shot"><div class="phone"><div class="screen pr-tilt"><canvas class="city" data-mode="hora" data-hora="tarde" data-seed="7" data-zoom="1.3"></canvas><div class="pr-win"></div><div class="notch"></div><div class="status light"><span>12:35</span><span>5G ▮▮▮</span></div>
+          <div class="po-hdr" style="z-index:12"><span class="po-glass dk"><svg class="ico"><use href="#i-x"/></svg></span><span class="po-glass dk" data-en="Cable car · tour">Teleférico · recorrido</span><span class="po-glass dk">ES</span></div>
+          <div class="pr-name on" style="left:62%;top:36%"><span data-en="Cerro de la Bufa">Cerro de la Bufa</span><i></i></div>
+          <div class="pr-sheet po-glass"><span class="k"><span data-en="You arrived">Llegaste</span><span>2:10 / 2:10</span></span><div class="pr-steps"><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i></div><h4 data-en="Cerro de la Bufa">Cerro de la Bufa</h4><p data-en="End of the tour. You get off at La Bufa station and the city 3D comes back where you left it.">Fin del recorrido. Bajas en la estación de La Bufa y la ciudad 3D vuelve a donde la dejaste.</p>
+            <div class="pr-bts"><span class="pr-bt alt" data-en="Tour again">Ver otra vez</span><span class="pr-bt" data-en="Get off">Bajar</span></div><span class="fine2" data-en="Virtual tour; the camera does not follow the real cable.">Recorrido virtual; la cámara no sigue el cable real.</span></div>
+        </div></div><span class="tag prop" data-en="Proposal · illustration">Propuesta · ilustración</span><figcaption data-en="Arrival: the tour ends at La Bufa with “Tour again” or “Get off”. The Side / From above views of O4 stay for “Just watch”; on board, the tour replaces them.">Llegada: el recorrido termina en La Bufa con «Ver otra vez» o «Bajar». Las vistas Perfil y Desde arriba de O4 se quedan para «Solo mirar»; a bordo, el recorrido las reemplaza.</figcaption></figure>
+      </div>
+      <div class="pr-rules">
+        <div><b data-en="Operating hours decide">El horario manda</b><span data-en="Cable car: every day 10:00 to 18:00 (src/data/teleferico.ts, “to verify”, source ADN40). Park train: Wednesday to Sunday 11:00 to 18:00 (src/data/trains.ts, “to be confirmed”). Zacatecas time, not the phone's.">Teleférico: todos los días de 10:00 a 18:00 (src/data/teleferico.ts, «por verificar», fuente ADN40). Trenecito: miércoles a domingo de 11:00 a 18:00 (src/data/trains.ts, «por confirmar»). Hora de Zacatecas, no la del celular.</span></div>
+        <div><b data-en="The freight train has no schedule">El tren de carga no tiene horario</b><span data-en="It is a model that shows up at random (#246) and the card says so. That is why it can be called at any time, with a 2-minute rest. If you prefer, it can follow the cable car's hours instead.">Es una maqueta que sale al azar (#246) y la tarjeta lo dice. Por eso se puede pedir a cualquier hora, con 2 minutos de descanso. Si prefieres, puede seguir el horario del teleférico.</span></div>
+        <div><b data-en="Reduced motion">Movimiento reducido</b><span data-en="With reduced motion on there is no countdown flight or tour: the buttons turn off with a hint, as the cabin already does today.">Con movimiento reducido no hay vuelo ni recorrido: los botones se apagan con un aviso, como ya hace hoy la cabina.</span></div>
+      </div>
+      <p class="fine" data-en="Changes O4 (#311): boarding no longer shows the Side / From above views; it starts the fixed tour. The radial menu button is drawn as today; with P1 Glass approved it would only change its look. Nothing here is live information: the cards and the tour say “simulated”.">Cambia O4 (#311): subir ya no muestra las vistas Perfil y Desde arriba; arranca el recorrido fijo. El botón de la rueda se dibuja como hoy; con P1 Vidrio aprobado solo cambiaría su aspecto. Nada de esto es información en vivo: las tarjetas y el recorrido dicen «simulado».</p>
+    </div>
+  </section>
+
   <section id="que-falta">
     <div class="section-head">
       <span class="eyebrow" data-en="What is missing">Qué falta</span>
