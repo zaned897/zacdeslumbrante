@@ -172,6 +172,8 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
   const focusRef = useRef(focus);
   focusRef.current = focus;
   const focusRunRef = useRef(0);
+  /** Un edificio va en vuelo y su tarjeta aún no sale (#334). */
+  const pendingRef = useRef(false);
   // Parada en curso del recorrido: alimenta la hoja con subtítulo y progreso.
   const [tourStep, setTourStep] = useState<{ tour: Tour; index: number } | null>(null);
   const [isTouring, setIsTouring] = useState(false);
@@ -254,8 +256,10 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
   const selectPoi = async (poi: ScenePoi) => {
     const run = ++focusRunRef.current;
     const busy = isExploring || isTouring || cabinRiding;
+    pendingRef.current = !busy;
     const found = busy ? null : ((await engineRef.current?.focusPlace?.(poi)) ?? null);
     if (run !== focusRunRef.current) return;
+    pendingRef.current = false;
     // Otro modo tomó la cámara a medio vuelo (p. ej. subir al teleférico): la tarjeta ya no sale.
     if (found?.cancelled) {
       setFocus(null);
@@ -269,6 +273,7 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
   /** Suelta el edificio elegido, o el que va en vuelo, antes de que otro modo tome la cámara (#334). */
   const dropFocus = () => {
     focusRunRef.current++;
+    pendingRef.current = false;
     setFocus(null);
     void engineRef.current?.focusPlace?.(null);
   };
@@ -276,6 +281,11 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
   useEffect(() => {
     if (focus && selected?.id !== focus.poiId) dropFocus();
   }, [selected, focus]);
+  // Cerrar o cambiar la tarjeta abierta (✕, «Preguntar al asistente»…) mientras un edificio va en vuelo lo
+  // cancela: su tarjeta ya no sale (#334).
+  useEffect(() => {
+    if (pendingRef.current) dropFocus();
+  }, [selected]);
   // La tarjeta no tapa el edificio elegido: el motor lo centra en lo que queda libre (#334).
   const cardRef = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {

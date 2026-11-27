@@ -192,7 +192,7 @@ describe('navegador', { skip: browserSkip, timeout: 900_000 }, () => {
     }
   });
 
-  test('revisión de Codex (#354): soltar o arrastrar a medio vuelo, entrar a Explorar o tocar en un recorrido no deja la ciudad atenuada', async () => {
+  test('revisión de Codex (#354): soltar, arrastrar o cerrar la tarjeta a medio vuelo, entrar a Explorar o tocar en un recorrido no deja la ciudad atenuada', async () => {
     const { chromium } = await loadPlaywright();
     const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
     try {
@@ -237,6 +237,16 @@ describe('navegador', { skip: browserSkip, timeout: 900_000 }, () => {
       await page.waitForTimeout(1500);
       await notDimmed();
       await page.getByRole('button', { name: 'Cerrar' }).first().dispatchEvent('click');
+
+      // Con la tarjeta de la plaza abierta, tocar la Catedral y cerrar la de la plaza antes de que aterrice:
+      // ya no sale ninguna tarjeta.
+      await press(PLAZA);
+      await page.locator('h3', { hasText: PLAZA }).waitFor({ timeout: 10_000 });
+      await press(CATEDRAL);
+      await page.getByRole('button', { name: 'Cerrar' }).first().dispatchEvent('click');
+      await page.waitForTimeout(2500);
+      assert.equal(await page.locator('h3', { hasText: CATEDRAL }).count(), 0, 'salió la Catedral tras cerrar la tarjeta');
+      await notDimmed();
 
       // Entrar a Explorar mientras vuela: ni tarjeta ni ciudad atenuada.
       await menu('Paseo');

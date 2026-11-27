@@ -1178,6 +1178,29 @@ export class ThreeOsmEngine implements SceneEngine {
     }
   }
 
+  /** Material de una huella resaltada (#334): el de los edificios, de día o de noche, con las caras un poco atrás. */
+  private outlineLook(looks: NonNullable<ThreeOsmEngine['looks']>, night: boolean): THREE.Material {
+    const solid = (night ? looks.night : looks.day).building.clone();
+    // Así el contorno, en el mismo lugar, siempre gana.
+    Object.assign(solid, { polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1 });
+    return solid;
+  }
+
+  /** El resaltado sigue la luz de la escena (#334): al pasar de día a noche, o al revés, cambia su material y su borde. */
+  private refreshOutline(): void {
+    const { T, looks, focused } = this;
+    if (!T || !looks || !focused?.outline) return;
+    const night = (this.seasonLook?.night ? 'night' : this.timeOfDay) === 'night';
+    focused.outline.traverse((o) => {
+      if (o instanceof T.LineSegments) {
+        (o.material as THREE.LineBasicMaterial).color.set(night ? FOCUS_OUTLINE.night : FOCUS_OUTLINE.day);
+      } else if (o instanceof T.Mesh) {
+        (o.material as THREE.Material).dispose();
+        o.material = this.outlineLook(looks, night);
+      }
+    });
+  }
+
   /** Huellas de un edificio sin maqueta (#334): con su color de siempre y contorno, sobre la ciudad atenuada. */
   private outlineFootprints(indices: number[]): THREE.Group | null {
     const { T, scene, buildings, starts, looks, focused } = this;
@@ -1197,10 +1220,7 @@ export class ThreeOsmEngine implements SceneEngine {
         const array = (a.array as Float32Array).slice(from * a.itemSize, to * a.itemSize);
         geometry.setAttribute(name, new T.BufferAttribute(array, a.itemSize, a.normalized));
       }
-      const solid = (night ? looks.night : looks.day).building.clone();
-      // Las caras un poco atrás: así el contorno, en el mismo lugar, siempre gana.
-      Object.assign(solid, { polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1 });
-      const mesh = new T.Mesh(geometry, solid);
+      const mesh = new T.Mesh(geometry, this.outlineLook(looks, night));
       mesh.castShadow = buildings.castShadow;
       mesh.receiveShadow = buildings.receiveShadow;
       const edges = new T.LineSegments(
@@ -1756,8 +1776,12 @@ export class ThreeOsmEngine implements SceneEngine {
       looks: this.looks,
       streetPoints: this.streetPoints,
     });
-    // El clima acaba de ajustar los colores: la atenuación de un edificio elegido (#334) va encima.
-    if (this.focused?.dim) this.dimCity();
+    // El clima acaba de ajustar los colores: la atenuación de un edificio elegido (#334) va encima, y su
+    // resaltado sigue la luz nueva.
+    if (this.focused?.dim) {
+      this.dimCity();
+      this.refreshOutline();
+    }
   }
 
   /** Material de día o de noche para edificios y calles, sin atenuar. */
