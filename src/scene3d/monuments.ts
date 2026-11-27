@@ -115,6 +115,8 @@ export interface MonumentsOptions {
   height: (x: number, z: number) => number;
   /** Con «reducir movimiento», la huella cambia por el modelo sin fundido. */
   reducedMotion?: boolean;
+  /** Un modelo no se pudo cargar y se queda su huella (#334). */
+  onModelFailed?: (entryId: string) => void;
 }
 
 export interface MonumentsLayer {
@@ -340,6 +342,7 @@ class Monuments implements MonumentsLayer {
     } catch (error) {
       m.state = 'failed';
       console.warn(`[monumentos] No se pudo cargar ${m.entry.model}; se queda la huella.`, error);
+      if (!this.disposed) this.options.onModelFailed?.(m.entry.id);
     }
   }
 

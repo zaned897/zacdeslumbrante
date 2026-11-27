@@ -101,7 +101,7 @@ function camera(from: THREE.Vector3, to: THREE.Vector3): THREE.PerspectiveCamera
 }
 
 /** Capa con la Catedral del registro, sobre terreno inclinado y una malla falsa. */
-async function catedralLayer(options: { reducedMotion?: boolean } = {}) {
+async function catedralLayer(options: { reducedMotion?: boolean; onModelFailed?: (entryId: string) => void } = {}) {
   const { mesh, starts, original } = fakeBuildings();
   const scene = new THREE.Scene();
   const height = (x: number, z: number) => 2240 + x * 0.05 - z * 0.02;
@@ -421,10 +421,11 @@ describe('enfoque de un edificio (#334)', () => {
     });
   });
 
-  test('si la maqueta elegida no carga, se queda su huella y la capa lo dice (modelFailed)', async () => {
+  test('si la maqueta elegida no carga, se queda su huella y la capa lo dice (modelFailed y onModelFailed)', async () => {
     // Sin el .glb en el servidor: responde 404.
     await withFetch({ [MONUMENTS_URL]: JSON.stringify(registry) }, async ({ warnings }) => {
-      const { layer, mesh, starts, original, scene, center } = await catedralLayer({ reducedMotion: true });
+      const failed: string[] = [];
+      const { layer, mesh, starts, original, scene, center } = await catedralLayer({ reducedMotion: true, onModelFailed: (id) => failed.push(id) });
       const eye = center.clone().add(new THREE.Vector3(-1300, 800, 900));
       const far = camera(eye, eye.clone().add(new THREE.Vector3(-1, 0, 1)));
       assert.equal(layer.modelFailed('catedral'), false);
@@ -432,6 +433,8 @@ describe('enfoque de un edificio (#334)', () => {
       layer.tick(far, 1000);
       await waitFor(() => layer.modelFailed('catedral'));
       assert.equal(layer.modelFailed('catedral'), true);
+      // El motor se entera en el momento, para resaltar la huella aunque ya haya aterrizado.
+      assert.deepEqual(failed, ['catedral']);
       layer.tick(far, 2000);
       assert.equal(scene.getObjectByName('monumento:catedral'), undefined);
       assert.equal(footprintsHidden(mesh, starts, original), false);

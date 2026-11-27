@@ -190,6 +190,8 @@ export interface SceneEngine {
   focusPlace?(poi: ScenePoi | null): Promise<SceneFocus | null>;
   /** Lo que tapa la tarjeta del edificio elegido (px): el motor lo centra en el resto de la vista (#334). */
   setFocusInset?(inset: { bottom: number; right: number }): void;
+  /** El edificio elegido cambió después de aterrizar (#334); p. ej. su maqueta no cargó y ya no lleva crédito. */
+  onFocusChange?(handler: (focus: SceneFocus) => void): void;
   destroy(): void;
 }
 

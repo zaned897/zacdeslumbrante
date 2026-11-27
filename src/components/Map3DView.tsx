@@ -458,6 +458,8 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
           }
           return pickSpotRef.current ? pickSpotRef.current(at) : teleportRef.current?.(at);
         });
+        // Si la maqueta del edificio elegido no carga después de aterrizar, la tarjeta pierde su crédito (#334).
+        engine.onFocusChange?.((change) => setFocus((current) => (current ? { poiId: current.poiId, model: change.model } : current)));
         engine.onFloatingPhotoClick?.(({ id, placeId }) => {
           const list = allPhotosRef.current.filter((p) => p.placeId === placeId);
           if (!list.length) return;

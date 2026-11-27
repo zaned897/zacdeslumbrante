@@ -5,7 +5,7 @@ import type { CableCarLayer } from './cableCar';
 import { CableCabins } from './cableCabins';
 import { FreightTrain } from './freightTrain';
 import type { TrenecitoLayer } from './trenecito';
-import type { MonumentsLayer } from './monuments';
+import type { MonumentEntry, MonumentsLayer } from './monuments';
 import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import type { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import type { CSS2DObject, CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
@@ -535,7 +535,13 @@ export class ThreeOsmEngine implements SceneEngine {
    * Edificio elegido (#334). `dim`: ya aterrizó la cámara y la ciudad está atenuada. `outline`: su
    * huella resaltada si no tiene maqueta, con la huella original oculta debajo.
    */
-  private focused: { poiId: string; dim: boolean; outline: THREE.Group | null; footprints: number[]; flight: ThreeOsmEngine['animation'] } | null = null;
+  private focused: {
+    poiId: string; dim: boolean; outline: THREE.Group | null; footprints: number[]; flight: ThreeOsmEngine['animation'];
+    /** Su entrada del registro, si tiene maqueta. */
+    entry: MonumentEntry | null;
+  } | null = null;
+  /** Avisa a la vista si el edificio elegido cambia después de aterrizar (#334). */
+  private focusChangeHandler: ((focus: SceneFocus) => void) | null = null;
   private focusSaved = new Map<number, Float32Array>();
   private dimMaterials: THREE.Material[] = [];
   /** Lo que tapa la tarjeta del edificio elegido (px) y cuánto se ha corrido la vista para librarlo (#334). */
@@ -808,7 +814,8 @@ export class ThreeOsmEngine implements SceneEngine {
       this.monumentsAbort = monumentsAbort;
       this.monumentsLoad = this.readyPromise.then(() => import('./monuments')).then(async ({ loadMonuments }) => {
         const layer = await loadMonuments({ T, scene, buildings, starts, footprints: data.buildings, project: toLocal,
-          height: (x, z) => terrain?.at(x, z) ?? 0, reducedMotion: this.reducedMotion }, monumentsAbort.signal);
+          height: (x, z) => terrain?.at(x, z) ?? 0, reducedMotion: this.reducedMotion,
+          onModelFailed: (id) => this.monumentFailed(id) }, monumentsAbort.signal);
         if (!monumentsAbort.signal.aborted) this.monuments = layer;
         else layer?.dispose();
       }).catch(error => console.warn('[monumentos] No se pudo cargar el módulo.', error));
@@ -1035,7 +1042,7 @@ export class ThreeOsmEngine implements SceneEngine {
     // Un lugar dentro de las huellas de una maqueta es ese monumento, aunque el registro no lo ligue.
     if (footprint >= 0) entry = this.monuments?.entryForBuilding(footprint) ?? null;
     if (!entry && footprint < 0) return null;
-    const focused = { poiId: poi.id, dim: false, outline: null as THREE.Group | null, footprints: [] as number[], flight: null as ThreeOsmEngine['animation'] };
+    const focused = { poiId: poi.id, dim: false, outline: null as THREE.Group | null, footprints: [] as number[], flight: null as ThreeOsmEngine['animation'], entry };
     this.focused = focused;
     // Su maqueta sale aunque esté lejos; las de otros edificios vuelven a su huella, atenuada con la ciudad.
     this.monuments?.focus(entry?.id ?? null, true);
@@ -1089,6 +1096,18 @@ export class ThreeOsmEngine implements SceneEngine {
     if (shift.x || shift.y) camera.setViewOffset(w, h, shift.x, shift.y, w, h);
     else camera.clearViewOffset();
     this.labelsAt = -Infinity;
+  }
+
+  onFocusChange(handler: (focus: SceneFocus) => void): void {
+    this.focusChangeHandler = handler;
+  }
+
+  /** La maqueta del edificio elegido falló después de aterrizar (#334): contorno, y la tarjeta sin crédito. */
+  private monumentFailed(entryId: string): void {
+    const focused = this.focused;
+    if (!focused?.dim || focused.entry?.id !== entryId || focused.outline) return;
+    focused.outline = this.outlineFootprints(focused.entry.buildingIds);
+    this.focusChangeHandler?.({});
   }
 
   /** Otro modo toma la cámara (#334): suelta el edificio elegido y cancela el que aún espera el registro. */

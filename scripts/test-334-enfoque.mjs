@@ -42,7 +42,7 @@ describe('navegador', { skip: browserSkip, timeout: 900_000 }, () => {
   }
 
   /** Abre la ciudad a 390 px (celular) y devuelve la página, lo que pidió y los errores. */
-  async function openCity(browser, { reducedMotion = 'no-preference', at, recommendations, slowRegistryMs, brokenModel } = {}) {
+  async function openCity(browser, { reducedMotion = 'no-preference', at, recommendations, slowRegistryMs, brokenModel, brokenModelAfterMs } = {}) {
     // `at`: hora fija en Zacatecas, para que el teleférico (de 10:00 a 18:00) esté abierto.
     const context = await browser.newContext({
       viewport: { width: 390, height: 844 },
@@ -61,8 +61,13 @@ describe('navegador', { skip: browserSkip, timeout: 900_000 }, () => {
         route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ recommendations }) }),
       );
     }
-    // Maqueta que no se puede bajar (404).
-    if (brokenModel) await page.route('**/models/monumentos/*.glb', (route) => route.fulfill({ status: 404, body: 'no está' }));
+    // Maqueta que no se puede bajar (404), de inmediato o tras una espera.
+    if (brokenModel || brokenModelAfterMs) {
+      await page.route('**/models/monumentos/*.glb', async (route) => {
+        if (brokenModelAfterMs) await new Promise((resolve) => setTimeout(resolve, brokenModelAfterMs));
+        await route.fulfill({ status: 404, body: 'no está' });
+      });
+    }
     // Registro de monumentos que tarda en llegar.
     if (slowRegistryMs) {
       await page.route('**/data/monumentos.json', async (route) => {
@@ -389,6 +394,23 @@ describe('navegador', { skip: browserSkip, timeout: 900_000 }, () => {
       await page.waitForTimeout(1500);
       assert.deepEqual(await visibleMarkers(page), [CATEDRAL]);
       assert.equal(await page.getByTestId('model-credit').count(), 0, 'crédito de una maqueta que no cargó');
+      assert.deepEqual(problems.filter((p) => !/No se pudo cargar/.test(p)), []);
+    } finally {
+      await browser.close();
+    }
+  });
+
+  test('revisión de Codex (#354): si la maqueta falla después de aterrizar, la tarjeta pierde el crédito', async () => {
+    const { chromium } = await loadPlaywright();
+    const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
+    try {
+      const { page, problems } = await openCity(browser, { reducedMotion: 'reduce', brokenModelAfterMs: 4000 });
+      // Con «reducir movimiento» aterriza al instante, cuando la maqueta todavía se está bajando.
+      await tap(page, CATEDRAL);
+      assert.equal(await page.getByTestId('model-credit').count(), 1);
+      await page.waitForTimeout(7000);
+      assert.equal(await page.getByTestId('model-credit').count(), 0, 'crédito de una maqueta que no cargó');
+      assert.deepEqual(await visibleMarkers(page), [CATEDRAL]);
       assert.deepEqual(problems.filter((p) => !/No se pudo cargar/.test(p)), []);
     } finally {
       await browser.close();
