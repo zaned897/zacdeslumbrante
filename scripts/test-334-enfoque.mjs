@@ -157,6 +157,63 @@ describe('navegador', { skip: browserSkip, timeout: 900_000 }, () => {
     }
   });
 
+  test('revisión de Codex (#354): soltar a medio vuelo, entrar a Explorar o tocar en un recorrido no deja la ciudad atenuada', async () => {
+    const { chromium } = await loadPlaywright();
+    const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
+    try {
+      const { page, problems } = await openCity(browser);
+      // Toque directo al marcador, aunque el acomodo de letreros lo tenga oculto.
+      const press = (name) => page.locator(`button[aria-label="${name}"]`).first().dispatchEvent('click');
+      const menu = async (...path) => {
+        await page.getByRole('button', { name: 'Abrir menú de acciones' }).click();
+        for (const name of path) await page.getByRole('menuitem', { name }).first().click();
+      };
+      const notDimmed = async () => {
+        assert.equal(await page.getByTestId('model-credit').count(), 0);
+        const shown = await visibleMarkers(page);
+        assert.ok(shown.length > 3, `marcadores: ${shown.join(', ')}`);
+      };
+
+      // Tocar la plaza mientras vuela a la Catedral: sale la tarjeta de la plaza y la cámara se queda ahí.
+      const PLAZA = 'Plaza de Armas y Palacio de Gobierno';
+      await press(CATEDRAL);
+      await page.waitForTimeout(150);
+      await press(PLAZA);
+      await page.locator('h3', { hasText: PLAZA }).waitFor({ timeout: 10_000 });
+      await watchHeadings(page);
+      await page.waitForTimeout(2000);
+      assert.equal((await headings(page)).length, 1, 'la cámara siguió volando hacia la Catedral');
+      assert.equal(await page.locator('h3', { hasText: CATEDRAL }).count(), 0);
+      await notDimmed();
+      await page.getByRole('button', { name: 'Cerrar' }).first().dispatchEvent('click');
+
+      // Entrar a Explorar mientras vuela: ni tarjeta ni ciudad atenuada.
+      await menu('Paseo');
+      await press(CATEDRAL);
+      await page.getByRole('menuitem', { name: 'A pie' }).first().click();
+      await page.waitForTimeout(3000);
+      assert.equal(await page.locator('h3', { hasText: CATEDRAL }).count(), 0);
+      await notDimmed();
+      // Al caminar, el avatar puede descubrir un lugar y salir la celebración del premio (#313): se cierra tocándola.
+      const prize = page.getByTestId('prize-moment');
+      if (await prize.count()) await prize.click({ position: { x: 8, y: 8 } });
+      await page.getByRole('button', { name: 'Salir' }).first().dispatchEvent('click');
+      await page.waitForTimeout(1500);
+
+      // Tocar un edificio durante un recorrido: el recorrido sigue y no vuela ni atenúa.
+      await menu('Paseo', 'Centro histórico en 2 minutos');
+      await page.waitForTimeout(1500);
+      await press(CATEDRAL);
+      await page.waitForTimeout(2500);
+      await notDimmed();
+      assert.equal(await page.getByRole('button', { name: 'Detener' }).count(), 1);
+      await page.getByRole('button', { name: 'Detener' }).click();
+      assert.deepEqual(problems, []);
+    } finally {
+      await browser.close();
+    }
+  });
+
   test('criterio: con «reducir movimiento» no hay vuelo, solo salto', async () => {
     const { chromium } = await loadPlaywright();
     const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });

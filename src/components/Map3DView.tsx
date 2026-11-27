@@ -248,24 +248,28 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
   teleportRef.current = isExploring ? teleport : null;
   /**
    * Tocar un lugar (#334): si es edificio, la cámara vuela y la tarjeta sale al aterrizar; si no, la
-   * tarjeta sale ya, como siempre. Un toque nuevo durante el vuelo gana. En Explorar la cámara sigue
-   * al avatar, así que ahí no vuela.
+   * tarjeta sale ya, como siempre. Un toque nuevo durante el vuelo gana. En Explorar, en un recorrido
+   * o a bordo del teleférico la cámara la lleva otro, así que ahí no vuela.
    */
   const selectPoi = async (poi: ScenePoi) => {
     const run = ++focusRunRef.current;
-    const found = isExploring ? null : ((await engineRef.current?.focusPlace?.(poi)) ?? null);
+    const busy = isExploring || isTouring || cabinRiding;
+    const found = busy ? null : ((await engineRef.current?.focusPlace?.(poi)) ?? null);
     if (run !== focusRunRef.current) return;
     setFocus(found ? { poiId: poi.id, model: found.model } : null);
     setSelected(poi);
   };
   const selectPoiRef = useRef(selectPoi);
   selectPoiRef.current = selectPoi;
-  // Al cerrar la tarjeta (✕, tocar fuera, un recorrido…) o elegir otra cosa, la ciudad vuelve (#334).
-  useEffect(() => {
-    if (!focus || selected?.id === focus.poiId) return;
+  /** Suelta el edificio elegido, o el que va en vuelo, antes de que otro modo tome la cámara (#334). */
+  const dropFocus = () => {
     focusRunRef.current++;
     setFocus(null);
     void engineRef.current?.focusPlace?.(null);
+  };
+  // Al cerrar la tarjeta (✕, tocar fuera…) o elegir otra cosa, la ciudad vuelve (#334).
+  useEffect(() => {
+    if (focus && selected?.id !== focus.poiId) dropFocus();
   }, [selected, focus]);
   // La tarjeta no tapa el edificio elegido: el motor lo centra en lo que queda libre (#334).
   const cardRef = useRef<HTMLDivElement>(null);
@@ -709,6 +713,7 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
 
   const stopTour = useCallback(() => {
     tourRunRef.current++;
+    dropFocus();
     engineRef.current?.stop();
     engineRef.current?.setRoute(null);
     setIsTouring(false);
@@ -721,6 +726,7 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
       if (!engine) return;
       const run = ++tourRunRef.current;
       const isCurrent = () => tourRunRef.current === run;
+      dropFocus();
       engine.setSkyView?.(false);
       setIsStargazing(false);
       setSelected(null);
@@ -749,6 +755,7 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
 
   // Se avisa al motor en el momento: si se espera al efecto, deshacer la vista del cielo frenaría un vuelo recién empezado.
   const setStargazing = (on: boolean) => {
+    if (on) dropFocus();
     engineRef.current?.setSkyView?.(on);
     setIsStargazing(on);
   };
@@ -798,6 +805,7 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
   const openPlace = (placeId: string) => {
     const poi = placePois.find((p) => p.placeId === placeId);
     if (!poi) return;
+    dropFocus();
     setSelected(poi);
     void engineRef.current?.flyTo(
       { lat: poi.lat, lng: poi.lng, altitude: ZACATECAS_3D_HOME.altitude, range: 700, tilt: 55, heading: ZACATECAS_3D_HOME.heading },
@@ -1376,6 +1384,7 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
         draft={vendorDraft}
         onChange={updateVendorDraft}
         onPickSpot={() => {
+          dropFocus();
           setSelected(null);
           setPickingSpot(true);
         }}

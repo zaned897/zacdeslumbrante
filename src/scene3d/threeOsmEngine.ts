@@ -529,7 +529,7 @@ export class ThreeOsmEngine implements SceneEngine {
    * Edificio elegido (#334). `dim`: ya aterrizó la cámara y la ciudad está atenuada. `outline`: su
    * huella resaltada si no tiene maqueta, con la huella original oculta debajo.
    */
-  private focused: { poiId: string; dim: boolean; outline: THREE.Group | null; footprint: number } | null = null;
+  private focused: { poiId: string; dim: boolean; outline: THREE.Group | null; footprint: number; flight: object | null } | null = null;
   private focusSaved = new Map<number, Float32Array>();
   private dimMaterials: THREE.Material[] = [];
   /** Lo que tapa la tarjeta del edificio elegido (px) y cuánto se ha corrido la vista para librarlo (#334). */
@@ -1010,7 +1010,7 @@ export class ThreeOsmEngine implements SceneEngine {
     // Un lugar dentro de las huellas de una maqueta es ese monumento, aunque el registro no lo ligue.
     if (footprint >= 0) entry = this.monuments?.entryForBuilding(footprint) ?? null;
     if (!entry && footprint < 0) return null;
-    const focused = { poiId: poi.id, dim: false, outline: null as THREE.Group | null, footprint };
+    const focused = { poiId: poi.id, dim: false, outline: null as THREE.Group | null, footprint, flight: null as object | null };
     this.focused = focused;
     // Su maqueta sale aunque esté lejos; las de otros edificios vuelven a su huella, atenuada con la ciudad.
     this.monuments?.focus(entry?.id ?? null, true);
@@ -1018,7 +1018,10 @@ export class ThreeOsmEngine implements SceneEngine {
     const view = this.readCamera();
     if (view) this.current = view;
     const target = entry ? entry.position : footprintCenter(this.footprints[footprint].p);
-    await this.flyTo(focusCamera(target, entry?.focus, view?.heading ?? 0, view?.altitude ?? 0), this.reducedMotion ? 0 : FOCUS_FLIGHT_MS);
+    const landed = this.flyTo(focusCamera(target, entry?.focus, view?.heading ?? 0, view?.altitude ?? 0), this.reducedMotion ? 0 : FOCUS_FLIGHT_MS);
+    // Si se suelta antes de aterrizar, su vuelo se detiene ahí mismo.
+    focused.flight = this.animation;
+    await landed;
     // Otro edificio, o se soltó, mientras volaba.
     if (this.focused !== focused) return null;
     focused.dim = true;
@@ -1058,6 +1061,8 @@ export class ThreeOsmEngine implements SceneEngine {
     const focused = this.focused;
     if (!focused) return;
     this.focused = null;
+    // Soltado en pleno vuelo (otro lugar, otro modo): la cámara no sigue hacia él.
+    if (focused.flight && this.animation === focused.flight) this.stop();
     this.focusInset = { bottom: 0, right: 0 };
     this.monuments?.focus(null);
     if (focused.dim) this.cableCar?.setLabelsVisible(!this.skyView);

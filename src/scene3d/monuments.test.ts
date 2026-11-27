@@ -421,14 +421,16 @@ describe('enfoque de un edificio (#334)', () => {
     const registros = [registry, { monuments: [{ ...catedral, poiId: undefined }] }];
     for (const [i, data] of registros.entries()) {
       await withFetch({ [MONUMENTS_URL]: JSON.stringify(data), [catedral.model]: glb }, async () => {
-        // Malla con solo dos huellas de verdad: la nave de la Catedral (8821) y otra, lejos.
+        // Malla con solo tres huellas de verdad: la nave de la Catedral (8821), otra lejos (8822) y otra
+        // (8823) delante de la Catedral, a 150 m, que tapa solo la franja de x + 5 a x + 25.
         const starts = new Int32Array(buildings.length + 1);
-        for (let b = 0; b <= buildings.length; b++) starts[b] = b <= 8821 ? 0 : b === 8822 ? 6 : 12;
+        for (let b = 0; b <= buildings.length; b++) starts[b] = b <= 8821 ? 0 : b === 8822 ? 6 : b === 8823 ? 12 : 18;
         const scene = new THREE.Scene();
         const { x, z } = toLocal(catedral.position.lat, catedral.position.lng);
-        const wall = (cx: number) => [cx - 20, 0, z, cx + 20, 0, z, cx + 20, 30, z, cx - 20, 0, z, cx + 20, 30, z, cx - 20, 30, z];
+        const wall = (x0: number, x1: number, wz = z) => [x0, 0, wz, x1, 0, wz, x1, 30, wz, x0, 0, wz, x1, 30, wz, x0, 30, wz];
         const geometry = new THREE.BufferGeometry();
-        geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array([...wall(x), ...wall(x + 2000)]), 3));
+        const walls = [...wall(x - 20, x + 20), ...wall(x + 1980, x + 2020), ...wall(x + 5, x + 25, z + 150)];
+        geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(walls), 3));
         const mesh = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ side: THREE.DoubleSide }));
         mesh.updateMatrixWorld();
         const layer: MonumentsLayer | null = await loadMonuments(
@@ -447,6 +449,8 @@ describe('enfoque de un edificio (#334)', () => {
         layer.tick(cam, 2000);
         // Ya con la maqueta: su huella no tiene área, el rayo da en el modelo.
         assert.equal(layer.pick(ray(x))?.id, expected, 'la maqueta de la Catedral');
+        // Un edificio delante tapa la maqueta: tocarlo no elige a la Catedral de atrás.
+        assert.equal(layer.pick(ray(x + 15)), null, 'el edificio de delante');
         layer.dispose();
       });
     }

@@ -223,18 +223,20 @@ class Monuments implements MonumentsLayer {
   }
 
   pick(ray: THREE.Raycaster): MonumentEntry | null {
-    const linked = this.items.filter((m) => m.entry.poiId);
-    for (const m of linked) {
+    // La malla unida es grande: solo se le tira el rayo si pasa cerca de algún monumento.
+    const near = this.items.filter((m) => m.entry.poiId && ray.ray.intersectsSphere(m.sphere));
+    if (!near.length) return null;
+    // Gana lo primero que toca el rayo: una maqueta o un bloque, que puede tapar a la maqueta de atrás.
+    let model: { entry: MonumentEntry; distance: number } | null = null;
+    for (const m of near) {
       if (!m.object?.visible) continue;
       m.object.updateMatrixWorld();
-      if (ray.intersectObject(m.object, true).length) return m.entry;
+      const hit = ray.intersectObject(m.object, true)[0];
+      if (hit && (!model || hit.distance < model.distance)) model = { entry: m.entry, distance: hit.distance };
     }
-    // La malla unida es grande: solo se le tira el rayo si pasa cerca de algún monumento.
-    const near = linked.filter((m) => ray.ray.intersectsSphere(m.sphere));
-    if (!near.length) return null;
-    const vertex = ray.intersectObject(this.options.buildings, false)[0]?.face?.a;
-    if (vertex === undefined) return null;
-    const building = buildingOfVertex(this.options.starts, vertex);
+    const block = ray.intersectObject(this.options.buildings, false)[0];
+    if (!block?.face || (model && model.distance <= block.distance)) return model?.entry ?? null;
+    const building = buildingOfVertex(this.options.starts, block.face.a);
     return near.find((m) => m.entry.buildingIds.includes(building))?.entry ?? null;
   }
 
