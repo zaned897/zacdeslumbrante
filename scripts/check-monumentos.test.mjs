@@ -157,6 +157,33 @@ test('el registro avisa de campos faltantes, modelos que no están y huellas que
   assert.deepEqual(checkRegistry({}, buildings), ['monumentos.json: falta la lista "monuments"']);
 });
 
+test('#334: «focus» y «poiId» son opcionales; si vienen, deben ser válidos', () => {
+  const [catedral] = registry.monuments;
+  const { focus, poiId, ...sinOpcionales } = catedral;
+  assert.ok(focus && poiId);
+  assert.deepEqual(checkRegistry({ monuments: [sinOpcionales] }, buildings), []);
+  const focusMal = 'debe traer heading (grados), tilt (0 a 85) y range (30 a 4000 m)';
+  const errors = checkRegistry(
+    {
+      monuments: [
+        { ...catedral, id: 'a', focus: { heading: 90, tilt: 95, range: 300 } },
+        { ...catedral, id: 'b', focus: { heading: 90, tilt: 60 } },
+        { ...catedral, id: 'c', focus: { heading: 90, tilt: 60, range: 10 } },
+        { ...catedral, id: 'd', poiId: '' },
+        { ...catedral, id: 'e', poiId: 42 },
+      ],
+    },
+    buildings,
+  );
+  assert.deepEqual(errors, [
+    `a: "focus" ${focusMal}`,
+    `b: "focus" ${focusMal}`,
+    `c: "focus" ${focusMal}`,
+    'd: "poiId" debe ser el id de un lugar del catálogo',
+    'e: "poiId" debe ser el id de un lugar del catálogo',
+  ]);
+});
+
 test('--huellas lista las huellas cercanas para llenar buildingIds', () => {
   const { lat, lng } = registry.monuments[0].position;
   const result = spawnSync(process.execPath, [SCRIPT, '--huellas', String(lat), String(lng)], { encoding: 'utf8' });
