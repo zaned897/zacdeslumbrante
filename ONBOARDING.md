@@ -42,8 +42,19 @@ bun install && bun run dev
 git switch main && git pull       # para volver a la versión buena
 ```
 
+## Niveles de issues
+Los issues pensados para colaboradores nuevos llevan una etiqueta de nivel y, arriba del texto, un bloque «Nivel N» con qué necesitas, cómo pedírselo a Claude y cómo ver el resultado. Empieza en el nivel 1 y **sube de nivel cuando tengas 2 PRs fusionados** en el actual.
+
+| Etiqueta | Qué incluye | Aquí, por ejemplo | Cómo se revisa |
+|---|---|---|---|
+| [`nivel-1`](https://github.com/zaned897/zacdeslumbrante/issues?q=is%3Aopen+label%3Anivel-1) | Textos, datos, documentación, fotos o un solo archivo, sin lógica | historia de los recursos de la mascota, accesorios regionales (bocetos en `docs/design/`) | Leyendo el PR o en la preview |
+| [`nivel-2`](https://github.com/zaned897/zacdeslumbrante/issues?q=is%3Aopen+label%3Anivel-2) | Pantallas, estilos, SVG o modelos CAD/3D | maquetas 3D de edificios, disfraces de la mascota, botón de vidrio | Preview + `lint`/`build` en verde |
+| [`nivel-3`](https://github.com/zaned897/zacdeslumbrante/issues?q=is%3Aopen+label%3Anivel-3) | Lógica de frontend o backend con pruebas, varias zonas | (más adelante) | Pruebas automáticas + preview |
+
+Etiquetas de área que acompañan al nivel: `area:frontend`, `area:design`, `area:data`, `area:docs` y el nivel de prototipo `level:sketch/mock/demo/poc`. Un issue con `bloqueado` espera algo del dueño (un archivo, una decisión): no lo tomes sin hablar con él.
+
 ## Primer PR
-Empieza por una issue con `good first issue` o `status:ready`. En un hilo nuevo de Claude:
+Empieza por un issue con etiqueta `nivel-1` (ver «Niveles de issues»). En un hilo nuevo de Claude:
 > Quiero resolver esta issue: <liga>. No programo. Explícame en 3 líneas qué vas a cambiar y dónde se verá; cuando te diga que sí, hazlo en una rama, corre `bun run lint` y `bun run test`, y abre un PR con la plantilla.
 
 Si el cambio tiene pantalla, primero va la propuesta visual (skill `design-first` y paso 1 de `CONTRIBUTING.md`). Datos de ejemplo siempre con `"_mock": true`; nada inventado como real (precios, horarios, negocios).
