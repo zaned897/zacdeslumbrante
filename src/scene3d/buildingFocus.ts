@@ -7,8 +7,10 @@ import type { SceneCamera, ScenePoi } from '../types/scene3d';
 
 /** Encuadre de un edificio sin `focus` (#334): distancia e inclinación; el rumbo es el de la cámara. */
 export const FOCUS_DEFAULT = { range: 300, tilt: 58 } as const;
-/** Límites de un `focus`: los de la cámara del mapa. */
-export const FOCUS_LIMITS = { tiltMax: 85, rangeMin: 30, rangeMax: 4000 } as const;
+/** Distancia de la cámara del mapa a lo que mira (m): los topes de sus controles. */
+export const MAP_RANGE_M = { min: 30, max: 2500 } as const;
+/** Límites de un `focus`: los de la cámara del mapa, que recortaría un encuadre más lejano. */
+export const FOCUS_LIMITS = { tiltMax: 85, rangeMin: MAP_RANGE_M.min, rangeMax: MAP_RANGE_M.max } as const;
 /** Lo que dura el vuelo en arco hasta el edificio elegido (ms). */
 export const FOCUS_FLIGHT_MS = 1200;
 /** Lugares del catálogo que no son edificios: tocarlos no vuela (eso es #293). */

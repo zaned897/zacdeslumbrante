@@ -23,6 +23,7 @@ import {
 import {
   FOCUS_DEFAULT,
   FOCUS_LIMITS,
+  MAP_RANGE_M,
   buildingOfVertex,
   catalogId,
   findFootprint,
@@ -340,11 +341,15 @@ describe('enfoque de un edificio (#334)', () => {
       assert.equal(warnings.length, 5, 'un aviso por campo inválido; las entradas siguen');
     });
     assert.deepEqual(parseFocus({ heading: 405, tilt: 0, range: 30 }), { heading: 45, tilt: 0, range: 30 });
-    assert.equal(parseFocus({ heading: 0, tilt: 0, range: 4001 }), null);
+    assert.deepEqual(parseFocus({ heading: 0, tilt: 0, range: 2500 }), { heading: 0, tilt: 0, range: 2500 });
+    assert.equal(parseFocus({ heading: 0, tilt: 0, range: 2501 }), null);
     assert.equal(parseFocus(null), null);
   });
 
-  test('los límites del encuadre son los mismos en el motor y en el chequeo de CI', async () => {
+  test('los límites del encuadre son los de la cámara del mapa, y los mismos en el chequeo de CI', async () => {
+    // Un encuadre más lejano que el tope de los controles terminaría recortado.
+    assert.equal(FOCUS_LIMITS.rangeMin, MAP_RANGE_M.min);
+    assert.equal(FOCUS_LIMITS.rangeMax, MAP_RANGE_M.max);
     // El chequeo de CI es JavaScript sin tipos: se importa por su ruta.
     const check = (await import(file('scripts/check-monumentos.mjs').href)) as { FOCUS_LIMITS: unknown };
     assert.deepEqual(check.FOCUS_LIMITS, { ...FOCUS_LIMITS });

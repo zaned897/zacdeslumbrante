@@ -107,7 +107,7 @@ Se aporta un monumento por PR:
    - **`scale`:** 1 si el modelo está en metros.
    - **`license` y `author`:** obligatorios, con licencia libre. La tarjeta del lugar los muestra como «Maqueta: autor · licencia».
    - **`poiId`** (opcional): el id del lugar en `src/data/places.ts` o `src/data/centroPoints.ts`. Con él, tocar su marcador o su bloque elige el monumento (#334). Un lugar cuyo punto cae dentro de las huellas también lo elige.
-   - **`focus`** (opcional): el encuadre al elegirlo: `heading` (rumbo en grados, 0 = norte), `tilt` (0 = desde arriba, hasta 85) y `range` (30 a 4000 m). Sin él: 300 m, 58° y el rumbo que ya traía la cámara.
+   - **`focus`** (opcional): el encuadre al elegirlo: `heading` (rumbo en grados, 0 = norte), `tilt` (0 = desde arriba, hasta 85) y `range` (30 a 2500 m, los topes de la cámara). Sin él: 300 m, 58° y el rumbo que ya traía la cámara.
 5. **Pruébalo:**
    - corre `./scripts/dev.sh`, abre `http://localhost:3000/#3d` y acércate;
    - en la pestaña Red de DevTools, el `.glb`, `GLTFLoader` y el decodificador de Meshopt no aparecen hasta que te acercas;

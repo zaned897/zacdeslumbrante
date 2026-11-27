@@ -256,6 +256,11 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
     const busy = isExploring || isTouring || cabinRiding;
     const found = busy ? null : ((await engineRef.current?.focusPlace?.(poi)) ?? null);
     if (run !== focusRunRef.current) return;
+    // Otro modo tomó la cámara a medio vuelo (p. ej. subir al teleférico): la tarjeta ya no sale.
+    if (found?.cancelled) {
+      setFocus(null);
+      return;
+    }
     setFocus(found ? { poiId: poi.id, model: found.model } : null);
     setSelected(poi);
   };

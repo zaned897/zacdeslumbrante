@@ -25,6 +25,7 @@ import type {
 } from '../types/scene3d';
 import {
   FOCUS_FLIGHT_MS,
+  MAP_RANGE_M,
   catalogId,
   findFootprint,
   focusCamera,
@@ -216,8 +217,8 @@ const SKY_VIEWPOINT = { lat: 22.7738, lng: -102.5649, eyeM: 8, headingDeg: 225 }
 // Navegación tipo mapa (#291): el centro de la vista no sale de la caja del relieve
 // (bbox de centro-terreno.json) y la cámara no se aleja más de lo que pide la vista inicial.
 const MAP_BOUNDS = { south: 22.756, north: 22.794, west: -102.596, east: -102.548 };
-const MAP_MIN_DISTANCE_M = 30;
-const MAP_MAX_DISTANCE_M = 2500;
+const MAP_MIN_DISTANCE_M = MAP_RANGE_M.min;
+const MAP_MAX_DISTANCE_M = MAP_RANGE_M.max;
 const MAP_MAX_POLAR = Math.PI / 2.1;
 /** Lo que tarda la cámara en girar al norte, inclinarse o acercar con los botones (#292). */
 const VIEW_ADJUST_MILLIS = 600;
@@ -497,6 +498,8 @@ export class ThreeOsmEngine implements SceneEngine {
   private monumentsLoad: Promise<void> = Promise.resolve();
   /** Sube con cada `focusPlace`: un toque nuevo mientras se espera gana (#334). */
   private focusToken = 0;
+  /** Sube cada vez que el usuario empieza a mover la cámara a mano (arrastrar, girar, acercar). */
+  private userMoves = 0;
   private poiGroup: THREE.Group | null = null;
   private poiLabels: PoiLabel[] = [];
   private labelPoint: THREE.Vector3 | null = null;
@@ -671,7 +674,10 @@ export class ThreeOsmEngine implements SceneEngine {
     const controls = new Orbit(camera, renderer.domElement);
     controls.enableDamping = true;
     this.useMapControls(T, controls);
-    controls.addEventListener('start', () => this.stop());
+    controls.addEventListener('start', () => {
+      this.userMoves++;
+      this.stop();
+    });
     controls.addEventListener('change', () => {
       this.keepInCity();
       this.emitView();
@@ -1016,11 +1022,14 @@ export class ThreeOsmEngine implements SceneEngine {
    */
   async focusPlace(poi: ScenePoi | null): Promise<SceneFocus | null> {
     const token = ++this.focusToken;
+    const moves = this.userMoves;
     this.releaseFocus();
     if (!poi || poi.id === CABLE_CAR_POI_ID || !isBuildingPoi(poi) || this.skyView) return null;
     // Con el registro a la mano, las huellas de una maqueta nunca se toman por un edificio cualquiera.
     await this.monumentsLoad;
-    if (token !== this.focusToken || this.destroyed || this.skyView) return null;
+    if (token !== this.focusToken || this.destroyed || this.skyView) return { cancelled: true };
+    // Si mientras llegaba el registro el usuario movió la cámara, no se la quita: tarjeta sin enfoque.
+    if (this.userMoves !== moves) return null;
     let entry = this.monuments?.entryFor(catalogId(poi)) ?? null;
     const footprint = entry ? -1 : findFootprint(poi.lat, poi.lng, this.footprints);
     // Un lugar dentro de las huellas de una maqueta es ese monumento, aunque el registro no lo ligue.
@@ -1039,8 +1048,8 @@ export class ThreeOsmEngine implements SceneEngine {
     const flight = this.animation;
     focused.flight = flight;
     await landed;
-    // Otro edificio, o se soltó, mientras volaba.
-    if (this.focused !== focused) return null;
+    // Otro edificio, otro modo (teleférico, tren, cielo) o se soltó mientras volaba: su tarjeta ya no sale.
+    if (this.focused !== focused) return { cancelled: true };
     // Arrastrar, girar o acercar a mano corta el vuelo: la tarjeta sale sin enfoque, como antes de #334.
     if (!flight?.arrived) {
       this.releaseFocus();
@@ -2203,10 +2212,11 @@ export class ThreeOsmEngine implements SceneEngine {
   private onClick = (event: MouseEvent): void => {
     const { T, camera, renderer, ground, poiGroup } = this;
     if (!T || !camera || !renderer || !ground || !poiGroup) return;
-    // Con un edificio elegido (#334), arrastrar para girar a su alrededor no es tocar fuera: con el
-    // mouse, el navegador manda un clic al soltar.
+    // Arrastrar para mover o girar el mapa no es tocar (#334), aunque con el mouse el navegador mande un
+    // clic al soltar: con un edificio elegido no lo suelta, y nunca elige un monumento.
     const down = this.pointerDownAt;
-    if (this.focused?.dim && down && Math.hypot(event.clientX - down.x, event.clientY - down.y) > DRAG_PX) return;
+    const dragged = !!down && Math.hypot(event.clientX - down.x, event.clientY - down.y) > DRAG_PX;
+    if (this.focused?.dim && dragged) return;
     const rect = renderer.domElement.getBoundingClientRect();
     const pointer = new T.Vector2(
       ((event.clientX - rect.left) / rect.width) * 2 - 1,
@@ -2226,7 +2236,7 @@ export class ThreeOsmEngine implements SceneEngine {
       return;
     }
     // Tocar el bloque (o la maqueta) de un monumento del registro lo elige, como su marcador (#334).
-    const monument = this.monuments?.pick(ray);
+    const monument = dragged ? null : this.monuments?.pick(ray);
     const monumentPoi = monument?.poiId ? this.poiList.find((p) => p.kind === 'place' && catalogId(p) === monument.poiId) : undefined;
     if (monumentPoi) {
       this.clickHandler?.(monumentPoi);

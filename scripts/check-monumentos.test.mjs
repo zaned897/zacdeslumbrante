@@ -162,7 +162,7 @@ test('#334: «focus» y «poiId» son opcionales; si vienen, deben ser válidos'
   const { focus, poiId, ...sinOpcionales } = catedral;
   assert.ok(focus && poiId);
   assert.deepEqual(checkRegistry({ monuments: [sinOpcionales] }, buildings), []);
-  const focusMal = 'debe traer heading (grados), tilt (0 a 85) y range (30 a 4000 m)';
+  const focusMal = 'debe traer heading (grados), tilt (0 a 85) y range (30 a 2500 m)';
   const errors = checkRegistry(
     {
       monuments: [

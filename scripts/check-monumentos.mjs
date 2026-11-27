@@ -15,8 +15,8 @@ export const MAX_BYTES = 300 * 1024;
 export const MAX_TRIANGLES = 20_000;
 /** Una huella listada debe tener su centro a menos de esto de la posición del monumento (m). */
 export const MAX_FOOTPRINT_DISTANCE_M = 100;
-/** Límites de `focus` (#334): los mismos que FOCUS_LIMITS en src/scene3d/buildingFocus.ts. */
-export const FOCUS_LIMITS = { tiltMax: 85, rangeMin: 30, rangeMax: 4000 };
+/** Límites de `focus` (#334): los mismos que FOCUS_LIMITS en src/scene3d/buildingFocus.ts (los de la cámara). */
+export const FOCUS_LIMITS = { tiltMax: 85, rangeMin: 30, rangeMax: 2500 };
 const UNSUPPORTED = {
   KHR_draco_mesh_compression: 'usa Draco, que el motor aún no lee: comprime con Meshopt',
   KHR_texture_basisu: 'usa texturas KTX2, que el motor aún no lee: deja el color en los materiales',
