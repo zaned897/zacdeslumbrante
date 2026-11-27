@@ -1,7 +1,8 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowDown,
   ArrowUp,
+  Box,
   CableCar,
   Camera,
   Check,
@@ -166,6 +167,13 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
   const [enabledLayers, setEnabledLayers] = useState<Set<string>>(DEFAULT_LAYERS);
   const [layerPois, setLayerPois] = useState<Record<string, ScenePoi[]>>({});
   const [selected, setSelected] = useState<ScenePoi | null>(null);
+  // Edificio elegido (#334): la cámara voló a él y la ciudad está atenuada; `model`, el crédito de su maqueta.
+  const [focus, setFocus] = useState<{ poiId: string; model?: { author: string; license: string } } | null>(null);
+  const focusRef = useRef(focus);
+  focusRef.current = focus;
+  const focusRunRef = useRef(0);
+  /** Un edificio va en vuelo y su tarjeta aún no sale (#334). */
+  const pendingRef = useRef(false);
   // Parada en curso del recorrido: alimenta la hoja con subtítulo y progreso.
   const [tourStep, setTourStep] = useState<{ tour: Tour; index: number } | null>(null);
   const [isTouring, setIsTouring] = useState(false);
@@ -240,6 +248,64 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
   const act = useAvatarControls(isExploring, position, teleport);
   const teleportRef = useRef<typeof teleport | null>(null);
   teleportRef.current = isExploring ? teleport : null;
+  /**
+   * Tocar un lugar (#334): si es edificio, la cámara vuela y la tarjeta sale al aterrizar; si no, la
+   * tarjeta sale ya, como siempre. Un toque nuevo durante el vuelo gana. En Explorar, en un recorrido
+   * o a bordo del teleférico la cámara la lleva otro, así que ahí no vuela.
+   */
+  const selectPoi = async (poi: ScenePoi) => {
+    const run = ++focusRunRef.current;
+    const busy = isExploring || isTouring || cabinRiding;
+    pendingRef.current = !busy;
+    const found = busy ? null : ((await engineRef.current?.focusPlace?.(poi)) ?? null);
+    if (run !== focusRunRef.current) return;
+    pendingRef.current = false;
+    // Otro modo tomó la cámara a medio vuelo (p. ej. subir al teleférico): la tarjeta ya no sale.
+    if (found?.cancelled) {
+      setFocus(null);
+      return;
+    }
+    setFocus(found ? { poiId: poi.id, model: found.model } : null);
+    setSelected(poi);
+  };
+  const selectPoiRef = useRef(selectPoi);
+  selectPoiRef.current = selectPoi;
+  /** Suelta el edificio elegido, o el que va en vuelo, antes de que otro modo tome la cámara (#334). */
+  const dropFocus = () => {
+    focusRunRef.current++;
+    pendingRef.current = false;
+    setFocus(null);
+    void engineRef.current?.focusPlace?.(null);
+  };
+  // Al cerrar la tarjeta (✕, tocar fuera…) o elegir otra cosa, la ciudad vuelve (#334).
+  useEffect(() => {
+    if (focus && selected?.id !== focus.poiId) dropFocus();
+  }, [selected, focus]);
+  // Cerrar o cambiar la tarjeta abierta (✕, «Preguntar al asistente»…) mientras un edificio va en vuelo lo
+  // cancela: su tarjeta ya no sale (#334).
+  useEffect(() => {
+    if (pendingRef.current) dropFocus();
+  }, [selected]);
+  // La tarjeta no tapa el edificio elegido: el motor lo centra en lo que queda libre (#334).
+  const cardRef = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const card = cardRef.current;
+    const box = containerRef.current;
+    if (!focus || !card || !box) return;
+    const measure = () => {
+      const c = card.getBoundingClientRect();
+      const b = box.getBoundingClientRect();
+      // Angosta a un lado (escritorio): libra la derecha. A lo ancho (celular): libra lo de abajo.
+      engineRef.current?.setFocusInset?.(
+        c.width < b.width / 2 ? { bottom: 0, right: b.right - c.left } : { bottom: b.bottom - c.top, right: 0 },
+      );
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(card);
+    observer.observe(box);
+    return () => observer.disconnect();
+  }, [focus, selected]);
   const pickSpotRef = useRef<((at: { lat: number; lng: number }) => void) | null>(null);
   pickSpotRef.current = pickingSpot
     ? (at) => {
@@ -393,8 +459,17 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
           if (!cancelled) setTimings((prev) => ({ ...prev, readyMs: performance.now() - startedAt }));
         });
         // Mientras se marca la ubicación de un puesto (#173), el toque elige el lugar en vez de abrir fichas o mover al avatar.
-        engine.onPoiClick((poi) => (pickSpotRef.current ? pickSpotRef.current(poi) : setSelected(poi)));
-        engine.onGroundClick((at) => (pickSpotRef.current ? pickSpotRef.current(at) : teleportRef.current?.(at)));
+        engine.onPoiClick((poi) => (pickSpotRef.current ? pickSpotRef.current(poi) : void selectPoiRef.current(poi)));
+        engine.onGroundClick((at) => {
+          // Con un edificio elegido (#334), tocar fuera cierra su tarjeta y la ciudad vuelve.
+          if (focusRef.current && !pickSpotRef.current) {
+            setSelected(null);
+            return;
+          }
+          return pickSpotRef.current ? pickSpotRef.current(at) : teleportRef.current?.(at);
+        });
+        // Si la maqueta del edificio elegido no carga después de aterrizar, la tarjeta pierde su crédito (#334).
+        engine.onFocusChange?.((change) => setFocus((current) => (current ? { poiId: current.poiId, model: change.model } : current)));
         engine.onFloatingPhotoClick?.(({ id, placeId }) => {
           const list = allPhotosRef.current.filter((p) => p.placeId === placeId);
           if (!list.length) return;
@@ -655,6 +730,7 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
 
   const stopTour = useCallback(() => {
     tourRunRef.current++;
+    dropFocus();
     engineRef.current?.stop();
     engineRef.current?.setRoute(null);
     setIsTouring(false);
@@ -667,6 +743,7 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
       if (!engine) return;
       const run = ++tourRunRef.current;
       const isCurrent = () => tourRunRef.current === run;
+      dropFocus();
       engine.setSkyView?.(false);
       setIsStargazing(false);
       setSelected(null);
@@ -695,6 +772,7 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
 
   // Se avisa al motor en el momento: si se espera al efecto, deshacer la vista del cielo frenaría un vuelo recién empezado.
   const setStargazing = (on: boolean) => {
+    if (on) dropFocus();
     engineRef.current?.setSkyView?.(on);
     setIsStargazing(on);
   };
@@ -744,6 +822,7 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
   const openPlace = (placeId: string) => {
     const poi = placePois.find((p) => p.placeId === placeId);
     if (!poi) return;
+    dropFocus();
     setSelected(poi);
     void engineRef.current?.flyTo(
       { lat: poi.lat, lng: poi.lng, altitude: ZACATECAS_3D_HOME.altitude, range: 700, tilt: 55, heading: ZACATECAS_3D_HOME.heading },
@@ -793,6 +872,8 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
       label: t.vendorFormOpen,
       icon: Store,
       action: () => {
+        // Si un edificio va en vuelo sin tarjeta todavía, cerrar no cambia `selected`: se suelta aquí (#334).
+        dropFocus();
         setSelected(null);
         setVendorOpen(true);
       },
@@ -1127,7 +1208,7 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
 
       {/* Tarjeta del lugar */}
       {selected && !isTouring && (
-        <div className={`absolute inset-x-3 ${isExploring ? 'bottom-56 md:bottom-24 md:right-48' : 'bottom-20 md:right-4'} md:inset-x-auto md:w-80 z-10 max-h-[62dvh] overflow-y-auto glass-sheet glass-tinted p-4 ${selected.kind === 'vendor' ? 'border-t-4 border-t-[#E4007C]' : ''}`}>
+        <div ref={cardRef} className={`absolute inset-x-3 ${isExploring ? 'bottom-56 md:bottom-24 md:right-48' : 'bottom-20 md:right-4'} md:inset-x-auto md:w-80 z-10 max-h-[62dvh] overflow-y-auto glass-sheet glass-tinted p-4 ${selected.kind === 'vendor' ? 'border-t-4 border-t-[#E4007C]' : ''}`}>
           {photo && (
             <figure className="-mx-4 -mt-4 mb-3">
               <div className="relative aspect-video overflow-hidden rounded-t-xl bg-stone-200">
@@ -1259,6 +1340,13 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
               {t.view3dProposePhoto}
             </button>
           )}
+          {/* Crédito de la maqueta del edificio elegido (#334), tal como viene en monumentos.json */}
+          {focus?.poiId === selected.id && focus.model && (
+            <p data-testid="model-credit" className="mt-3 flex items-center gap-1.5 border-t border-stone-200 pt-2 text-[10px] text-stone-500">
+              <Box className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+              {t.view3dModelCredit.replace('{author}', focus.model.author).replace('{license}', focus.model.license)}
+            </p>
+          )}
         </div>
       )}
 
@@ -1315,6 +1403,7 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
         draft={vendorDraft}
         onChange={updateVendorDraft}
         onPickSpot={() => {
+          dropFocus();
           setSelected(null);
           setPickingSpot(true);
         }}

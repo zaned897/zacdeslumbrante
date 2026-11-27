@@ -181,7 +181,26 @@ export interface SceneEngine {
   onViewChange?(handler: (view: { heading: number; tilt: number }) => void): void;
   /** Ajusta la vista actual sin moverse de lugar: rumbo, inclinación o acercar (factor del alcance). Opcional (#292). */
   adjustView?(change: { heading?: number; tilt?: number; rangeFactor?: number }): Promise<void>;
+  /**
+   * Elegir un edificio (#334): vuela a su encuadre, saca su maqueta, atenúa lo demás y resuelve al
+   * aterrizar. Si el punto no es edificio resuelve null sin mover la cámara; si el usuario mueve la
+   * cámara antes de aterrizar, null sin atenuar; si otro modo la toma, `{ cancelled: true }`. null
+   * suelta el que esté elegido. Opcional: solo la ciudad estilizada lo tiene.
+   */
+  focusPlace?(poi: ScenePoi | null): Promise<SceneFocus | null>;
+  /** Lo que tapa la tarjeta del edificio elegido (px): el motor lo centra en el resto de la vista (#334). */
+  setFocusInset?(inset: { bottom: number; right: number }): void;
+  /** El edificio elegido cambió después de aterrizar (#334); p. ej. su maqueta no cargó y ya no lleva crédito. */
+  onFocusChange?(handler: (focus: SceneFocus) => void): void;
   destroy(): void;
+}
+
+/** Edificio elegido (#334). */
+export interface SceneFocus {
+  /** Crédito de su maqueta, de `public/data/monumentos.json`; sin maqueta no viene. */
+  model?: { author: string; license: string };
+  /** Otro modo (teleférico, tren, cielo) o un toque nuevo tomó la cámara antes de aterrizar: sin tarjeta. */
+  cancelled?: boolean;
 }
 
 /** Estado de las cabinas del teleférico (#263). */

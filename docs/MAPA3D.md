@@ -94,7 +94,9 @@ Se aporta un monumento por PR:
      "rotation": 22.1,
      "scale": 1,
      "license": "CC0 1.0; medidas de las huellas de Overture Maps y OpenStreetMap (ODbL 1.0)",
-     "author": "Modelo de prueba de zacdeslumbrante (scripts/gen-monumento-prueba.mjs)"
+     "author": "Modelo de prueba de zacdeslumbrante",
+     "poiId": "catedral-zacatecas",
+     "focus": { "heading": 135, "tilt": 60, "range": 400 }
    }
    ```
    - **`buildingIds`:** el lugar de cada huella que reemplaza en `buildings` de `public/data/centro-edificios.json`.
@@ -103,10 +105,15 @@ Se aporta un monumento por PR:
    - **`position`:** dónde va el origen del modelo. Su base se asienta en la esquina más baja de sus huellas, como cada huella en pendiente.
    - **`rotation`:** grados en sentido horario vistos desde arriba. Con 0, el norte del modelo apunta al norte.
    - **`scale`:** 1 si el modelo está en metros.
-   - **`license` y `author`:** obligatorios, con licencia libre.
+   - **`license` y `author`:** obligatorios, con licencia libre. La tarjeta del lugar los muestra como «Maqueta: autor · licencia».
+   - **`poiId`** (opcional): el id del lugar en `src/data/places.ts` o `src/data/centroPoints.ts`. Con él, tocar su marcador o su bloque elige el monumento (#334). Un lugar cuyo punto cae dentro de las huellas también lo elige.
+   - **`focus`** (opcional): el encuadre al elegirlo: `heading` (rumbo en grados, 0 = norte), `tilt` (0 = desde arriba, hasta 85) y `range` (30 a 2500 m, los topes de la cámara). Sin él: 300 m, 58° y el rumbo que ya traía la cámara.
 5. **Pruébalo:**
    - corre `./scripts/dev.sh`, abre `http://localhost:3000/#3d` y acércate;
-   - en la pestaña Red de DevTools, el `.glb`, `GLTFLoader` y el decodificador de Meshopt no aparecen hasta que te acercas.
+   - en la pestaña Red de DevTools, el `.glb`, `GLTFLoader` y el decodificador de Meshopt no aparecen hasta que te acercas;
+   - toca su marcador desde lejos: la cámara vuela a su encuadre, la maqueta sale aunque no te hayas acercado, el resto de la ciudad se atenúa y la tarjeta trae el crédito. Con la ✕ o tocando fuera, todo vuelve.
+
+Elegir un edificio sin maqueta (#334) también vuela: su huella se resalta con un contorno. Solo vuelan los lugares que son edificio: plazas, callejones, miradores, puestos y fotos abren su tarjeta como siempre (hasta #293). En Explorar la cámara sigue al avatar y no vuela.
 
 Notas:
 - Sin Git LFS mientras cada modelo respete el tope.

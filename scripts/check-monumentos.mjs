@@ -3,7 +3,8 @@
 // - Cada archivo de public/models/monumentos/ es un .glb de hasta 300 KB y 20 mil triángulos, con
 //   geometría Meshopt o sin comprimir (el motor aún no lee Draco ni texturas KTX2).
 // - Cada entrada de public/data/monumentos.json apunta a un modelo de esa carpeta y a huellas de
-//   public/data/centro-edificios.json que quedan junto a su posición.
+//   public/data/centro-edificios.json que quedan junto a su posición; si trae `focus` o `poiId`
+//   (#334), son válidos.
 // Uso: node scripts/check-monumentos.mjs [carpeta de modelos] [registro]   (sale con 1 si algo falla)
 //      node scripts/check-monumentos.mjs --huellas <lat> <lng>   (índices de las huellas cercanas)
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
@@ -14,6 +15,8 @@ export const MAX_BYTES = 300 * 1024;
 export const MAX_TRIANGLES = 20_000;
 /** Una huella listada debe tener su centro a menos de esto de la posición del monumento (m). */
 export const MAX_FOOTPRINT_DISTANCE_M = 100;
+/** Límites de `focus` (#334): los mismos que FOCUS_LIMITS en src/scene3d/buildingFocus.ts (los de la cámara). */
+export const FOCUS_LIMITS = { tiltMax: 85, rangeMin: 30, rangeMax: 2500 };
 const UNSUPPORTED = {
   KHR_draco_mesh_compression: 'usa Draco, que el motor aún no lee: comprime con Meshopt',
   KHR_texture_basisu: 'usa texturas KTX2, que el motor aún no lee: deja el color en los materiales',
@@ -108,6 +111,18 @@ export function checkRegistry(registry, buildings, publicDir = PUBLIC) {
     }
     if (!Number.isFinite(m?.rotation)) errors.push(`${name}: "rotation" debe ser un número (grados)`);
     if (!Number.isFinite(m?.scale) || m.scale <= 0) errors.push(`${name}: "scale" debe ser un número mayor que 0`);
+    // Opcionales (#334): el encuadre al elegirlo y el lugar del catálogo cuyo marcador lo elige.
+    if (m?.focus !== undefined) {
+      const f = m.focus;
+      const ok = typeof f === 'object' && f !== null && [f.heading, f.tilt, f.range].every(Number.isFinite) &&
+        f.tilt >= 0 && f.tilt <= FOCUS_LIMITS.tiltMax && f.range >= FOCUS_LIMITS.rangeMin && f.range <= FOCUS_LIMITS.rangeMax;
+      if (!ok) {
+        errors.push(`${name}: "focus" debe traer heading (grados), tilt (0 a ${FOCUS_LIMITS.tiltMax}) y range (${FOCUS_LIMITS.rangeMin} a ${FOCUS_LIMITS.rangeMax} m)`);
+      }
+    }
+    if (m?.poiId !== undefined && (typeof m.poiId !== 'string' || !m.poiId.trim())) {
+      errors.push(`${name}: "poiId" debe ser el id de un lugar del catálogo`);
+    }
     if (typeof m?.model === 'string' && m.model.trim()) {
       const inFolder = m.model.startsWith('/models/monumentos/') && m.model.endsWith('.glb');
       if (!inFolder || !existsSync(join(publicDir, m.model))) errors.push(`${name}: el modelo ${m.model} no está en public/models/monumentos/`);

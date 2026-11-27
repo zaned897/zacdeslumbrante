@@ -9,7 +9,9 @@
       "rotation": 22.1,
       "scale": 1,
       "license": "CC0 1.0; medidas de las huellas de Overture Maps y OpenStreetMap (ODbL 1.0)",
-      "author": "Modelo de prueba de zacdeslumbrante (scripts/gen-monumento-prueba.mjs)"
+      "author": "Modelo de prueba de zacdeslumbrante",
+      "poiId": "catedral-zacatecas",
+      "focus": { "heading": 135, "tilt": 60, "range": 400 }
     }
   ]
 }
