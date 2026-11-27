@@ -183,8 +183,8 @@ export interface SceneEngine {
   adjustView?(change: { heading?: number; tilt?: number; rangeFactor?: number }): Promise<void>;
   /**
    * Elegir un edificio (#334): vuela a su encuadre, saca su maqueta, atenúa lo demás y resuelve al
-   * aterrizar. Si el punto no es edificio resuelve null sin mover la cámara; null suelta el que esté
-   * elegido. Opcional: solo la ciudad estilizada lo tiene.
+   * aterrizar. Si el punto no es edificio resuelve null sin mover la cámara; si otro movimiento corta
+   * el vuelo, null sin atenuar. null suelta el que esté elegido. Opcional: solo la ciudad estilizada lo tiene.
    */
   focusPlace?(poi: ScenePoi | null): Promise<SceneFocus | null>;
   /** Lo que tapa la tarjeta del edificio elegido (px): el motor lo centra en el resto de la vista (#334). */

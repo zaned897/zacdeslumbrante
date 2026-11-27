@@ -52,6 +52,8 @@ const FOCUS_DIM = { pale: '#F5F0E8', mix: 0.6, glow: 0.22, night: 0.55 };
 const FOCUS_OUTLINE = { day: '#9A3412', night: '#FED7AA' };
 /** Qué tan rápido se corre la vista bajo la tarjeta (1/s): ~0.3 s para llegar. */
 const VIEW_SHIFT_RATE = 12;
+/** Más de esto (px) entre apretar y soltar es arrastrar, no tocar. */
+const DRAG_PX = 6;
 
 type Three = typeof THREE;
 
@@ -513,7 +515,8 @@ export class ThreeOsmEngine implements SceneEngine {
   private nearbyPhotosKey: string | null = null;
   private photoList: FloatingPhoto[] = [];
   private groundClickHandler: ((at: { lat: number; lng: number }) => void) | null = null;
-  private animation: { step: (now: number) => boolean; resolve: () => void } | null = null;
+  /** Vuelo o giro en curso. `arrived`: terminó solo, no lo detuvo otro movimiento (#334). */
+  private animation: { step: (now: number) => boolean; resolve: () => void; arrived?: boolean } | null = null;
   private current: SceneCamera | null = null;
   private viewHandler: ((view: { heading: number; tilt: number }) => void) | null = null;
   private readyPromise: Promise<void> = Promise.resolve();
@@ -529,12 +532,14 @@ export class ThreeOsmEngine implements SceneEngine {
    * Edificio elegido (#334). `dim`: ya aterrizó la cámara y la ciudad está atenuada. `outline`: su
    * huella resaltada si no tiene maqueta, con la huella original oculta debajo.
    */
-  private focused: { poiId: string; dim: boolean; outline: THREE.Group | null; footprint: number; flight: object | null } | null = null;
+  private focused: { poiId: string; dim: boolean; outline: THREE.Group | null; footprint: number; flight: ThreeOsmEngine['animation'] } | null = null;
   private focusSaved = new Map<number, Float32Array>();
   private dimMaterials: THREE.Material[] = [];
   /** Lo que tapa la tarjeta del edificio elegido (px) y cuánto se ha corrido la vista para librarlo (#334). */
   private focusInset = { bottom: 0, right: 0 };
   private viewShift = { x: 0, y: 0 };
+  /** Dónde se apretó el puntero sobre el lienzo, para no tomar un arrastre por un toque (#334). */
+  private pointerDownAt: { x: number; y: number } | null = null;
   /** Relieve, edificios y calles partidos en mosaicos para que la cámara recorte lo que no ve. */
   private tiled: TiledMesh[] = [];
   private resolution: AdaptiveResolution | null = null;
@@ -683,6 +688,7 @@ export class ThreeOsmEngine implements SceneEngine {
 
     this.jumpTo(initial);
 
+    renderer.domElement.addEventListener('pointerdown', this.onPointerDown);
     renderer.domElement.addEventListener('click', this.onClick);
 
     if (!response.ok) throw new Error(`${BUILDINGS_URL}: HTTP ${response.status}`);
@@ -849,7 +855,11 @@ export class ThreeOsmEngine implements SceneEngine {
   getCableCarLayer(): CableCarLayer | null { return this.cableCar; }
   getCableCabinState() { return this.cableCabins?.getState() ?? { status: 'unavailable' as const, riding: false, heightM: null }; }
   rideCableCabin(on: boolean): void {
-    if (on) this.stop();
+    if (on) {
+      this.stop();
+      // A bordo la cámara la lleva la cabina: la ciudad no se queda atenuada por un edificio elegido (#334).
+      this.releaseFocus();
+    }
     this.cableCabins?.ride(on);
   }
   setCableCabinView(view: CabinView): void { this.cableCabins?.setView(view); }
@@ -858,7 +868,12 @@ export class ThreeOsmEngine implements SceneEngine {
   getRailLayer(): RailLayer | null { return this.rail; }
   getFreightState() { return this.freight?.state ?? 'unavailable' as const; }
   setFreightEnabled(on: boolean): void { this.freightEnabled = on; this.freight?.setEnabled(on); }
-  watchFreight(follow: boolean): void { this.stop(); this.freight?.watch(follow); }
+  watchFreight(follow: boolean): void {
+    this.stop();
+    // Siguiendo al tren, igual que a bordo del teleférico (#334).
+    if (follow) this.releaseFocus();
+    this.freight?.watch(follow);
+  }
   stopFreightFollowing(): void { this.freight?.stopFollowing(); }
 
   ready(): Promise<void> {
@@ -996,7 +1011,8 @@ export class ThreeOsmEngine implements SceneEngine {
    * Elegir un edificio (#334): la cámara vuela en arco a su encuadre (salta con «reducir movimiento»)
    * y su maqueta sale aunque la cámara venga de lejos. Al aterrizar, la ciudad se atenúa, los demás
    * marcadores se apagan y, si no tiene maqueta, su huella queda resaltada. Con null todo vuelve.
-   * Lo que no es edificio (plazas, miradores, puestos…) no vuela: devuelve null, como antes.
+   * Lo que no es edificio (plazas, miradores, puestos…) no vuela: devuelve null, como antes. Si el
+   * usuario u otro modo cortan el vuelo, también devuelve null y la ciudad no se atenúa.
    */
   async focusPlace(poi: ScenePoi | null): Promise<SceneFocus | null> {
     const token = ++this.focusToken;
@@ -1010,7 +1026,7 @@ export class ThreeOsmEngine implements SceneEngine {
     // Un lugar dentro de las huellas de una maqueta es ese monumento, aunque el registro no lo ligue.
     if (footprint >= 0) entry = this.monuments?.entryForBuilding(footprint) ?? null;
     if (!entry && footprint < 0) return null;
-    const focused = { poiId: poi.id, dim: false, outline: null as THREE.Group | null, footprint, flight: null as object | null };
+    const focused = { poiId: poi.id, dim: false, outline: null as THREE.Group | null, footprint, flight: null as ThreeOsmEngine['animation'] };
     this.focused = focused;
     // Su maqueta sale aunque esté lejos; las de otros edificios vuelven a su huella, atenuada con la ciudad.
     this.monuments?.focus(entry?.id ?? null, true);
@@ -1020,14 +1036,21 @@ export class ThreeOsmEngine implements SceneEngine {
     const target = entry ? entry.position : footprintCenter(this.footprints[footprint].p);
     const landed = this.flyTo(focusCamera(target, entry?.focus, view?.heading ?? 0, view?.altitude ?? 0), this.reducedMotion ? 0 : FOCUS_FLIGHT_MS);
     // Si se suelta antes de aterrizar, su vuelo se detiene ahí mismo.
-    focused.flight = this.animation;
+    const flight = this.animation;
+    focused.flight = flight;
     await landed;
     // Otro edificio, o se soltó, mientras volaba.
     if (this.focused !== focused) return null;
+    // Arrastrar, girar o acercar a mano corta el vuelo: la tarjeta sale sin enfoque, como antes de #334.
+    if (!flight?.arrived) {
+      this.releaseFocus();
+      return null;
+    }
     focused.dim = true;
     this.dimCity();
-    // Los letreros del teleférico también son marcadores: se apagan con los demás.
+    // Los letreros del teleférico y los pines 3D de otros puntos también son marcadores: se apagan.
     this.cableCar?.setLabelsVisible(false);
+    this.showPins(focused.poiId);
     if (!entry) focused.outline = this.outlineFootprint(footprint);
     this.labelsAt = -Infinity;
     this.lastPhotoCheckAt = -PHOTO_CHECK_MS;
@@ -1065,7 +1088,10 @@ export class ThreeOsmEngine implements SceneEngine {
     if (focused.flight && this.animation === focused.flight) this.stop();
     this.focusInset = { bottom: 0, right: 0 };
     this.monuments?.focus(null);
-    if (focused.dim) this.cableCar?.setLabelsVisible(!this.skyView);
+    if (focused.dim) {
+      this.cableCar?.setLabelsVisible(!this.skyView);
+      this.showPins(null);
+    }
     if (focused.outline) {
       this.scene?.remove(focused.outline);
       focused.outline.traverse((o) => {
@@ -1084,6 +1110,14 @@ export class ThreeOsmEngine implements SceneEngine {
     }
     this.labelsAt = -Infinity;
     this.lastPhotoCheckAt = -PHOTO_CHECK_MS;
+  }
+
+  /** Pines 3D de los puntos (recomendaciones, retos): con `only`, solo el de ese punto; null, todos (#334). */
+  private showPins(only: string | null): void {
+    for (const child of this.poiGroup?.children ?? []) {
+      const id = child.userData.poiId as string | undefined;
+      if (id) child.visible = !only || id === only;
+    }
   }
 
   /** Ciudad atenuada mientras hay un edificio elegido (#334): de día, menos color y más clara; de noche, más oscura. */
@@ -1302,6 +1336,7 @@ export class ThreeOsmEngine implements SceneEngine {
     this.resolution = null;
     this.stop();
     this.renderer?.setAnimationLoop(null);
+    this.renderer?.domElement.removeEventListener('pointerdown', this.onPointerDown);
     this.renderer?.domElement.removeEventListener('click', this.onClick);
     this.resizeObserver?.disconnect();
     this.controls?.dispose();
@@ -1813,7 +1848,10 @@ export class ThreeOsmEngine implements SceneEngine {
   private tick(now: number): void {
     const { renderer, labels, scene, camera, controls, clock } = this;
     if (!renderer || !labels || !scene || !camera || !controls || !clock) return;
-    if (this.animation && this.animation.step(now)) this.stop();
+    if (this.animation && this.animation.step(now)) {
+      this.animation.arrived = true;
+      this.stop();
+    }
     if (!this.animation && !this.cableCabins?.getState().riding) controls.update();
     this.starSky?.tick(camera, now, new Date());
     const dt = clock.getDelta();
@@ -2158,9 +2196,17 @@ export class ThreeOsmEngine implements SceneEngine {
     }
   }
 
+  private onPointerDown = (event: PointerEvent): void => {
+    this.pointerDownAt = { x: event.clientX, y: event.clientY };
+  };
+
   private onClick = (event: MouseEvent): void => {
     const { T, camera, renderer, ground, poiGroup } = this;
     if (!T || !camera || !renderer || !ground || !poiGroup) return;
+    // Con un edificio elegido (#334), arrastrar para girar a su alrededor no es tocar fuera: con el
+    // mouse, el navegador manda un clic al soltar.
+    const down = this.pointerDownAt;
+    if (this.focused?.dim && down && Math.hypot(event.clientX - down.x, event.clientY - down.y) > DRAG_PX) return;
     const rect = renderer.domElement.getBoundingClientRect();
     const pointer = new T.Vector2(
       ((event.clientX - rect.left) / rect.width) * 2 - 1,
@@ -2168,7 +2214,8 @@ export class ThreeOsmEngine implements SceneEngine {
     );
     const ray = new T.Raycaster();
     ray.setFromCamera(pointer, camera);
-    const poiHit = ray.intersectObjects(poiGroup.children, true)[0];
+    // Un pin oculto por un edificio elegido (#334) no se puede tocar.
+    const poiHit = ray.intersectObjects(poiGroup.children, true).find((hit) => hit.object.parent?.visible !== false);
     const poi = poiHit?.object.userData.poi as ScenePoi | undefined;
     if (poi) {
       this.clickHandler?.(poi);
@@ -2225,6 +2272,7 @@ export class ThreeOsmEngine implements SceneEngine {
       }
       const color = new T.Color(poi.color ?? '#9A3412');
       const pin = new T.Group();
+      pin.userData.poiId = poi.id;
       pin.position.set(x, this.heightAt(x, z), z);
       const stem = new T.Mesh(new T.CylinderGeometry(0.6, 0.6, 30, 6), new T.MeshBasicMaterial({ color }));
       stem.position.y = 15;
@@ -2260,6 +2308,7 @@ export class ThreeOsmEngine implements SceneEngine {
       el.style.pointerEvents = 'none';
       this.poiLabels.push({ el, obj: label, rank: LABEL_RANK[poi.kind] ?? 0, w: 0, h: 0, shown: false, order, dy: 0, poiId: poi.id });
     }
+    if (this.focused?.dim) this.showPins(this.focused.poiId);
   }
 
   private makePlayer(T: Three, scene: THREE.Scene): THREE.Object3D {

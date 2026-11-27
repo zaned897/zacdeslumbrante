@@ -42,13 +42,25 @@ describe('navegador', { skip: browserSkip, timeout: 900_000 }, () => {
   }
 
   /** Abre la ciudad a 390 px (celular) y devuelve la página, lo que pidió y los errores. */
-  async function openCity(browser, { reducedMotion = 'no-preference' } = {}) {
-    const context = await browser.newContext({ viewport: { width: 390, height: 844 }, reducedMotion });
+  async function openCity(browser, { reducedMotion = 'no-preference', at, recommendations } = {}) {
+    // `at`: hora fija en Zacatecas, para que el teleférico (de 10:00 a 18:00) esté abierto.
+    const context = await browser.newContext({
+      viewport: { width: 390, height: 844 },
+      reducedMotion,
+      ...(at ? { timezoneId: 'America/Mexico_City' } : {}),
+    });
     await context.addInitScript(() => {
       localStorage.setItem('zacatecas_onboarded_v1', '1');
       localStorage.setItem('zacatecas_lang', 'es');
     });
     const page = await context.newPage();
+    if (at) await page.clock.setFixedTime(at);
+    // Recomendaciones sin Python: la capa dibuja un pin 3D por cada una.
+    if (recommendations) {
+      await page.route('**/api/py/recommendations**', (route) =>
+        route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ recommendations }) }),
+      );
+    }
     const requests = [];
     const problems = [];
     page.on('request', (r) => requests.push(new URL(r.url()).pathname));
@@ -129,6 +141,15 @@ describe('navegador', { skip: browserSkip, timeout: 900_000 }, () => {
       );
       // Los demás marcadores se apagan.
       assert.deepEqual(await visibleMarkers(page), [CATEDRAL]);
+      // Arrastrar para girar a su alrededor no es tocar fuera: con el mouse llega un clic al soltar.
+      const around = await freeSpot(page);
+      assert.ok(around, 'un punto libre del lienzo sobre la tarjeta');
+      await page.mouse.move(around.x, around.y);
+      await page.mouse.down();
+      await page.mouse.move(around.x + 50, around.y + 10, { steps: 4 });
+      await page.mouse.up();
+      await page.waitForTimeout(1000);
+      assert.equal(await page.getByTestId('model-credit').count(), 1, 'la tarjeta se cerró al arrastrar');
 
       // Al cerrar con la ✕, los marcadores vuelven.
       await page.getByRole('button', { name: 'Cerrar' }).first().dispatchEvent('click');
@@ -157,7 +178,7 @@ describe('navegador', { skip: browserSkip, timeout: 900_000 }, () => {
     }
   });
 
-  test('revisión de Codex (#354): soltar a medio vuelo, entrar a Explorar o tocar en un recorrido no deja la ciudad atenuada', async () => {
+  test('revisión de Codex (#354): soltar o arrastrar a medio vuelo, entrar a Explorar o tocar en un recorrido no deja la ciudad atenuada', async () => {
     const { chromium } = await loadPlaywright();
     const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
     try {
@@ -168,10 +189,12 @@ describe('navegador', { skip: browserSkip, timeout: 900_000 }, () => {
         await page.getByRole('button', { name: 'Abrir menú de acciones' }).click();
         for (const name of path) await page.getByRole('menuitem', { name }).first().click();
       };
+      // Con un edificio elegido solo queda su marcador; cualquier otro a la vista (un lugar, los letreros
+      // del teleférico) dice que la ciudad no está atenuada. Cuántos se ven depende de dónde va la cámara.
       const notDimmed = async () => {
         assert.equal(await page.getByTestId('model-credit').count(), 0);
         const shown = await visibleMarkers(page);
-        assert.ok(shown.length > 3, `marcadores: ${shown.join(', ')}`);
+        assert.ok(shown.some((name) => name !== CATEDRAL), `marcadores: ${shown.join(', ')}`);
       };
 
       // Tocar la plaza mientras vuela a la Catedral: sale la tarjeta de la plaza y la cámara se queda ahí.
@@ -184,6 +207,20 @@ describe('navegador', { skip: browserSkip, timeout: 900_000 }, () => {
       await page.waitForTimeout(2000);
       assert.equal((await headings(page)).length, 1, 'la cámara siguió volando hacia la Catedral');
       assert.equal(await page.locator('h3', { hasText: CATEDRAL }).count(), 0);
+      await notDimmed();
+      await page.getByRole('button', { name: 'Cerrar' }).first().dispatchEvent('click');
+
+      // Arrastrar el mapa a medio vuelo lo corta: la tarjeta sale sin enfoque, como antes de #334.
+      const spot = await freeSpot(page);
+      assert.ok(spot, 'un punto libre del lienzo');
+      await press(CATEDRAL);
+      await page.waitForTimeout(150);
+      await page.mouse.move(spot.x, spot.y);
+      await page.mouse.down();
+      await page.mouse.move(spot.x + 60, spot.y + 20, { steps: 4 });
+      await page.mouse.up();
+      await page.locator('h3', { hasText: CATEDRAL }).waitFor({ timeout: 10_000 });
+      await page.waitForTimeout(1500);
       await notDimmed();
       await page.getByRole('button', { name: 'Cerrar' }).first().dispatchEvent('click');
 
@@ -208,6 +245,63 @@ describe('navegador', { skip: browserSkip, timeout: 900_000 }, () => {
       await notDimmed();
       assert.equal(await page.getByRole('button', { name: 'Detener' }).count(), 1);
       await page.getByRole('button', { name: 'Detener' }).click();
+      assert.deepEqual(problems, []);
+    } finally {
+      await browser.close();
+    }
+  });
+
+  test('revisión de Codex (#354): con un edificio elegido, los pines 3D de las recomendaciones se ocultan', async () => {
+    const { chromium } = await loadPlaywright();
+    const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
+    try {
+      // Tres recomendaciones de prueba junto a la Catedral.
+      const recommendations = [[22.7763, -102.5713], [22.7749, -102.5712], [22.7764, -102.573]].map(([lat, lng], i) => ({
+        id: `rec:${i}`, placeId: `prueba-${i}`, title: { es: `Recomendado ${i}`, en: `Pick ${i}` }, reason: { es: 'cerca', en: 'near' }, lat, lng,
+      }));
+      const { page, problems } = await openCity(browser, { recommendations });
+      // La capa se enciende en el panel de Explorar y sigue encendida al salir.
+      await page.getByRole('button', { name: 'Abrir menú de acciones' }).click();
+      await page.getByRole('menuitem', { name: 'Paseo' }).first().click();
+      await page.getByRole('menuitem', { name: 'A pie' }).first().click();
+      await page.getByRole('switch', { name: 'Recomendaciones' }).first().dispatchEvent('click');
+      await page.waitForTimeout(2500);
+      await page.getByRole('button', { name: 'Salir' }).first().dispatchEvent('click');
+      const prize = page.getByTestId('prize-moment');
+      if (await prize.count()) await prize.click({ position: { x: 8, y: 8 } });
+      await page.waitForTimeout(2500);
+      // Un pin oculto esconde también su letrero (display: none); uno que solo apagó el acomodo, no.
+      const pinsShown = () =>
+        page.evaluate(() => [...document.querySelectorAll('button')].filter((b) => /^Recomendado/.test(b.textContent ?? '') && b.style.display !== 'none').length);
+      await page.locator(`button[aria-label="${CATEDRAL}"]`).first().dispatchEvent('click');
+      await page.locator('h3', { hasText: CATEDRAL }).waitFor({ timeout: 30_000 });
+      await page.waitForTimeout(1500);
+      assert.equal(await pinsShown(), 0, 'pines de recomendaciones a la vista con la Catedral elegida');
+      await page.getByRole('button', { name: 'Cerrar' }).first().dispatchEvent('click');
+      await page.waitForTimeout(1500);
+      assert.ok((await pinsShown()) > 0, 'los pines no volvieron al cerrar');
+      assert.deepEqual(problems, []);
+    } finally {
+      await browser.close();
+    }
+  });
+
+  test('revisión de Codex (#354): subir al teleférico con un edificio elegido lo suelta', async () => {
+    const { chromium } = await loadPlaywright();
+    const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
+    try {
+      const { page, problems } = await openCity(browser, { at: new Date('2026-11-26T12:00:00-06:00') });
+      await tap(page, CATEDRAL);
+      await page.waitForTimeout(1500);
+      assert.deepEqual(await visibleMarkers(page), [CATEDRAL]);
+      await page.getByRole('button', { name: 'Abrir menú de acciones' }).click();
+      await page.getByRole('menuitem', { name: 'Atracciones' }).first().click();
+      await page.getByRole('menuitem', { name: 'Teleférico' }).first().click();
+      await page.getByRole('button', { name: 'Subir' }).first().click();
+      await page.waitForTimeout(4000);
+      // A bordo, la ciudad deja de estar atenuada: vuelven los demás marcadores.
+      const shown = await visibleMarkers(page);
+      assert.ok(shown.length > 3, `marcadores a bordo: ${shown.join(', ')}`);
       assert.deepEqual(problems, []);
     } finally {
       await browser.close();
