@@ -1,5 +1,8 @@
 import type * as THREE from 'three';
 import type { GLTF, GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { buildingOfVertex, parseFocus, setFootprints, type BuildingFocus } from './buildingFocus';
+
+export { setFootprints, type FootprintPositions } from './buildingFocus';
 
 type Three = typeof THREE;
 
@@ -12,6 +15,8 @@ export const MONUMENTS_URL = '/data/monumentos.json';
 export const MONUMENT_NEAR_M = 800;
 /** Al alejarse, las huellas vuelven 80 m más allá, para que no parpadee en el borde. */
 export const MONUMENT_FAR_M = MONUMENT_NEAR_M + 80;
+/** Fundido al cambiar la huella por el modelo, o al revés (#334). */
+export const MONUMENT_FADE_MS = 300;
 /** Cada cuánto se revisan la distancia y el cuadro (ms). */
 const CHECK_MS = 250;
 /** Holgura sobre el radio de las huellas para saber si el monumento entra en cuadro: cubre su altura. */
@@ -30,34 +35,61 @@ export interface MonumentEntry {
   scale: number;
   license: string;
   author: string;
+  /** Encuadre al elegirlo (#334); sin él, 300 m, 58° y el rumbo de la cámara. */
+  focus?: BuildingFocus;
+  /** Id del lugar en el catálogo (places.ts o centroPoints.ts) cuyo marcador lo elige (#334). */
+  poiId?: string;
 }
 
 const isNumber = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
 const isText = (v: unknown): v is string => typeof v === 'string' && v.trim() !== '';
 
-/** Entradas válidas del registro; una entrada inválida se omite con un aviso. */
+function isEntry(m: Partial<MonumentEntry> | null, buildingCount: number): m is MonumentEntry {
+  return (
+    !!m &&
+    isText(m.id) &&
+    isText(m.model) &&
+    m.model.endsWith('.glb') &&
+    Array.isArray(m.buildingIds) &&
+    m.buildingIds.every((i) => Number.isInteger(i) && i >= 0 && i < buildingCount) &&
+    isNumber(m.position?.lat) &&
+    isNumber(m.position?.lng) &&
+    isNumber(m.rotation) &&
+    isNumber(m.scale) &&
+    m.scale > 0 &&
+    isText(m.license) &&
+    isText(m.author)
+  );
+}
+
+/**
+ * Entradas válidas del registro; una entrada inválida se omite con un aviso. Un `focus` o un `poiId`
+ * inválidos solo se ignoran (con aviso): la entrada sigue.
+ */
 export function parseMonuments(data: unknown, buildingCount: number): MonumentEntry[] {
   const list = (data as { monuments?: unknown } | null)?.monuments;
   if (!Array.isArray(list)) return [];
-  return list.filter((raw): raw is MonumentEntry => {
+  const entries: MonumentEntry[] = [];
+  for (const raw of list) {
     const m = raw as Partial<MonumentEntry> | null;
-    const ok =
-      !!m &&
-      isText(m.id) &&
-      isText(m.model) &&
-      m.model.endsWith('.glb') &&
-      Array.isArray(m.buildingIds) &&
-      m.buildingIds.every((i) => Number.isInteger(i) && i >= 0 && i < buildingCount) &&
-      isNumber(m.position?.lat) &&
-      isNumber(m.position?.lng) &&
-      isNumber(m.rotation) &&
-      isNumber(m.scale) &&
-      m.scale > 0 &&
-      isText(m.license) &&
-      isText(m.author);
-    if (!ok) console.warn('[monumentos] Entrada inválida en el registro; se omite.', raw);
-    return ok;
-  });
+    if (!isEntry(m, buildingCount)) {
+      console.warn('[monumentos] Entrada inválida en el registro; se omite.', raw);
+      continue;
+    }
+    const { id, buildingIds, model, position, rotation, scale, license, author } = m;
+    const entry: MonumentEntry = { id, buildingIds, model, position: { lat: position.lat, lng: position.lng }, rotation, scale, license, author };
+    if (m.focus !== undefined) {
+      const focus = parseFocus(m.focus);
+      if (focus) entry.focus = focus;
+      else console.warn(`[monumentos] «focus» inválido en «${id}»; se usa el encuadre por omisión.`, m.focus);
+    }
+    if (m.poiId !== undefined) {
+      if (isText(m.poiId)) entry.poiId = m.poiId;
+      else console.warn(`[monumentos] «poiId» inválido en «${id}»; se omite.`, m.poiId);
+    }
+    entries.push(entry);
+  }
+  return entries;
 }
 
 /** El modelo se pide solo con el monumento en cuadro y la cámara cerca. */
@@ -68,46 +100,6 @@ export function shouldLoad(distanceM: number, inFrame: boolean): boolean {
 /** El modelo cerca y las huellas lejos; ya mostrando el modelo, vuelve a las huellas en MONUMENT_FAR_M. */
 export function showModel(distanceM: number, showing: boolean): boolean {
   return distanceM < (showing ? MONUMENT_FAR_M : MONUMENT_NEAR_M);
-}
-
-/** Lo que se toca de la posición de la malla unida de edificios. */
-export interface FootprintPositions {
-  array: ArrayLike<number>;
-  needsUpdate: boolean;
-  addUpdateRange(start: number, count: number): void;
-}
-
-/**
- * Oculta o regresa huellas dentro de la malla unida de edificios sin rehacerla. Para ocultar, junta
- * sus vértices en uno (los triángulos quedan sin área y no se dibujan) y guarda los originales en
- * `saved`. `starts[i]` es el primer vértice de la huella i y `starts[i + 1]`, el de la siguiente.
- */
-export function setFootprints(
-  positions: FootprintPositions,
-  starts: Int32Array,
-  saved: Map<number, Float32Array>,
-  ids: number[],
-  visible: boolean,
-): void {
-  const array = positions.array;
-  if (!(array instanceof Float32Array)) return;
-  for (const id of ids) {
-    const from = starts[id] * 3;
-    const to = starts[id + 1] * 3;
-    if (!(to > from)) continue;
-    const original = saved.get(id);
-    if (visible) {
-      if (!original) continue;
-      array.set(original, from);
-      saved.delete(id);
-    } else {
-      if (original) continue;
-      saved.set(id, array.slice(from, to));
-      for (let k = from + 3; k < to; k += 3) array.copyWithin(k, from, from + 3);
-    }
-    positions.addUpdateRange(from, to - from);
-    positions.needsUpdate = true;
-  }
 }
 
 export interface MonumentsOptions {
@@ -121,10 +113,23 @@ export interface MonumentsOptions {
   project: (lat: number, lng: number) => { x: number; z: number };
   /** La misma altura del terreno con la que se levantaron las huellas. */
   height: (x: number, z: number) => number;
+  /** Con «reducir movimiento», la huella cambia por el modelo sin fundido. */
+  reducedMotion?: boolean;
 }
 
 export interface MonumentsLayer {
   tick(camera: THREE.Camera, now: number): void;
+  /** Entrada ligada a un lugar del catálogo por su `poiId` (#334). */
+  entryFor(catalogId: string): MonumentEntry | null;
+  /** Entrada que reemplaza la huella `index` de centro-edificios.json, si alguna (#334). */
+  entryForBuilding(index: number): MonumentEntry | null;
+  /**
+   * Muestra la maqueta de una entrada aunque la cámara esté lejos (#334). Con `alone`, las demás vuelven
+   * a su huella, que se atenúa con la ciudad. `focus(null)` regresa a la regla de distancia.
+   */
+  focus(entryId: string | null, alone?: boolean): void;
+  /** Entrada con `poiId` cuyo modelo o huellas toca el rayo (#334). */
+  pick(ray: THREE.Raycaster): MonumentEntry | null;
   dispose(): void;
 }
 
@@ -135,6 +140,12 @@ interface Monument {
   object: THREE.Object3D | null;
   state: 'idle' | 'loading' | 'ready' | 'failed';
   showing: boolean;
+  /** Materiales del modelo con su transparencia y opacidad originales, para el fundido. */
+  materials: Array<{ material: THREE.Material; transparent: boolean; opacity: number }>;
+  opacity: number;
+  fade: { from: number; to: number; start: number } | null;
+  /** Sombras ya copiadas de los edificios (proyecta, recibe), para no recorrer el modelo de más. */
+  shadows: string;
 }
 
 /** Lee el registro. Sin archivo, vacío o ilegible devuelve null y la ciudad queda como estaba. */
@@ -155,6 +166,8 @@ class Monuments implements MonumentsLayer {
   private readonly matrix: THREE.Matrix4;
   private loader: Promise<GLTFLoader> | null = null;
   private lastCheck = -Infinity;
+  private forced: string | null = null;
+  private alone = false;
   private disposed = false;
 
   constructor(options: MonumentsOptions, entries: MonumentEntry[]) {
@@ -169,27 +182,60 @@ class Monuments implements MonumentsLayer {
       const base = corners.length ? Math.min(...corners.map((c) => height(c.x, c.z))) : height(x, z);
       const radius = Math.max(0, ...corners.map((c) => Math.hypot(c.x - x, c.z - z))) + FRAME_MARGIN_M;
       const center = new T.Vector3(x, base, z);
-      return { entry, center, sphere: new T.Sphere(center, radius), object: null, state: 'idle', showing: false };
+      return {
+        entry, center, sphere: new T.Sphere(center, radius), object: null, state: 'idle', showing: false,
+        materials: [], opacity: 1, fade: null, shadows: '',
+      };
     });
   }
 
   tick(camera: THREE.Camera, now: number): void {
-    if (this.disposed || now - this.lastCheck < CHECK_MS) return;
+    if (this.disposed) return;
+    this.stepFades(now);
+    if (now - this.lastCheck < CHECK_MS) return;
     this.lastCheck = now;
     this.frustum.setFromProjectionMatrix(this.matrix.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse));
-    const positions = this.options.buildings.geometry.getAttribute('position') as THREE.BufferAttribute;
     for (const m of this.items) {
+      const forced = m.entry.id === this.forced;
+      const byDistance = !this.alone;
       const distance = camera.position.distanceTo(m.center);
-      if (m.state === 'idle' && shouldLoad(distance, this.frustum.intersectsSphere(m.sphere))) void this.load(m);
+      if (m.state === 'idle' && (forced || (byDistance && shouldLoad(distance, this.frustum.intersectsSphere(m.sphere))))) void this.load(m);
       if (!m.object) continue;
-      const show = showModel(distance, m.showing);
-      if (show !== m.showing) {
-        m.showing = show;
-        m.object.visible = show;
-        setFootprints(positions, this.options.starts, this.saved, m.entry.buildingIds, !show);
-      }
-      if (show) this.copyShadows(m.object);
+      const show = forced || (byDistance && showModel(distance, m.showing));
+      if (show !== m.showing) this.swap(m, show, now);
+      if (show) this.copyShadows(m);
     }
+  }
+
+  entryFor(catalogId: string): MonumentEntry | null {
+    return this.items.find((m) => m.entry.poiId === catalogId)?.entry ?? null;
+  }
+
+  entryForBuilding(index: number): MonumentEntry | null {
+    return this.items.find((m) => m.entry.buildingIds.includes(index))?.entry ?? null;
+  }
+
+  focus(entryId: string | null, alone = false): void {
+    this.forced = entryId;
+    this.alone = alone;
+    // Se decide en el siguiente cuadro, como cualquier cambio de distancia.
+    this.lastCheck = -Infinity;
+  }
+
+  pick(ray: THREE.Raycaster): MonumentEntry | null {
+    const linked = this.items.filter((m) => m.entry.poiId);
+    for (const m of linked) {
+      if (!m.object?.visible) continue;
+      m.object.updateMatrixWorld();
+      if (ray.intersectObject(m.object, true).length) return m.entry;
+    }
+    // La malla unida es grande: solo se le tira el rayo si pasa cerca de algún monumento.
+    const near = linked.filter((m) => ray.ray.intersectsSphere(m.sphere));
+    if (!near.length) return null;
+    const vertex = ray.intersectObject(this.options.buildings, false)[0]?.face?.a;
+    if (vertex === undefined) return null;
+    const building = buildingOfVertex(this.options.starts, vertex);
+    return near.find((m) => m.entry.buildingIds.includes(building))?.entry ?? null;
   }
 
   dispose(): void {
@@ -207,6 +253,55 @@ class Monuments implements MonumentsLayer {
     }
   }
 
+  /** Cambia huella por modelo (o al revés) con un fundido; la huella se quita al terminar de aparecer el modelo. */
+  private swap(m: Monument, show: boolean, now: number): void {
+    const object = m.object;
+    if (!object) return;
+    m.showing = show;
+    const instant = this.options.reducedMotion === true;
+    if (show) {
+      object.visible = true;
+      if (instant) {
+        this.setOpacity(m, 1);
+        this.hideFootprints(m, true);
+      } else {
+        m.fade = { from: m.fade ? m.opacity : 0, to: 1, start: now };
+        this.setOpacity(m, m.fade.from);
+      }
+    } else {
+      // Las huellas vuelven ya; el modelo se desvanece encima.
+      this.hideFootprints(m, false);
+      if (instant) object.visible = false;
+      else m.fade = { from: m.opacity, to: 0, start: now };
+    }
+  }
+
+  private stepFades(now: number): void {
+    for (const m of this.items) {
+      const fade = m.fade;
+      if (!fade || !m.object) continue;
+      const t = Math.min(1, Math.max(0, (now - fade.start) / MONUMENT_FADE_MS));
+      this.setOpacity(m, fade.from + (fade.to - fade.from) * t);
+      if (t < 1) continue;
+      m.fade = null;
+      if (fade.to === 1) this.hideFootprints(m, true);
+      else m.object.visible = false;
+    }
+  }
+
+  private setOpacity(m: Monument, opacity: number): void {
+    m.opacity = opacity;
+    for (const { material, transparent, opacity: base } of m.materials) {
+      material.transparent = opacity < 1 ? true : transparent;
+      material.opacity = base * opacity;
+    }
+  }
+
+  private hideFootprints(m: Monument, hide: boolean): void {
+    const positions = this.options.buildings.geometry.getAttribute('position') as THREE.BufferAttribute;
+    setFootprints(positions, this.options.starts, this.saved, m.entry.buildingIds, !hide);
+  }
+
   private async load(m: Monument): Promise<void> {
     m.state = 'loading';
     try {
@@ -217,6 +312,16 @@ class Monuments implements MonumentsLayer {
       object.position.copy(m.center);
       object.rotation.y = -this.options.T.MathUtils.degToRad(m.entry.rotation);
       object.scale.setScalar(m.entry.scale);
+      const seen = new Set<THREE.Material>();
+      object.traverse((o) => {
+        const mesh = o as THREE.Mesh;
+        if (!mesh.isMesh) return;
+        for (const material of Array.isArray(mesh.material) ? mesh.material : [mesh.material]) {
+          if (seen.has(material)) continue;
+          seen.add(material);
+          m.materials.push({ material, transparent: material.transparent, opacity: material.opacity });
+        }
+      });
       // PROTO: de noche el modelo no recibe el alumbrado de calle que llevan las huellas por vértice.
       object.visible = false;
       this.options.scene.add(object);
@@ -239,9 +344,13 @@ class Monuments implements MonumentsLayer {
     return this.loader.then((loader) => loader.loadAsync(url));
   }
 
-  private copyShadows(object: THREE.Object3D): void {
+  /** Las sombras del modelo siguen a las de los edificios; solo se recorre el modelo cuando cambian. */
+  private copyShadows(m: Monument): void {
     const { castShadow, receiveShadow } = this.options.buildings;
-    object.traverse((o) => {
+    const key = `${castShadow}${receiveShadow}`;
+    if (!m.object || key === m.shadows) return;
+    m.shadows = key;
+    m.object.traverse((o) => {
       o.castShadow = castShadow;
       o.receiveShadow = receiveShadow;
     });

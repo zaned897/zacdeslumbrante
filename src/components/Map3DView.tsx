@@ -1,7 +1,8 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowDown,
   ArrowUp,
+  Box,
   CableCar,
   Camera,
   Check,
@@ -166,6 +167,11 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
   const [enabledLayers, setEnabledLayers] = useState<Set<string>>(DEFAULT_LAYERS);
   const [layerPois, setLayerPois] = useState<Record<string, ScenePoi[]>>({});
   const [selected, setSelected] = useState<ScenePoi | null>(null);
+  // Edificio elegido (#334): la cámara voló a él y la ciudad está atenuada; `model`, el crédito de su maqueta.
+  const [focus, setFocus] = useState<{ poiId: string; model?: { author: string; license: string } } | null>(null);
+  const focusRef = useRef(focus);
+  focusRef.current = focus;
+  const focusRunRef = useRef(0);
   // Parada en curso del recorrido: alimenta la hoja con subtítulo y progreso.
   const [tourStep, setTourStep] = useState<{ tour: Tour; index: number } | null>(null);
   const [isTouring, setIsTouring] = useState(false);
@@ -240,6 +246,47 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
   const act = useAvatarControls(isExploring, position, teleport);
   const teleportRef = useRef<typeof teleport | null>(null);
   teleportRef.current = isExploring ? teleport : null;
+  /**
+   * Tocar un lugar (#334): si es edificio, la cámara vuela y la tarjeta sale al aterrizar; si no, la
+   * tarjeta sale ya, como siempre. Un toque nuevo durante el vuelo gana. En Explorar la cámara sigue
+   * al avatar, así que ahí no vuela.
+   */
+  const selectPoi = async (poi: ScenePoi) => {
+    const run = ++focusRunRef.current;
+    const found = isExploring ? null : ((await engineRef.current?.focusPlace?.(poi)) ?? null);
+    if (run !== focusRunRef.current) return;
+    setFocus(found ? { poiId: poi.id, model: found.model } : null);
+    setSelected(poi);
+  };
+  const selectPoiRef = useRef(selectPoi);
+  selectPoiRef.current = selectPoi;
+  // Al cerrar la tarjeta (✕, tocar fuera, un recorrido…) o elegir otra cosa, la ciudad vuelve (#334).
+  useEffect(() => {
+    if (!focus || selected?.id === focus.poiId) return;
+    focusRunRef.current++;
+    setFocus(null);
+    void engineRef.current?.focusPlace?.(null);
+  }, [selected, focus]);
+  // La tarjeta no tapa el edificio elegido: el motor lo centra en lo que queda libre (#334).
+  const cardRef = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const card = cardRef.current;
+    const box = containerRef.current;
+    if (!focus || !card || !box) return;
+    const measure = () => {
+      const c = card.getBoundingClientRect();
+      const b = box.getBoundingClientRect();
+      // Angosta a un lado (escritorio): libra la derecha. A lo ancho (celular): libra lo de abajo.
+      engineRef.current?.setFocusInset?.(
+        c.width < b.width / 2 ? { bottom: 0, right: b.right - c.left } : { bottom: b.bottom - c.top, right: 0 },
+      );
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(card);
+    observer.observe(box);
+    return () => observer.disconnect();
+  }, [focus, selected]);
   const pickSpotRef = useRef<((at: { lat: number; lng: number }) => void) | null>(null);
   pickSpotRef.current = pickingSpot
     ? (at) => {
@@ -393,8 +440,15 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
           if (!cancelled) setTimings((prev) => ({ ...prev, readyMs: performance.now() - startedAt }));
         });
         // Mientras se marca la ubicación de un puesto (#173), el toque elige el lugar en vez de abrir fichas o mover al avatar.
-        engine.onPoiClick((poi) => (pickSpotRef.current ? pickSpotRef.current(poi) : setSelected(poi)));
-        engine.onGroundClick((at) => (pickSpotRef.current ? pickSpotRef.current(at) : teleportRef.current?.(at)));
+        engine.onPoiClick((poi) => (pickSpotRef.current ? pickSpotRef.current(poi) : void selectPoiRef.current(poi)));
+        engine.onGroundClick((at) => {
+          // Con un edificio elegido (#334), tocar fuera cierra su tarjeta y la ciudad vuelve.
+          if (focusRef.current && !pickSpotRef.current) {
+            setSelected(null);
+            return;
+          }
+          return pickSpotRef.current ? pickSpotRef.current(at) : teleportRef.current?.(at);
+        });
         engine.onFloatingPhotoClick?.(({ id, placeId }) => {
           const list = allPhotosRef.current.filter((p) => p.placeId === placeId);
           if (!list.length) return;
@@ -1127,7 +1181,7 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
 
       {/* Tarjeta del lugar */}
       {selected && !isTouring && (
-        <div className={`absolute inset-x-3 ${isExploring ? 'bottom-56 md:bottom-24 md:right-48' : 'bottom-20 md:right-4'} md:inset-x-auto md:w-80 z-10 max-h-[62dvh] overflow-y-auto glass-sheet glass-tinted p-4 ${selected.kind === 'vendor' ? 'border-t-4 border-t-[#E4007C]' : ''}`}>
+        <div ref={cardRef} className={`absolute inset-x-3 ${isExploring ? 'bottom-56 md:bottom-24 md:right-48' : 'bottom-20 md:right-4'} md:inset-x-auto md:w-80 z-10 max-h-[62dvh] overflow-y-auto glass-sheet glass-tinted p-4 ${selected.kind === 'vendor' ? 'border-t-4 border-t-[#E4007C]' : ''}`}>
           {photo && (
             <figure className="-mx-4 -mt-4 mb-3">
               <div className="relative aspect-video overflow-hidden rounded-t-xl bg-stone-200">
@@ -1258,6 +1312,13 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
               <Camera className="w-4 h-4" />
               {t.view3dProposePhoto}
             </button>
+          )}
+          {/* Crédito de la maqueta del edificio elegido (#334), tal como viene en monumentos.json */}
+          {focus?.poiId === selected.id && focus.model && (
+            <p data-testid="model-credit" className="mt-3 flex items-center gap-1.5 border-t border-stone-200 pt-2 text-[10px] text-stone-500">
+              <Box className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+              {t.view3dModelCredit.replace('{author}', focus.model.author).replace('{license}', focus.model.license)}
+            </p>
           )}
         </div>
       )}
