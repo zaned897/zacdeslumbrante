@@ -123,6 +123,8 @@ export interface MonumentsLayer {
   entryFor(catalogId: string): MonumentEntry | null;
   /** Entrada que reemplaza la huella `index` de centro-edificios.json, si alguna (#334). */
   entryForBuilding(index: number): MonumentEntry | null;
+  /** Su modelo no se pudo cargar: se queda la huella (#334). */
+  modelFailed(entryId: string): boolean;
   /**
    * Muestra la maqueta de una entrada aunque la cámara esté lejos (#334). Con `alone`, las demás vuelven
    * a su huella, que se atenúa con la ciudad. `focus(null)` regresa a la regla de distancia.
@@ -213,6 +215,10 @@ class Monuments implements MonumentsLayer {
 
   entryForBuilding(index: number): MonumentEntry | null {
     return this.items.find((m) => m.entry.buildingIds.includes(index))?.entry ?? null;
+  }
+
+  modelFailed(entryId: string): boolean {
+    return this.items.find((m) => m.entry.id === entryId)?.state === 'failed';
   }
 
   focus(entryId: string | null, alone = false): void {

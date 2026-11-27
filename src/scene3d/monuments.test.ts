@@ -421,6 +421,25 @@ describe('enfoque de un edificio (#334)', () => {
     });
   });
 
+  test('si la maqueta elegida no carga, se queda su huella y la capa lo dice (modelFailed)', async () => {
+    // Sin el .glb en el servidor: responde 404.
+    await withFetch({ [MONUMENTS_URL]: JSON.stringify(registry) }, async ({ warnings }) => {
+      const { layer, mesh, starts, original, scene, center } = await catedralLayer({ reducedMotion: true });
+      const eye = center.clone().add(new THREE.Vector3(-1300, 800, 900));
+      const far = camera(eye, eye.clone().add(new THREE.Vector3(-1, 0, 1)));
+      assert.equal(layer.modelFailed('catedral'), false);
+      layer.focus('catedral', true);
+      layer.tick(far, 1000);
+      await waitFor(() => layer.modelFailed('catedral'));
+      assert.equal(layer.modelFailed('catedral'), true);
+      layer.tick(far, 2000);
+      assert.equal(scene.getObjectByName('monumento:catedral'), undefined);
+      assert.equal(footprintsHidden(mesh, starts, original), false);
+      assert.ok(warnings.some((w) => /No se pudo cargar/.test(w)), warnings.join('\n'));
+      layer.dispose();
+    });
+  });
+
   test('tocar el bloque o la maqueta de un monumento con «poiId» lo elige; fuera de él, nada', async () => {
     const glb = readFileSync(file(`public${catedral.model}`));
     const registros = [registry, { monuments: [{ ...catedral, poiId: undefined }] }];

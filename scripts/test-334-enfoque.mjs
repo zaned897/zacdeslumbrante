@@ -42,7 +42,7 @@ describe('navegador', { skip: browserSkip, timeout: 900_000 }, () => {
   }
 
   /** Abre la ciudad a 390 px (celular) y devuelve la página, lo que pidió y los errores. */
-  async function openCity(browser, { reducedMotion = 'no-preference', at, recommendations, slowRegistryMs } = {}) {
+  async function openCity(browser, { reducedMotion = 'no-preference', at, recommendations, slowRegistryMs, brokenModel } = {}) {
     // `at`: hora fija en Zacatecas, para que el teleférico (de 10:00 a 18:00) esté abierto.
     const context = await browser.newContext({
       viewport: { width: 390, height: 844 },
@@ -61,6 +61,8 @@ describe('navegador', { skip: browserSkip, timeout: 900_000 }, () => {
         route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ recommendations }) }),
       );
     }
+    // Maqueta que no se puede bajar (404).
+    if (brokenModel) await page.route('**/models/monumentos/*.glb', (route) => route.fulfill({ status: 404, body: 'no está' }));
     // Registro de monumentos que tarda en llegar.
     if (slowRegistryMs) {
       await page.route('**/data/monumentos.json', async (route) => {
@@ -354,9 +356,61 @@ describe('navegador', { skip: browserSkip, timeout: 900_000 }, () => {
       await page.getByRole('menuitem', { name: 'Teleférico' }).first().click();
       const ride = page.getByRole('button', { name: 'Subir' }).first();
       await ride.waitFor({ timeout: 10_000 });
-      // Tocar la Catedral y, mientras vuela, subir a la cabina.
+      // Tocar la Catedral y, mientras vuela, subir a la cabina (los dos clics sin esperas: el vuelo dura 1.2 s).
+      await page.locator(`button[aria-label="${CATEDRAL}"]`).first().dispatchEvent('click');
+      await ride.dispatchEvent('click');
+      await page.waitForTimeout(3000);
+      assert.equal(await page.locator('h3', { hasText: CATEDRAL }).count(), 0, 'salió la tarjeta de la Catedral');
+      assert.equal(await page.getByRole('button', { name: 'Salir de la cabina' }).count(), 1, 'el viaje se cortó');
+      assert.deepEqual(problems, []);
+    } finally {
+      await browser.close();
+    }
+  });
+
+  test('revisión de Codex (#354): con el registro lento, el zoom cancela el vuelo pendiente; una maqueta que no carga deja contorno y sin crédito', async () => {
+    const { chromium } = await loadPlaywright();
+    const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
+    try {
+      const { page, problems } = await openCity(browser, { slowRegistryMs: 15_000, brokenModel: true });
+      // Tocar la Catedral y, mientras llega el registro, acercar con el botón.
+      await page.locator(`button[aria-label="${CATEDRAL}"]`).first().dispatchEvent('click');
+      await page.waitForTimeout(300);
+      await page.getByRole('button', { name: 'Acercar' }).first().click();
+      await watchHeadings(page);
+      await page.locator('h3', { hasText: CATEDRAL }).waitFor({ timeout: 30_000 });
+      await page.waitForTimeout(2500);
+      assert.equal((await headings(page)).length, 1, 'la Catedral voló después del zoom');
+      assert.equal(await page.getByTestId('model-credit').count(), 0);
+      await page.getByRole('button', { name: 'Cerrar' }).first().dispatchEvent('click');
+      await page.waitForTimeout(1000);
+      // Ya con el registro: vuela, pero su maqueta no carga. Queda elegida (con contorno) y sin crédito.
+      await tap(page, CATEDRAL);
+      await page.waitForTimeout(1500);
+      assert.deepEqual(await visibleMarkers(page), [CATEDRAL]);
+      assert.equal(await page.getByTestId('model-credit').count(), 0, 'crédito de una maqueta que no cargó');
+      assert.deepEqual(problems.filter((p) => !/No se pudo cargar/.test(p)), []);
+    } finally {
+      await browser.close();
+    }
+  });
+
+  test('revisión de Codex (#354): con el registro lento, subir al teleférico cancela el vuelo pendiente', async () => {
+    const { chromium } = await loadPlaywright();
+    const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
+    try {
+      const { page, problems } = await openCity(browser, { at: new Date('2026-11-26T12:00:00-06:00'), slowRegistryMs: 30_000 });
+      const registry = page.waitForResponse('**/data/monumentos.json', { timeout: 90_000 });
+      // Con la tarjeta del teleférico abierta: tocar la Catedral y, sin esperar el registro, subir.
+      await page.getByRole('button', { name: 'Abrir menú de acciones' }).click();
+      await page.getByRole('menuitem', { name: 'Atracciones' }).first().click();
+      await page.getByRole('menuitem', { name: 'Teleférico' }).first().click();
+      const ride = page.getByRole('button', { name: 'Subir' }).first();
+      await ride.waitFor({ timeout: 10_000 });
       await page.locator(`button[aria-label="${CATEDRAL}"]`).first().dispatchEvent('click');
       await ride.click();
+      // Llega el registro: la Catedral ya no vuela ni baja a nadie de la cabina.
+      await registry;
       await page.waitForTimeout(3000);
       assert.equal(await page.locator('h3', { hasText: CATEDRAL }).count(), 0, 'salió la tarjeta de la Catedral');
       assert.equal(await page.getByRole('button', { name: 'Salir de la cabina' }).count(), 1, 'el viaje se cortó');

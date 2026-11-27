@@ -535,7 +535,7 @@ export class ThreeOsmEngine implements SceneEngine {
    * Edificio elegido (#334). `dim`: ya aterrizó la cámara y la ciudad está atenuada. `outline`: su
    * huella resaltada si no tiene maqueta, con la huella original oculta debajo.
    */
-  private focused: { poiId: string; dim: boolean; outline: THREE.Group | null; footprint: number; flight: ThreeOsmEngine['animation'] } | null = null;
+  private focused: { poiId: string; dim: boolean; outline: THREE.Group | null; footprints: number[]; flight: ThreeOsmEngine['animation'] } | null = null;
   private focusSaved = new Map<number, Float32Array>();
   private dimMaterials: THREE.Material[] = [];
   /** Lo que tapa la tarjeta del edificio elegido (px) y cuánto se ha corrido la vista para librarlo (#334). */
@@ -864,7 +864,7 @@ export class ThreeOsmEngine implements SceneEngine {
     if (on) {
       this.stop();
       // A bordo la cámara la lleva la cabina: la ciudad no se queda atenuada por un edificio elegido (#334).
-      this.releaseFocus();
+      this.cancelFocus();
     }
     this.cableCabins?.ride(on);
   }
@@ -877,7 +877,7 @@ export class ThreeOsmEngine implements SceneEngine {
   watchFreight(follow: boolean): void {
     this.stop();
     // Siguiendo al tren, igual que a bordo del teleférico (#334).
-    if (follow) this.releaseFocus();
+    if (follow) this.cancelFocus();
     this.freight?.watch(follow);
   }
   stopFreightFollowing(): void { this.freight?.stopFollowing(); }
@@ -1035,7 +1035,7 @@ export class ThreeOsmEngine implements SceneEngine {
     // Un lugar dentro de las huellas de una maqueta es ese monumento, aunque el registro no lo ligue.
     if (footprint >= 0) entry = this.monuments?.entryForBuilding(footprint) ?? null;
     if (!entry && footprint < 0) return null;
-    const focused = { poiId: poi.id, dim: false, outline: null as THREE.Group | null, footprint, flight: null as ThreeOsmEngine['animation'] };
+    const focused = { poiId: poi.id, dim: false, outline: null as THREE.Group | null, footprints: [] as number[], flight: null as ThreeOsmEngine['animation'] };
     this.focused = focused;
     // Su maqueta sale aunque esté lejos; las de otros edificios vuelven a su huella, atenuada con la ciudad.
     this.monuments?.focus(entry?.id ?? null, true);
@@ -1060,10 +1060,12 @@ export class ThreeOsmEngine implements SceneEngine {
     // Los letreros del teleférico y los pines 3D de otros puntos también son marcadores: se apagan.
     this.cableCar?.setLabelsVisible(false);
     this.showPins(focused.poiId);
-    if (!entry) focused.outline = this.outlineFootprint(footprint);
+    // Sin maqueta, o si la suya no cargó, se resalta la huella; el crédito solo va con maqueta.
+    const failed = Boolean(entry && this.monuments?.modelFailed(entry.id));
+    if (!entry || failed) focused.outline = this.outlineFootprints(entry ? entry.buildingIds : [footprint]);
     this.labelsAt = -Infinity;
     this.lastPhotoCheckAt = -PHOTO_CHECK_MS;
-    return entry ? { model: { author: entry.author, license: entry.license } } : {};
+    return entry && !failed ? { model: { author: entry.author, license: entry.license } } : {};
   }
 
   /** La tarjeta tapa `bottom` px abajo o `right` px a la derecha: el edificio elegido se centra en el resto. */
@@ -1089,6 +1091,12 @@ export class ThreeOsmEngine implements SceneEngine {
     this.labelsAt = -Infinity;
   }
 
+  /** Otro modo toma la cámara (#334): suelta el edificio elegido y cancela el que aún espera el registro. */
+  private cancelFocus(): void {
+    this.focusToken++;
+    this.releaseFocus();
+  }
+
   private releaseFocus(): void {
     const focused = this.focused;
     if (!focused) return;
@@ -1110,7 +1118,7 @@ export class ThreeOsmEngine implements SceneEngine {
         (shape.material as THREE.Material).dispose();
       });
       const positions = this.buildings?.geometry.getAttribute('position') as THREE.BufferAttribute | undefined;
-      if (positions && this.starts) setFootprints(positions, this.starts, this.focusSaved, [focused.footprint], true);
+      if (positions && this.starts) setFootprints(positions, this.starts, this.focusSaved, focused.footprints, true);
     }
     if (this.dimMaterials.length) {
       this.dimMaterials.forEach((m) => m.dispose());
@@ -1151,37 +1159,42 @@ export class ThreeOsmEngine implements SceneEngine {
     }
   }
 
-  /** Huella de un edificio sin maqueta (#334): con su color de siempre y contorno, sobre la ciudad atenuada. */
-  private outlineFootprint(index: number): THREE.Group | null {
-    const { T, scene, buildings, starts, looks } = this;
-    if (!T || !scene || !buildings || !starts || !looks || index < 0) return null;
-    const from = starts[index];
-    const to = starts[index + 1];
-    const geometry = new T.BufferGeometry();
-    for (const [name, attribute] of Object.entries(buildings.geometry.attributes)) {
-      const a = attribute as THREE.BufferAttribute;
-      // Posición, normal, uv y color de la huella unida: todos Float32Array.
-      const array = (a.array as Float32Array).slice(from * a.itemSize, to * a.itemSize);
-      geometry.setAttribute(name, new T.BufferAttribute(array, a.itemSize, a.normalized));
-    }
+  /** Huellas de un edificio sin maqueta (#334): con su color de siempre y contorno, sobre la ciudad atenuada. */
+  private outlineFootprints(indices: number[]): THREE.Group | null {
+    const { T, scene, buildings, starts, looks, focused } = this;
+    if (!T || !scene || !buildings || !starts || !looks || !focused) return null;
+    const ids = indices.filter((i) => i >= 0);
+    if (!ids.length) return null;
     const night = (this.seasonLook?.night ? 'night' : this.timeOfDay) === 'night';
-    const solid = (night ? looks.night : looks.day).building.clone();
-    // Las caras un poco atrás: así el contorno, en el mismo lugar, siempre gana.
-    Object.assign(solid, { polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1 });
-    const mesh = new T.Mesh(geometry, solid);
-    mesh.castShadow = buildings.castShadow;
-    mesh.receiveShadow = buildings.receiveShadow;
-    const edges = new T.LineSegments(
-      new T.EdgesGeometry(geometry, 30),
-      new T.LineBasicMaterial({ color: night ? FOCUS_OUTLINE.night : FOCUS_OUTLINE.day }),
-    );
     const group = new T.Group();
     group.name = 'contorno-edificio';
-    group.add(mesh, edges);
+    for (const index of ids) {
+      const from = starts[index];
+      const to = starts[index + 1];
+      const geometry = new T.BufferGeometry();
+      for (const [name, attribute] of Object.entries(buildings.geometry.attributes)) {
+        const a = attribute as THREE.BufferAttribute;
+        // Posición, normal, uv y color de la huella unida: todos Float32Array.
+        const array = (a.array as Float32Array).slice(from * a.itemSize, to * a.itemSize);
+        geometry.setAttribute(name, new T.BufferAttribute(array, a.itemSize, a.normalized));
+      }
+      const solid = (night ? looks.night : looks.day).building.clone();
+      // Las caras un poco atrás: así el contorno, en el mismo lugar, siempre gana.
+      Object.assign(solid, { polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1 });
+      const mesh = new T.Mesh(geometry, solid);
+      mesh.castShadow = buildings.castShadow;
+      mesh.receiveShadow = buildings.receiveShadow;
+      const edges = new T.LineSegments(
+        new T.EdgesGeometry(geometry, 30),
+        new T.LineBasicMaterial({ color: night ? FOCUS_OUTLINE.night : FOCUS_OUTLINE.day }),
+      );
+      group.add(mesh, edges);
+    }
     scene.add(group);
-    // La huella original, atenuada, se oculta para que no se encime con esta.
+    // Las huellas originales, atenuadas, se ocultan para que no se encimen con estas.
     const positions = buildings.geometry.getAttribute('position') as THREE.BufferAttribute;
-    setFootprints(positions, starts, this.focusSaved, [index], false);
+    setFootprints(positions, starts, this.focusSaved, ids, false);
+    focused.footprints = ids;
     return group;
   }
 
@@ -1194,6 +1207,8 @@ export class ThreeOsmEngine implements SceneEngine {
   adjustView(change: { heading?: number; tilt?: number; rangeFactor?: number }): Promise<void> {
     const now = this.readCamera();
     if (!now || this.skyView) return Promise.resolve();
+    // Brújula, inclinación y zoom también son mover la cámara a mano (#334).
+    this.userMoves++;
     this.current = now;
     const range = Math.min(Math.max(now.range * (change.rangeFactor ?? 1), MAP_MIN_DISTANCE_M), MAP_MAX_DISTANCE_M);
     const reduced = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1575,7 +1590,7 @@ export class ThreeOsmEngine implements SceneEngine {
     this.stop();
     if (on) {
       // Mirando el cielo no hay edificio elegido: la ciudad no se queda atenuada ni la vista corrida (#334).
-      this.releaseFocus();
+      this.cancelFocus();
       this.skyView = { saved: this.current };
       this.starSky?.setLookingUp(true);
       if (this.poiGroup) this.poiGroup.visible = false;
