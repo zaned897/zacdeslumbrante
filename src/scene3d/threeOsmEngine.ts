@@ -883,8 +883,8 @@ export class ThreeOsmEngine implements SceneEngine {
   setFreightEnabled(on: boolean): void { this.freightEnabled = on; this.freight?.setEnabled(on); }
   watchFreight(follow: boolean): void {
     this.stop();
-    // Siguiendo al tren, igual que a bordo del teleférico (#334).
-    if (follow) this.cancelFocus();
+    // Ver pasar o seguir al tren toma la cámara, igual que el teleférico: suelta el edificio elegido (#334).
+    this.cancelFocus();
     this.freight?.watch(follow);
   }
   stopFreightFollowing(): void { this.freight?.stopFollowing(); }

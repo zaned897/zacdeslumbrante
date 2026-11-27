@@ -192,7 +192,7 @@ describe('navegador', { skip: browserSkip, timeout: 900_000 }, () => {
     }
   });
 
-  test('revisión de Codex (#354): soltar, arrastrar o cerrar la tarjeta a medio vuelo, entrar a Explorar o tocar en un recorrido no deja la ciudad atenuada', async () => {
+  test('revisión de Codex (#354): soltar, arrastrar o cerrar la tarjeta a medio vuelo, entrar a Explorar, tocar en un recorrido o abrir «Tu puesto» no deja la ciudad atenuada', async () => {
     const { chromium } = await loadPlaywright();
     const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
     try {
@@ -269,6 +269,22 @@ describe('navegador', { skip: browserSkip, timeout: 900_000 }, () => {
       await notDimmed();
       assert.equal(await page.getByRole('button', { name: 'Detener' }).count(), 1);
       await page.getByRole('button', { name: 'Detener' }).click();
+      await page.waitForTimeout(1500);
+      // El toque durante el recorrido dejó la tarjeta de la Catedral, que sale al detenerlo: se cierra.
+      if (await page.locator('h3', { hasText: CATEDRAL }).count()) {
+        await page.getByRole('button', { name: 'Cerrar' }).first().dispatchEvent('click');
+        await page.waitForTimeout(1000);
+      }
+      assert.equal(await page.locator('h3', { hasText: CATEDRAL }).count(), 0);
+
+      // Abrir «Tu puesto» desde el menú mientras vuela la primera selección (sin tarjeta abierta): la
+      // Catedral ya no aterriza detrás de la hoja.
+      await page.getByRole('button', { name: 'Abrir menú de acciones' }).click();
+      await press(CATEDRAL);
+      await page.getByRole('menuitem', { name: 'Tu puesto' }).first().dispatchEvent('click');
+      await page.waitForTimeout(2500);
+      assert.equal(await page.locator('h3', { hasText: CATEDRAL }).count(), 0, 'salió la Catedral tras abrir «Tu puesto»');
+      await notDimmed();
       assert.deepEqual(problems, []);
     } finally {
       await browser.close();

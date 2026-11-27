@@ -872,6 +872,8 @@ const Map3DScene: React.FC<Map3DViewProps> = ({ language, onToggleLanguage }) =>
       label: t.vendorFormOpen,
       icon: Store,
       action: () => {
+        // Si un edificio va en vuelo sin tarjeta todavía, cerrar no cambia `selected`: se suelta aquí (#334).
+        dropFocus();
         setSelected(null);
         setVendorOpen(true);
       },
